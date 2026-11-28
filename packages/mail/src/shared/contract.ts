@@ -171,7 +171,6 @@ export const KNOWN_MAIL_CLIENTS: Readonly<Record<string, string>> = {
   alertmanager: "Alertmanager",
   "storm-forum-prod": "Storm Forum",
   "storm-forum-beta": "Storm Forum (Beta)",
-  bugsink: "Bugsink",
   seerr: "Seerr",
 };
 

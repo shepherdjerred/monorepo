@@ -187,13 +187,78 @@ function exemptPreparedChart(text: string, name: string): string {
   const charts = z
     .record(z.string(), z.string())
     .parse(document["chartsWithoutRecipe"]);
+  const pending =
+    document["pendingPrivateImages"] === undefined
+      ? undefined
+      : z
+          .record(z.string(), z.string())
+          .parse(document["pendingPrivateImages"]);
+  const nextPending =
+    pending === undefined
+      ? undefined
+      : Object.fromEntries(
+          Object.entries(pending).filter(([key]) => key !== name),
+        );
   return JSON.stringify({
     ...document,
+    ...(nextPending === undefined ? {} : { pendingPrivateImages: nextPending }),
     chartsWithoutRecipe: {
       ...charts,
       [name]: `prepared service: ${activationConstant(name)} is false, so no Application renders and no recipe exists until activation`,
     },
   });
+}
+
+function addOrReusePrivateImage(text: string, name: string): string {
+  const document = DocumentSchema.parse(JSON.parse(text));
+  const list = z
+    .array(
+      z.looseObject({ name: z.string(), visibility: z.string().optional() }),
+    )
+    .parse(document["images"]);
+  const existing = list.find((entry) => entry.name === name);
+  if (existing !== undefined) {
+    if (existing.visibility !== "private") {
+      throw new Error(
+        `image-registry.json already declares ${name} with visibility ${JSON.stringify(existing.visibility)}`,
+      );
+    }
+    return text;
+  }
+  return addToList(text, {
+    file: "image-registry.json",
+    key: "images",
+    entry: { name, visibility: "private" },
+    identify: entryName,
+    sorted: true,
+  });
+}
+
+function assertImageUnownedInCatalog(
+  text: string,
+  name: string,
+  file: string,
+): void {
+  const document = DocumentSchema.parse(JSON.parse(text));
+  const services = z
+    .array(
+      z.looseObject({
+        id: z.string(),
+        components: z.array(z.looseObject({ name: z.string() })).optional(),
+      }),
+    )
+    .parse(document["services"]);
+  const owner = services.find(
+    (service) =>
+      service.components?.some(
+        (component) => component.name === `image:${name}`,
+      ) === true,
+  );
+  if (owner !== undefined) {
+    throw new Error(
+      `${file} already declares image:${name} (owned by ${owner.id})`,
+    );
+  }
 }
 
 /** Every edit to an existing file, in the order they are applied. */
@@ -219,14 +284,7 @@ export function registrationEdits(
     {
       file: "packages/version-catalog/src/image-registry.json",
       json: "compact",
-      apply: (text) =>
-        addToList(text, {
-          file: "image-registry.json",
-          key: "images",
-          entry: { name, visibility: "private" },
-          identify: entryName,
-          sorted: true,
-        }),
+      apply: (text) => addOrReusePrivateImage(text, name),
     },
     {
       file: "ci/scripts/images/image-targets.ts",
@@ -255,8 +313,9 @@ export function registrationEdits(
     {
       file: catalog,
       json: "expanded",
-      apply: (text) =>
-        addToList(
+      apply: (text) => {
+        assertImageUnownedInCatalog(text, name, catalog);
+        return addToList(
           addToList(text, {
             file: catalog,
             key: "groups",
@@ -269,7 +328,8 @@ export function registrationEdits(
             entry: catalogService(options),
             identify: entryId,
           },
-        ),
+        );
+      },
     },
     {
       // `sources.test.ts` in ops-model holds this equal to the catalog's view.

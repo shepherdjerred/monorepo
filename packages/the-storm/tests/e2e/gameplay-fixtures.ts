@@ -94,11 +94,23 @@ export function e2eProfile(): E2eProfile {
 }
 
 /**
+ * Full-profile worlds build both SettlementBlueprint and rustworks across six
+ * dimensions during arena preparation, exceeding the 1G default heap without
+ * needing a benchmark CPU cap on local workstations.
+ */
+export function fullResources(): ServerResources {
+  return {
+    heap: "8G",
+    memoryLimit: "10g",
+  };
+}
+
+/**
  * The load profile retains its historical 4-CPU cap, 8G heap and 10Gi memory
  * limit. The CPU is capped so numbers do not depend on the workstation's spare cores;
  * `STORM_E2E_LOAD_CPUS` measures another cap (6 to size the pod).
  */
-export function loadResources(): ServerResources {
+export function loadResources(): ServerResources & { cpus: number } {
   const cpus = Bun.env["STORM_E2E_LOAD_CPUS"];
   return {
     cpus:
@@ -108,6 +120,21 @@ export function loadResources(): ServerResources {
     heap: "8G",
     memoryLimit: "10g",
   };
+}
+
+export function profileResources(
+  profile: E2eProfile,
+): ServerResources | undefined {
+  switch (profile) {
+    case "e2e":
+      return undefined;
+    case "full":
+      return fullResources();
+    case "load":
+      return loadResources();
+    case "capacity":
+      return capacityResources();
+  }
 }
 
 const OwnedModulesSchema = z

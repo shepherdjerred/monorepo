@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
+import { renderMonitorQuery } from "./contract.ts";
 import {
   MonitorObservationSchema,
   MonitorQuerySchema,
   MonitorSchema,
   MonitorStatusSchema,
   monitorOutcome,
-  renderMonitorQuery,
   unknownMonitorPlaceholders,
   WatchingMonitorSchema,
 } from "./monitor-contract.ts";
@@ -41,9 +41,11 @@ describe("MonitorSchema", () => {
     ]);
   });
 
-  test("allows only the window, version and gitSha placeholders", () => {
+  test("allows only the declared placeholders", () => {
     expect(
-      MonitorQuerySchema.safeParse('up{v="$version"}[$window]').success,
+      MonitorQuerySchema.safeParse(
+        'sum_over_time(up{v="$version",sha="$gitSha"}[$window]) and (timestamp(up) >= $acceptedAt)',
+      ).success,
     ).toBe(true);
     expect(MonitorQuerySchema.safeParse('x{job=~"a.*$"}').success).toBe(true);
     const result = MonitorQuerySchema.safeParse(
@@ -53,7 +55,9 @@ describe("MonitorSchema", () => {
     expect(result.error?.issues[0]?.message).toMatch(
       /found \$environment, \$threshold/u,
     );
-    expect(unknownMonitorPlaceholders("$gitSha $sha")).toEqual(["sha"]);
+    expect(
+      unknownMonitorPlaceholders("$gitSha $sha $acceptedAt $acceptedAtMs"),
+    ).toEqual(["sha", "acceptedAtMs"]);
   });
 
   test.each([
@@ -84,6 +88,44 @@ describe("MonitorSchema", () => {
   });
 });
 
+describe("renderMonitorQuery", () => {
+  const values = {
+    window: "17m",
+    version: "1.2.3",
+    gitSha: "a".repeat(40),
+  };
+
+  test("renders existing templates without an acceptance value", () => {
+    expect(
+      renderMonitorQuery('x{git_sha="$gitSha",v="$version"}[$window]', values),
+    ).toBe(`x{git_sha="${values.gitSha}",v="1.2.3"}[17m]`);
+  });
+
+  test("renders acceptance as an unquoted epoch scalar with millisecond precision", () => {
+    expect(
+      renderMonitorQuery(
+        "(timestamp(x) >= $acceptedAt) and (x > $acceptedAt)",
+        {
+          ...values,
+          acceptedAt: 1_792_627_200.123,
+        },
+      ),
+    ).toBe("(timestamp(x) >= 1792627200.123) and (x > 1792627200.123)");
+  });
+
+  test.each([undefined, Number.NaN, Number.POSITIVE_INFINITY])(
+    "refuses missing or non-finite acceptance time (%s)",
+    (acceptedAt) => {
+      expect(() =>
+        renderMonitorQuery("timestamp(x) >= $acceptedAt", {
+          ...values,
+          ...(acceptedAt === undefined ? {} : { acceptedAt }),
+        }),
+      ).toThrow("$acceptedAt requires finite epoch seconds");
+    },
+  );
+});
+
 describe("observations", () => {
   const monitor = MonitorSchema.parse(scoutProd);
   const base = {
@@ -92,16 +134,6 @@ describe("observations", () => {
     alarms: [],
     evidence: { "matches-processed": 60 },
   };
-
-  test("renders placeholders from the accepted artifact", () => {
-    expect(
-      renderMonitorQuery('x{git_sha="$gitSha",v="$version"}[$window]', {
-        window: "17m",
-        version: "1.2.3",
-        gitSha: "a".repeat(40),
-      }),
-    ).toBe(`x{git_sha="${"a".repeat(40)}",v="1.2.3"}[17m]`);
-  });
 
   test("classifies settled, watching and alarmed observations", () => {
     expect(monitorOutcome(monitor, base)).toBe("settled");

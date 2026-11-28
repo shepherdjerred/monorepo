@@ -1,6 +1,34 @@
 import type { Construct } from "constructs";
 import { S3Backend, TerraformStack } from "cdktn";
+import { z } from "zod";
+import providerVersionsDocument from "homelab/src/tofu/provider-versions.json" with { type: "json" };
+import { requirePin } from "homelab/scripts/tofu/provider-versions.ts";
 import { forget } from "#src/state-migrations.ts";
+
+const PINNED_PROVIDERS = z
+  .object({
+    providers: z.array(
+      z.looseObject({
+        registryUrl: z.string(),
+        source: z.string(),
+        version: z.string(),
+        bindings: z.boolean().optional(),
+        bindingsName: z.string().optional(),
+        local: z.boolean().optional(),
+      }),
+    ),
+  })
+  .parse(providerVersionsDocument).providers;
+
+/**
+ * Exact version pinned in `packages/homelab/src/tofu/provider-versions.json`
+ * for `address` (e.g. `registry.opentofu.org/docker/docker`). Stacks whose
+ * `.terraform.lock.hcl` constrains a provider to an exact version read it
+ * here so `providers:refresh` advances both configuration and lock together.
+ */
+export function pinnedProviderVersion(address: string): string {
+  return requirePin(PINNED_PROVIDERS, address).version;
+}
 
 /** OpenTofu releases the app, and the bindings generated for it, target. */
 export const OPENTOFU_TARGET_VERSION = ">=1.11.0";

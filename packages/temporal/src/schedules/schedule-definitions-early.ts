@@ -286,6 +286,34 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
       "Awaiting 100% candidate traffic for runRenovateDeltaEnrichment; stable workers do not register this Workflow",
   },
   {
+    id: "renovate-ranking-daily",
+    workflowType: "runDailyRenovateRanking",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 3 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "2 hours",
+    initialPauseNote:
+      "Requires Renovate lookup canary on the registered repo worker and Hub readback",
+    memo: "Rank the complete daily Renovate backlog for Hub and bundle dispatch",
+  },
+  {
+    id: "renovate-bundle-dispatch",
+    workflowType: "runRenovateBundleDispatch",
+    args: [],
+    timing: { kind: "interval", every: "5 minutes" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "1 hour",
+    initialPauseNote:
+      "Requires local bundle preview, one live exact-head Woodpecker receipt, and duplicate-run readback",
+    memo: "Drain aged, needed dependency upgrades when Woodpecker can admit verified bundles",
+  },
+  {
     id: "llm-archive-index",
     workflowType: "runLlmArchiveIndex",
     args: [{}],

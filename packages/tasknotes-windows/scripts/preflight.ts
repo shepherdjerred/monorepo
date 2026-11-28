@@ -1,20 +1,30 @@
 import path from "node:path";
-import { resolveMise } from "./mise.ts";
+import { resolveDotnetExecutable, resolveMise } from "./mise.ts";
 import { toolchainVersionMatches, toolchainVersions } from "./toolchain.ts";
 
 const failures: string[] = [];
 const decoder = new TextDecoder();
+const repositoryRoot = path.resolve(import.meta.dir, "../../..");
 const mise = await resolveMise();
 const toolchain = toolchainVersions(
   Bun.TOML.parse(
-    await Bun.file(path.resolve(import.meta.dir, "../../../.mise.toml")).text(),
+    await Bun.file(path.join(repositoryRoot, ".mise.toml")).text(),
   ),
 );
 
-function run(command: string[], cwd = process.cwd()): string {
+function run(
+  command: string[],
+  cwd = process.cwd(),
+  env?: Record<string, string | undefined>,
+): string {
   let result: ReturnType<typeof Bun.spawnSync>;
   try {
-    result = Bun.spawnSync(command, { cwd, stdout: "pipe", stderr: "pipe" });
+    result = Bun.spawnSync(command, {
+      cwd,
+      ...(env === undefined ? {} : { env }),
+      stdout: "pipe",
+      stderr: "pipe",
+    });
   } catch (error) {
     failures.push(
       `Could not start '${command[0] ?? "unknown command"}': ${error instanceof Error ? error.message : String(error)}`,
@@ -138,25 +148,34 @@ requireValue(
   run([mise, "--version"]),
   "mise is missing. Install it with: winget install jdx.mise",
 );
-const dotnetVersion = run([mise, "exec", "--", "dotnet", "--version"]);
-if (!toolchainVersionMatches("dotnet", toolchain.dotnet, dotnetVersion)) {
-  failures.push(
-    `Expected .NET SDK ${toolchain.dotnet} from the root mise manifest; found '${dotnetVersion || "nothing"}'. Run mise install.`,
-  );
+let dotnet: string | undefined;
+try {
+  dotnet = await resolveDotnetExecutable(repositoryRoot);
+} catch (error) {
+  failures.push(error instanceof Error ? error.message : String(error));
 }
-const winuiTemplates = run([
-  mise,
-  "exec",
-  "--",
-  "dotnet",
-  "new",
-  "list",
-  "winui",
-]);
-if (!winuiTemplates.includes("winui")) {
-  failures.push(
-    "The WinUI C# templates are missing. Run: dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates",
+if (dotnet !== undefined) {
+  const dotnetEnv = {
+    ...Bun.env,
+    DOTNET_MULTILEVEL_LOOKUP: "0",
+    DOTNET_ROOT: path.dirname(dotnet),
+  };
+  const dotnetVersion = run([dotnet, "--version"], repositoryRoot, dotnetEnv);
+  if (!toolchainVersionMatches("dotnet", toolchain.dotnet, dotnetVersion)) {
+    failures.push(
+      `Expected .NET SDK ${toolchain.dotnet} from the root mise manifest; found '${dotnetVersion || "nothing"}'. Run mise install.`,
+    );
+  }
+  const winuiTemplates = run(
+    [dotnet, "new", "list", "winui"],
+    repositoryRoot,
+    dotnetEnv,
   );
+  if (!winuiTemplates.includes("winui")) {
+    failures.push(
+      "The WinUI C# templates are missing. Run: dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates",
+    );
+  }
 }
 
 if (failures.length > 0) {

@@ -13,6 +13,8 @@ export function maintenanceKind(pipeline: WoodpeckerPipeline) {
   )?.name;
   if (name === "maintenance-release-notes") return "release-notes";
   if (name === "maintenance-ci-images") return "ci-images";
+  if (name === "maintenance-workspace-seeds") return "workspace-seeds";
+  if (name === "maintenance-workspace-golden") return "workspace-golden";
   return name === "maintenance-superseded" ? "superseded" : null;
 }
 
@@ -55,6 +57,6 @@ export async function ciMaintenance(config: WoodpeckerConfig) {
       memoKey: "ciMaintenance",
     },
     guidance:
-      "Maintenance does not satisfy main verification. Inspect failures and the durable coordinator state before retrying; unknown submissions require read-back. Generated PRs remain drafts until a human marks them ready.",
+      "Maintenance does not satisfy main verification. Inspect failures and the durable coordinator state before retrying; unknown submissions require read-back. Generated PRs remain drafts until a human marks them ready. A blocked stream with nothing pending is retried with toolkit ci maintenance retry <kind> --apply (dry run without --apply).",
   };
 }

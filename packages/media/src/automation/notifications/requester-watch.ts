@@ -39,11 +39,17 @@ async function memberInterestsReleased(
   );
   if (household.reason !== null) return false;
   const claims = household.recipients;
-  const observations = await Promise.all(
-    claims.map((claim) =>
-      boundRequesterWatch(tx, member, claim.userId, context.binding.budget),
-    ),
-  );
+  const observations: Awaited<ReturnType<typeof boundRequesterWatch>>[] = [];
+  for (const claim of claims) {
+    observations.push(
+      await boundRequesterWatch(
+        tx,
+        member,
+        claim.userId,
+        context.binding.budget,
+      ),
+    );
+  }
   for (const observation of observations) {
     if (observation !== null)
       context.captureFreshness?.(

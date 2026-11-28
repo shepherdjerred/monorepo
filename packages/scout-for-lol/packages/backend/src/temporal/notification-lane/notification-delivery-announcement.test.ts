@@ -105,7 +105,7 @@ function hallRecordWith(records: unknown[]): unknown {
       target: { kind: "channel", channelId: CHANNEL_ID },
       announcement: {
         kind: "scout-hall-record-break-announcement",
-        version: 1,
+        version: 2,
         data: {
           guildId: "100000000000000001",
           riotMatchId: "NA1_9301",

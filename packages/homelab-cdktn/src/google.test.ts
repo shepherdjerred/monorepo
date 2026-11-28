@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
+import { useSynthesizedApp } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
   data: z.record(z.string(), z.record(z.string(), z.unknown())),
@@ -21,16 +21,14 @@ const ConfigurationSchema = z.looseObject({
   }),
 });
 
-async function google() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(JSON.parse(synthesized.get("google") ?? ""));
-}
+const readStack = useSynthesizedApp();
+const google = () => readStack("google", ConfigurationSchema);
 
 const WORKLOADS = "${var.google_workloads}";
 
 describe("google", () => {
-  test("keeps the addresses of its state", async () => {
-    const { resource, data, variable, output } = await google();
+  test("keeps the addresses of its state", () => {
+    const { resource, data, variable, output } = google();
     expect(
       Object.entries(resource).flatMap(([type, byName]) =>
         Object.keys(byName).map((name) => `${type}.${name}`),
@@ -58,15 +56,15 @@ describe("google", () => {
     expect(Object.keys(output)).toEqual(["google_gemini_spend_caps"]);
   });
 
-  test("declares no import, moved or removed block", async () => {
-    const configuration = await google();
+  test("declares no import, moved or removed block", () => {
+    const configuration = google();
     expect(configuration.import).toBeUndefined();
     expect(configuration.moved).toBeUndefined();
     expect(configuration.removed).toBeUndefined();
   });
 
-  test("keys each resource by the map its instances were created from", async () => {
-    const { resource, locals } = await google();
+  test("keys each resource by the map its instances were created from", () => {
+    const { resource, locals } = google();
     for (const address of [
       ["google_project", "workload"],
       ["google_service_account", "gemini_key"],
@@ -107,8 +105,8 @@ describe("google", () => {
     );
   });
 
-  test("keeps project deletion protection, key rotation order and API ordering", async () => {
-    const { resource } = await google();
+  test("keeps project deletion protection, key rotation order and API ordering", () => {
+    const { resource } = google();
     expect(resource["google_project"]?.["workload"]).toMatchObject({
       deletion_policy: "PREVENT",
     });
@@ -139,8 +137,8 @@ describe("google", () => {
     });
   });
 
-  test("hands each key off as a concealed field of the workload's item", async () => {
-    const { resource } = await google();
+  test("hands each key off as a concealed field of the workload's item", () => {
+    const { resource } = google();
     expect(resource["onepassword_item"]?.["gemini"]).toEqual({
       for_each: WORKLOADS,
       vault: "v64ocnykdqju4ui6j6pua56xw4",
@@ -161,8 +159,8 @@ describe("google", () => {
     });
   });
 
-  test("keeps the provider constraints its lock file records, and encrypts state", async () => {
-    const { terraform } = await google();
+  test("keeps the provider constraints its lock file records, and encrypts state", () => {
+    const { terraform } = google();
     expect(terraform.required_version).toBe(">= 1.9.0");
     expect(terraform.required_providers).toEqual({
       google: { source: "hashicorp/google", version: "~> 8.4" },

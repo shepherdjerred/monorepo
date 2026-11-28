@@ -802,6 +802,37 @@ test("only a Kubernetes Application has a removal adapter (4.10)", () => {
   });
   expect(targetWithoutRemoval(kubernetes)).toBeNull();
   expect(targetWithoutRemoval(wrappedApplication)).toBeNull();
+  const archiveApplication = KubernetesApplicationRecipeSchema.parse(
+    application({
+      steps: [
+        { kind: "apply-safety", instance: "application:arcade" },
+        { kind: "sync", instance: "application:arcade" },
+        {
+          kind: "archive",
+          instance: "application:arcade",
+          archiveComponent: "archive:trmnl-plugins",
+        },
+      ],
+    }),
+  );
+  const wrappedArchive = OperatorRunRecipeSchema.parse({
+    kind: "operator-run",
+    wrapped: archiveApplication,
+    stages: ["apply-safety", "sync", "archive"],
+  });
+  const compoundArchive = CompoundRecipeSchema.parse({
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:arcade", definition: archiveApplication },
+      {
+        instance: "channel:npm/@shepherdjerred/webring",
+        definition: channel,
+      },
+    ],
+  });
+  expect(targetWithoutRemoval(archiveApplication)).toBe("archive step");
+  expect(targetWithoutRemoval(wrappedArchive)).toBe("archive step");
+  expect(targetWithoutRemoval(compoundArchive)).toBe("archive step");
   expect(targetWithoutRemoval(site)).toBe("static-site");
   expect(targetWithoutRemoval(tofu("github"))).toBe("tofu");
   expect(targetWithoutRemoval(tofu("argocd"))).toBe("operator-run tofu");

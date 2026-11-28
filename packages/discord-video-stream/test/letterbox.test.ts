@@ -1,5 +1,34 @@
 import { describe, expect, test } from "vitest";
-import { computeLetterbox } from "../src/media/letterbox.ts";
+import { computeLetterbox, fitWithin } from "../src/media/letterbox.ts";
+
+describe("fitWithin", () => {
+  const box = { width: 1920, height: 1080 };
+
+  test.each([
+    ["scope 2.39:1 is width-limited", 2.39, { width: 1920, height: 804 }],
+    ["IMAX 1.90:1 is width-limited", 1.9, { width: 1920, height: 1010 }],
+    ["16:9 fills the box", 16 / 9, { width: 1920, height: 1080 }],
+    ["4:3 is height-limited", 4 / 3, { width: 1440, height: 1080 }],
+    ["9:16 portrait is height-limited", 9 / 16, { width: 608, height: 1080 }],
+  ])("%s", (_name, aspect, expected) => {
+    expect(fitWithin(aspect, box)).toEqual(expected);
+  });
+
+  test("odd bounds round down so the result never exceeds them", () => {
+    const fitted = fitWithin(16 / 9, { width: 1281, height: 721 });
+    expect(fitted).toEqual({ width: 1280, height: 720 });
+  });
+
+  test("an extreme aspect still yields an encodable picture", () => {
+    expect(fitWithin(1000, box).height).toBe(2);
+    expect(fitWithin(1 / 1000, box).width).toBe(2);
+  });
+
+  test("rejects a non-positive aspect instead of guessing", () => {
+    expect(() => fitWithin(0, box)).toThrow(RangeError);
+    expect(() => fitWithin(Number.NaN, box)).toThrow(RangeError);
+  });
+});
 
 describe("computeLetterbox", () => {
   test("4:3 pillarboxes into a 16:9 720p canvas", () => {

@@ -9,137 +9,259 @@
  * repo-authoritative values. Renovate groups each set into one branch (the
  * "Rust toolchain", ".NET SDK" and "OpenTofu" rules in renovate.json), but a
  * hand edit, or a copy a group rule does not match, can still drift. This
- * check makes that drift fail loudly instead of silently building a
- * cross-compiler image against a stale toolchain.
+ * check makes that drift fail loudly instead of silently building an image
+ * against a stale toolchain.
  *
- * The Temporal worker image pins its own OpenTofu release the same way, and
- * Delivery plans and applies stacks with that binary. It drifted a minor
- * release behind `.mise.toml` unnoticed, so it is held equal here too.
+ * The Temporal worker image pins operator CLIs (`TOFU_VERSION`,
+ * `ARGOCD_CLI_VERSION`, `GH_CLI_VERSION`, `TEMPORAL_CLI_VERSION`,
+ * `LYCHEE_VERSION`, and `POSTGRESQL_BINARIES_VERSION`) that must stay aligned
+ * with `.mise.toml` so local runs, CI, and scheduled workflows execute the
+ * same releases.
  */
 
+import path from "node:path";
 import { z } from "zod";
-import mise from "../../../.mise.toml";
 
-const MiseToolsSchema = z.object({
+const MiseVersionEntrySchema = z.union([
+  z.string(),
+  z.object({ version: z.string() }),
+]);
+
+export const MiseToolsSchema = z.object({
   tools: z.object({
     rust: z.string(),
     dotnet: z.string(),
     opentofu: z.string(),
+    argocd: z.string(),
+    gh: z.string(),
+    lychee: z.string(),
+    "aqua:temporalio/cli": z.string(),
+    "github:theseus-rs/postgresql-binaries": MiseVersionEntrySchema,
   }),
 });
 
-const GlobalJsonSchema = z.object({
+export const GlobalJsonSchema = z.object({
   sdk: z.object({
     version: z.string(),
   }),
 });
 
-type Violation = {
+export type ToolchainViolation = {
   file: string;
   message: string;
 };
 
-const MISE_TOML_PATH = ".mise.toml";
-const GLOBAL_JSON_PATH = "global.json";
-const MACOS_DOCKERFILE = "packages/macos-cross-compiler/Dockerfile";
-const WINDOWS_DOCKERFILE = "packages/windows-cross-compiler/Dockerfile";
-// The worker image is where Delivery plans and applies OpenTofu stacks, so
-// its binary must be the release CI validates and operators plan with.
-const TEMPORAL_DOCKERFILE = "packages/temporal/Dockerfile";
+export type ToolchainSyncInputs = {
+  miseConfig: unknown;
+  globalJson: unknown;
+  macosDockerfile: string;
+  windowsDockerfile: string;
+  temporalDockerfile: string;
+};
 
-function extractArg(source: string, argName: string): string | undefined {
+export const MISE_TOML_PATH = ".mise.toml";
+export const GLOBAL_JSON_PATH = "global.json";
+export const MACOS_DOCKERFILE = "packages/macos-cross-compiler/Dockerfile";
+export const WINDOWS_DOCKERFILE = "packages/windows-cross-compiler/Dockerfile";
+export const TEMPORAL_DOCKERFILE = "packages/temporal/Dockerfile";
+
+export function extractArg(
+  source: string,
+  argName: string,
+): string | undefined {
   const match = new RegExp(
-    String.raw`ARG\s+${argName}=([0-9][a-zA-Z0-9._-]*)`,
+    String.raw`^\s*ARG\s+${argName}=([a-zA-Z0-9][a-zA-Z0-9._-]*)`,
+    "m",
   ).exec(source);
   return match?.[1];
 }
 
-async function main(): Promise<void> {
-  const violations: Violation[] = [];
-
-  const { tools } = MiseToolsSchema.parse(mise);
-  const miseRust = tools.rust;
-  const miseDotnet = tools.dotnet;
-
-  const globalJson = GlobalJsonSchema.parse(
-    await Bun.file(GLOBAL_JSON_PATH).json(),
-  );
-  const globalJsonDotnet = globalJson.sdk.version;
-
-  const macosSource = await Bun.file(MACOS_DOCKERFILE).text();
-  const windowsSource = await Bun.file(WINDOWS_DOCKERFILE).text();
-
-  const macosRust = extractArg(macosSource, "RUST_VERSION");
-  const windowsRust = extractArg(windowsSource, "RUST_VERSION");
-  const windowsDotnet = extractArg(windowsSource, "DOTNET_SDK_VERSION");
-
-  if (macosRust === undefined) {
-    violations.push({
-      file: MACOS_DOCKERFILE,
-      message: "no ARG RUST_VERSION found",
-    });
-  } else if (macosRust !== miseRust) {
-    violations.push({
-      file: MACOS_DOCKERFILE,
-      message: `ARG RUST_VERSION=${macosRust} does not match ${MISE_TOML_PATH}'s rust = "${miseRust}"`,
-    });
-  }
-
-  if (windowsRust === undefined) {
-    violations.push({
-      file: WINDOWS_DOCKERFILE,
-      message: "no ARG RUST_VERSION found",
-    });
-  } else if (windowsRust !== miseRust) {
-    violations.push({
-      file: WINDOWS_DOCKERFILE,
-      message: `ARG RUST_VERSION=${windowsRust} does not match ${MISE_TOML_PATH}'s rust = "${miseRust}"`,
-    });
-  }
-
-  if (windowsDotnet === undefined) {
-    violations.push({
-      file: WINDOWS_DOCKERFILE,
-      message: "no ARG DOTNET_SDK_VERSION found",
-    });
-  } else if (windowsDotnet !== miseDotnet) {
-    violations.push({
-      file: WINDOWS_DOCKERFILE,
-      message: `ARG DOTNET_SDK_VERSION=${windowsDotnet} does not match ${MISE_TOML_PATH}'s dotnet = "${miseDotnet}"`,
-    });
-  }
-
-  const temporalTofu = extractArg(
-    await Bun.file(TEMPORAL_DOCKERFILE).text(),
-    "TOFU_VERSION",
-  );
-  if (temporalTofu !== tools.opentofu) {
-    violations.push({
-      file: TEMPORAL_DOCKERFILE,
-      message: `ARG TOFU_VERSION=${temporalTofu ?? "<missing>"} does not match ${MISE_TOML_PATH}'s opentofu = "${tools.opentofu}"`,
-    });
-  }
-
-  if (globalJsonDotnet !== miseDotnet) {
-    violations.push({
-      file: GLOBAL_JSON_PATH,
-      message: `sdk.version = "${globalJsonDotnet}" does not match ${MISE_TOML_PATH}'s dotnet = "${miseDotnet}"`,
-    });
-  }
-
-  if (violations.length > 0) {
-    console.error("Toolchain version-sync violations:\n");
-    for (const v of violations) {
-      console.error(`  ${v.file}`);
-      console.error(`    ${v.message}\n`);
-    }
-    console.error(`${String(violations.length)} violation(s) found.`);
-    process.exit(1);
-  }
-
-  console.log(
-    `Toolchain versions in sync: rust=${miseRust}, dotnet=${miseDotnet}, opentofu=${tools.opentofu}.`,
-  );
+function resolveMiseEntryVersion(
+  entry: z.infer<typeof MiseVersionEntrySchema>,
+): string {
+  return typeof entry === "string" ? entry : entry.version;
 }
 
-await main();
+function checkDockerArg(
+  violations: ToolchainViolation[],
+  options: {
+    file: string;
+    source: string;
+    argName: string;
+    expectedValue: string;
+    miseLabel: string;
+    requireDefinedMessage?: boolean;
+  },
+): void {
+  const actual = extractArg(options.source, options.argName);
+  if (actual === undefined && options.requireDefinedMessage === true) {
+    violations.push({
+      file: options.file,
+      message: `no ARG ${options.argName} found`,
+    });
+    return;
+  }
+  if (actual !== options.expectedValue) {
+    violations.push({
+      file: options.file,
+      message: `ARG ${options.argName}=${actual ?? "<missing>"} does not match ${MISE_TOML_PATH}'s ${options.miseLabel}`,
+    });
+  }
+}
+
+export function validateToolchainVersionSync(
+  inputs: ToolchainSyncInputs,
+): ToolchainViolation[] {
+  const violations: ToolchainViolation[] = [];
+  const { tools } = MiseToolsSchema.parse(inputs.miseConfig);
+  const globalJson = GlobalJsonSchema.parse(inputs.globalJson);
+
+  checkDockerArg(violations, {
+    file: MACOS_DOCKERFILE,
+    source: inputs.macosDockerfile,
+    argName: "RUST_VERSION",
+    expectedValue: tools.rust,
+    miseLabel: `rust = "${tools.rust}"`,
+    requireDefinedMessage: true,
+  });
+
+  checkDockerArg(violations, {
+    file: WINDOWS_DOCKERFILE,
+    source: inputs.windowsDockerfile,
+    argName: "RUST_VERSION",
+    expectedValue: tools.rust,
+    miseLabel: `rust = "${tools.rust}"`,
+    requireDefinedMessage: true,
+  });
+
+  checkDockerArg(violations, {
+    file: WINDOWS_DOCKERFILE,
+    source: inputs.windowsDockerfile,
+    argName: "DOTNET_SDK_VERSION",
+    expectedValue: tools.dotnet,
+    miseLabel: `dotnet = "${tools.dotnet}"`,
+    requireDefinedMessage: true,
+  });
+
+  const postgresVersion = resolveMiseEntryVersion(
+    tools["github:theseus-rs/postgresql-binaries"],
+  );
+  const temporalChecks: {
+    argName: string;
+    expectedValue: string;
+    miseLabel: string;
+  }[] = [
+    {
+      argName: "TOFU_VERSION",
+      expectedValue: tools.opentofu,
+      miseLabel: `opentofu = "${tools.opentofu}"`,
+    },
+    {
+      argName: "ARGOCD_CLI_VERSION",
+      expectedValue: `v${tools.argocd}`,
+      miseLabel: `argocd = "${tools.argocd}" (expected v${tools.argocd})`,
+    },
+    {
+      argName: "GH_CLI_VERSION",
+      expectedValue: tools.gh,
+      miseLabel: `gh = "${tools.gh}"`,
+    },
+    {
+      argName: "TEMPORAL_CLI_VERSION",
+      expectedValue: tools["aqua:temporalio/cli"],
+      miseLabel: `"aqua:temporalio/cli" = "${tools["aqua:temporalio/cli"]}"`,
+    },
+    {
+      argName: "LYCHEE_VERSION",
+      expectedValue: `lychee-v${tools.lychee}`,
+      miseLabel: `lychee = "${tools.lychee}" (expected lychee-v${tools.lychee})`,
+    },
+    {
+      argName: "POSTGRESQL_BINARIES_VERSION",
+      expectedValue: postgresVersion,
+      miseLabel: `"github:theseus-rs/postgresql-binaries" = "${postgresVersion}"`,
+    },
+  ];
+
+  for (const check of temporalChecks) {
+    checkDockerArg(violations, {
+      file: TEMPORAL_DOCKERFILE,
+      source: inputs.temporalDockerfile,
+      argName: check.argName,
+      expectedValue: check.expectedValue,
+      miseLabel: check.miseLabel,
+    });
+  }
+
+  if (globalJson.sdk.version !== tools.dotnet) {
+    violations.push({
+      file: GLOBAL_JSON_PATH,
+      message: `sdk.version = "${globalJson.sdk.version}" does not match ${MISE_TOML_PATH}'s dotnet = "${tools.dotnet}"`,
+    });
+  }
+
+  return violations;
+}
+
+export async function loadAndValidateToolchainSync(
+  repoRoot = path.resolve(import.meta.dir, "../../.."),
+): Promise<{
+  tools: z.infer<typeof MiseToolsSchema>["tools"];
+  violations: ToolchainViolation[];
+}> {
+  const [
+    miseSource,
+    globalJsonRaw,
+    macosDockerfile,
+    windowsDockerfile,
+    temporalDockerfile,
+  ] = await Promise.all([
+    Bun.file(path.join(repoRoot, MISE_TOML_PATH)).text(),
+    Bun.file(path.join(repoRoot, GLOBAL_JSON_PATH)).text(),
+    Bun.file(path.join(repoRoot, MACOS_DOCKERFILE)).text(),
+    Bun.file(path.join(repoRoot, WINDOWS_DOCKERFILE)).text(),
+    Bun.file(path.join(repoRoot, TEMPORAL_DOCKERFILE)).text(),
+  ]);
+  const miseConfig = MiseToolsSchema.parse(Bun.TOML.parse(miseSource));
+  const globalJson = GlobalJsonSchema.parse(JSON.parse(globalJsonRaw));
+  const violations = validateToolchainVersionSync({
+    miseConfig,
+    globalJson,
+    macosDockerfile,
+    windowsDockerfile,
+    temporalDockerfile,
+  });
+  return { tools: miseConfig.tools, violations };
+}
+
+export function formatToolchainReport(
+  tools: z.infer<typeof MiseToolsSchema>["tools"],
+  violations: readonly ToolchainViolation[],
+): { ok: boolean; output: string } {
+  if (violations.length > 0) {
+    const lines = ["Toolchain version-sync violations:\n"];
+    for (const v of violations) {
+      lines.push(`  ${v.file}`, `    ${v.message}\n`);
+    }
+    lines.push(`${String(violations.length)} violation(s) found.`);
+    return { ok: false, output: lines.join("\n") };
+  }
+  return {
+    ok: true,
+    output: `Toolchain versions in sync: rust=${tools.rust}, dotnet=${tools.dotnet}, opentofu=${tools.opentofu}, argocd=${tools.argocd}.`,
+  };
+}
+
+async function main(): Promise<void> {
+  const { tools, violations } = await loadAndValidateToolchainSync();
+  const report = formatToolchainReport(tools, violations);
+  if (!report.ok) {
+    console.error(report.output);
+    process.exit(1);
+  }
+  console.log(report.output);
+}
+
+if (import.meta.main) {
+  await main();
+}

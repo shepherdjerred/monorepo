@@ -118,6 +118,8 @@ p.fl-detail {
   max-width: 26ch;
   overflow: hidden;
   vertical-align: bottom;
+  /* The kit's .ui-data cells wrap; a long variant value stays one line. */
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
@@ -320,6 +322,19 @@ p.fl-detail {
   background: var(--ui-sev-info-soft);
   color: var(--ui-sev-info-text);
   font-size: 12.5px;
+}
+
+.fl-notice[data-tone="warning"] {
+  border-color: var(--ui-sev-warning);
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+}
+
+/* A model picker: the catalog select, its custom id field and any warning */
+.fl-choice {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
 }
 
 /* Review dialog */
@@ -694,6 +709,211 @@ p.fl-detail {
   padding: 0;
   list-style: none;
   font: 12.5px/1.5 var(--ui-font-mono);
+}
+
+/* Inventory description, added and last-changed times, under the key. */
+/*
+ * Zero intrinsic width: the line fills the key's column without widening it.
+ * When rows become cards, it sits under the key, beside the cell's label.
+ */
+.fl-desc {
+  display: block;
+  grid-column: 2;
+  width: 0;
+  min-width: 100%;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font: 400 12px/1.4 var(--ui-font-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fl-meta {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.fl-purpose {
+  color: var(--ui-ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fl-undeclared {
+  justify-self: start;
+  padding: 2px 8px;
+  border: 1px solid var(--ui-sev-warning);
+  border-radius: 6px;
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+  font-size: 12px;
+}
+
+.fl-meta-dates {
+  font-size: 12px;
+}
+
+/* History timeline */
+.fl-history {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ui-line);
+}
+
+.fl-history-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fl-history-title svg {
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+}
+
+.fl-history-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fl-history-entry {
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+}
+
+.fl-history-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: var(--ui-ink);
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.fl-history-toggle:hover {
+  background: var(--ui-active);
+}
+
+.fl-history-toggle > svg {
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+}
+
+.fl-history-entry[data-action="retire"] .fl-history-action {
+  color: var(--ui-sev-error-text);
+}
+
+.fl-history-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 0 8px 8px;
+}
+
+.fl-history-restore {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 12px;
+}
+
+/* Usage: read sites and consumer liveness */
+.fl-usage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ui-line);
+}
+
+.fl-usage-packages,
+.fl-usage-files {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fl-usage-package {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fl-usage-files {
+  gap: 4px;
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ui-line-soft);
+}
+
+.fl-usage-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
+}
+
+.fl-usage-file a {
+  overflow-wrap: anywhere;
+}
+
+.fl-usage-file a:hover {
+  text-decoration: underline;
+}
+
+.fl-usage-kind {
+  font-size: 11px;
+}
+
+.fl-usage-none,
+.fl-usage-eval {
+  font-size: 12.5px;
+}
+
+.fl-liveness {
+  font-size: 0.85rem;
+}
+
+.fl-card-row:has(.fl-card-live) {
+  row-gap: 0;
+  padding-block: 6px;
+}
+
+.fl-card-live {
+  grid-column: 1 / -1;
+  padding-left: 23px;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+}
+
+/* Archive */
+.fl-archive-key {
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.fl-archive-item .fl-command {
+  max-height: 16rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* The sticky top bar would cover a jump target at phone width. */

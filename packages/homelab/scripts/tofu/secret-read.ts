@@ -52,6 +52,8 @@ export async function capturedRead(
         !key.startsWith("TF_CLI_ARGS"),
     ),
   );
+  let stdout: string;
+  let exitCode: number;
   try {
     const child = Bun.spawn(command, {
       cwd: repositoryRoot,
@@ -59,16 +61,20 @@ export async function capturedRead(
       stdout: "pipe",
       stderr: "pipe",
     });
-    const [stdout, , exitCode] = await Promise.all([
+    [stdout, , exitCode] = await Promise.all([
       new Response(child.stdout).text(),
       new Response(child.stderr).text(),
       child.exited,
     ]);
-    if (exitCode !== 0) throw new Error("failed");
-    return stdout;
   } catch {
     throw new Error(`Read failed (${operation}); command output withheld.`);
   }
+  if (exitCode !== 0) {
+    throw new Error(
+      `Read failed (${operation}, exit ${String(exitCode)}); command output withheld.`,
+    );
+  }
+  return stdout;
 }
 
 export function parsePrivateJson<Schema extends z.ZodType>(

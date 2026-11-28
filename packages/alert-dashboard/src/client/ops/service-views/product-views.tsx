@@ -305,6 +305,7 @@ const SERVICE_CONSOLES: Readonly<Record<string, string>> = {
   golink: "golink",
   flags: "flags",
   "outbound-mail": "mail",
+  errors: "errors",
 };
 
 /**
@@ -340,7 +341,7 @@ export function renderProductServiceView(
   switch (id) {
     case "scout-for-lol":
       return <ScoutServiceView range={range} />;
-    case "bugsink":
+    case "errors":
       return <BugsinkServiceView range={range} />;
     case "flags":
       return <FlagsServiceView range={range} />;

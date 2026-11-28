@@ -14,6 +14,7 @@ import type {
 } from "@shepherdjerred/discord-video-stream";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { buildVideoPrepareOptions } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
+import { audioProcessingFlags } from "@shepherdjerred/streambot/config/media-features.ts";
 
 // A credential-free measurement of the real ffmpeg → native demux → paced sender.
 // Run: bun e2e/pacing-local.ts [seconds=60] [regular|discontinuous|live|live-ungated] [flush]
@@ -257,6 +258,8 @@ const prepare = buildVideoPrepareOptions({
   startSeconds: 0,
   volumePercent: 100,
   pipelineMode: "sw",
+  // No Flags provider here, so this is the inventory default production starts from.
+  audioProcessing: await audioProcessingFlags("local-pacing-probe"),
 });
 const player = createSeekablePlayer(streamer, source, {
   prepare: {

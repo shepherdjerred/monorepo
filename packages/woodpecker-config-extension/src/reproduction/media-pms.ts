@@ -52,7 +52,7 @@ export function renderPmsReproduction(
     branch: identity.branch,
     defaultBranch: "main",
     draft: true,
-    maintenance: true,
+    canary: true,
   });
   if (lane === undefined) throw new Error("PMS lane missing after routing");
   if (

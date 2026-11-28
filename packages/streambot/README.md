@@ -132,7 +132,50 @@ therefore splits identities:
 - **Streamer** — ffmpeg-driven voice streaming via
   [`@shepherdjerred/discord-video-stream`](../discord-video-stream/), the
   in-repo fork of `@dank074/discord-video-stream` (seekable player, VAAPI
-  hardware-encode pipeline, stream observer for metrics).
+  hardware-encode pipeline, stream observer for metrics). The resolve-time
+  ffprobe records how the chosen video stream is meant to be shown (display
+  aspect after pixel aspect and rotation, frame rate, interlacing, colour) and
+  the audio layout. Video is encoded at that display aspect fitted inside
+  `STREAM_WIDTH`×`STREAM_HEIGHT` (a 2.39:1 film plays at 1920×804, a portrait
+  clip at 608×1080); Discord letterboxes it. Rotated sources decode to system
+  memory so ffmpeg can autorotate them. `STREAM_FPS` is a cap, not a forced
+  rate: a source at a standard rate (23.976, 25, 29.97, 50, 59.94, …) encodes
+  at that rate, or at the largest whole fraction of it under the cap (60 → 30,
+  50 → 25), and Discord is told the same rate. Interlaced sources are
+  deinterlaced before the scale (`bwdif`, or `deinterlace_vaapi` on the GPU).
+  Sources tagged BT.601 (SD) or full-range BT.709 are converted to BT.709
+  limited range in the scale filter and the output is tagged BT.709; untagged
+  sources are left as they are. A failed probe keeps the full box, the
+  `STREAM_FPS` rate and today's colour handling.
+  Audio processing has four default-on, guild-targeted boolean flags, evaluated
+  once per playback segment (a seek reuses its segment's options). Setting one to `false` in the `streambot/prod` Flags deployment
+  (`toolkit flags` or the Flags UI) restores exactly that part of the old
+  `-ac 2 -lfe_mix_level 1` + `volume@internal_lib` stage from the next item:
+  - `streambot-audio-dialog-downmix-enabled`: `5.1`, `5.1(side)` and `7.1`
+    sources downmix through
+    `pan=stereo|FL=FC+0.707*FL+0.5*<surround>|…` (dialogue at unity, fronts
+    -3 dB, surrounds -6 dB, LFE dropped) and `alimiter` at -1 dBFS. Measured on
+    ffmpeg 7.1.5, dialogue sits 7 dB further forward of the effects than with
+    `-ac 2`, and a mix that clipped 399 samples now peaks at -0.4 dBFS. Mono,
+    stereo and unknown layouts keep `-ac 2`.
+  - `streambot-audio-loudness-normalization-enabled`:
+    `dynaudnorm=f=100:g=9:p=0.5:m=5:b=1` ahead of the volume filter on video
+    and music. It brings -26 and -6 LUFS inputs to about -16 LUFS for about
+    0.5 s of added startup latency. The single-pass `loudnorm` filter was
+    rejected: it adds 2.7 s and costs 4-5x the CPU. `acompressor` was rejected
+    because it pumps 5-9 dB on transients.
+  - `streambot-audio-live-resync-enabled`: Twitch live with timestamp
+    rewriting adds `aresample=async=1:first_pts=0`. The demuxer counts audio
+    samples while the `-r` video stays constant-rate, so every audio hole used to
+    shift lip-sync for the rest of the stream (-0.2 to -2 s on synthetic HLS
+    gaps; now within +50 ms).
+  - `streambot-audio-track-ranking-enabled`: plays the ffprobe-ranked audio
+    track (default disposition, then the subtitle language preference, never
+    commentary or audio description while a main track exists, then most
+    channels) for every source including music. It also plays the tallest HLS
+    video variant that fits `STREAM_HEIGHT`, then the highest
+    `variant_bitrate`. Off, sources map the first audio track and the first
+    sized video stream as before.
 
 The playback lifecycle is a pure, unit-tested XState machine; all I/O lives in
 invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the

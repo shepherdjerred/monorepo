@@ -17,10 +17,9 @@ import {
   assertConsumerPlayerScope,
   resolveConsumerPlayerScope,
 } from "#src/consumer/player-access.ts";
-import {
-  getConsumerPlayerMatchHistory,
-  getConsumerPlayerProfileSummary,
-} from "#src/lib/player-profile/queries.ts";
+import { getConsumerPlayerMatchHistory } from "#src/lib/player-profile/queries.ts";
+import { getConsumerPlayerProfileSummary } from "#src/lib/player-profile/profile-summary.ts";
+import { getConsumerRoster } from "#src/lib/player-profile/roster.ts";
 import { getConsumerPlayerRankHistory } from "#src/lib/player-profile/rank-history.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
@@ -255,6 +254,17 @@ export const consumerPlayerRouter = router({
         : ({ state: "feature_disabled" } as const);
     }),
 
+  roster: protectedProcedure.query(async ({ ctx }) => {
+    const guilds = await assertConsumerPlayerScope(ctx.user);
+    return getConsumerRoster({
+      guilds,
+      viewerDiscordId: ctx.user.discordId,
+    });
+  }),
+
+  // Deprecated: replaced by `roster`. Kept, untouched, until the app's Players
+  // page switches over; then it is removed. (A `@deprecated` tag would fail
+  // the app's lint for as long as it still calls this.)
   home: protectedProcedure.query(async ({ ctx }) => {
     const guilds = await assertConsumerPlayerScope(ctx.user);
     const guildIds = guilds.map((guild) =>

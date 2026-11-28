@@ -4,6 +4,111 @@
 # follows macOS appearance changes (openai/codex#45163), so each launch picks
 # the syntax theme for the current appearance; restart-codex-panes relaunches
 # running panes through this wrapper when the appearance flips.
+#
+# On macOS, Homebrew Cask installs `/opt/homebrew/bin/codex` as a symlink into
+# `/opt/homebrew/Caskroom/codex/<version>/bin/codex`. Codex resolves
+# `std::env::current_exe()` to that Caskroom path at startup and spawns its
+# sibling `codex-code-mode-host` on every subagent shell call, which fails once
+# `brew upgrade` deletes the old `<version>` directory (AI-791). Pin each
+# Caskroom `<version>` directory into `~/.local/state/codex-cask/<version>` via
+# APFS copy-on-write (`cp -cR`) and reap unreferenced versions at launch.
+set -eu
+
+wrapper_dir=$(cd -P -- "$(dirname -- "$0")" && pwd)
+state_base="${XDG_STATE_HOME:-$HOME/.local/state}/codex-cask"
+
+real_codex=""
+old_ifs=$IFS
+IFS=:
+for dir in $PATH; do
+  [ -n "$dir" ] || continue
+  [ -d "$dir" ] && [ -x "$dir" ] || continue
+  resolved_dir=$(cd -P -- "$dir" && pwd) || continue
+  [ "$resolved_dir" = "$wrapper_dir" ] && continue
+  case "$resolved_dir" in
+    */codex-cask/*/bin) continue ;;
+  esac
+  if [ -f "$dir/codex" ] && [ -x "$dir/codex" ]; then
+    real_codex="$dir/codex"
+    break
+  fi
+done
+IFS=$old_ifs
+
+codex_target=codex
+if [ -n "$real_codex" ] && [ -e "$real_codex" ] && command -v realpath >/dev/null 2>&1; then
+  if ! resolved_codex=$(realpath "$real_codex"); then
+    resolved_codex=""
+  fi
+  case "$resolved_codex" in
+    */Caskroom/codex/*/bin/codex)
+      cask_bin_dir=${resolved_codex%/codex}
+      cask_version_dir=${cask_bin_dir%/bin}
+      version=${cask_version_dir##*/}
+      cask_parent=${cask_version_dir%/"$version"}
+      case "$cask_parent" in
+        */Caskroom/codex)
+          mkdir -p -- "$state_base"
+          state_root=$(cd -P -- "$state_base" && pwd)
+          ps_snapshot=""
+          if [ "$(uname -s)" = "Darwin" ]; then
+            ps_snapshot=$(ps -ax -o command=) || ps_snapshot=""
+          else
+            ps_snapshot=$(ps -eo args=) || ps_snapshot=""
+          fi
+          if [ -n "$ps_snapshot" ]; then
+            for entry in "$state_root"/*; do
+              [ -d "$entry" ] || continue
+              entry_name=${entry##*/}
+              case "$entry_name" in
+                .*|"$version") continue ;;
+              esac
+              case "$ps_snapshot" in
+                *"$entry/"*) ;;
+                *) rm -rf -- "$entry" ;;
+              esac
+            done
+          fi
+
+          pinned_dir="$state_root/$version"
+          if [ ! -x "$pinned_dir/bin/codex" ] ||
+            { [ -x "$cask_version_dir/bin/codex-code-mode-host" ] &&
+              [ ! -x "$pinned_dir/bin/codex-code-mode-host" ]; }; then
+            tmp_dir="$state_root/.staging.$$"
+            rm -rf -- "$tmp_dir"
+            copied=0
+            if [ "$(uname -s)" = "Darwin" ] && cp -cR "$cask_version_dir" "$tmp_dir"; then
+              copied=1
+            elif cp -R "$cask_version_dir" "$tmp_dir"; then
+              copied=1
+            fi
+            if [ "$copied" -eq 1 ]; then
+              if [ ! -e "$pinned_dir" ]; then
+                mv "$tmp_dir" "$pinned_dir" || rm -rf -- "$tmp_dir"
+              elif [ ! -x "$pinned_dir/bin/codex" ] ||
+                { [ -x "$cask_version_dir/bin/codex-code-mode-host" ] &&
+                  [ ! -x "$pinned_dir/bin/codex-code-mode-host" ]; }; then
+                rm -rf -- "$pinned_dir"
+                mv "$tmp_dir" "$pinned_dir" || rm -rf -- "$tmp_dir"
+              else
+                rm -rf -- "$tmp_dir"
+              fi
+            else
+              rm -rf -- "$tmp_dir"
+            fi
+          fi
+
+          if [ -x "$pinned_dir/bin/codex" ] &&
+            { [ ! -x "$cask_version_dir/bin/codex-code-mode-host" ] ||
+              [ -x "$pinned_dir/bin/codex-code-mode-host" ]; }; then
+            codex_target="$pinned_dir/bin/codex"
+          fi
+          ;;
+      esac
+      ;;
+  esac
+fi
+
 theme=catppuccin-latte
 # Light mode has no AppleInterfaceStyle key, so defaults prints an error there.
 if [ -x /usr/bin/defaults ] &&
@@ -19,4 +124,4 @@ for arg in "$@"; do
 done
 # Neither is a bypass flag, so both go after `--` and survive AGENT_SAFE=1.
 # shellcheck disable=SC2086
-exec "${0%/*}/agent-exec" codex -- $no_daemon -c "tui.theme=\"$theme\"" "$@"
+exec "${0%/*}/agent-exec" "$codex_target" -- $no_daemon -c "tui.theme=\"$theme\"" "$@"

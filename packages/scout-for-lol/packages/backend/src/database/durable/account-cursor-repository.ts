@@ -20,11 +20,12 @@ import type { Db } from "#src/database/index.ts";
  * users.
  *
  * The guard is therefore on the ORDERING column rather than on the match id:
- * the update applies only when the stored instant is absent or strictly
- * earlier. A cursor that already sits past this match answers
- * `already-applied` and NOT `conflict`, because a newer cursor is not two
- * producers disagreeing — it is progress, and this match's work is genuinely
- * already accounted for.
+ * the update applies when the stored instant is absent, strictly earlier, or
+ * equal while `lastProcessedMatchId` is still null (completing a seed instant
+ * stamped by `updateLastMatchTime` before V2 finished that seed match). A
+ * cursor that already sits at or past this match answers `already-applied` and
+ * NOT `conflict`, because a newer cursor is not two producers disagreeing — it
+ * is progress, and this match's work is genuinely already accounted for.
  *
  * This mirrors `markTrackedAccountCursorAdvanced`, which guards the per-match
  * association the same way. The two are complementary, not redundant: that one
@@ -44,7 +45,11 @@ export async function advanceAccountCursor(
   const advanced = await db.account.updateMany({
     where: {
       puuid: args.puuid,
-      OR: [{ lastMatchTime: null }, { lastMatchTime: { lt: args.matchTime } }],
+      OR: [
+        { lastMatchTime: null },
+        { lastMatchTime: { lt: args.matchTime } },
+        { lastProcessedMatchId: null, lastMatchTime: args.matchTime },
+      ],
     },
     data: {
       lastProcessedMatchId: args.matchId,

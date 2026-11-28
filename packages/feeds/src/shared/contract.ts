@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-export const ManagedCategorySchema = z.enum(["Repo Stack", "Blogs"]);
+export const ManagedCategorySchema = z.enum([
+  "Engineering & Infra",
+  "AI",
+  "Essays & Personal Blogs",
+]);
 export type ManagedCategory = z.infer<typeof ManagedCategorySchema>;
 
 export const FeedSourceSchema = z.enum(["code", "user"]);
@@ -14,13 +18,28 @@ export const EntryViewSchema = z.enum([
 ]);
 export type EntryView = z.infer<typeof EntryViewSchema>;
 
-export const AutoReadRuleSchema = z.strictObject({
-  field: z.literal("title"),
+export const AutoReadFieldSchema = z.enum(["title", "url", "category"]);
+export type AutoReadField = z.infer<typeof AutoReadFieldSchema>;
+
+export const SingleAutoReadRuleSchema = z.strictObject({
+  field: AutoReadFieldSchema,
   pattern: z.string().min(1),
   flags: z.enum(["", "i"]),
   negate: z.boolean().optional(),
 });
+export type SingleAutoReadRule = z.infer<typeof SingleAutoReadRuleSchema>;
+
+export const AutoReadRuleSchema = z.union([
+  SingleAutoReadRuleSchema,
+  z.array(SingleAutoReadRuleSchema).min(1).max(20).readonly(),
+]);
 export type AutoReadRule = z.infer<typeof AutoReadRuleSchema>;
+
+export function normalizeAutoReadRules(
+  rule: AutoReadRule,
+): readonly SingleAutoReadRule[] {
+  return "field" in rule ? [rule] : rule;
+}
 
 export type DeclaredFeed = {
   readonly category: ManagedCategory;
@@ -136,6 +155,9 @@ export const MarkAllReadBodySchema = z.strictObject({
   feedId: z.number().int().positive().optional(),
   q: z.string().optional(),
   beforeId: z.number().int().positive().optional(),
+  publishedBefore: z.number().int().positive().optional(),
+  includeHidden: z.boolean().optional(),
+  excludeStarred: z.boolean().optional(),
 });
 export type MarkAllReadBody = z.infer<typeof MarkAllReadBodySchema>;
 

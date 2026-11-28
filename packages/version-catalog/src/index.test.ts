@@ -6,6 +6,7 @@ import {
   VersionCatalogEntrySchema,
   catalogComponentName,
   componentEntries,
+  findMutatedComponentTagDigests,
   githubSource,
   ociChart,
   parseVersionCatalog,
@@ -106,23 +107,27 @@ describe("version catalog", () => {
   });
 });
 
+const SAMPLE_DIGEST = `sha256:${"a".repeat(64)}`;
+function sampleComponentImage(name: string, packageName?: string) {
+  return VersionCatalogEntrySchema.parse({
+    name,
+    category: "upstream",
+    artifactType: "image",
+    management: {
+      managed: true,
+      datasource: "docker",
+      registryUrl: "https://docker.io",
+      versioning: "docker",
+      ...(packageName === undefined ? {} : { packageName }),
+    },
+    value: `1.0.0@${SAMPLE_DIGEST}`,
+    component: true,
+  });
+}
+
 describe("Delivery component naming", () => {
-  const digest = `sha256:${"a".repeat(64)}`;
-  const image = (name: string, packageName?: string) =>
-    VersionCatalogEntrySchema.parse({
-      name,
-      category: "upstream",
-      artifactType: "image",
-      management: {
-        managed: true,
-        datasource: "docker",
-        registryUrl: "https://docker.io",
-        versioning: "docker",
-        ...(packageName === undefined ? {} : { packageName }),
-      },
-      value: `1.0.0@${digest}`,
-      component: true,
-    });
+  const digest = SAMPLE_DIGEST;
+  const image = sampleComponentImage;
 
   test("names a chart by its name and an image by its repository basename", () => {
     const [chart] = componentEntries(parseVersionCatalog(rawCatalog));
@@ -219,5 +224,107 @@ describe("Delivery component naming", () => {
     expect(() =>
       VersionCatalogEntrySchema.parse({ ...kueue, value: "0.20.1" }),
     ).toThrow("digest-pinned");
+  });
+});
+
+describe("immutable component tag digests (AI-738)", () => {
+  const digest = SAMPLE_DIGEST;
+  const otherDigest = `sha256:${"b".repeat(64)}`;
+  const componentImage = sampleComponentImage;
+
+  test("findMutatedComponentTagDigests rejects changing the digest of an unchanged component tag", () => {
+    const base = parseVersionCatalog({
+      $schema: "./schema.json",
+      schemaVersion: 1,
+      entries: [
+        componentImage("mikefarah/yq"),
+        componentImage("itzg/minecraft-server-java8", "itzg/minecraft-server"),
+        VersionCatalogEntrySchema.parse({
+          name: "non-component/image",
+          category: "upstream",
+          artifactType: "image",
+          management: {
+            managed: true,
+            datasource: "docker",
+            registryUrl: "https://docker.io",
+            versioning: "docker",
+          },
+          value: `1.0.0@${digest}`,
+        }),
+      ],
+    });
+    expect(findMutatedComponentTagDigests(base, base)).toEqual([]);
+    const bumpedTag = parseVersionCatalog({
+      ...base,
+      entries: base.entries.map((entry) =>
+        entry.name === "mikefarah/yq"
+          ? { ...entry, value: `1.0.1@${otherDigest}` }
+          : entry,
+      ),
+    });
+    expect(findMutatedComponentTagDigests(base, bumpedTag)).toEqual([]);
+    const nonComponentRefresh = parseVersionCatalog({
+      ...base,
+      entries: base.entries.map((entry) =>
+        entry.name === "non-component/image"
+          ? { ...entry, value: `1.0.0@${otherDigest}` }
+          : entry,
+      ),
+    });
+    expect(findMutatedComponentTagDigests(base, nonComponentRefresh)).toEqual(
+      [],
+    );
+    const mutated = parseVersionCatalog({
+      ...base,
+      entries: base.entries.map((entry) =>
+        entry.name === "mikefarah/yq" ||
+        entry.name === "itzg/minecraft-server-java8"
+          ? { ...entry, value: `1.0.0@${otherDigest}` }
+          : entry,
+      ),
+    });
+    expect(findMutatedComponentTagDigests(base, mutated)).toEqual([
+      {
+        name: "mikefarah/yq",
+        upstream: "mikefarah/yq",
+        tag: "1.0.0",
+        baseDigest: digest,
+        headDigest: otherDigest,
+      },
+      {
+        name: "itzg/minecraft-server-java8",
+        upstream: "itzg/minecraft-server",
+        tag: "1.0.0",
+        baseDigest: digest,
+        headDigest: otherDigest,
+      },
+    ]);
+  });
+
+  test("no committed component entry mutates the digest of an already-registered tag on origin/main", () => {
+    const changedBase = Bun.env["CI_CHANGED_BASE"]?.trim();
+    const refs = [
+      "origin/main",
+      ...(changedBase === undefined || changedBase === "" ? [] : [changedBase]),
+      "HEAD",
+    ];
+    let baseText: string | undefined;
+    for (const ref of refs) {
+      const result = Bun.spawnSync(
+        ["git", "show", `${ref}:packages/version-catalog/src/catalog.json`],
+        { cwd: import.meta.dirname, stdout: "pipe", stderr: "ignore" },
+      );
+      if (result.exitCode === 0) {
+        baseText = result.stdout.toString("utf8");
+        break;
+      }
+    }
+    if (baseText === undefined) return;
+    expect(
+      findMutatedComponentTagDigests(
+        parseVersionCatalogText(baseText),
+        parseVersionCatalog(rawCatalog),
+      ),
+    ).toEqual([]);
   });
 });

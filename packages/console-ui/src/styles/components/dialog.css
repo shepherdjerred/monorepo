@@ -1,0 +1,88 @@
+/*
+ * Dialogs: the `Dialog` component (Base UI) or a native `<dialog
+ * class="ui-dialog">` with the same parts. A 15px title row, the body, and
+ * right-aligned actions; sizes sm (400px), md (520px) and lg (720px).
+ */
+@layer ui.components {
+  .ui-dialog {
+    position: fixed;
+    z-index: var(--ui-z-overlay);
+    display: flex;
+    flex-direction: column;
+    width: min(520px, calc(100vw - 2 * var(--ui-space-4)));
+    max-height: calc(100dvh - 2 * var(--ui-space-4));
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    box-shadow: var(--ui-shadow-overlay);
+  }
+  .ui-dialog:not(dialog) {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  dialog.ui-dialog {
+    inset: 0;
+    margin: auto;
+  }
+  dialog.ui-dialog:not([open]) {
+    display: none;
+  }
+  dialog.ui-dialog::backdrop {
+    background: var(--ui-backdrop);
+  }
+  .ui-dialog[data-size="sm"] {
+    width: min(400px, calc(100vw - 2 * var(--ui-space-4)));
+  }
+  .ui-dialog[data-size="lg"] {
+    width: min(720px, calc(100vw - 2 * var(--ui-space-4)));
+  }
+  .ui-dialog:focus-visible {
+    outline: none;
+  }
+  .ui-dialog-head {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-2);
+    min-height: var(--ui-header);
+    padding: 0 var(--ui-space-3) 0 var(--ui-gutter);
+  }
+  .ui-dialog-title {
+    flex: 1;
+    margin: 0;
+    font-size: var(--ui-text-xl);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-dialog-body {
+    display: grid;
+    gap: var(--ui-space-3);
+    padding: 0 var(--ui-gutter) var(--ui-space-4);
+  }
+  .ui-dialog-description {
+    margin: 0;
+    color: var(--ui-muted);
+  }
+  .ui-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-3) var(--ui-gutter) var(--ui-space-4);
+    border-top: 1px solid var(--ui-line-soft);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-dialog:not(dialog) {
+      transition:
+        opacity var(--ui-duration-panel) var(--ui-ease-out),
+        transform var(--ui-duration-panel) var(--ui-ease-out);
+    }
+    .ui-dialog:not(dialog):is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 8px));
+    }
+  }
+}

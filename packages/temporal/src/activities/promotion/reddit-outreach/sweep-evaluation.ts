@@ -13,7 +13,7 @@ import {
 } from "#activities/promotion/reddit-discovery/decisions.ts";
 import type { RedditRequestPost } from "#activities/promotion/reddit-discovery/model.ts";
 import { draftRedditInvite } from "#activities/promotion/reddit-discovery/relevance.ts";
-import { REDDIT_OUTREACH_FACTS } from "#activities/promotion/reddit-facts.ts";
+import { REDDIT_SERVER_FACTS } from "#activities/promotion/reddit-facts.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
 
 export function countReason(
@@ -78,7 +78,7 @@ export async function draftCandidate(input: {
       model: config.model,
       signal,
       communityRules: rules,
-      serverFacts: REDDIT_OUTREACH_FACTS,
+      serverFacts: REDDIT_SERVER_FACTS,
     });
     await record(recordDraftUsage(result.usage));
     return result.draft.reply;

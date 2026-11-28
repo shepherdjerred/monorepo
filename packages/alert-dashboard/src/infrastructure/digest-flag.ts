@@ -20,6 +20,12 @@ import { z } from "zod";
 const TARGETING_KEY = "alert-dashboard";
 
 const DEFINITION = {
+  ciJobsEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: managedBooleanDefault("alert-dashboard-ci-jobs-enabled"),
+    names: { flag: "alert-dashboard-ci-jobs-enabled" },
+  },
   alertEmailEnabled: {
     schema: z.boolean(),
     sources: ["flag", "default"],
@@ -65,6 +71,7 @@ function createResolver() {
       flag: createFlagConfigSource({
         targetingKey: TARGETING_KEY,
         kinds: {
+          ciJobsEnabled: "boolean",
           alertEmailEnabled: "boolean",
           dailyDigestQuietClear: "boolean",
           incidentEmailFrom: flagValueKind(
@@ -90,6 +97,11 @@ function createResolver() {
       },
     },
   });
+}
+
+/** Resolve per request so the dashboard can be disabled without a restart. */
+export function ciDashboardEnabled(): Promise<boolean> {
+  return createResolver().value("ciJobsEnabled");
 }
 
 /** Incident and digest mail routing is constructed at startup; changes require a restart. */

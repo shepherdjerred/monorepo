@@ -4,11 +4,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
-  computeKda,
   isArenaQueueOrMode,
-  LOW_SAMPLE_GAME_THRESHOLD,
-  PlayerProfileGameWindowSchema,
-  PlayerProfileQueueSelectionSchema,
   QueueTypeSchema,
   leaguePointsDelta,
   type DiscordGuildId,
@@ -18,12 +14,10 @@ import {
   type QueueType,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { buildPlayerBehavior } from "#src/lib/player-profile/behavior.ts";
 import { matchLoadoutFromLakeRow } from "#src/report-lake/loadout.ts";
 import { arenaAugmentsFromLakeRow } from "#src/report-lake/arena.ts";
 import { PlayerLookupInput } from "#src/lib/player-admin/shared.ts";
 import {
-  latestRanks,
   parseRank,
   resolveConsumerPlayerPuuids,
   resolveGuildPuuids,
@@ -31,14 +25,16 @@ import {
   type ResolvedPlayerProfile,
 } from "#src/lib/player-profile/profile-resolution.ts";
 import {
-  fetchPlayerChampionPool,
   fetchPlayerMatchHistory,
-  fetchTeamTotalsForMatches,
+  readTeamTotalsForMatches,
   type LakePlayerMatchHistoryRow,
   type MatchHistoryCursor,
 } from "#src/reports/duckdb/lake-reads.ts";
-import { accountSummaries } from "#src/lib/player-profile/account-summaries.ts";
-import { fetchHistoryRosters } from "#src/reports/duckdb/community/history-roster.ts";
+import {
+  withLakePage,
+  type LakePage,
+} from "#src/reports/duckdb/consumer/pages/lake-page.ts";
+import { readHistoryRosters } from "#src/reports/duckdb/community/history-roster.ts";
 
 /**
  * Read models for the player profile surface.
@@ -49,12 +45,6 @@ import { fetchHistoryRosters } from "#src/reports/duckdb/community/history-roste
  * looks a player up by the `(serverId, alias)` unique and returns only that
  * server's accounts. Never source puuids any other way.
  */
-
-/**
- * Below this many games a rate is noise, so the UI labels it rather than
- * printing a confident number. The domain owns the shared threshold.
- */
-const MIN_GAMES_FOR_RATE = LOW_SAMPLE_GAME_THRESHOLD;
 
 /** Games summarised for "recent form"; also the default history page size. */
 const RECENT_FORM_GAMES = 20;
@@ -97,6 +87,8 @@ export type MatchHistoryEntry = {
   deaths: number;
   assists: number;
   creepScore: number;
+  /** Riot's `largestMultiKill`: 2 double, 3 triple, 4 quadra, 5 penta. */
+  largestMultiKill: number;
   csPerMinute: number;
   visionScore: number;
   goldEarned: number;
@@ -117,26 +109,51 @@ function ratio(part: number, whole: number): number | null {
   return whole > 0 ? part / whole : null;
 }
 
+export type HistoryLakeContext = {
+  teamTotals: Awaited<ReturnType<typeof readTeamTotalsForMatches>>;
+  rosterRows: Awaited<ReturnType<typeof readHistoryRosters>>;
+};
+
+/**
+ * The lake half of decorating history rows: team totals and rosters are
+ * match-scoped, so they cannot come from the puuid-filtered rows themselves.
+ * Runs on the caller's lake page.
+ */
+export async function readHistoryLakeContext(
+  page: LakePage,
+  rows: { match_id: RiotMatchId }[],
+): Promise<HistoryLakeContext> {
+  const matchIds = rows.map((row) => row.match_id);
+  const teamTotals = await readTeamTotalsForMatches(page, { matchIds });
+  const rosterRows = await readHistoryRosters(page, { matchIds });
+  return { teamTotals, rosterRows };
+}
+
 /**
  * Attach team-relative and rank-relative context to raw lake rows.
  *
- * Team totals come from a separate match-scoped query because the history rows
- * themselves are puuid-filtered and therefore cannot see teammates.
+ * Without a `context` it reads the team totals and rosters itself, on one lake
+ * slot; a page that already holds a slot passes the context it read there.
  */
-async function decorateHistoryRows(
+export async function decorateHistoryRows(
   rows: LakePlayerMatchHistoryRow[],
   accounts: ProfileAccount[],
+  context?: HistoryLakeContext,
 ): Promise<MatchHistoryEntry[]> {
   if (rows.length === 0) return [];
   const matchIds = rows.map((row) => row.match_id);
   const puuids = accounts.map((account) => account.puuid);
 
-  const [teamTotals, rankRows, rosterRows] = await Promise.all([
-    fetchTeamTotalsForMatches({ matchIds }),
+  const [{ teamTotals, rosterRows }, rankRows] = await Promise.all([
+    context === undefined
+      ? withLakePage(
+          undefined,
+          async (page) => await readHistoryLakeContext(page, rows),
+        )
+      : Promise.resolve(context),
     prisma.matchRankHistory.findMany({
       where: { matchId: { in: matchIds }, puuid: { in: puuids } },
     }),
-    fetchHistoryRosters({ matchIds }),
   ]);
 
   const rostersByMatch = new Map<string, typeof rosterRows>();
@@ -197,6 +214,7 @@ async function decorateHistoryRows(
       deaths: row.deaths,
       assists: row.assists,
       creepScore: row.creep_score,
+      largestMultiKill: row.largest_multi_kill,
       csPerMinute: minutes > 0 ? row.creep_score / minutes : 0,
       visionScore: row.vision_score,
       goldEarned: row.gold_earned,
@@ -310,197 +328,4 @@ export async function getConsumerPlayerMatchHistory(input: {
 }) {
   const player = await resolveConsumerPlayerPuuids(input);
   return matchHistoryForPlayer(player, input);
-}
-
-export type ChampionPoolEntry = {
-  championId: number;
-  championName: string;
-  games: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-  kda: number;
-  averageKills: number;
-  averageDeaths: number;
-  averageAssists: number;
-  averageCs: number;
-  csPerMinute: number;
-  damagePerMinute: number;
-  averageDamage: number;
-  averageVisionScore: number;
-  teamPosition: string | null;
-  /** True when `games` is too small for the rates above to mean much. */
-  lowSample: boolean;
-};
-
-function calculatePreferredPositions(recent: MatchHistoryEntry[]): {
-  position: string;
-  games: number;
-  percentage: number;
-}[] {
-  const counts = new Map<string, number>();
-  for (const entry of recent) {
-    const pos = entry.teamPosition.trim().toUpperCase();
-    if (pos !== "INVALID" && pos !== "") {
-      counts.set(pos, (counts.get(pos) ?? 0) + 1);
-    }
-  }
-  const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
-  if (total === 0) return [];
-  return [...counts.entries()]
-    .map(([position, games]) => ({
-      position,
-      games,
-      percentage: Math.round((games / total) * 100),
-    }))
-    .sort((a, b) => b.games - a.games);
-}
-
-async function profileSummaryForPlayer(
-  player: ResolvedPlayerProfile,
-  filters: {
-    queue?: QueueType;
-    queues?: QueueType[];
-    games: PlayerProfileGameWindow;
-    championGames?: PlayerProfileGameWindow;
-  },
-) {
-  const accounts = await accountSummaries(player.accounts);
-  if (player.puuids.length === 0) {
-    return {
-      alias: player.alias,
-      accountCount: 0,
-      accounts,
-      riotIds: [],
-      ranks: { solo: undefined, flex: undefined },
-      recentForm: null,
-      behavior: null,
-      championPool: [],
-      minGamesForRate: MIN_GAMES_FOR_RATE,
-    };
-  }
-
-  const [ranks, recentRows, pool] = await Promise.all([
-    latestRanks(player.puuids),
-    fetchPlayerMatchHistory({
-      puuids: player.puuids,
-      ...(filters.games === "all" ? {} : { limit: filters.games }),
-      ...(filters.queue === undefined ? {} : { queue: filters.queue }),
-      ...(filters.queues === undefined ? {} : { queues: filters.queues }),
-    }),
-    fetchPlayerChampionPool({
-      puuids: player.puuids,
-      games: filters.championGames ?? filters.games,
-      ...(filters.queue === undefined ? {} : { queue: filters.queue }),
-      ...(filters.queues === undefined ? {} : { queues: filters.queues }),
-    }),
-  ]);
-
-  const recent = await decorateHistoryRows(recentRows, player.accounts);
-  const behavior = await buildPlayerBehavior({
-    puuids: player.puuids,
-    recentRows,
-    roleShare: calculatePreferredPositions(recent),
-    ...(filters.queue === undefined ? {} : { queue: filters.queue }),
-    ...(filters.queues === undefined ? {} : { queues: filters.queues }),
-  });
-  const participations = recent
-    .map((entry) => entry.killParticipation)
-    .filter((value) => value !== null);
-
-  return {
-    alias: player.alias,
-    accountCount: player.puuids.length,
-    accounts,
-    riotIds: player.accounts
-      .filter((account) => account.riotGameName !== null)
-      .map((account) => ({
-        gameName: account.riotGameName,
-        tagLine: account.riotTagLine,
-      })),
-    ranks,
-    behavior,
-    recentForm:
-      recent.length === 0
-        ? null
-        : {
-            games: recent.length,
-            wins: recent.filter((entry) => entry.win).length,
-            kills: recent.reduce((sum, entry) => sum + entry.kills, 0),
-            deaths: recent.reduce((sum, entry) => sum + entry.deaths, 0),
-            assists: recent.reduce((sum, entry) => sum + entry.assists, 0),
-            averageKillParticipation:
-              participations.length === 0
-                ? null
-                : participations.reduce((sum, value) => sum + value, 0) /
-                  participations.length,
-            averageCs:
-              recent.reduce((sum, entry) => sum + entry.creepScore, 0) /
-              recent.length,
-            averageCsPerMinute:
-              recent.reduce((sum, entry) => sum + entry.csPerMinute, 0) /
-              recent.length,
-            averageVisionScore:
-              recent.reduce((sum, entry) => sum + entry.visionScore, 0) /
-              recent.length,
-            preferredPositions: calculatePreferredPositions(recent),
-          },
-    championPool: pool.map((row): ChampionPoolEntry => {
-      const minutes = row.time_played / 60;
-      const games = row.games > 0 ? row.games : 1;
-      return {
-        championId: row.champion_id,
-        championName: row.champion_name,
-        games: row.games,
-        wins: row.wins,
-        losses: Math.max(0, row.games - row.wins),
-        winRate: row.games > 0 ? row.wins / row.games : 0,
-        kda: computeKda(row),
-        averageKills: row.kills / games,
-        averageDeaths: row.deaths / games,
-        averageAssists: row.assists / games,
-        averageCs: row.creep_score / games,
-        csPerMinute: minutes > 0 ? row.creep_score / minutes : 0,
-        damagePerMinute: minutes > 0 ? row.damage_to_champions / minutes : 0,
-        averageDamage: row.damage_to_champions / games,
-        averageVisionScore: row.vision_score / games,
-        teamPosition: row.team_position,
-        lowSample: row.games < MIN_GAMES_FOR_RATE,
-      };
-    }),
-    minGamesForRate: MIN_GAMES_FOR_RATE,
-  };
-}
-
-export async function getPlayerProfileSummary(
-  input: z.infer<typeof PlayerProfileInput>,
-) {
-  const player = await resolveGuildPuuids(input);
-  const summary = await profileSummaryForPlayer(player, {
-    games: RECENT_FORM_GAMES,
-    championGames: "all",
-    ...(input.queue === undefined ? {} : { queue: input.queue }),
-  });
-  return {
-    discordId: player.discordId,
-    ...summary,
-  };
-}
-
-export async function getConsumerPlayerProfileSummary(input: {
-  playerId: PlayerId;
-  guildIds: DiscordGuildId[];
-  queues?: QueueType[];
-  games: PlayerProfileGameWindow;
-}) {
-  const player = await resolveConsumerPlayerPuuids(input);
-  return {
-    guildId: player.guildId,
-    ...(await profileSummaryForPlayer(player, {
-      games: PlayerProfileGameWindowSchema.parse(input.games),
-      ...(input.queues === undefined
-        ? {}
-        : { queues: PlayerProfileQueueSelectionSchema.parse(input.queues) }),
-    })),
-  };
 }

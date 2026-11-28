@@ -583,6 +583,17 @@ test("worker recovery settlement releases the platform lock its holder kept, so 
   expect(await db.platformLock.count()).toBe(0);
   expect(await db.targetLock.count()).toBe(0);
   await context.delivery.claim(stack.id, testExecutor);
+  await context.delivery.stage(
+    stack.id,
+    {
+      key: "step-apply",
+      status: "running",
+      operationId: `delivery-${"3".repeat(40)}`,
+      message: "step-apply: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
   expect(
     await db.platformLock.findUniqueOrThrow({ where: { id: "platform" } }),
   ).toMatchObject({ deploymentId: stack.id });

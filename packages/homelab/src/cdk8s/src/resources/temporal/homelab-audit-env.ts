@@ -1,4 +1,5 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
+import { ERRORS_ADMIN_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import { temporalFeatureFlagEnvironment } from "./feature-flags.ts";
 
 function requiredSecretEnv(
@@ -15,11 +16,10 @@ function requiredSecretEnv(
 export function homelabAuditEnv(
   secret: ISecret,
   argocdSecret: ISecret,
-  bugsinkSecret: ISecret,
 ): Record<string, EnvValue> {
   return {
     ...temporalFeatureFlagEnvironment(),
-    BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
+    ERRORS_URL: EnvValue.fromValue(ERRORS_ADMIN_ENDPOINT.url),
     // HTTP origin of the Woodpecker server. Deliberately not
     // WOODPECKER_SERVER, which upstream uses for the agent's gRPC endpoint.
     WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),
@@ -34,10 +34,6 @@ export function homelabAuditEnv(
     ),
     ARGOCD_SERVER: EnvValue.fromValue("argocd.sjer.red"),
     WOODPECKER_REPO_ID: EnvValue.fromValue("1"),
-    BUGSINK_TOKEN: EnvValue.fromSecretValue({
-      secret: bugsinkSecret,
-      key: "BUGSINK_TOKEN",
-    }),
     ARGOCD_AUTH_TOKEN: EnvValue.fromSecretValue({
       secret: argocdSecret,
       key: "ARGOCD_AUTH_TOKEN",

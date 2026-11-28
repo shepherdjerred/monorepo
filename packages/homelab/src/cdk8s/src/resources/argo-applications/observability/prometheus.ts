@@ -27,6 +27,11 @@ import {
 import { ALERTMANAGER_EMAIL_TEMPLATE_HELM_ESCAPED } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alertmanager-email-template.ts";
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
+import {
+  INCIDENT_ALERTMANAGER_PATH,
+  INCIDENT_ALERT_RECEIVER,
+  INCIDENTS_ROUTE,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/incidents-alerts.ts";
 
 const ALERT_DASHBOARD_SERVICE_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341";
@@ -58,12 +63,15 @@ const OPERATOR_EMAIL_CONFIGS = [
   },
 ];
 
-function alertmanagerWebhookConfigs(alertDashboardSecretName: string) {
+function alertmanagerWebhookConfigs(
+  alertDashboardSecretName: string,
+  path = "/internal/v1/alertmanager/events",
+) {
   return [
     {
       send_resolved: true,
       max_alerts: 100,
-      url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
+      url: `${ALERT_DASHBOARD_SERVICE_URL}${path}`,
       http_config: {
         authorization: {
           type: "Bearer",
@@ -99,6 +107,15 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
       // Reports on the webhook, so it must not depend on the webhook.
       name: "mail-fallback",
       email_configs: OPERATOR_EMAIL_CONFIGS,
+    },
+    {
+      // Hub's Incidents module opens, attaches to, and clears incidents from
+      // the curated alerts `INCIDENTS_ROUTE` sends here.
+      name: INCIDENT_ALERT_RECEIVER,
+      webhook_configs: alertmanagerWebhookConfigs(
+        alertDashboardSecretName,
+        INCIDENT_ALERTMANAGER_PATH,
+      ),
     },
   ];
 }
@@ -205,6 +222,13 @@ export async function createPrometheusApp(chart: Chart) {
     prometheusOperator: {
       resources: {
         requests: { cpu: "100m", memory: "128Mi" },
+      },
+      admissionWebhooks: {
+        patch: {
+          resources: {
+            requests: { cpu: "10m", memory: "64Mi" },
+          },
+        },
       },
       prometheusConfigReloader: {
         resources: {
@@ -334,6 +358,9 @@ export async function createPrometheusApp(chart: Chart) {
           repeat_interval: "12h",
           receiver: "alerts",
           routes: [
+            // First, and `continue: true`: the curated alerts also reach
+            // every route below, so ledger, mail and suppression are unchanged.
+            INCIDENTS_ROUTE,
             {
               receiver: "mail-fallback",
               matchers: ['alert_dashboard_fallback = "true"'],

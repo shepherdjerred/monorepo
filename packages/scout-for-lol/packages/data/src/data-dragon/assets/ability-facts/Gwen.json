@@ -122,7 +122,15 @@
         ]
       },
       "resolvedDescription": "Passive: Gwen gains 1 stack when she hits an enemy with an attack (max 4, lasts 6 seconds). Active: Consumes stacks. Gwen snips once for 10/14/18/22/26 (+5% AP) magic damage, snips again for each ammo consumed, and then snips a final time for 60/85/110/135/160 (+35% AP) magic damage. The center of each strikes converts 50% of the damage into true damage instead and applies A Thousand Cuts to enemies hit. Deals 80% damage to minions. Minions below 20% health take 1000% bonus damage instead of reduced damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.5,
+        "radius": 210,
+        "lineWidth": 60,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Hallowed Mist",
@@ -215,7 +223,15 @@
         ]
       },
       "resolvedDescription": "Gwen summons the Hallowed Mist, making her Untargetable to all enemies (except towers) outside the zone for 4 seconds or until she leaves it. While in the Mist, Gwen gains 22/24/26/28/30 (+7% AP) Armor and Magic Resist. Gwen can Recast this Ability once to call the Mist to her. This will automatically Recast the first time Gwen attempts to leave the zone.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 500,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Skip 'n Slash",
@@ -301,7 +317,15 @@
         ]
       },
       "resolvedDescription": "Gwen dashes and empowers her Attacks for 4 seconds. Empowered Attacks gain 30/42.5/55/67.5/80% Attack Speed, 15 (+20% AP) magic damage On-Hit, 75 range, and the first one to hit an enemy refunds 25/35/45/55/65% of this Ability's Cooldown.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": 160,
+        "missileSpeed": 700,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Needlework",
@@ -355,7 +379,72 @@
         ]
       },
       "resolvedDescription": "First Cast: Hurl a needle that deals 30/50/70 (+10% AP) magic damage, Slows by 40/50/60% for 1.5 seconds, and applies A Thousand Cuts to all enemies hit. Gwen can Recast this ability up to 2 additional times within 6 seconds (1s cooldown between casts). Second Cast: Fire three needles to deal 90/150/210 (+30% AP) magic damage Third Cast: Fire five needles to deal 150/250/350 (+50% AP) magic damage",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "gwenrmis",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "WidthPerSecond"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "gwenrmis3_visualonly",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "gwenrmis_visualonly",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "gwenrrecast",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     }
   }
 }

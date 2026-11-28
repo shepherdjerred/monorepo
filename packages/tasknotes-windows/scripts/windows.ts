@@ -1,11 +1,22 @@
 import path from "node:path";
-import { resolveMise } from "./mise.ts";
+import { resolveDotnetExecutable, resolveMise } from "./mise.ts";
 import { parseStoreIdentity, storeManifest } from "./store-identity.ts";
 import { createPackageVerifier } from "./package-verification.ts";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 import { StandaloneScenario } from "./standalone-contract.ts";
+
 const packageRoot = path.resolve(import.meta.dir, "..");
+const repositoryRoot = path.resolve(packageRoot, "..", "..");
+const solutionPath = path.join(packageRoot, "TaskNotes.Windows.slnx");
+const appProject = path.join(
+  packageRoot,
+  "src/TaskNotes.Windows.App/TaskNotes.Windows.App.csproj",
+);
+const e2eProject = path.join(
+  packageRoot,
+  "tests/TaskNotes.Windows.E2E/TaskNotes.Windows.E2E.csproj",
+);
 const vswhere = path.join(
   Bun.env["ProgramFiles(x86)"] ?? String.raw`C:\Program Files (x86)`,
   "Microsoft Visual Studio",
@@ -13,8 +24,15 @@ const vswhere = path.join(
   "vswhere.exe",
 );
 const mise = await resolveMise();
+const dotnet = await resolveDotnetExecutable(repositoryRoot);
+const dotnetRoot = path.dirname(dotnet);
 const vswhereExists = await Bun.file(vswhere).exists();
-const commandPath = `${path.dirname(mise)};${Bun.env["PATH"] ?? ""}`;
+const commandPath = [
+  dotnetRoot,
+  path.dirname(process.execPath),
+  path.dirname(mise),
+  Bun.env["PATH"] ?? "",
+].join(";");
 let cachedDeveloperEnvironment: Record<string, string | undefined> | undefined;
 type Command = [string, ...string[]];
 const { verifyPackagedNative, verifyPackagedLicense } = createPackageVerifier(
@@ -22,6 +40,7 @@ const { verifyPackagedNative, verifyPackagedLicense } = createPackageVerifier(
   capture,
   captureDeveloper,
 );
+
 function capture(command: Command): string {
   const result = Bun.spawnSync(command, { stdout: "pipe", stderr: "inherit" });
   if (result.exitCode !== 0) {
@@ -50,11 +69,12 @@ async function spawn(
   command: Command,
   cwd = packageRoot,
   environment?: Record<string, string | undefined>,
+  nonInteractive = false,
 ): Promise<void> {
   const child = Bun.spawn(command, {
     cwd,
     env: environment ?? { ...Bun.env, PATH: commandPath },
-    stdin: "inherit",
+    stdin: nonInteractive ? "ignore" : "inherit",
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -67,6 +87,7 @@ async function spawn(
 async function preflight(): Promise<void> {
   await spawn(["bun", "scripts/preflight.ts"]);
 }
+
 function developerEnvironment(): Record<string, string | undefined> {
   if (cachedDeveloperEnvironment !== undefined) {
     return cachedDeveloperEnvironment;
@@ -78,13 +99,9 @@ function developerEnvironment(): Record<string, string | undefined> {
   }
   const installation = capture([
     vswhere,
-    "-latest",
-    "-products",
-    "*",
-    "-requires",
-    "Microsoft.VisualStudio.Workload.Universal",
-    "-property",
-    "installationPath",
+    ..."-latest -products * -requires Microsoft.VisualStudio.Workload.Universal -property installationPath".split(
+      " ",
+    ),
   ]);
   const devTools = path.join(installation, "Common7", "Tools");
   const result = Bun.spawnSync(
@@ -107,34 +124,48 @@ function developerEnvironment(): Record<string, string | undefined> {
   const output = new TextDecoder().decode(result.stdout);
   for (const line of output.split(/\r?\n/u)) {
     const separator = line.indexOf("=");
-    if (separator <= 0) {
-      continue;
+    if (separator > 0) {
+      const name = line.slice(0, separator);
+      environment[name.toUpperCase() === "PATH" ? "PATH" : name] = line.slice(
+        separator + 1,
+      );
     }
-
-    const name = line.slice(0, separator);
-    const value = line.slice(separator + 1);
-    environment[name.toUpperCase() === "PATH" ? "PATH" : name] = value;
   }
-  environment["PATH"] = `${path.dirname(mise)};${environment["PATH"] ?? ""}`;
+  environment["PATH"] = [
+    dotnetRoot,
+    path.dirname(process.execPath),
+    path.dirname(mise),
+    environment["PATH"] ?? "",
+  ].join(";");
+  environment["DOTNET_ROOT"] = dotnetRoot;
+  environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
   cachedDeveloperEnvironment = environment;
   return environment;
 }
 
-async function spawnDeveloper(command: Command): Promise<void> {
-  await spawn(
-    [mise, "exec", "-C", packageRoot, "--", ...command],
-    packageRoot,
-    developerEnvironment(),
-  );
+async function spawnDeveloper(
+  command: Command,
+  nonInteractive = false,
+): Promise<void> {
+  const executable: Command =
+    command[0] === "dotnet" ? [dotnet, ...command.slice(1)] : command;
+  const baseEnv = developerEnvironment();
+  const env = nonInteractive
+    ? {
+        ...baseEnv,
+        CI: "true",
+        DOTNET_CLI_TELEMETRY_OPTOUT: "1",
+        DOTNET_NOLOGO: "1",
+      }
+    : baseEnv;
+  await spawn(executable, packageRoot, env, nonInteractive);
 }
 
-async function restore(): Promise<void> {
-  await spawnDeveloper([
-    "dotnet",
-    "restore",
-    path.join(packageRoot, "TaskNotes.Windows.slnx"),
-    "--locked-mode",
-  ]);
+async function restore(nonInteractive = false): Promise<void> {
+  await spawnDeveloper(
+    ["dotnet", "restore", solutionPath, "--locked-mode"],
+    nonInteractive,
+  );
 }
 
 async function build(): Promise<void> {
@@ -142,11 +173,44 @@ async function build(): Promise<void> {
   await spawnDeveloper([
     "dotnet",
     "build",
-    path.join(packageRoot, "TaskNotes.Windows.slnx"),
-    "--configuration",
+    solutionPath,
+    "-c",
     "Release",
     "--no-restore",
   ]);
+}
+
+async function buildRemote(): Promise<void> {
+  await restore(true);
+  const noSign = "-p:AppxPackageSigningEnabled=false";
+  await spawnDeveloper(
+    [
+      "dotnet",
+      "build",
+      solutionPath,
+      "-c",
+      "Release",
+      "--no-restore",
+      noSign,
+      "-p:GenerateAppxPackageOnBuild=false",
+    ],
+    true,
+  );
+  const appxDir = `${path.join(packageRoot, "AppPackages/Remote")}${path.sep}`;
+  await spawnDeveloper(
+    [
+      "dotnet",
+      "build",
+      appProject,
+      "-c",
+      "Release",
+      "--no-restore",
+      "-p:GenerateAppxPackageOnBuild=true",
+      noSign,
+      `-p:AppxPackageDir=${appxDir}`,
+    ],
+    true,
+  );
 }
 
 async function test(): Promise<void> {
@@ -155,11 +219,9 @@ async function test(): Promise<void> {
     "test",
     path.join(
       packageRoot,
-      "tests",
-      "TaskNotes.Windows.Tests",
-      "TaskNotes.Windows.Tests.csproj",
+      "tests/TaskNotes.Windows.Tests/TaskNotes.Windows.Tests.csproj",
     ),
-    "--configuration",
+    "-c",
     "Release",
     "--property:RestoreLockedMode=true",
   ]);
@@ -176,12 +238,7 @@ async function packageApp(
   await spawnDeveloper([
     "dotnet",
     "build",
-    path.join(
-      packageRoot,
-      "src",
-      "TaskNotes.Windows.App",
-      "TaskNotes.Windows.App.csproj",
-    ),
+    appProject,
     "--configuration",
     configuration,
     "--no-restore",
@@ -203,41 +260,29 @@ async function packageStoreApp(
     );
   }
   const identity = parseStoreIdentity(await Bun.file(identityPath).json());
-  if (process.platform !== "win32")
+  if (process.platform !== "win32") {
     throw new Error(
       "Store packaging and Windows App Certification require Windows 11 x64.",
     );
+  }
   const manifestPath = path.join(
     packageRoot,
-    ".build",
-    "store",
-    "Package.appxmanifest",
+    ".build/store/Package.appxmanifest",
   );
   const template = await Bun.file(
-    path.join(
-      packageRoot,
-      "src",
-      "TaskNotes.Windows.App",
-      "Package.appxmanifest",
-    ),
+    path.join(packageRoot, "src/TaskNotes.Windows.App/Package.appxmanifest"),
   ).text();
   await Bun.write(manifestPath, storeManifest(template, identity));
   await restore();
   const directory = path.join(
     packageRoot,
-    "AppPackages",
-    "Store",
+    "AppPackages/Store",
     `${identity.version}-${crypto.randomUUID()}`,
   );
   await spawnDeveloper([
     "dotnet",
     "build",
-    path.join(
-      packageRoot,
-      "src",
-      "TaskNotes.Windows.App",
-      "TaskNotes.Windows.App.csproj",
-    ),
+    appProject,
     "--configuration",
     "Release",
     "--no-restore",
@@ -249,11 +294,10 @@ async function packageStoreApp(
   const artifacts = [
     ...new Bun.Glob("**/*.msix").scanSync({ cwd: directory, onlyFiles: true }),
   ];
-  if (artifacts.length !== 1)
-    throw new Error("Expected one x64 Store package to verify.");
   const [relative] = artifacts;
-  if (relative === undefined)
-    throw new Error("The Store package output is empty.");
+  if (relative === undefined || artifacts.length !== 1) {
+    throw new Error("Expected one x64 Store package to verify.");
+  }
   const artifact = path.join(directory, relative);
   const manifest = capture(["tar.exe", "-xOf", artifact, "AppxManifest.xml"]);
   const packaged = z
@@ -329,12 +373,7 @@ async function prepareE2E(): Promise<void> {
   await spawnDeveloper([
     "dotnet",
     "build",
-    path.join(
-      packageRoot,
-      "tests",
-      "TaskNotes.Windows.E2E",
-      "TaskNotes.Windows.E2E.csproj",
-    ),
+    e2eProject,
     "--configuration",
     "Release",
     "--no-restore",
@@ -350,59 +389,41 @@ async function runE2EScenario(): Promise<void> {
   const testConfiguration = path.join(artifactDirectory, "testconfig.json");
   await Bun.write(
     testConfiguration,
-    `${JSON.stringify(
-      {
-        platformOptions: {
-          exitProcessOnUnhandledException: true,
-          resultDirectory: artifactDirectory,
+    `${JSON.stringify({
+      platformOptions: {
+        exitProcessOnUnhandledException: true,
+        resultDirectory: artifactDirectory,
+      },
+      mstest: {
+        parallelism: { enabled: false, scope: "method" },
+        timeout: {
+          test: 300_000,
+          testInitialize: 120_000,
+          testCleanup: 120_000,
+          useCooperativeCancellation: true,
         },
-        mstest: {
-          parallelism: { enabled: false, scope: "method" },
-          timeout: {
-            test: 300_000,
-            testInitialize: 120_000,
-            testCleanup: 120_000,
-            useCooperativeCancellation: true,
-          },
-          execution: {
-            mapInconclusiveToFailed: true,
-            mapNotRunnableToFailed: true,
-            randomizeTestOrder: true,
-            randomTestOrderSeed: 20_260_811,
-            treatClassAndAssemblyCleanupWarningsAsErrors: true,
-            treatDiscoveryWarningsAsErrors: true,
-          },
+        execution: {
+          mapInconclusiveToFailed: true,
+          mapNotRunnableToFailed: true,
+          randomizeTestOrder: true,
+          randomTestOrderSeed: 20_260_811,
+          treatClassAndAssemblyCleanupWarningsAsErrors: true,
+          treatDiscoveryWarningsAsErrors: true,
         },
       },
-      null,
-      2,
-    )}\n`,
+    })}\n`,
   );
   await spawnDeveloper([
     "dotnet",
     "test",
-    path.join(
-      packageRoot,
-      "tests",
-      "TaskNotes.Windows.E2E",
-      "TaskNotes.Windows.E2E.csproj",
-    ),
-    "--configuration",
-    "Release",
-    "--no-build",
-    "--no-restore",
-    "--config-file",
+    e2eProject,
+    ..."-c Release --no-build --no-restore --config-file".split(" "),
     testConfiguration,
     "--filter",
     `TestCategory=${scenario}`,
-    "--report-junit",
-    "--report-junit-filename",
-    "junit.xml",
-    "--report-trx",
-    "--report-trx-filename",
-    "e2e.trx",
-    "--crashdump",
-    "--hangdump",
+    ..."--report-junit --report-junit-filename junit.xml --report-trx --report-trx-filename e2e.trx --crashdump --hangdump".split(
+      " ",
+    ),
   ]);
 }
 
@@ -416,6 +437,10 @@ switch (action) {
   case "build":
     await preflight();
     await build();
+    break;
+  case "build-remote":
+    await preflight();
+    await buildRemote();
     break;
   case "test":
     await preflight();
@@ -441,13 +466,8 @@ switch (action) {
       "dotnet",
       "run",
       "--project",
-      path.join(
-        packageRoot,
-        "src",
-        "TaskNotes.Windows.App",
-        "TaskNotes.Windows.App.csproj",
-      ),
-      "--configuration",
+      appProject,
+      "-c",
       "Debug",
     ]);
     break;
@@ -459,8 +479,8 @@ switch (action) {
     await spawnDeveloper([
       "dotnet",
       "build",
-      path.join(packageRoot, "TaskNotes.Windows.slnx"),
-      "--configuration",
+      solutionPath,
+      "-c",
       "Release",
       "--no-restore",
     ]);

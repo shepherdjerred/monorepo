@@ -1,7 +1,7 @@
 import { chmod, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
   createGitSpiceMerge,
   gitSpiceMergeArgs,
@@ -13,6 +13,8 @@ import {
 import type { waitForPr } from "#commands/ci.ts";
 import { GitHubClient } from "#lib/ci/github.ts";
 import { CiObserver } from "#lib/ci/observer.ts";
+import { EXIT_CODES } from "#lib/ci/readiness.ts";
+import { PrLandReceiptSchema } from "#lib/ci/stale-base/receipts.ts";
 import type { WaitResult } from "#lib/ci/wait/wait.ts";
 import { ciFixture, CI_HEAD } from "./ci/fixtures.ts";
 
@@ -23,6 +25,12 @@ const config = {
   repoId: 1,
 };
 const options: LandOptions = { json: true, allowRedMain: false };
+
+let isolatedStateDir = "";
+beforeEach(async () => {
+  isolatedStateDir = await mkdtemp(path.join(tmpdir(), "toolkit-land-state-"));
+  vi.stubEnv("TOOLKIT_STATE_DIR", isolatedStateDir);
+});
 
 function ready(): WaitResult {
   return {
@@ -38,6 +46,18 @@ function stubPr(merged: { value: boolean }, headSha = CI_HEAD): void {
     "fetch",
     vi.fn(async (input: URL) => {
       const url = new URL(input);
+      if (url.pathname.includes("/compare/")) {
+        return Response.json({
+          status: "identical",
+          ahead_by: 0,
+          behind_by: 0,
+          total_commits: 0,
+          base_commit: { sha: headSha },
+          merge_base_commit: { sha: headSha },
+          commits: [],
+          files: [],
+        });
+      }
       if (!url.pathname.endsWith("/pulls/99"))
         throw new Error(`Unexpected request ${url.pathname}`);
       const pr = ciFixture().pr;
@@ -55,7 +75,14 @@ function stubPr(merged: { value: boolean }, headSha = CI_HEAD): void {
 const observer = () => new CiObserver(new GitHubClient("test"), config);
 /** The GraphQL bucket can always afford a merge. */
 const noQuota = async () => null;
-afterEach(() => vi.unstubAllGlobals());
+afterEach(async () => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  if (isolatedStateDir !== "") {
+    await rm(isolatedStateDir, { recursive: true, force: true });
+    isolatedStateDir = "";
+  }
+});
 
 function landPr99(deps: Parameters<typeof landPr>[2], opts = options) {
   return landPr(
@@ -511,4 +538,127 @@ test("merge quota reads the GraphQL bucket and treats a RATE_LIMIT refusal as a 
   // A recent observation answers without another request.
   expect(await mergeQuota(github, signal, false)).toBe(reset * 1000);
   expect(respond).toHaveBeenCalledTimes(3);
+});
+
+test("blocks stale overlapping base with outcome failure (exit 1), restack commands, and NDJSON receipt", async () => {
+  stubPr({ value: false });
+  const merge = vi.fn();
+  const baseSha = "e".repeat(40);
+  const mainSha = "f".repeat(40);
+  const { result, mergeCommitSha } = await landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    options,
+    {
+      wait: async () => ready(),
+      merge,
+      quota: noQuota,
+      staleBase: async () => ({
+        stale: true,
+        headSha: CI_HEAD,
+        mergeBaseSha: baseSha,
+        mainHeadSha: mainSha,
+        behindBy: 3,
+        verdict: "stale_overlap",
+        reasons: [
+          "workspace dependency overlap with main advances: @shepherdjerred/tracker",
+        ],
+      }),
+    },
+  );
+  expect(result.verdict.outcome).toBe("failure");
+  expect(EXIT_CODES[result.verdict.outcome]).toBe(1);
+  expect(mergeCommitSha).toBeNull();
+  expect(merge).not.toHaveBeenCalled();
+  expect(result.verdict.commands).toEqual([
+    "toolkit git-spice repo sync --restack=aboves",
+    "toolkit git-spice branch submit --update-only --no-web --no-prompt",
+  ]);
+  expect(result.verdict.reasons.join("\n")).toContain(
+    "@shepherdjerred/tracker",
+  );
+
+  const rawLines = await Bun.file(
+    path.join(isolatedStateDir, "pr-land.ndjson"),
+  ).text();
+  const lines = rawLines.trim().split("\n");
+  expect(lines).toHaveLength(1);
+  expect(PrLandReceiptSchema.parse(JSON.parse(lines[0] ?? ""))).toMatchObject({
+    pr: 99,
+    headSha: CI_HEAD,
+    mergeBaseSha: baseSha,
+    mainHeadSha: mainSha,
+    behindBy: 3,
+    verdict: "stale_overlap",
+    bypassed: false,
+  });
+});
+
+test("allows disjoint behind-main PRs and --allow-stale-base bypasses while recording receipts", async () => {
+  const merged = { value: false };
+  stubPr(merged);
+  const baseSha = "e".repeat(40);
+  const mainSha = "f".repeat(40);
+  const merge = vi.fn(async () => {
+    merged.value = true;
+    return 0;
+  });
+
+  const disjointOutcome = await landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    options,
+    {
+      wait: async () => ready(),
+      merge,
+      quota: noQuota,
+      staleBase: async () => ({
+        stale: false,
+        headSha: CI_HEAD,
+        mergeBaseSha: baseSha,
+        mainHeadSha: mainSha,
+        behindBy: 2,
+        verdict: "disjoint_clean",
+        reasons: [],
+      }),
+    },
+  );
+  expect(disjointOutcome.result.verdict.outcome).toBe("merged");
+
+  merged.value = false;
+  stubPr(merged);
+  const bypassedOutcome = await landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    { ...options, allowStaleBase: true },
+    {
+      wait: async () => ready(),
+      merge,
+      quota: noQuota,
+      staleBase: async () => ({
+        stale: true,
+        headSha: CI_HEAD,
+        mergeBaseSha: baseSha,
+        mainHeadSha: mainSha,
+        behindBy: 5,
+        verdict: "stale_overlap",
+        reasons: ["main modified global verification input(s): bun.lock"],
+      }),
+    },
+  );
+  expect(bypassedOutcome.result.verdict.outcome).toBe("merged");
+
+  const rawReceipts = await Bun.file(
+    path.join(isolatedStateDir, "pr-land.ndjson"),
+  ).text();
+  const receipts = rawReceipts
+    .trim()
+    .split("\n")
+    .map((line) => PrLandReceiptSchema.parse(JSON.parse(line)));
+  expect(receipts).toHaveLength(2);
+  expect(receipts[0]).toMatchObject({
+    verdict: "disjoint_clean",
+    bypassed: false,
+  });
+  expect(receipts[1]).toMatchObject({
+    verdict: "stale_overlap",
+    bypassed: true,
+  });
 });

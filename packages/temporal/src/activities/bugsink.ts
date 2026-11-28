@@ -1,69 +1,14 @@
-import { Context } from "@temporalio/activity";
-import * as k8s from "@kubernetes/client-node";
-import { kubectlExecInPod } from "#shared/infra/kubectl-exec.ts";
-
-const NAMESPACE = "bugsink";
-const CONTAINER = "bugsink";
-
-function loadCoreApi(): k8s.CoreV1Api {
-  const kc = new k8s.KubeConfig();
-  kc.loadFromCluster();
-  return kc.makeApiClient(k8s.CoreV1Api);
-}
-
-export type BugsinkHousekeepingActivities =
-  typeof bugsinkHousekeepingActivities;
-
+/**
+ * Retained drainage stub on `TASK_QUEUES.INFRA` so pre-retirement histories or
+ * in-flight retries settle without Kubernetes RBAC or a live `bugsink` pod.
+ */
 export const bugsinkHousekeepingActivities = {
-  async runBugsinkHousekeeping(): Promise<string> {
-    const podName = await findRunningBugsinkPod();
-
-    // No `cleanup_eventstorage` — this Bugsink instance does not configure
-    // external event storage (events live in the DB), so the command exits 1
-    // with "Storage name … not found because you have not configured any
-    // event storage at all". Re-add with the configured storage name if/when
-    // external event storage is enabled.
-    const commands: string[][] = [
-      ["bugsink-manage", "delete_old_events", "--days", "180"],
-      ["bugsink-manage", "vacuum_tags"],
-      ["bugsink-manage", "vacuum_files"],
-      ["bugsink-manage", "vacuum_eventless_issuetags"],
-    ];
-
-    const results: string[] = [];
-    for (const command of commands) {
-      // Per-iteration heartbeat — pairs with the activity's
-      // heartbeatTimeout: "90 seconds" in workflows/bugsink.ts. SDK
-      // throttles transmission to 80% of timeout automatically.
-      Context.current().heartbeat({ command: command.join(" ") });
-      const out = await kubectlExecInPod({
-        namespace: NAMESPACE,
-        container: CONTAINER,
-        pod: podName,
-        command,
-      });
-      const trimmed = out.trim();
-      results.push(`${command.join(" ")}: ${trimmed === "" ? "ok" : trimmed}`);
-    }
-    return results.join("\n");
+  runBugsinkHousekeeping(): Promise<string> {
+    return Promise.resolve(
+      "retired: Bugsink replaced by @shepherdjerred/errors",
+    );
   },
 };
 
-async function findRunningBugsinkPod(): Promise<string> {
-  const pods = await loadCoreApi().listNamespacedPod({
-    namespace: NAMESPACE,
-    labelSelector: "app=bugsink",
-  });
-  const pod = pods.items.find((p) => p.status?.phase === "Running");
-  const name = pod?.metadata?.name;
-  if (name === undefined) {
-    throw new Error(`No running bugsink pod found in ${NAMESPACE} namespace`);
-  }
-  return name;
-}
-
-// `kubectl exec` is used here in place of @kubernetes/client-node's
-// WebSocket-based Exec because the latter rejects with opaque DOM-style
-// ErrorEvent objects under Bun (the library targets Node's `ws` shim, which
-// Bun doesn't replicate exactly). Pod discovery via the HTTP API still works
-// and is kept above.
+export type BugsinkHousekeepingActivities =
+  typeof bugsinkHousekeepingActivities;

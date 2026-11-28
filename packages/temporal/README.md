@@ -468,13 +468,20 @@ the original owned finished Argo operation. No failed release becomes accepted.
 
 The same verifier runs without a healthy Workflow or Activity worker, while
 Delivery API, PostgreSQL, Kubernetes and the Temporal server remain reachable.
-From the repository root, create and inspect the intent using the brokered admin
-identity, then run the bounded operator command:
+On a workstation or macOS host without an exported server API key, open a
+loopback-only Temporal port-forward first:
+
+```bash
+kubectl --context admin@torvalds -n temporal port-forward service/temporal-temporal-server-service 7233:7233 --address 127.0.0.1
+```
+
+From the repository root in a second terminal, create and inspect the intent
+using the brokered admin identity, then run the bounded operator command:
 
 ```bash
 toolkit deploy platform recover DEPLOYMENT_ID --machine --expected-generation GENERATION --reason 'Independently settle this exact failed platform operation'
 toolkit deploy platform recovery RECOVERY_INTENT_ID
-bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action inspect
+env -u OP_SERVICE_ACCOUNT_TOKEN -u TEMPORAL_API_KEY TEMPORAL_ADDRESS=127.0.0.1:7233 TEMPORAL_TLS=false bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action inspect
 ```
 
 If a root release is partial, `--action apply` reruns the existing guarded
@@ -589,10 +596,18 @@ appends only that checkpoint, never replays it, and then continues the original
 approved candidate. A changed journal, incomplete native migration or foreign
 owner refuses without removing maintenance or replacing the original backup.
 
-`--action inspect` verifies an already settled target without replaying its
-repair. Fresh native/target readback and the original PostgreSQL generation/lock
-CAS release quarantine without accepting the failed release. The same command
-resumes a settled intent whose exact host restoration acknowledgement was lost.
+`--action inspect` verifies the frozen desired target without replaying its
+repair. When the original Forum release container never reached migration and
+the previously accepted deployment still serves, use `--action inspect-prior`
+with the same intent. It requires exact terminal Job evidence, the original
+accepted source in Argo CD history, and two matching read-only observations of
+the prior runtime and its storage. Ambiguous, partial, or changed mutations
+keep quarantine held.
+
+Fresh native readback and the original PostgreSQL generation and lock
+release quarantine while preserving the failed result and last acceptance.
+Use `--action inspect` to resume a settled intent whose exact host restoration
+acknowledgement was lost.
 It restores only that host's UID/template and new Ready Pods. Stop the exact
 port-forward and resume dispatch after the restoration receipt is recorded.
 
@@ -716,8 +731,9 @@ dispatch flag and unpause this exact schedule. Reconciliation preserves the
 operator's subsequent pause state.
 
 Describe the workflow and read its `ciMaintenance` memo for the pending request ID, pipeline receipt,
-completed fingerprints, and blocked streams. The coordinator allows one
-submission at a time, coalesces repeated ticks, and retains fingerprints
+queue and start times, any age-out, completed fingerprints, pre-work retry and
+age-out counts, the last successful inspection (`inspectedAt`),
+and blocked streams. The coordinator allows one submission at a time, coalesces repeated ticks, and retains fingerprints
 across worker replacement and continue-as-new. The memo is refreshed after
 each tick; Workflow history records in-flight writes before that snapshot.
 CI image fingerprints cover
@@ -748,13 +764,62 @@ Canary branches target beta consumer flags and do not require a beta dispatcher.
 
 Writes have one activity attempt. After a lost response, subsequent ticks
 search for the recorded request ID; they never repeat the POST blindly.
-Read failures preserve state. A failed pipeline blocks that stream until an
-operator inspects it and sends `maintenanceRetry` with its exact `kind` and
-`requestId`. The other stream may continue. An absent submission requires an
-API/history audit first: send `maintenanceConfirmAbsent` with its exact
-`requestId` and a non-secret `evidence` explanation, then explicitly retry.
-That signal cannot clear a request with a known pipeline receipt. Never
-confirm absence while the original request or pipeline could still settle.
+Read failures preserve state. A pipeline that fails after a command started
+blocks that stream until an operator inspects it and sends `maintenanceRetry`
+with its exact `kind` and `requestId`. A pipeline that ends before any command
+starts (a config-extension or forge error) is resubmitted automatically up to
+six consecutive times per stream; the seventh such ending blocks the stream
+with a reason that says so. The other streams may continue. An absent
+submission requires an API/history audit first: send
+`maintenanceConfirmAbsent` with its exact `requestId` and a non-secret
+`evidence` explanation, then explicitly retry. That signal cannot clear a
+request with a known pipeline receipt. Never confirm absence while the
+original request or pipeline could still settle.
+
+Only one request is pending at a time. Once a request has waited in
+Woodpecker's queue for two hours without an agent taking it, each tick checks
+Woodpecker's task queue (`/api/queue/info`) for evidence that it is stuck
+rather than slow. Woodpecker hands each agent the oldest pending task it
+matches, so a request behind a long backlog keeps its place and is never
+canceled. It counts as stuck when newer tasks in its agent pool (`ci-pool`)
+run ahead of it, when it heads an idle pool, or when the queue holds no task
+for it. A busy concurrency group, a paused queue, or a pool that is taking no
+work at all is not evidence against the request. A stuck request is re-read by
+request ID and canceled only if no step has started, because Woodpecker's
+cancel also kills running work. A cancel, once sent, is recorded and never
+sent again, even when its result is unconfirmed; a check that fails before any
+cancel is sent records nothing and runs again next tick. The canceled request
+settles on a later read-back without counting a retry. Three consecutive stuck
+age-outs block the stream; an agent taking one of its requests resets the
+count. Streams are chosen round-robin after the last settled one, so an
+aged-out stream waits for every other stream's turn.
+
+Every tick also publishes health to Alertmanager from the infra worker's `ops`
+queue, reading the coordinator memo and the cluster rather than the
+coordinator itself. `CiMaintenanceStreamBlocked` (per `stream`) fires once a
+stream has been blocked for 30 minutes. `CiMaintenanceRequestStalled` fires
+once a pending request has had no receipt, or an unconfirmed age-out, for 30
+minutes, or has waited without an agent for two and a half hours, or for
+eight hours while its latest age-out check (`lastQueueCheck`) finds it
+`waiting` behind older work in its pool. `CiMaintenanceCoordinatorStalled`
+fires while dispatch is enabled and the coordinator has not completed an
+inspection (`inspectedAt`) for 30 minutes on two reads a minute apart, so the
+tick's own wake, for example after dispatch is turned back on, can refresh it
+first. A `repo-automation` Activity holding that one-slot queue for over 30
+minutes, such as a long git backup, also trips it. `CiWorkspaceGoldenStale` fires once the
+selected golden snapshot is more than 36 hours old or its source commit trails
+main by more than 36 hours, while `ci-workspace-golden-refresh-enabled` is on.
+A source that cannot be read, or a flag whose Flags source failed, leaves out
+only its own occurrences, which keep their state until their one-hour TTL; the
+rest still publish, and a read that also fails the Activity's retry fails the
+tick, which `temporal-failure-watch` reports. A healthy tick resolves every
+occurrence it publishes.
+
+Delivery's `temporal` recipe syncs the chart, waiting for every Deployment to
+be Synced and Healthy, before its `worker-rollout` step routes Workflows to the
+new build, so the `repo` and `infra` Activity workers register new Activities
+first. A tick whose health Activity is not registered yet logs a warning
+instead of failing.
 
 `toolkit ci maintenance --json` lists recent maintenance receipts separately
 from verification. A successful maintenance run must emit one structured
@@ -772,8 +837,11 @@ one-hour catchup window and a four-hour execution timeout. The Workflow runs on
 `newestVerifiedMaintenanceSource` the coordinator uses), then POSTs one manual
 `main` pipeline with message `ci-extended-verify/<request-uuid>` and variables
 `CI_EXTENDED_REQUEST` and `CI_EXTENDED_SOURCE`. The config extension emits the
-`verify-extended` workflow for that request, or an `extended-superseded`
-no-work step when main's verified head moved first. The message is not a
+`verify-extended` and `paper-smoke-nightly` workflows for that request, or an
+`extended-superseded` no-work step when main's verified head moved first. The
+Workflow reads only the pipeline's workflow states and requires both
+`verify-extended` and `paper-smoke-nightly` to be present and green, so a red or
+missing `paper-smoke-nightly` fails the night like a red `verify-extended`. The message is not a
 `ci-maintenance/` message, so maintenance admission ignores the nightly run.
 
 The write has one attempt. A lost response is read back by request ID after a
@@ -1065,6 +1133,12 @@ Ops queue routing is recorded with the `ops-isolated-activity-queue` Workflow
 patch. Histories created before that patch retain their `infra` Activity queue;
 the infra registry keeps the old Ops Activities available to drain them. The
 same worker credentials, pod limits, and metrics endpoint serve both queues.
+
+Hub CI uses two dedicated Ops workflows. `ops-ci-dashboard` samples the
+Woodpecker queue, monorepo jobs, and Kueue admission every minute.
+`ops-ci-dashboard-timings` refreshes the seven-day timing cohort every
+15 minutes. Both skip overlaps and publish through Hub's Ops ingest boundary.
+The Woodpecker queue API requires an administrator credential on the worker.
 
 The work collector reads Tracker through the credentialless `TRACKER_URL`
 bootstrap endpoint and builds issue links from `TRACKER_PUBLIC_URL`, which the
@@ -1436,13 +1510,15 @@ hard requirement. An applicable rule against bots, automated comments,
 promotional replies, or owner advertising blocks outreach. Silence or
 ambiguity about permission leaves an otherwise eligible request available for
 drafting. A useful partial fit can qualify when The Storm meets the main request
-and some of the preferences. The reply names concrete overlap and any meaningful
-differences. Adult-only requests can qualify based on The Storm's adult
-audience. The reply says that players of other ages can join. A separate model
-drafts the invite after the thread and account are checked. Requests already
-answered by `the_storm_mc` and threads whose comments cannot be fully inspected
-are excluded. Assessments are cached against the request, community rules and
-approved facts. Edits or rule changes require a fresh assessment.
+and misses optional preferences. Adult-only requests can qualify based on The
+Storm's adult audience. After the thread and account are checked, a separate
+model writes a brief invitation with up to one supported detail. The reply
+identifies The Storm as our server, followed by the invitation link. The
+publisher skips exact repeat replies in the same subreddit within 24 hours.
+Requests already answered by `the_storm_mc` and threads whose comments cannot
+be fully inspected are excluded. Assessments are cached against the request,
+community rules and approved facts. Edits or rule changes require a fresh
+assessment.
 
 `the-storm-reddit-outreach-enabled` and the typed JSON flag
 `the-storm-reddit-outreach-settings` control this schedule's publishing separately
@@ -1948,6 +2024,39 @@ retains the uncertain-effect hold; neither path permits a second write in that
 occurrence.
 Publishing still requires the production flag and a target allowlist; these
 source capabilities do not establish production deployment or live acceptance.
+
+### Daily dependency upgrades
+
+`renovate-ranking-daily` ranks the repository's dependency updates at 03:15
+Pacific. The repo worker runs a read-only Renovate lookup on a pinned `main`
+checkout, checks release age and advisories, and records the ranked snapshot in
+`renovate-ranking/v1/latest.json` in the report receipt bucket. Hub's Renovate
+page shows the ranking, lookup coverage, bake status, and linked bundle PRs.
+
+`renovate-bundle-dispatch` drains the same backlog as Woodpecker has room.
+Needed, aged updates estimated at XS, S, or M qualify. An isolated Codex turn
+groups compatible candidates and prepares the upgrade. The repo worker verifies
+the exact pins, changed paths, lockfiles, and affected checks before publishing.
+Each GitHub write is journaled in `renovate-ranking/v1/dispatch.json`. The next
+bundle can proceed after the exact head has a Woodpecker receipt. Open work
+reserves its changed paths and lockfiles until it merges or closes. A native or
+operator check the worker cannot complete is shown as a blocker in Hub.
+Python verification downloads locked wheels before running builds and tests
+offline. A dependency that requires an uncached source build stays blocked.
+.NET verification requires the SDK and a populated NuGet cache so MSBuild
+runs offline.
+
+Both schedules register paused for worker cutover. Once the new workflow and
+repo workers are active, trigger `renovate-ranking-daily` and read the resulting
+snapshot in Hub. Start `runRenovateBundleDispatch` on `monorepo-workflows` with
+`{"preview":true}` to validate a bundle without publishing it. Check that
+`temporal-renovate-publishing-enabled` resolves to `true` in the production
+Flags deployment and the credentialless exact-head approval policy in the
+deployed Woodpecker config extension before triggering the first live dispatch.
+Verify the PR and exact Woodpecker head, then trigger again to confirm the first
+head is unchanged.
+Unpause the schedules after those checks. Set the publishing flag to `false` to
+pause submissions while keeping ranking and PR status readback active.
 
 ### Scheduled report PR remediation
 

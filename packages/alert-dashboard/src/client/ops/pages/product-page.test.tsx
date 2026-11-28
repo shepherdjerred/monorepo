@@ -233,8 +233,8 @@ describe("renderProductServiceView (Flags, Bugsink, Golink, Scout)", () => {
     expect(html).toContain("✕ Overdue (2020-01-01)");
   });
 
-  it("renders Bugsink error command center KPIs, projects summary, and top unresolved issues", () => {
-    const view = renderProductServiceView("bugsink", "7d");
+  it("renders Errors command center KPIs, projects summary, and top unresolved issues", () => {
+    const view = renderProductServiceView("errors", "7d");
     expect(view).not.toBeNull();
     const html = renderWithQueryClient(view ?? <div />, (client) => {
       client.setQueryData(

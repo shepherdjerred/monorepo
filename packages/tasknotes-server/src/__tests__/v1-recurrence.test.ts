@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
-import { computeNextOccurrence } from "../v1/recurrence.ts";
+import { computeNextOccurrence } from "@shepherdjerred/facet-protocol/recurrence";
 import { v1Routes } from "../v1/routes.ts";
 
 const RecurringTaskSchema = z.object({
@@ -34,6 +34,25 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
+
+test.each([
+  ["spring gap", "2026-03-07T10:30:00.000Z", "2026-03-08T10:30:00.000Z"],
+  ["fall overlap", "2026-10-31T08:30:00.000Z", "2026-11-01T08:30:00.000Z"],
+])(
+  "resolves the %s with compatible DST disambiguation",
+  (_caseName, dueDatetime, expected) => {
+    const result = computeNextOccurrence({
+      rule: "FREQ=DAILY",
+      dueDatetime,
+      dueTimezone: "America/Los_Angeles",
+    });
+    expect(result).toEqual({
+      ended: false,
+      nextDate: new Date(expected),
+      updatedRule: "FREQ=DAILY",
+    });
+  },
+);
 
 describe("RFC 5545 Recurrence Calculator & Completion Advancement", () => {
   test("computes DAILY, WEEKLY BYDAY, MONTHLY BYMONTHDAY/-1, YEARLY, COUNT, and UNTIL", () => {

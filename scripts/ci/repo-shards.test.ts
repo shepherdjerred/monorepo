@@ -60,6 +60,7 @@ const TurboConfigSchema = z
   .object({ tasks: z.record(z.string(), z.unknown()) })
   .loose();
 const SHARDED_CHECKS = ["prettier", "line-endings", "large-files"] as const;
+const ROOT_CHECK_TASKS = SHARDED_CHECKS.map((check) => `${check}-root`);
 
 async function turboTasks(): Promise<Record<string, unknown>> {
   const config = TurboConfigSchema.parse(
@@ -143,7 +144,7 @@ async function runFixtureTasks(
     [
       path.join(import.meta.dir, "../../node_modules/.bin/turbo"),
       "run",
-      ...SHARDED_CHECKS.map((check) => `${check}-root`),
+      ...ROOT_CHECK_TASKS,
       ...args,
     ],
     {
@@ -155,81 +156,104 @@ async function runFixtureTasks(
   );
 }
 
-describe("root check Git input hashes", () => {
-  test("ignore checkout metadata but retain staging and source changes", async () => {
-    const fixture = await mkdtemp(path.join(tmpdir(), "root-check-inputs-"));
+const SummarySchema = z.object({
+  tasks: z.array(
+    z.object({
+      task: z.string(),
+      hash: z.string(),
+      inputs: z.record(z.string(), z.string()),
+    }),
+  ),
+});
+
+type TaskSummaries = z.infer<typeof SummarySchema>["tasks"];
+
+async function fixtureHashes(fixture: string): Promise<TaskSummaries> {
+  const result = await runFixtureTasks(fixture, ["--dry=json"]);
+  expect(result.exitCode, result.stderr.toString()).toBe(0);
+  const { tasks } = SummarySchema.parse(JSON.parse(result.stdout.toString()));
+  expect(tasks).toHaveLength(ROOT_CHECK_TASKS.length);
+  return tasks;
+}
+
+function expectHashesChanged(before: TaskSummaries, after: TaskSummaries) {
+  for (const { task, hash } of before) {
+    const changed = after.find((entry) => entry.task === task)?.hash;
+    expect(changed, task).toBeDefined();
+    expect(changed, task).not.toBe(hash);
+  }
+}
+
+async function withRootCheckFixture(
+  body: (fixture: string, git: (...args: string[]) => void) => Promise<void>,
+) {
+  const fixture = await mkdtemp(path.join(tmpdir(), "root-check-inputs-"));
+  const git = (...args: string[]) => {
+    const result = Bun.spawnSync(["git", ...args], { cwd: fixture });
+    expect(result.exitCode, result.stderr.toString()).toBe(0);
+  };
+  try {
     const tasks = await turboTasks();
-    const names = SHARDED_CHECKS.map((check) => `${check}-root`);
-    const SummarySchema = z.object({
-      tasks: z.array(
-        z.object({
-          task: z.string(),
-          hash: z.string(),
-          inputs: z.record(z.string(), z.string()),
-        }),
-      ),
-    });
-    const git = (...args: string[]) => {
-      const result = Bun.spawnSync(["git", ...args], { cwd: fixture });
-      expect(result.exitCode).toBe(0);
-    };
-    const hashes = async () => {
-      const result = await runFixtureTasks(fixture, ["--dry=json"]);
-      expect(result.exitCode).toBe(0);
-      return SummarySchema.parse(JSON.parse(result.stdout.toString())).tasks;
-    };
-    try {
-      await mkdir(path.join(fixture, "packages/probe"), { recursive: true });
+    await mkdir(path.join(fixture, "packages/probe"), { recursive: true });
+    await Bun.write(
+      path.join(fixture, "packages/probe/package.json"),
+      '{"name":"probe","private":true}',
+    );
+    await Bun.write(
+      path.join(fixture, "package.json"),
+      JSON.stringify({
+        name: "root-check-input-probe",
+        private: true,
+        packageManager: `bun@${Bun.version}`,
+        workspaces: ["packages/*"],
+        scripts: Object.fromEntries(
+          ROOT_CHECK_TASKS.map((name) => [name, "bun check.ts"]),
+        ),
+      }),
+    );
+    await Bun.write(
+      path.join(fixture, "turbo.json"),
+      JSON.stringify({
+        tasks: Object.fromEntries(
+          ROOT_CHECK_TASKS.map((name) => [
+            `//#${name}`,
+            ShardTaskSchema.parse(tasks[`//#${name}`]),
+          ]),
+        ),
+      }),
+    );
+    await Bun.write(path.join(fixture, ".gitignore"), ".turbo/\n");
+    for (const module of ["root-check-inputs.ts", "repo-shards.ts"]) {
       await Bun.write(
-        path.join(fixture, "packages/probe/package.json"),
-        '{"name":"probe","private":true}',
+        path.join(fixture, "scripts/ci", module),
+        Bun.file(path.join(import.meta.dir, module)),
       );
-      await Bun.write(
-        path.join(fixture, "package.json"),
-        JSON.stringify({
-          name: "root-check-input-probe",
-          private: true,
-          packageManager: `bun@${Bun.version}`,
-          workspaces: ["packages/*"],
-          scripts: Object.fromEntries(
-            names.map((name) => [name, "bun check.ts"]),
-          ),
-        }),
-      );
-      await Bun.write(
-        path.join(fixture, "turbo.json"),
-        JSON.stringify({
-          tasks: Object.fromEntries(
-            names.map((name) => [
-              `//#${name}`,
-              ShardTaskSchema.parse(tasks[`//#${name}`]),
-            ]),
-          ),
-        }),
-      );
-      await Bun.write(path.join(fixture, ".gitignore"), ".turbo/\n");
-      for (const module of ["root-check-inputs.ts", "repo-shards.ts"]) {
-        await Bun.write(
-          path.join(fixture, "scripts/ci", module),
-          Bun.file(path.join(import.meta.dir, module)),
-        );
-      }
-      await Bun.write(
-        path.join(fixture, "check.ts"),
-        'import { assertRootCheckInputs } from "./scripts/ci/root-check-inputs.ts"; await assertRootCheckInputs(); console.log("checked");\n',
-      );
-      await Bun.write(
-        path.join(fixture, "source.ts"),
-        "export const value = 1;\n",
-      );
-      git("init", "--quiet");
-      git("add", ".");
-      const original = await hashes();
+    }
+    await Bun.write(
+      path.join(fixture, "check.ts"),
+      'import { assertRootCheckInputs } from "./scripts/ci/root-check-inputs.ts"; await assertRootCheckInputs(); console.log("checked");\n',
+    );
+    await Bun.write(
+      path.join(fixture, "source.ts"),
+      "export const value = 1;\n",
+    );
+    git("init", "--quiet");
+    git("add", ".");
+    await body(fixture, git);
+  } finally {
+    await rm(fixture, { recursive: true, force: true });
+  }
+}
+
+describe("root check Git input hashes", () => {
+  test("ignore checkout metadata, Git objects and private CI caches", async () => {
+    await withRootCheckFixture(async (fixture, git) => {
+      const original = await fixtureHashes(fixture);
       await Bun.write(
         path.join(fixture, ".git/objects/info/input-probe"),
         "object storage changed\n",
       );
-      const objectsChanged = await hashes();
+      const objectsChanged = await fixtureHashes(fixture);
       const scratchFiles = [
         ".git/ci-cold-source-cache/probe/objects/pack/probe.pack",
         ".git/ci-gradle-seed/modules-2/probe.jar",
@@ -237,7 +261,7 @@ describe("root check Git input hashes", () => {
       for (const file of scratchFiles) {
         await Bun.write(path.join(fixture, file), "private cache changed\n");
       }
-      const scratchChanged = await hashes();
+      const scratchChanged = await fixtureHashes(fixture);
       await Bun.write(
         path.join(fixture, ".git/FETCH_HEAD"),
         "checkout bookkeeping\n",
@@ -247,40 +271,7 @@ describe("root check Git input hashes", () => {
         "reflog bookkeeping\n",
       );
       git("update-index", "--refresh");
-      const metadataChanged = await hashes();
-      await Bun.write(path.join(fixture, "new-source.ts"), "const value=1\n");
-      const beforeStaging = await hashes();
-      git("add", "new-source.ts");
-      const afterStaging = await hashes();
-      await Bun.write(
-        path.join(fixture, "source.ts"),
-        "export const value = 2;\n",
-      );
-      const sourceChanged = await hashes();
-      await Bun.write(path.join(fixture, ".gitignore"), ".turbo/\nignored/\n");
-      const hiddenSourceChanged = await hashes();
-      await Bun.write(
-        path.join(fixture, "ignored/probe.ts"),
-        "export const value = 1;\n",
-      );
-      git("add", "--force", "ignored/probe.ts");
-      const ignoredStaged = await hashes();
-      await Bun.write(
-        path.join(fixture, "ignored/probe.ts"),
-        "export const value = 2;\n",
-      );
-      const ignoredWorking = await hashes();
-      // Change only the staged blob, preserving the working file bytes.
-      await Bun.write(
-        path.join(fixture, "source.ts"),
-        "export const value = 3;\n",
-      );
-      git("add", "source.ts");
-      await Bun.write(
-        path.join(fixture, "source.ts"),
-        "export const value = 2;\n",
-      );
-      const stagedBlob = await hashes();
+      const metadataChanged = await fixtureHashes(fixture);
       for (const task of original) {
         const hashFor = (summary: z.infer<typeof SummarySchema>["tasks"]) =>
           summary.find((entry) => entry.task === task.task)?.hash;
@@ -300,13 +291,51 @@ describe("root check Git input hashes", () => {
         for (const file of scratchFiles)
           expect(scratchInputs).not.toContain(file);
         expect(hashFor(scratchChanged)).toBe(task.hash);
-        expect(hashFor(afterStaging)).not.toBe(hashFor(beforeStaging));
-        expect(hashFor(sourceChanged)).not.toBe(hashFor(afterStaging));
-        expect(hashFor(hiddenSourceChanged)).not.toBe(hashFor(sourceChanged));
-        expect(hashFor(ignoredStaged)).not.toBe(hashFor(hiddenSourceChanged));
-        expect(hashFor(ignoredWorking)).not.toBe(hashFor(ignoredStaged));
-        expect(hashFor(stagedBlob)).not.toBe(hashFor(ignoredWorking));
       }
+    });
+  });
+
+  test("include changes to staged paths, tracked bytes and staged blobs", async () => {
+    await withRootCheckFixture(async (fixture, git) => {
+      await Bun.write(path.join(fixture, "new-source.ts"), "const value=1\n");
+      const beforeStaging = await fixtureHashes(fixture);
+      git("add", "new-source.ts");
+      const afterStaging = await fixtureHashes(fixture);
+      expectHashesChanged(beforeStaging, afterStaging);
+
+      const source = path.join(fixture, "source.ts");
+      await Bun.write(source, "export const value = 2;\n");
+      const sourceChanged = await fixtureHashes(fixture);
+      expectHashesChanged(afterStaging, sourceChanged);
+
+      // Change only the staged blob, preserving the working file bytes.
+      await Bun.write(source, "export const value = 3;\n");
+      git("add", "source.ts");
+      await Bun.write(source, "export const value = 2;\n");
+      expectHashesChanged(sourceChanged, await fixtureHashes(fixture));
+    });
+  });
+
+  test("include ignore rules and both versions of force-added ignored files", async () => {
+    await withRootCheckFixture(async (fixture, git) => {
+      const original = await fixtureHashes(fixture);
+      await Bun.write(path.join(fixture, ".gitignore"), ".turbo/\nignored/\n");
+      const ignoreRulesChanged = await fixtureHashes(fixture);
+      expectHashesChanged(original, ignoreRulesChanged);
+
+      const ignored = path.join(fixture, "ignored/probe.ts");
+      await Bun.write(ignored, "export const value = 1;\n");
+      git("add", "--force", "ignored/probe.ts");
+      const ignoredStaged = await fixtureHashes(fixture);
+      expectHashesChanged(ignoreRulesChanged, ignoredStaged);
+
+      await Bun.write(ignored, "export const value = 2;\n");
+      expectHashesChanged(ignoredStaged, await fixtureHashes(fixture));
+    });
+  });
+
+  test("reuse a warm cache after a fetch and refuse runs without an input fingerprint", async () => {
+    await withRootCheckFixture(async (fixture) => {
       const firstRun = await runFixtureTasks(fixture, ["--cache=local:rw"]);
       expect(firstRun.exitCode, firstRun.stderr.toString()).toBe(0);
       await Bun.write(
@@ -329,9 +358,7 @@ describe("root check Git input hashes", () => {
           "freshly fingerprinted",
         );
       }
-    } finally {
-      await rm(fixture, { recursive: true, force: true });
-    }
+    });
   });
 });
 

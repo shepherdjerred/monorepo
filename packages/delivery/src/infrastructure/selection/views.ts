@@ -10,6 +10,7 @@ import {
 } from "#shared/contract.ts";
 import {
   PLAN_APPROVAL_STAGE_KEY,
+  attestationStageKey,
   stepStageKey,
 } from "#shared/model/stage-keys.ts";
 import { recipeKindOf } from "#shared/model/recipe-view.ts";
@@ -118,6 +119,21 @@ export function recoveryIntentView(row: RecoveryIntent) {
   );
 }
 
+function pendingAttestationStages(
+  detail: DeploymentDetail,
+): string[] | undefined {
+  const recipe = detail.pipeline.definition;
+  if (recipe.kind !== "operator-run") return undefined;
+  const attested = new Set(
+    detail.stages
+      .filter((stage) => stage.status === "succeeded")
+      .map((stage) => stage.key),
+  );
+  return recipe.stages.filter(
+    (stage) => !attested.has(attestationStageKey(stage)),
+  );
+}
+
 /** `GET /deployments/:id`: the detail with the deployment view, approval and intents. */
 export function detailView(
   detail: DeploymentDetail,
@@ -138,6 +154,7 @@ export function detailView(
     requestedAt: Date;
   } | null,
 ) {
+  const pendingStages = pendingAttestationStages(detail);
   return DeploymentDetailV2Schema.parse({
     ...detail,
     deployment: deploymentView(row),
@@ -160,6 +177,9 @@ export function detailView(
             ...newerRequest,
             requestedAt: newerRequest.requestedAt.toISOString(),
           },
+    ...(pendingStages === undefined
+      ? {}
+      : { pendingAttestationStages: pendingStages }),
   });
 }
 
@@ -230,6 +250,9 @@ async function newerRequestOf(
 /** The approve step's stage, which runs while a saved plan waits on its decision. */
 const APPROVE_STEP_KEY = stepStageKey("step", "approve");
 
+/** The attestation step's stage, which runs while an operator-run deployment waits on attestations. */
+const ATTESTATION_STEP_KEY = stepStageKey("step", "attestation");
+
 /**
  * A running deployment whose approve step is running and whose saved plan
  * has no decision yet (H6).
@@ -240,6 +263,11 @@ export const AWAITING_PLAN_DECISION = {
     { stages: { some: { key: APPROVE_STEP_KEY, status: "running" } } },
     {
       stages: {
+        none: { key: { not: APPROVE_STEP_KEY }, status: "running" },
+      },
+    },
+    {
+      stages: {
         none: {
           key: PLAN_APPROVAL_STAGE_KEY,
           status: { in: ["succeeded", "failed"] },
@@ -247,6 +275,30 @@ export const AWAITING_PLAN_DECISION = {
       },
     },
   ],
+} satisfies Prisma.DeploymentWhereInput;
+
+/**
+ * A running operator-run deployment parked solely on its attestation gate (X13).
+ */
+export const AWAITING_OPERATOR_ATTESTATION = {
+  status: "running",
+  AND: [
+    { stages: { some: { key: ATTESTATION_STEP_KEY, status: "running" } } },
+    {
+      stages: {
+        none: { key: { not: ATTESTATION_STEP_KEY }, status: "running" },
+      },
+    },
+  ],
+} satisfies Prisma.DeploymentWhereInput;
+
+/**
+ * A running deployment parked solely on a human saved-plan decision or an
+ * operator-run attestation gate, with no active in-cluster step running.
+ */
+export const AWAITING_HUMAN_GATE = {
+  status: "running",
+  OR: [AWAITING_PLAN_DECISION, AWAITING_OPERATOR_ATTESTATION],
 } satisfies Prisma.DeploymentWhereInput;
 
 function awaitingPlanDecision(

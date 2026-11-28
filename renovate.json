@@ -488,6 +488,14 @@
       "matchPackageNames": ["argoproj/argo-cd"]
     },
     {
+      "description": "The argo-cd Helm chart is chart-versioned while .mise.toml and packages/temporal/Dockerfile pin the Argo CD appVersion, so Renovate cannot group them directly.",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["argo-cd"],
+      "prBodyNotes": [
+        "**CLI companion pins.** Check the `argo-cd` chart's `appVersion` for {{{newValue}}} and align `argocd` in `.mise.toml` plus `ARGOCD_CLI_VERSION` in `packages/temporal/Dockerfile` (`bun scripts/checks/deps/check-toolchain-version-sync.ts` enforces that the two CLI pins match)."
+      ]
+    },
+    {
       "description": "The mise Temporal CLI and the Temporal worker TEMPORAL_CLI_VERSION move together.",
       "groupName": "Temporal CLI",
       "matchPackageNames": ["temporalio/cli"]
@@ -552,6 +560,12 @@
     {
       "description": "The deb and git-refs datasources carry no release timestamps. Under the strict 30-day release-age gate an update without a timestamp stays pending forever, so these skip the gate.",
       "matchDatasources": ["deb", "git-refs"],
+      "minimumReleaseAge": "0 days"
+    },
+    {
+      "description": "Docker digest-only updates refresh the digest of an already-pinned tag and often carry no registry release timestamp. Under the strict 30-day release-age gate they stay pending forever, so digest updates skip the gate while tag bumps still wait.",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest"],
       "minimumReleaseAge": "0 days"
     },
     {

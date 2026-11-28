@@ -1,4 +1,5 @@
-import { collectDefaultMetrics, Counter, Gauge, Registry } from "prom-client";
+import { createConsoleRegistry } from "@shepherdjerred/console-server";
+import { Counter, Gauge, type Registry } from "prom-client";
 import * as Sentry from "@sentry/bun";
 import { bugsinkServerOptions } from "@shepherdjerred/bugsink-config/server";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
@@ -7,19 +8,8 @@ import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-ho
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import {
-  context,
-  propagation,
-  SpanKind,
-  SpanStatusCode,
-  trace,
-  type Span,
-} from "@opentelemetry/api";
 import type { LinkItem, LinkKind } from "#shared/contract.ts";
 import type { Bootstrap } from "./config.ts";
-
-const SERVICE_NAME = "golink";
-const golinkTracer = trace.getTracer(SERVICE_NAME);
 
 const ALL_LINK_KINDS: readonly LinkKind[] = [
   "manual",
@@ -39,12 +29,14 @@ export type GolinkMetrics = {
   ) => void;
 };
 
+/**
+ * Go link's own metrics on the console registry, which carries
+ * `service="golink"`, the `golink_` process metrics and the kit's
+ * `golink_http_request_duration_seconds`.
+ */
 export function createGolinkMetrics(
-  register: Registry = new Registry(),
+  register: Registry = createConsoleRegistry("golink"),
 ): GolinkMetrics {
-  register.setDefaultLabels({ service: "golink" });
-  collectDefaultMetrics({ register, prefix: "golink_" });
-
   const redirectsTotal = new Counter({
     name: "golink_redirects_total",
     help: "Total HTTP redirects served by golink, partitioned by resolved link kind",
@@ -85,14 +77,12 @@ export function createGolinkMetrics(
 
 let sdk: NodeSDK | undefined;
 let bugSinkActive = false;
-let tracingActive = false;
 
 export function initializeTelemetry(
   config: Bootstrap,
   telemetryEnabled: boolean,
 ): void {
   bugSinkActive = false;
-  tracingActive = false;
   if (!telemetryEnabled) {
     return;
   }
@@ -127,8 +117,8 @@ export function initializeTelemetry(
       ],
       contextManager: new AsyncLocalStorageContextManager(),
     });
+    // The console server's request spans use this global tracer provider.
     sdk.start();
-    tracingActive = true;
   }
 }
 
@@ -138,44 +128,6 @@ export function reportError(error: unknown): void {
   }
 }
 
-async function executeServerSpan<T>(
-  span: Span,
-  method: string,
-  route: string,
-  operation: () => Promise<T>,
-): Promise<T> {
-  span.setAttributes({
-    "http.request.method": method,
-    "http.route": route,
-  });
-  try {
-    return await operation();
-  } catch (error) {
-    span.setStatus({ code: SpanStatusCode.ERROR });
-    reportError(error);
-    throw error;
-  } finally {
-    span.end();
-  }
-}
-
-export async function traceRequest<T>(
-  request: Request,
-  route: string,
-  operation: () => Promise<T>,
-): Promise<T> {
-  if (!tracingActive) {
-    return operation();
-  }
-  const carrier = Object.fromEntries(request.headers);
-  const extractedContext = propagation.extract(context.active(), carrier);
-  return context.with(extractedContext, () =>
-    golinkTracer.startActiveSpan(route, { kind: SpanKind.SERVER }, (span) =>
-      executeServerSpan(span, request.method, route, operation),
-    ),
-  );
-}
-
 export async function shutdownTelemetry(): Promise<void> {
   await Promise.all([
     sdk?.shutdown(),
@@ -183,5 +135,4 @@ export async function shutdownTelemetry(): Promise<void> {
   ]);
   sdk = undefined;
   bugSinkActive = false;
-  tracingActive = false;
 }

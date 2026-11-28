@@ -15,6 +15,7 @@ import {
   buildCommunityInsights,
   squadChemistry,
 } from "#src/trpc/router/consumer/community-insights.ts";
+import { STANDARD_COMMUNITY_QUEUES } from "#src/trpc/router/consumer/standard-rift.ts";
 import { listLivePrematchGames } from "#src/temporal/prematch/prematch-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
@@ -26,17 +27,7 @@ const CommunityFilters = GuildInput.extend({
   queuePreset: z.enum(["standard", "all", "arena"]).default("standard"),
 });
 
-const STANDARD_QUEUES = [
-  "solo",
-  "flex",
-  "ranked 5s",
-  "clash",
-  "normal",
-  "draft pick",
-  "quickplay",
-  "swiftplay",
-  "custom",
-];
+const STANDARD_QUEUES = STANDARD_COMMUNITY_QUEUES;
 
 async function authorizedGuild(user: User, guildId: DiscordGuildId) {
   const guilds = await assertConsumerPlayerScope(user);

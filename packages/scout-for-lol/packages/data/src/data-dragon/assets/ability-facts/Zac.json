@@ -131,7 +131,30 @@
       "resolvedDescription": "Zac stretches his arm out, attaching it to the first enemy hit to deal 60/90/120/150/180 (+30% AP) (+3% bonus Health) magic damage and briefly Slow them. Zac's next Attack gains increased range and applies the same damage and Slow. If Zac hits a different enemy with this Attack, he Knocks Up both towards each other. If they collide, they and surrounding enemies take 60/90/120/150/180 (+30% AP) (+3% bonus Health) magic damage and are briefly Slowed.",
       "unresolved": [
         "healthcosttooltip"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.33,
+        "radius": null,
+        "lineWidth": 120,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "zacqmissile",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 2800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Unstable Matter",
@@ -220,7 +243,15 @@
       "unresolved": [
         "displaypercentdamage",
         "tooltiphealthcost"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Elastic Slingshot",
@@ -323,7 +354,15 @@
       "unresolved": [
         "maxstun",
         "healthcosttooltip"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 250,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Let's Bounce!",
@@ -407,7 +446,15 @@
         ]
       },
       "resolvedDescription": "Zac bounces 4 times. The first bounce to hit each enemy Knocks them back and deals 120/190/260 (+40% AP) magic damage. Subsequent bounces deal 60/95/130 (+20% AP) magic damage and Slow by 20% for 1 second. Zac gains up to 50% Move Speed over time and can cast Unstable Matter while bouncing.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.3,
+        "radius": 300,
+        "lineWidth": null,
+        "missileSpeed": 1800,
+        "missiles": []
+      }
     }
   }
 }

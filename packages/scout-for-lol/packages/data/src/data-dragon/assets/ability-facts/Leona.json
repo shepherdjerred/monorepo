@@ -59,7 +59,15 @@
         ]
       },
       "resolvedDescription": "Leona's next Attack Stuns for 1 seconds and deals an additional 10/35/60/85/110 (+30% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Eclipse",
@@ -138,7 +146,15 @@
         ]
       },
       "resolvedDescription": "Leona raises her shield, reducing incoming damage by 8/12/16/20/24 and gaining 20/27.5/35/42.5/50 (+20% bonus Armor) Armor and 20/27.5/35/42.5/50 (+20% bonus Magic Resist) Magic Resist for 3 seconds. Afterwards, her shield detonates, dealing 55/85/115/145/175 (+40% AP) magic damage to nearby enemies. If she hits at least one, she retains the Armor and Magic Resist bonuses for an additional 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 500,
+        "lineWidth": null,
+        "missileSpeed": 828.5,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Zenith Blade",
@@ -182,7 +198,30 @@
         ]
       },
       "resolvedDescription": "Leona thrusts with a sword of light, dealing 50/90/130/170/210 (+40% AP) magic damage. The last champion struck will be Rooted for 0.5 seconds and Leona will dash to them.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "leonazenithblademissile",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Solar Flare",
@@ -251,7 +290,15 @@
         ]
       },
       "resolvedDescription": "Leona calls down a radiant beam of solar energy dealing 150/225/300 (+80% AP) magic damage and Slowing by 80% for 1.75 seconds. Enemies in the center of the flare are Stunned instead of Slowed.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 120,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     }
   }
 }

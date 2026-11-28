@@ -1,0 +1,759 @@
+{
+  "match": {
+    "matchId": "NA1_9400000001",
+    "gameCreationMs": 1787659200000,
+    "gameDurationSeconds": 1680,
+    "queue": "solo",
+    "queueId": 420,
+    "remake": false,
+    "gameMode": "CLASSIC",
+    "gameType": "MATCHED_GAME",
+    "gameVersion": "16.1.1",
+    "mapId": 11,
+    "arenaSubteams": null,
+    "teams": [
+      {
+        "teamId": 100,
+        "win": true,
+        "participants": [
+          {
+            "participantId": 1,
+            "teamId": 100,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "Mossback",
+              "tagLine": "NA1"
+            },
+            "championId": 122,
+            "championName": "Darius",
+            "position": "TOP",
+            "win": true,
+            "kills": 5,
+            "deaths": 4,
+            "assists": 6,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 18400,
+            "killParticipation": 0.3793103448275862,
+            "damageShare": 0.19126819126819128,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          },
+          {
+            "participantId": 2,
+            "teamId": 100,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "Velour",
+              "tagLine": "NA1"
+            },
+            "championId": 64,
+            "championName": "LeeSin",
+            "position": "JUNGLE",
+            "win": true,
+            "kills": 4,
+            "deaths": 5,
+            "assists": 12,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 12900,
+            "killParticipation": 0.5517241379310345,
+            "damageShare": 0.1340956340956341,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          },
+          {
+            "participantId": 3,
+            "teamId": 100,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": true,
+            "riotId": {
+              "gameName": "Northstar",
+              "tagLine": "NA1"
+            },
+            "championId": 103,
+            "championName": "Ahri",
+            "position": "MIDDLE",
+            "win": true,
+            "kills": 9,
+            "deaths": 2,
+            "assists": 11,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 27600,
+            "killParticipation": 0.6896551724137931,
+            "damageShare": 0.2869022869022869,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [
+              {
+                "playerId": "viewer",
+                "alias": "Northstar",
+                "guildName": "test-guild"
+              }
+            ],
+            "lpDelta": null
+          },
+          {
+            "participantId": 4,
+            "teamId": 100,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "RiverQuartz",
+              "tagLine": "NA1"
+            },
+            "championId": 222,
+            "championName": "Jinx",
+            "position": "BOTTOM",
+            "win": true,
+            "kills": 10,
+            "deaths": 3,
+            "assists": 9,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 31200,
+            "killParticipation": 0.6551724137931034,
+            "damageShare": 0.32432432432432434,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [
+              {
+                "playerId": "friend",
+                "alias": "RiverQuartz",
+                "guildName": "test-guild"
+              }
+            ],
+            "lpDelta": null
+          },
+          {
+            "participantId": 5,
+            "teamId": 100,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "TidalWren",
+              "tagLine": "NA1"
+            },
+            "championId": 412,
+            "championName": "Thresh",
+            "position": "UTILITY",
+            "win": true,
+            "kills": 1,
+            "deaths": 4,
+            "assists": 18,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 6100,
+            "killParticipation": 0.6551724137931034,
+            "damageShare": 0.06340956340956341,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          }
+        ],
+        "objectives": {
+          "turrets": 5,
+          "inhibitors": 0,
+          "barons": 0,
+          "dragons": 0
+        }
+      },
+      {
+        "teamId": 200,
+        "win": false,
+        "participants": [
+          {
+            "participantId": 6,
+            "teamId": 200,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "Tallowick",
+              "tagLine": "NA1"
+            },
+            "championId": 86,
+            "championName": "Garen",
+            "position": "TOP",
+            "win": false,
+            "kills": 3,
+            "deaths": 6,
+            "assists": 4,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 16800,
+            "killParticipation": 0.3888888888888889,
+            "damageShare": 0.2222222222222222,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          },
+          {
+            "participantId": 7,
+            "teamId": 200,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "Ninefold",
+              "tagLine": "NA1"
+            },
+            "championId": 254,
+            "championName": "Vi",
+            "position": "JUNGLE",
+            "win": false,
+            "kills": 4,
+            "deaths": 6,
+            "assists": 7,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 11200,
+            "killParticipation": 0.6111111111111112,
+            "damageShare": 0.14814814814814814,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          },
+          {
+            "participantId": 8,
+            "teamId": 200,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "Windlass",
+              "tagLine": "NA1"
+            },
+            "championId": 157,
+            "championName": "Yasuo",
+            "position": "MIDDLE",
+            "win": false,
+            "kills": 5,
+            "deaths": 7,
+            "assists": 3,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 19500,
+            "killParticipation": 0.4444444444444444,
+            "damageShare": 0.25793650793650796,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          },
+          {
+            "participantId": 9,
+            "teamId": 200,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "Petrichor",
+              "tagLine": "NA1"
+            },
+            "championId": 145,
+            "championName": "Kaisa",
+            "position": "BOTTOM",
+            "win": false,
+            "kills": 5,
+            "deaths": 5,
+            "assists": 5,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 22700,
+            "killParticipation": 0.5555555555555556,
+            "damageShare": 0.3002645502645503,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          },
+          {
+            "participantId": 10,
+            "teamId": 200,
+            "subteamId": null,
+            "placement": null,
+            "augments": [],
+            "selectedPlayer": false,
+            "riotId": {
+              "gameName": "Anchorage",
+              "tagLine": "NA1"
+            },
+            "championId": 111,
+            "championName": "Nautilus",
+            "position": "UTILITY",
+            "win": false,
+            "kills": 1,
+            "deaths": 5,
+            "assists": 9,
+            "creepScore": 150,
+            "goldEarned": 10000,
+            "visionScore": 20,
+            "damageToChampions": 5400,
+            "killParticipation": 0.5555555555555556,
+            "damageShare": 0.07142857142857142,
+            "objectives": {
+              "turrets": 1,
+              "inhibitors": 0,
+              "barons": 0,
+              "dragons": 0
+            },
+            "loadout": {
+              "itemIds": [
+                1055,
+                3006,
+                3031,
+                3094,
+                3072,
+                0,
+                3340
+              ],
+              "summonerSpellIds": [
+                4,
+                7
+              ],
+              "runes": {
+                "primaryStyleId": 8000,
+                "primaryRuneIds": [
+                  8005,
+                  8009,
+                  9103,
+                  8014
+                ],
+                "secondaryStyleId": 8300,
+                "secondaryRuneIds": [
+                  8304,
+                  8347
+                ],
+                "statShardIds": {
+                  "offense": 5005,
+                  "flex": 5008,
+                  "defense": 5002
+                }
+              }
+            },
+            "scoutAliases": [],
+            "lpDelta": null
+          }
+        ],
+        "objectives": {
+          "turrets": 5,
+          "inhibitors": 0,
+          "barons": 0,
+          "dragons": 0
+        }
+      }
+    ],
+    "roleMatchups": [
+      {
+        "role": "top",
+        "blueParticipantId": 1,
+        "redParticipantId": 6,
+        "at15": null
+      },
+      {
+        "role": "jungle",
+        "blueParticipantId": 2,
+        "redParticipantId": 7,
+        "at15": null
+      },
+      {
+        "role": "middle",
+        "blueParticipantId": 3,
+        "redParticipantId": 8,
+        "at15": null
+      },
+      {
+        "role": "adc",
+        "blueParticipantId": 4,
+        "redParticipantId": 9,
+        "at15": null
+      },
+      {
+        "role": "support",
+        "blueParticipantId": 5,
+        "redParticipantId": 10,
+        "at15": null
+      }
+    ]
+  },
+  "timeline": {
+    "coverage": null,
+    "keyEvents": []
+  }
+}

@@ -6,7 +6,10 @@ import { createPyroscopeApp } from "./pyroscope.ts";
 
 const PyroscopeApplicationSchema = z.object({
   kind: z.literal("Application"),
-  metadata: z.object({ name: z.literal("pyroscope") }),
+  metadata: z.object({
+    name: z.literal("pyroscope"),
+    annotations: z.record(z.string(), z.string()),
+  }),
   spec: z.object({
     ignoreDifferences: z.array(
       z.object({
@@ -101,6 +104,9 @@ describe("Pyroscope Argo CD application", () => {
     // preflight refuses indexed pointers because dropping one entry renumbers
     // its siblings. Chart 2.2.1 renders an empty `annotations: {}` inside the
     // claim template that 2.2.0 did not, which is what made every sync fail.
+    expect(manifest.data.metadata.annotations).toEqual({
+      "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+    });
     expect(manifest.data.spec.ignoreDifferences).toEqual([
       {
         group: "apps",

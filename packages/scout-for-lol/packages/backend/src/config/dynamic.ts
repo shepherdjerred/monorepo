@@ -261,6 +261,17 @@ const DEFINITION = {
     default: false,
     names: { flag: "scout-participant-crawl-enabled" },
   },
+  /**
+   * Kill switch for the daily rank refresh (`league/rank-refresh/`). A
+   * process's code default is the managed inventory's for its environment
+   * (on in beta, off in production).
+   */
+  scoutRankRefreshEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: false,
+    names: { flag: "scout-rank-refresh-enabled" },
+  },
   /** Matches the participant crawl may store per UTC day. */
   participantCrawlDailyMatchBudget: {
     schema: flagValueSchema("scout-participant-crawl-daily-match-budget"),
@@ -313,6 +324,11 @@ function buildSnapshot(
   seed: DynamicConfigSeed,
   flagSourceEnabled: boolean,
 ) {
+  // On in beta and off in production when no flag answers.
+  const rankRefreshDefault = managedBooleanDefault(
+    "scout-rank-refresh-enabled",
+    managedEnvironment(environment),
+  );
   const resolver = defineConfig({
     definition: {
       ...DEFINITION,
@@ -326,6 +342,10 @@ function buildSnapshot(
       evidenceRecoveryEnabled: {
         ...DEFINITION.evidenceRecoveryEnabled,
         default: evidenceRecoveryDefault(environment),
+      },
+      scoutRankRefreshEnabled: {
+        ...DEFINITION.scoutRankRefreshEnabled,
+        default: rankRefreshDefault,
       },
     },
     sources: {
@@ -351,6 +371,7 @@ function buildSnapshot(
                 evidenceRecoveryEnabled: "boolean",
                 riotBudgetMode: flagValueKind("scout-riot-budget-mode"),
                 participantCrawlEnabled: "boolean",
+                scoutRankRefreshEnabled: "boolean",
                 participantCrawlDailyMatchBudget: flagValueKind(
                   "scout-participant-crawl-daily-match-budget",
                 ),
@@ -382,6 +403,7 @@ function buildSnapshot(
       evidenceRecoveryEnabled: evidenceRecoveryDefault(environment),
       riotBudgetMode: "observe",
       participantCrawlEnabled: false,
+      scoutRankRefreshEnabled: rankRefreshDefault,
       participantCrawlDailyMatchBudget:
         DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET,
       scoutClientEndOfGameDeadlineSeconds:
@@ -592,6 +614,14 @@ export function riotBudgetMode(): RiotBudgetMode {
 /** Per-tick read by the participant crawl; the flag's answer, `false` until refreshed. */
 export function participantCrawlEnabled(): boolean {
   return snapshot?.get("participantCrawlEnabled") ?? false;
+}
+
+/**
+ * Per-batch read by the rank refresh. Before the first refresh it answers
+ * `false`, so an Activity that outruns configuration boot does nothing.
+ */
+export function scoutRankRefreshEnabled(): boolean {
+  return snapshot?.get("scoutRankRefreshEnabled") ?? false;
 }
 
 /** Per-tick read by the participant crawl: matches it may store per UTC day. */

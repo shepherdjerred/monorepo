@@ -3,7 +3,7 @@ import { createMovieWorkflowFixture } from "#testing/movie-workflow/fixture.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
-import { searchMovieCandidatesV4 } from "./candidates.ts";
+import { searchMovieCandidatesV4 } from "./candidate-search.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import { MovieReconcileOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";

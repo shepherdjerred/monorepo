@@ -31,20 +31,14 @@ async function ignoreError(action: Promise<unknown>): Promise<void> {
   }
 }
 
-import type {
-  ClientBootstrap,
-  ClientLauncher,
-  LaunchedClient,
-} from "./client-launch.ts";
+import type { ClientBootstrap, ClientLauncher } from "./client-launch.ts";
+import {
+  assertConnectedClientName,
+  stopManagedClientSession,
+  type ManagedClientSession,
+} from "./client-session.ts";
 
-type Session = {
-  summary: ClientSummary;
-  socket: string;
-  privateDir: string;
-  child?: LaunchedClient;
-  bootstrapPath?: string;
-  cleanup?: () => Promise<void>;
-};
+type Session = ManagedClientSession;
 
 const POLL_MS = 500;
 
@@ -62,20 +56,6 @@ async function isSocket(file: string): Promise<boolean> {
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-async function exitWithin(child: LaunchedClient, ms: number): Promise<boolean> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<false>((resolve) => {
-    timer = setTimeout(() => {
-      resolve(false);
-    }, ms);
-  });
-  try {
-    return await Promise.race([child.exited.then(() => true), timeout]);
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 export class ClientManager {
@@ -202,6 +182,7 @@ export class ClientManager {
         if (!state.connected)
           throw new Error("Prism client disconnected before registration");
         session.summary.pid = state.pid;
+        assertConnectedClientName(name, state);
         void this.monitorPrism(session);
       } catch (error) {
         await this.stopSession(session);
@@ -297,8 +278,15 @@ export class ClientManager {
     this.options.log("client starting", { name, target, pid: child.pid });
     try {
       await this.waitUntilJoined(session, logPath);
+      if (target === "live") {
+        const state = ClientStateSchema.parse(
+          await clientRequest(session.socket, "status"),
+        );
+        assertConnectedClientName(name, state);
+      }
     } catch (error) {
       await this.stopSession(session);
+      if (error instanceof DaemonError) throw error;
       throw new DaemonError(describe(error), 502);
     }
     this.options.log("client joined", { name, target });
@@ -322,8 +310,11 @@ export class ClientManager {
     while (Date.now() < deadline) {
       const code = session.child?.exitCode() ?? null;
       if (code !== null) {
+        const reason = session.child?.failureReason?.();
         throw new Error(
-          `Client exited (${code.toString()}) before joining; see ${logPath}`,
+          reason === undefined
+            ? `Client exited (${code.toString()}) before joining; see ${logPath}`
+            : `${reason} (see ${logPath})`,
         );
       }
       if (await isSocket(session.socket)) {
@@ -448,43 +439,11 @@ export class ClientManager {
 
   /** Asks the game to quit, then escalates to SIGTERM and SIGKILL. */
   private async stopSession(session: Session): Promise<void> {
-    const { child } = session;
-    if (child === undefined) {
-      try {
-        await clientRequest(session.socket, "shutdown", {}, 5000);
-      } catch {
-        // Fall back to the verified Prism game process.
-      }
-      if (session.bootstrapPath === undefined)
-        throw new Error("Missing Prism bootstrap path");
-      await stopPrism(
-        session.bootstrapPath,
-        (this.options.stopTimeoutMs ?? 30_000) / 3,
-      );
-      await this.ended(session, null);
-      return;
-    }
-    const grace = this.options.stopTimeoutMs ?? 30_000;
-    if (child.exitCode() === null) {
-      try {
-        await clientRequest(session.socket, "shutdown", {}, 5000);
-      } catch {
-        // Not answering is what the signals below are for.
-      }
-      if (!(await exitWithin(child, grace))) {
-        await child.kill("SIGTERM");
-        if (!(await exitWithin(child, grace / 3))) {
-          await child.kill("SIGKILL");
-          await child.exited;
-        }
-      }
-    }
-    if (session.bootstrapPath !== undefined) {
-      await ignoreError(
-        stopPrism(session.bootstrapPath, Math.min(grace / 3, 5000)),
-      );
-    }
-    await this.ended(session, child.exitCode());
+    await stopManagedClientSession(
+      session,
+      this.options.stopTimeoutMs ?? 30_000,
+      (code) => this.ended(session, code),
+    );
   }
 
   private async ended(session: Session, code: number | null): Promise<void> {

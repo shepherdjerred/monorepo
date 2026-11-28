@@ -1,0 +1,5 @@
+/* Conformance fixture: one colour literal and nothing else. */
+.app-row {
+  border-bottom: 1px solid #dfe0d7;
+  color: var(--ui-ink);
+}

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import type { PublishBuild } from "#shared/contract.ts";
 import { useDeliveryHttp } from "#testing/delivery-http-fixture.ts";
 import { testExecutor, testPublisher, testOperator } from "#testing/seed.ts";
 
@@ -372,7 +373,11 @@ test("automatic qualification retains qualified image B across a manual A compos
   expect(selected.components["site:scout-frontend-beta"]?.id).toBe("site/c");
 });
 
-async function retaining(number: number, retainedArtifactId: string) {
+async function retaining(
+  number: number,
+  retainedArtifactId: string,
+  artifacts: PublishBuild["artifacts"] = [],
+) {
   return harness.delivery.publish(
     {
       requestId: `retaining/${String(number)}`,
@@ -380,7 +385,7 @@ async function retaining(number: number, retainedArtifactId: string) {
       sourceRevision: String(number).padStart(40, "0"),
       ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
       verifiedAt: new Date().toISOString(),
-      artifacts: [],
+      artifacts,
       retainedArtifactIds: [retainedArtifactId],
     },
     testPublisher,
@@ -501,7 +506,132 @@ describe("back-to-back pipelines retain a pending original by reference", () => 
     expect(await serviceSets()).toBe(2);
     expect(await qualifiedId()).toBe(changed.artifactId);
   });
+});
 
+describe("a CI publication retaining a stale comparison base", () => {
+  test("a late retention preserves the newer producer and does not become a future comparison base", async () => {
+    const original = await publication(1, "verified");
+    const frozenBase = await retainableId(3);
+    expect(frozenBase).toBe(original.artifactId);
+    const changed = await publication(2, "verified");
+    const retained = await retaining(3, frozenBase);
+
+    expect(await retainableId(4)).toBe(changed.artifactId);
+    expect(
+      await harness.delivery.qualify(
+        retained.buildId,
+        "verified",
+        testExecutor,
+      ),
+    ).toEqual({ status: "verified" });
+    expect(await serviceSets()).toBe(2);
+    expect(await qualifiedId()).toBe(changed.artifactId);
+    expect(
+      await client().latestRetainableArtifact({ ...query, beforePipeline: 4 }),
+    ).toMatchObject({
+      id: changed.artifactId,
+      buildId: changed.buildId,
+      sourceRevision: changed.sourceRevision,
+    });
+    expect(
+      await harness.cluster.database.buildArtifactSelection.findUniqueOrThrow({
+        where: {
+          buildId_component: {
+            buildId: retained.buildId,
+            component: query.component,
+          },
+        },
+      }),
+    ).toMatchObject({ artifactId: original.artifactId });
+
+    const next = await publication(4);
+    await retaining(5, frozenBase);
+    expect(await retainableId(6)).toBe(next.artifactId);
+    expect(
+      await harness.delivery.qualify(next.buildId, "verified", testExecutor),
+    ).toEqual({ status: "verified" });
+    expect(await qualifiedId()).toBe(next.artifactId);
+  });
+
+  test("pipeline numbers from different repositories do not establish artifact precedence", async () => {
+    const original = await publication(1, "verified");
+    await publication(2, "verified", 2);
+    const retained = await retaining(3, original.artifactId);
+
+    expect(await retainableId(4)).toBe(original.artifactId);
+    expect(
+      await harness.delivery.qualify(
+        retained.buildId,
+        "verified",
+        testExecutor,
+      ),
+    ).toEqual({ status: "verified" });
+    const set = await harness.cluster.database.versionSet.findUniqueOrThrow({
+      where: { qualifiedBuildId: retained.buildId },
+    });
+    const { components } = await harness.delivery.version(set.id);
+    expect(components[query.component]).toMatchObject({
+      id: original.artifactId,
+      buildId: original.buildId,
+    });
+  });
+
+  test.each([false, true])(
+    "uses the newer image and enforces all requirements for other declared outputs (depends on stale image: %s)",
+    async (dependsOnStaleImage) => {
+      const original = await publication(1, "verified");
+      const changed = await publication(2, "verified");
+      const originalDigest = `sha256:${"1".padStart(64, "0")}`;
+      const siteComponent = "site:scout-frontend-beta";
+      const late = await retaining(3, original.artifactId, [
+        {
+          id: "site/late-retention",
+          component: siteComponent,
+          kind: "archive",
+          uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${"a".repeat(64)}.tar`,
+          version: "build-3",
+          digest: `sha256:${"a".repeat(64)}`,
+          requires: dependsOnStaleImage
+            ? { [query.component]: originalDigest }
+            : {},
+        },
+      ]);
+
+      const result = await harness.delivery.qualify(
+        late.buildId,
+        "verified",
+        testExecutor,
+      );
+      expect(await qualifiedId()).toBe(changed.artifactId);
+      if (dependsOnStaleImage) {
+        expect(result).toEqual({ status: "failed" });
+        expect(await buildRow(late.buildId)).toMatchObject({
+          qualificationReason: `${siteComponent} requires exact ${query.component} digest ${originalDigest}`,
+        });
+        expect(await serviceSets()).toBe(2);
+      } else {
+        expect(result).toEqual({ status: "verified" });
+        const set = await harness.cluster.database.versionSet.findUniqueOrThrow(
+          {
+            where: { qualifiedBuildId: late.buildId },
+          },
+        );
+        const { components } = await harness.delivery.version(set.id);
+        expect(components[query.component]).toMatchObject({
+          id: changed.artifactId,
+          buildId: changed.buildId,
+          sourceRevision: changed.sourceRevision,
+        });
+        expect(components[siteComponent]).toMatchObject({
+          id: "site/late-retention",
+          buildId: late.buildId,
+        });
+      }
+    },
+  );
+});
+
+describe("invalid retained originals", () => {
   test("a failed reference fails the retaining build with a reason naming the retained artifact", async () => {
     const live = await publication(1, "verified");
     const changed = await publication(2);

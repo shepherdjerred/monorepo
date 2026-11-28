@@ -1,0 +1,192 @@
+/* ── Inbox, outline and the board shell ──────────────────────────────────── */
+.ar-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+.ar-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-bottom: 12px;
+}
+.ar-page-head h1,
+.ar-board-head h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ar-rows {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.ar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+.ar-row:hover {
+  background: var(--ui-hover);
+}
+.ar-row-main {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.ar-row-title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ar-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.ar-row-actions {
+  display: flex;
+  gap: 6px;
+}
+.ar-row-actions .ui-btn[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--ui-sev-ok) 50%, var(--ui-btn-edge));
+  background: var(--ui-sev-ok-soft);
+}
+@media (max-width: 640px) {
+  .ar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ar-row-actions {
+    justify-content: flex-end;
+  }
+}
+
+/* Board */
+.ar-board {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: calc(100dvh - var(--ar-top));
+}
+.ar-board-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.ar-board-body {
+  min-width: 0;
+  padding: 16px;
+}
+.ar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: 16px;
+  padding: 0;
+  list-style: none;
+}
+.ar-node {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ar-node[data-selected="true"] .ar-node-body {
+  outline: 2px solid color-mix(in srgb, var(--ui-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+.ar-node-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+}
+.ar-node-title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-ink);
+}
+.ar-node-head .ar-icon-button {
+  margin-left: auto;
+}
+.ar-node-body {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+.ar-placeholder {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 12px;
+  color: var(--ui-muted);
+  text-align: center;
+}
+.ar-placeholder svg {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 4px;
+}
+.ar-placeholder-kind {
+  color: var(--ui-ink);
+  font-weight: 600;
+}
+.ar-placeholder-meta {
+  font-size: 12.5px;
+}
+.ar-placeholder .ui-btn {
+  margin-top: 8px;
+}
+.ar-side-title {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Outline */
+.ar-outline-list {
+  display: grid;
+  gap: 20px;
+  margin: 16px 0 24px;
+  padding: 0;
+  list-style: none;
+}
+.ar-outline-item {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+.ar-outline-item h2,
+.ar-outline h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ar-outline a {
+  color: var(--ui-accent);
+}
+.ar-outline-meta {
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}

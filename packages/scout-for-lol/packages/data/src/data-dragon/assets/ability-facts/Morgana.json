@@ -59,7 +59,15 @@
         ]
       },
       "resolvedDescription": "Morgana hurls a blast of starfire that Roots the first enemy hit for 2/2.25/2.5/2.75/3 seconds and deals 80/135/190/245/300 (+90% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1200,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Tormented Shadow",
@@ -140,7 +148,15 @@
       "resolvedDescription": "Morgana ignites the ground for 5 seconds, dealing 18/31/44/57/70 (+20% AP) magic damage per second, increased by up to {{ totalmaxdamage }} based on the targets' missing Health. This Ability's Cooldown is reduced by 5% every time Morgana is healed by Soul Siphon.",
       "unresolved": [
         "totalmaxdamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 280,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Black Shield",
@@ -184,7 +200,15 @@
         ]
       },
       "resolvedDescription": "Morgana grants an ally champion 100/155/210/265/320 (+70% AP) Magic Shield for 5 seconds. The shield prevents Disabling and Immobilizing effects until it breaks.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Soul Shackles",
@@ -233,7 +257,30 @@
         ]
       },
       "resolvedDescription": "Morgana chains herself to nearby enemy Champions, dealing 200/275/350 (+80% AP) magic damage and Slowing them by 20%. After 3 seconds, enemies unable to break the chains take an additional 200/275/350 (+80% AP) magic damage and are Stunned for 1.5/1.75/2 seconds. While casting this Ability, Morgana gains 20/40/60% Move Speed.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 625,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "morganarvfxmis",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

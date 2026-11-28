@@ -148,7 +148,13 @@ export const FIXTURE_ROWS: readonly RollupRow[] = [
     wins: 16,
   }),
   row("matchup", 3, "MIDDLE", { key1: "2", games: 80, wins: 30 }),
+  // Lane games are the sampled subset with a 15:00 checkpoint; `wins` is games ahead.
+  row("lane", 2, "MIDDLE", { games: 120, wins: 66 }),
+  row("lane_matchup", 2, "MIDDLE", { key1: "3", games: 36, wins: 24 }),
 ];
+
+/** The one retained day of the fixture whose partials hold lane rows. */
+export const FIXTURE_LANE_DAYS: readonly string[] = ["2026-11-13"];
 
 export const FIXTURE_NOW = new Date("2026-11-14T03:00:00.000Z");
 
@@ -159,6 +165,7 @@ export function fixtureMetaReader(
   const serving = assembleMetaServing({
     rows,
     days: ["2026-11-12", "2026-11-13"],
+    laneDays: FIXTURE_LANE_DAYS,
     buildId: "fixture-build",
     now: FIXTURE_NOW,
     thresholds: DEFAULT_META_THRESHOLDS,

@@ -30,6 +30,19 @@ export type MediaFeatureGate = {
   readonly voiceDecisionsRouter?: (scope: DiscoveryScope) => Promise<boolean>;
 };
 
+/** Guild-scoped evaluation, for decisions made where no requesting user is in hand. */
+async function guildEnabled(
+  key: StreambotBooleanFlagKey,
+  guildId: string,
+): Promise<boolean> {
+  const result = await isEnabled(key, {
+    default: managedBooleanDefault(key),
+    targetingKey: guildId,
+    attributes: { server: guildId },
+  });
+  return result.value;
+}
+
 async function enabled(
   key: StreambotBooleanFlagKey,
   scope: DiscoveryScope,
@@ -52,14 +65,8 @@ export const mediaFeatureGate: MediaFeatureGate = {
   lolAutoplay: (scope) => enabled("streambot-lol-autoplay-enabled", scope),
   automaticChannelRouting: (scope) =>
     enabled("streambot-automatic-channel-routing-enabled", scope),
-  numberedChannels: async (scope) => {
-    const result = await isEnabled("streambot-numbered-channels-enabled", {
-      default: managedBooleanDefault("streambot-numbered-channels-enabled"),
-      targetingKey: scope.guildId,
-      attributes: { server: scope.guildId },
-    });
-    return result.value;
-  },
+  numberedChannels: (scope) =>
+    guildEnabled("streambot-numbered-channels-enabled", scope.guildId),
   assistantV2: (scope) => enabled("streambot-assistant-v2-enabled", scope),
   history: (scope) => enabled("streambot-history-enabled", scope),
   musicOverVoice: (scope) =>
@@ -69,6 +76,40 @@ export const mediaFeatureGate: MediaFeatureGate = {
   voiceDecisionsRouter: (scope) =>
     enabled("streambot-voice-decisions-router-enabled", scope),
 };
+
+/**
+ * The audio-processing switches one playback segment runs with. Each is independent, and each one
+ * off restores exactly its part of the ffmpeg audio stage that shipped before it existed.
+ */
+export type AudioProcessingFlags = {
+  /** 5.1/7.1 sources downmix through a dialogue-first `pan` and a limiter, not `-ac 2`. */
+  readonly dialogDownmix: boolean;
+  /** Realtime loudness normalisation ahead of the volume filter, on video and music. */
+  readonly loudnessNormalization: boolean;
+  /** Discontinuous live audio is resampled onto its timestamps (`aresample=async=1`). */
+  readonly liveResync: boolean;
+  /** Play the probe-ranked audio track and HLS video variant instead of the first usable one. */
+  readonly trackRanking: boolean;
+};
+
+/**
+ * Evaluated by the streamer once per playback segment (a seek reuses its segment's options), so a
+ * flip applies from the next item, retry or fallback without touching one already running. The
+ * streaming call site has the voice handle (guild + channel) and not the requester, so these
+ * target the guild, as `streambot-numbered-channels-enabled` does.
+ */
+export async function audioProcessingFlags(
+  guildId: string,
+): Promise<AudioProcessingFlags> {
+  const [dialogDownmix, loudnessNormalization, liveResync, trackRanking] =
+    await Promise.all([
+      guildEnabled("streambot-audio-dialog-downmix-enabled", guildId),
+      guildEnabled("streambot-audio-loudness-normalization-enabled", guildId),
+      guildEnabled("streambot-audio-live-resync-enabled", guildId),
+      guildEnabled("streambot-audio-track-ranking-enabled", guildId),
+    ]);
+  return { dialogDownmix, loudnessNormalization, liveResync, trackRanking };
+}
 
 /**
  * Which provider answers music search: `youtube-music` or `musicbrainz`. Read per request so a flag

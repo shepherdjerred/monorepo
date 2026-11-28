@@ -8,10 +8,9 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 7359,
     proxy: Object.fromEntries(
-      ["/api", "/.export", "/healthz", "/readyz"].map((route) => [
-        route,
-        "http://127.0.0.1:7352",
-      ]),
+      ["/api", "/trpc", "/.export", "/healthz", "/readyz", "/metrics"].map(
+        (route) => [route, "http://127.0.0.1:7352"],
+      ),
     ),
   },
 });

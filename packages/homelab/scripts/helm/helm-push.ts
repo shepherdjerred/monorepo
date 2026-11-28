@@ -39,6 +39,7 @@ import {
   type ChartPlanningClient,
 } from "./helm-delivery-publication.ts";
 import { chartPublicationImages } from "@shepherdjerred/root-scripts/lib/image-pin-catalog.ts";
+import { createRetryingDeliveryFetch } from "@shepherdjerred/root-scripts/lib/delivery/retry-fetch.ts";
 import { requireEnv as requireEnvironment } from "@shepherdjerred/root-scripts/lib/run.ts";
 import {
   ChartPublicationSchema,
@@ -196,6 +197,7 @@ function planningClient(): ChartPlanningClient {
     headers: {
       Authorization: `Bearer ${requireEnvironment("DELIVERY_API_TOKEN")}`,
     },
+    fetch: createRetryingDeliveryFetch(),
   });
 }
 

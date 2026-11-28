@@ -1,4 +1,5 @@
 import type { CiStep } from "./model.ts";
+import type { CacheTrustDomain } from "./cache-trust-domain.ts";
 import {
   parseVersionCatalog,
   versionCatalogMap,
@@ -30,12 +31,17 @@ export const SOURCE_CACHE_CONTROL = "woodpecker-source-control";
 export const SOURCE_CACHE_PATH = "/woodpecker/source-cache";
 export const SOURCE_CACHE_CONTROL_PATH = "/woodpecker/source-control";
 
+/**
+ * Only the pinned helper image's checkout writes either claim, never the code
+ * under test, so the source cache follows the trust domain rather than the
+ * branch: trusted proposals share main's objects.
+ */
 export function cacheSourceSteps(
   steps: readonly CiStep[],
   input: {
     enabled: boolean;
     credentialless: boolean;
-    main: boolean;
+    trustDomain: CacheTrustDomain;
     image?: string | undefined;
   },
 ): CiStep[] {
@@ -49,7 +55,10 @@ export function cacheSourceSteps(
           ...step,
           sourceCache: {
             image,
-            claim: input.main ? SOURCE_CACHE_MAIN : SOURCE_CACHE_PR,
+            claim:
+              input.trustDomain === "trusted"
+                ? SOURCE_CACHE_MAIN
+                : SOURCE_CACHE_PR,
           },
         },
   );

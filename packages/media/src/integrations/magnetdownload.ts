@@ -11,9 +11,9 @@ import {
   boundedBytes,
   magnetFor,
   sameOriginUrl,
-  releaseTitleEvidence,
   type ProviderCandidate,
 } from "./providers.ts";
+import { releaseTitleEvidence } from "./provider-title-evidence.ts";
 
 export const MagnetDownloadResultSchema = z.object({
   id: z.string().regex(/^\d+$/u),

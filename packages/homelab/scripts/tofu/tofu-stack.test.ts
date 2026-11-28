@@ -6,9 +6,18 @@ import { z } from "zod";
 import {
   buildTofuEnvironment,
   desiredStateVariableValue,
+  interpretPlanExit,
+  parseTofuStackFlags,
   validationEnvironment,
   validationInitArguments,
 } from "./tofu-stack.ts";
+import {
+  buildServiceAccountEnvFile,
+  runServiceAccountPlan,
+  serviceAccountPlanCommand,
+} from "./tofu-service-account.ts";
+import { TransientError } from "@shepherdjerred/root-scripts/lib/transient-error.ts";
+import { VAULT_ID } from "#cdk8s/scripts/onepassword-lib.ts";
 import {
   assertStackExecutionContext,
   dockerTokenPlanSummary,
@@ -726,33 +735,11 @@ process.exit(action === "init" ? ${String(initExit)} : ${String(planExit)});
 `,
       );
       await chmod(executable, 0o700);
-      const child = Bun.spawn(
-        [
-          process.execPath,
-          new URL("tofu-stack.ts", import.meta.url).pathname,
-          "github",
-          "plan",
-        ],
-        {
-          env: {
-            PATH: `${fixture}:${Bun.env["PATH"] ?? ""}`,
-            TMPDIR: fixture,
-            TF_PLUGIN_CACHE_DIR: path.join(fixture, "provider-cache"),
-            TF_DATA_DIR: path.join(fixture, "must-not-inherit"),
-            SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID: "fixture-state-id",
-            SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY: "fixture-state-key",
-            TOFU_GITHUB_TOKEN: "fixture-github-token",
-          },
-          stdout: "pipe",
-          stderr: "pipe",
-        },
-      );
-      const [stdout, stderr, exitCode] = await Promise.all([
-        new Response(child.stdout).text(),
-        new Response(child.stderr).text(),
-        child.exited,
-      ]);
-      expect(exitCode === 0, stdout + stderr).toBe(success);
+      const { output, exitCode } = await spawnFixtureGithubPlan(fixture, [], {
+        TF_PLUGIN_CACHE_DIR: path.join(fixture, "provider-cache"),
+        TF_DATA_DIR: path.join(fixture, "must-not-inherit"),
+      });
+      expect(exitCode === 0, output).toBe(success);
       const recorded = await Bun.file(log).text();
       const observations = recorded
         .trim()
@@ -921,5 +908,309 @@ describe("provider pins", () => {
       { address: "registry.opentofu.org/a/b", version: "1.2.3" },
       { address: "registry.terraform.io/c/d", version: "0.1.0" },
     ]);
+  });
+});
+
+describe("service-account plan credentials (AI-892)", () => {
+  const SERVICE_ACCOUNT_STACKS: readonly TofuStack[] = [
+    "seaweedfs",
+    "tailscale",
+    "arr",
+    "github",
+    "cloudflare",
+    "openai",
+    "anthropic",
+    "discord",
+    "cloudflare-tokens",
+    "posthog",
+    "dockerhub",
+  ];
+
+  const OPERATOR_ONLY_STACKS: readonly TofuStack[] = [
+    "anthropic-federation",
+    "argocd",
+    "asuswrt",
+    "backblaze",
+    "dockerhub-tokens",
+    "google",
+    "application-secrets",
+  ];
+
+  test.each(SERVICE_ACCOUNT_STACKS)(
+    "%s maps every required stack credential to an exact homelab-vault op:// reference",
+    (stack) => {
+      const envFile = buildServiceAccountEnvFile(stack);
+      const lines = envFile.trimEnd().split("\n");
+      const entries = new Map<string, string>();
+      for (const line of lines) {
+        const separator = line.indexOf("=");
+        expect(separator).toBeGreaterThan(0);
+        const name = line.slice(0, separator);
+        const locator = line.slice(separator + 1);
+        expect(locator).toMatch(
+          new RegExp(String.raw`^op://${VAULT_ID}/[a-z0-9]+/[\w-]+$`, "u"),
+        );
+        entries.set(name, locator);
+      }
+
+      const definition = STACK_MANIFEST[stack];
+      const objectSources =
+        definition.secretObject === undefined
+          ? []
+          : Object.values(definition.secretObject.entries);
+      const expectedSources = [
+        ...new Set([
+          ...STATE_SOURCES,
+          ...definition.credentials.map(({ source }) => source),
+          ...objectSources,
+        ]),
+      ].toSorted();
+
+      expect([...entries.keys()].toSorted()).toEqual(expectedSources);
+      expect(entries.has("DELIVERY_PLAN_ENCRYPTION_PASSPHRASE")).toBe(false);
+    },
+  );
+
+  test.each(OPERATOR_ONLY_STACKS)(
+    "rejects --service-account for operator-only stack %s",
+    (stack) => {
+      expect(() => buildServiceAccountEnvFile(stack)).toThrow(
+        "--service-account is not available for operator-only stack",
+      );
+    },
+  );
+
+  test("builds the wrapper op run command and strips OP_SERVICE_ACCOUNT_TOKEN before re-entry", () => {
+    expect(
+      serviceAccountPlanCommand({
+        repoRoot: "/repo",
+        envFilePath: "/tmp/private/stack.env",
+        stack: "seaweedfs",
+        expectNoChanges: true,
+        bunExecutable: "/usr/local/bin/bun",
+        scriptPath: "/repo/packages/homelab/scripts/tofu/tofu-stack.ts",
+      }),
+    ).toEqual([
+      "/repo/scripts/onepassword/with-service-account.sh",
+      "op",
+      "run",
+      "--env-file",
+      "/tmp/private/stack.env",
+      "--",
+      "env",
+      "-u",
+      "OP_SERVICE_ACCOUNT_TOKEN",
+      "/usr/local/bin/bun",
+      "/repo/packages/homelab/scripts/tofu/tofu-stack.ts",
+      "seaweedfs",
+      "plan",
+      "--expect-no-changes",
+    ]);
+  });
+
+  test("runServiceAccountPlan writes a 0600 env file, invokes the wrapper, and removes scratch files", async () => {
+    const fixture = await mkdtemp(path.join(tmpdir(), "tofu-sa-runner-"));
+    try {
+      const fakeHomelabRoot = path.join(fixture, "packages/homelab");
+      const wrapperDir = path.join(fixture, "scripts/onepassword");
+      const recordPath = path.join(fixture, "wrapper-record.json");
+      await mkdir(fakeHomelabRoot, { recursive: true });
+      await mkdir(wrapperDir, { recursive: true });
+      const wrapperPath = path.join(wrapperDir, "with-service-account.sh");
+      const helperPath = path.join(wrapperDir, "record.mjs");
+      await Bun.write(
+        helperPath,
+        `import { readFileSync, statSync, writeFileSync } from "node:fs";\nconst envFile = process.argv[5];\nwriteFileSync(${JSON.stringify(recordPath)}, JSON.stringify({ argv: process.argv.slice(2), mode: statSync(envFile).mode & 0o777, hasGithub: readFileSync(envFile, "utf8").includes("TOFU_GITHUB_TOKEN=op://"), envFile }));\n`,
+      );
+      await Bun.write(
+        wrapperPath,
+        `#!/bin/sh\nexec "${process.execPath}" "${helperPath}" "$@"\n`,
+      );
+      await chmod(wrapperPath, 0o700);
+
+      await runServiceAccountPlan({
+        stack: "github",
+        root: fakeHomelabRoot,
+        scriptPath: "/synthetic/tofu-stack.ts",
+        dryRun: true,
+        expectNoChanges: false,
+      });
+      expect(await Bun.file(recordPath).exists()).toBe(false);
+
+      await runServiceAccountPlan({
+        stack: "github",
+        root: fakeHomelabRoot,
+        scriptPath: "/synthetic/tofu-stack.ts",
+        dryRun: false,
+        expectNoChanges: true,
+      });
+      const recorded = z
+        .object({
+          argv: z.array(z.string()),
+          mode: z.number(),
+          hasGithub: z.boolean(),
+          envFile: z.string(),
+        })
+        .parse(await Bun.file(recordPath).json());
+      expect(recorded.mode).toBe(0o600);
+      expect(recorded.hasGithub).toBe(true);
+      expect(recorded.argv.slice(-3)).toEqual([
+        "github",
+        "plan",
+        "--expect-no-changes",
+      ]);
+      await expect(stat(recorded.envFile)).rejects.toMatchObject({
+        code: "ENOENT",
+      });
+    } finally {
+      await rm(fixture, { recursive: true, force: true });
+    }
+  });
+});
+
+async function spawnFixtureGithubPlan(
+  fixture: string,
+  extraArgs: readonly string[] = [],
+  extraEnv: Record<string, string> = {},
+): Promise<{ output: string; exitCode: number }> {
+  const child = Bun.spawn(
+    [
+      process.execPath,
+      new URL("tofu-stack.ts", import.meta.url).pathname,
+      "github",
+      "plan",
+      ...extraArgs,
+    ],
+    {
+      env: {
+        PATH: `${fixture}:${Bun.env["PATH"] ?? ""}`,
+        TMPDIR: fixture,
+        SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID: "fixture-state-id",
+        SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY: "fixture-state-key",
+        TOFU_GITHUB_TOKEN: "fixture-github-token",
+        ...extraEnv,
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  return { output: stdout + stderr, exitCode };
+}
+
+describe("plan exit handling and CLI flags (AI-548)", () => {
+  test("validates supported flags and restricts plan-only flags to plan", () => {
+    expect(parseTofuStackFlags([], "validate")).toEqual({
+      dryRun: false,
+      expectNoChanges: false,
+      serviceAccount: false,
+    });
+    expect(
+      parseTofuStackFlags(
+        ["--dry-run", "--expect-no-changes", "--service-account"],
+        "plan",
+      ),
+    ).toEqual({
+      dryRun: true,
+      expectNoChanges: true,
+      serviceAccount: true,
+    });
+    for (const action of ["validate", "apply"] as const) {
+      expect(() =>
+        parseTofuStackFlags(["--expect-no-changes"], action),
+      ).toThrow("--expect-no-changes is only supported with the plan action.");
+      expect(() => parseTofuStackFlags(["--service-account"], action)).toThrow(
+        "--service-account is only supported with the plan action.",
+      );
+    }
+    expect(() => parseTofuStackFlags(["--bogus"], "plan")).toThrow(
+      "Unknown flag: --bogus",
+    );
+  });
+
+  test("interpretPlanExit handles 0, 2 (default vs --expect-no-changes), and 1 (transient vs permanent)", () => {
+    expect(() =>
+      interpretPlanExit("github", STACK_MANIFEST.github, {
+        exitCode: 0,
+        stderr: "",
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      interpretPlanExit(
+        "github",
+        STACK_MANIFEST.github,
+        { exitCode: 0, stderr: "" },
+        true,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      interpretPlanExit("github", STACK_MANIFEST.github, {
+        exitCode: 2,
+        stderr: "",
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      interpretPlanExit(
+        "github",
+        STACK_MANIFEST.github,
+        { exitCode: 2, stderr: "" },
+        true,
+      ),
+    ).toThrow("tofu plan detected changes for github (--expect-no-changes)");
+
+    expect(() =>
+      interpretPlanExit("github", STACK_MANIFEST.github, {
+        exitCode: 1,
+        stderr: "permanent configuration error",
+      }),
+    ).toThrow("tofu plan failed (exit 1)");
+
+    expect(() =>
+      interpretPlanExit("github", STACK_MANIFEST.github, {
+        exitCode: 1,
+        stderr: "Error: HTTP 503 Service Unavailable",
+      }),
+    ).toThrow(TransientError);
+
+    // Platform stacks do not classify provider errors as transient retries.
+    let platformError: unknown;
+    try {
+      interpretPlanExit("openai", STACK_MANIFEST.openai, {
+        exitCode: 1,
+        stderr: "Error: HTTP 503 Service Unavailable",
+      });
+    } catch (error) {
+      platformError = error;
+    }
+    expect(platformError).toBeInstanceOf(Error);
+    expect(platformError).not.toBeInstanceOf(TransientError);
+  });
+
+  test("plan --expect-no-changes exits non-zero when OpenTofu returns exit code 2", async () => {
+    const fixture = await mkdtemp(path.join(tmpdir(), "tofu-expect-clean-"));
+    const executable = path.join(fixture, "tofu");
+    try {
+      await Bun.write(
+        executable,
+        `#!${process.execPath}\nconst action = process.argv[3];\nprocess.exit(action === "init" ? 0 : 2);\n`,
+      );
+      await chmod(executable, 0o700);
+      const { output, exitCode } = await spawnFixtureGithubPlan(fixture, [
+        "--expect-no-changes",
+      ]);
+      expect(exitCode).not.toBe(0);
+      expect(output).toContain(
+        "tofu plan detected changes for github (--expect-no-changes)",
+      );
+    } finally {
+      await rm(fixture, { recursive: true, force: true });
+    }
   });
 });

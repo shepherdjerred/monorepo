@@ -641,21 +641,6 @@
       "deploy": []
     },
     {
-      "id": "bugsink",
-      "title": "Bugsink",
-      "kind": "platform",
-      "aliases": [],
-      "namespaces": ["bugsink"],
-      "argoApps": ["bugsink"],
-      "charts": [],
-      "images": [],
-      "bootstrapImages": [],
-      "bugsinkProjects": [],
-      "analyticsSites": [],
-      "grafanaDashboards": [],
-      "deploy": []
-    },
-    {
       "id": "ci",
       "title": "CI (Woodpecker)",
       "kind": "platform",
@@ -931,6 +916,17 @@
           "argoApp": "errors"
         }
       ]
+    },
+    {
+      "id": "artifacts",
+      "rootReleaseExclusions": { "artifacts": "inactive" },
+      "images": ["artifacts"],
+      "charts": ["artifacts"],
+      "title": "Artifacts",
+      "kind": "product",
+      "package": "artifacts",
+      "namespaces": ["artifacts"],
+      "argoApps": []
     }
   ]
 }

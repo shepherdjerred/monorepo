@@ -1,0 +1,226 @@
+/*
+ * Artifacts console styles on top of @shepherdjerred/console-ui. Every colour
+ * comes from a --ui-* token; the unlayered rules here win over the ui layers.
+ */
+:root {
+  font-synthesis: none;
+  --ar-top: 44px;
+  --ar-pin: var(--ui-accent);
+  --ar-pin-ink: var(--ui-on-accent);
+}
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: 14px;
+}
+
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 60;
+  padding: 6px 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+main:focus-visible {
+  outline: none;
+}
+
+kbd {
+  padding: 0 5px;
+  border: 1px solid var(--ui-btn-edge);
+  border-radius: 4px;
+  background: var(--ui-head);
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+}
+
+.ar-grow {
+  flex: 1;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+.ar-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--ar-top);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-bg);
+}
+.ar-top > :first-child {
+  flex: none;
+}
+.ar-top-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+.ar-top-nav a {
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--ui-ink-2);
+  font-weight: 500;
+  text-decoration: none;
+}
+.ar-top-nav a:hover {
+  background: var(--ui-side-hover);
+}
+.ar-icon-button,
+.ui-topbar-btn {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 6px;
+  color: var(--ui-ink-2);
+  cursor: pointer;
+}
+.ar-icon-button:hover,
+.ui-topbar-btn:hover {
+  background: var(--ui-side-hover);
+}
+.ar-icon-button svg,
+.ui-topbar-btn svg {
+  width: 16px;
+  height: 16px;
+}
+@media (pointer: coarse) {
+  .ar-icon-button,
+  .ui-topbar-btn,
+  .ui-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ── Shared bits ─────────────────────────────────────────────────────────── */
+.ar-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid var(--ui-line);
+  border-radius: 999px;
+  background: var(--ui-head);
+  color: var(--ui-ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ar-tag:empty {
+  display: none;
+}
+.ar-tag[data-tone="amber"] {
+  border-color: color-mix(in srgb, var(--ui-sev-warning) 40%, transparent);
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+}
+.ar-tag[data-tone="kept"] {
+  border-color: color-mix(in srgb, var(--ui-sev-ok) 40%, transparent);
+  background: var(--ui-sev-ok-soft);
+  color: var(--ui-sev-ok-text);
+}
+.ar-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 0 4px;
+  border-radius: 4px;
+  color: var(--ui-accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ar-link-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+.ar-link-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ar-link-button svg {
+  width: 13px;
+  height: 13px;
+}
+.ar-note {
+  padding: 24px;
+  color: var(--ui-muted);
+}
+.ar-empty {
+  padding: 28px 4px;
+  color: var(--ui-muted);
+}
+
+/* ── Dialog ──────────────────────────────────────────────────────────────── */
+.ar-dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+}
+.ar-dialog::backdrop {
+  background: color-mix(in srgb, black 45%, transparent);
+}
+.ar-dialog h2 {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.ar-dialog p {
+  color: var(--ui-ink-2);
+  line-height: 1.5;
+}
+.ar-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.ar-shortcuts {
+  display: grid;
+  gap: 6px;
+}
+.ar-shortcuts > div {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 8px;
+  align-items: baseline;
+}
+.ar-shortcuts dd {
+  color: var(--ui-ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

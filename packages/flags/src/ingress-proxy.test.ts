@@ -150,7 +150,7 @@ function clusterFixture() {
 test("accepts the verified Tailscale proxy pod IP and rejects prometheus or sibling proxy pod IPs", async () => {
   const fixture = clusterFixture();
   const store = FlagStore.open(":memory:");
-  store.seedFromInventory();
+  store.seedFromInventory({ kind: "system", id: "seed" });
   let peer: string | null = null;
   let reads = 0;
   const app = createFlagsApp({
@@ -205,7 +205,7 @@ test("accepts the verified Tailscale proxy pod IP and rejects prometheus or sibl
 
 test("fails closed with 503 when ingress metadata is tampered or unavailable", async () => {
   const store = FlagStore.open(":memory:");
-  store.seedFromInventory();
+  store.seedFromInventory({ kind: "system", id: "seed" });
 
   for (const mutate of [
     (f: ReturnType<typeof clusterFixture>) => {

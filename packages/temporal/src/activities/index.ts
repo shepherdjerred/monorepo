@@ -7,7 +7,6 @@ import { homelabAuditActivities } from "./homelab/homelab-audit.ts";
 import { homelabAuditCollectorActivities } from "./homelab/homelab-audit-collectors.ts";
 import { agentTaskActivities } from "./agent/agent-task.ts";
 import { zfsMaintenanceActivities } from "./homelab/zfs-maintenance.ts";
-import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon/data-dragon.ts";
 import { lanePriorActivities } from "./lane-prior-refresh.ts";
 import { championMetaActivities } from "./scout/champion-meta-refresh.ts";
@@ -40,12 +39,15 @@ import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciWorkspaceReaperActivities } from "./maintenance/ci-workspace-reaper.ts";
 import { ciWorkspaceGoldenActivities } from "./maintenance/ci-workspace-golden.ts";
+import { ciMaintenanceHealthActivities } from "./ops/ci-maintenance/ci-maintenance-health.ts";
 import { feedsActivities } from "./maintenance/feeds/feeds.ts";
 import { flagInventoryActivities } from "./flag-inventory-sync.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
+import { opsCiDashboardActivities } from "./ops/ci-dashboard/activities.ts";
 import { llmArchiveIndexActivities } from "./ops/llm-archive/llm-archive-index.ts";
 import { renovateDeltaActivities } from "./ops/renovate-delta/renovate-delta.ts";
+import { renovateAutomationActivities } from "./renovate/index.ts";
 import { stormPlotActivities } from "./homelab/storm-plots.ts";
 import { rwfRecordingArchiveActivities } from "./homelab/rwf/recording-archive.ts";
 import { stormCompanionActivities } from "./homelab/storm-companions.ts";
@@ -62,6 +64,7 @@ import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
 import { ciExtendedVerifyActivities } from "./maintenance/ci-extended-verify.ts";
 import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
 import { codeReviewActivities } from "./ci/code-review.ts";
+import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { ddnsActivities } from "./infra/ddns.ts";
 import { gitBackupActivities } from "./repo/git-backup.ts";
 
@@ -83,6 +86,7 @@ export const reportActivities = {
 };
 
 export const infraActivities = {
+  ...bugsinkHousekeepingActivities,
   ...ddnsActivities,
   ...trackerAttachmentActivities,
   ...stormCompanionActivities,
@@ -91,7 +95,6 @@ export const infraActivities = {
   ...homelabAuditActivities,
   ...homelabAuditCollectorActivities,
   ...zfsMaintenanceActivities,
-  ...bugsinkHousekeepingActivities,
   ...veleroOrphanAuditActivities,
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,
@@ -111,10 +114,13 @@ export const stormWorkerActivities = {
 // This queue exposes only bounded snapshot collection/publication operations.
 export const opsWorkerActivities = {
   ...opsActivities,
+  ...opsCiDashboardActivities,
   ...renovateDeltaActivities,
+  ...ciMaintenanceHealthActivities,
 };
 
 export const repoActivities = {
+  ...renovateAutomationActivities,
   ...gitBackupActivities,
   ...ciMaintenanceActivities,
   ...ciExtendedVerifyActivities,

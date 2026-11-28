@@ -68,6 +68,7 @@ export const RESERVED_SLUGS = new Set([
   "healthz",
   "readyz",
   "metrics",
+  "trpc",
   "favicon.ico",
   "robots.txt",
 ]);
@@ -111,16 +112,19 @@ export function validateTargetUrl(raw: string): string | null {
     : "Destination URL must use https:// or http://.";
 }
 
+/** A slug as typed: normalized, then checked against the slug rules. */
+export const ShortSlugSchema = z
+  .string()
+  .transform((value) => normalizeShortSlug(value))
+  .superRefine((value, ctx) => {
+    const error = validateShortSlug(value);
+    if (error !== null) {
+      ctx.addIssue({ code: "custom", message: error });
+    }
+  });
+
 export const UpsertManualLinkInputSchema = z.object({
-  short: z
-    .string()
-    .transform((value) => normalizeShortSlug(value))
-    .superRefine((value, ctx) => {
-      const error = validateShortSlug(value);
-      if (error !== null) {
-        ctx.addIssue({ code: "custom", message: error });
-      }
-    }),
+  short: ShortSlugSchema,
   targetUrl: z
     .string()
     .transform((value) => value.trim())

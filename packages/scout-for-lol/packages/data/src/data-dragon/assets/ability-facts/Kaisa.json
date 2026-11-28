@@ -42,7 +42,30 @@
         ]
       },
       "resolvedDescription": "Kai'Sa's basic attacks stack Plasma, dealing increasing bonus magic damage. Allies' immobilizing effects help stack Plasma. Additionally, Kai'Sa's item purchases upgrade her basic spells to have more powerful properties.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "kaisapattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Icathian Rain",
@@ -145,7 +168,184 @@
       "unresolved": [
         "maxdamagedisplay",
         "f11.1"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": 100,
+        "lineWidth": 120,
+        "missileSpeed": 2500,
+        "missiles": [
+          {
+            "name": "kaisaqleftmissile1",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqleftmissile2",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqleftmissile3",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqleftmissile4",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqleftmissile5",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqleftmissile6",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqrightmissile1",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqrightmissile2",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqrightmissile3",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqrightmissile4",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqrightmissile5",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaqrightmissile6",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Void Seeker",
@@ -176,7 +376,15 @@
       "resolvedDescription": "Kai'Sa fires a void blast that deals 30/55/80/105/130 (+130% AD) (+45% AP) magic damage, applies 2 stacks of Plasma, and grants True Sight of the first enemy hit for 4 seconds. Evolved: Kai'Sa instead applies 3 stacks of Plasma and hitting a champion reduces the Cooldown by 75%. Current: {{ f2.1 }}/100 Ability Power",
       "unresolved": [
         "f2.1"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.4,
+        "radius": 299.3,
+        "lineWidth": 100,
+        "missileSpeed": 1750,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Supercharge",
@@ -208,7 +416,170 @@
       "unresolved": [
         "totalmovespeed",
         "f10.1"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 1.5,
+        "radius": 500,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "kaisaeattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaeattack2",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaeattack3",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaeattack4",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaeattack5",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaecritattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaecritattack2",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaecritattack3",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaecritattack4",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaecritattack5",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kaisaepattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Killer Instinct",
@@ -257,7 +628,15 @@
         ]
       },
       "resolvedDescription": "Kai'Sa warps near an enemy champion affected by Plasma and gains 100/150/200 (+90/135/180% AD) (+120% AP) Shield for 2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 525,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

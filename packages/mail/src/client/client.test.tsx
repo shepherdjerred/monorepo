@@ -395,7 +395,7 @@ describe("Shell, routing, and Outbox view", () => {
       "Temporal",
       "Alertmanager",
       "Storm Forum",
-      "Bugsink",
+      "Errors",
       "Seerr",
     ]);
     expect(html).toContain(

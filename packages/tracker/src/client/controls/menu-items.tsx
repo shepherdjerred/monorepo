@@ -100,8 +100,20 @@ function Submenu({
   label: string;
   children: ReactNode;
 }) {
+  const released = use(ReleaseContext);
   return (
-    <ContextMenu.SubmenuRoot>
+    <ContextMenu.SubmenuRoot
+      onOpenChange={(open, details) => {
+        // A long-press release can send both mousedown and click to this trigger.
+        if (
+          open &&
+          details.reason === "trigger-press" &&
+          released(details.event)
+        ) {
+          details.cancel();
+        }
+      }}
+    >
       <ContextMenu.SubmenuTrigger className="menu-item">
         <span className="option-icon">{icon}</span>
         <span className="option-label">{label}</span>

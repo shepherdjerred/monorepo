@@ -45,15 +45,14 @@ describe("TRMNL plugin selection (T3)", () => {
       kind: "compound",
       subRecipes: [
         {
-          instance: "bucket:trmnl-docs",
+          instance: "channel:npm/@shepherdjerred/trmnl",
           definition: {
-            kind: "static-site",
-            archiveComponent: "archive:trmnl-docs",
-            bucket: "trmnl-docs",
-            verification: {
-              url: "https://trmnl.sjer.red/",
-              expectedStatus: 200,
-            },
+            kind: "channel",
+            store: "npm",
+            name: "@shepherdjerred/trmnl",
+            pointer: "latest",
+            forwardOnly: false,
+            artifactComponent: "archive:trmnl-package",
           },
         },
         {

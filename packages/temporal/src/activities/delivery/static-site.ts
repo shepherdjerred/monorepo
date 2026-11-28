@@ -1,7 +1,6 @@
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { z } from "zod";
 import type { EvidenceInput } from "@shepherdjerred/delivery/contract";
 import { restoreStaticArchive } from "@shepherdjerred/root-scripts/lib/static-site-archive.ts";
 import {
@@ -29,6 +28,7 @@ import type { StaticActivationReceipt } from "./static-site-effects.ts";
 import { withActivityHeartbeat } from "#activities/activity-heartbeat.ts";
 import { effectContext } from "#lib/delivery/model/effect-signal.ts";
 import { verifyPublicStaticEntrypoint } from "./static-site-public.ts";
+import { purgeCloudflareUrls } from "./static-site-purge.ts";
 import {
   staticSiteSelection as selection,
   type StaticSiteSelection,
@@ -256,11 +256,15 @@ function publicUrls(pipeline: SitePolicy): string[] {
 
 async function purge(
   pipeline: SitePolicy,
-  archiveFiles: string[],
-  signal: AbortSignal,
+  { files: archiveFiles, signal }: OpenedArchive,
   io: StaticSiteIo,
+  fence: () => Promise<void>,
 ): Promise<void> {
-  if (pipeline.cloudflareZoneId === undefined) return;
+  if (pipeline.cloudflareZoneId === undefined) {
+    await fence();
+    signal.throwIfAborted();
+    return;
+  }
   const mutableFiles = archiveFiles.filter(
     (file) =>
       !pipeline.immutablePrefixes.some((prefix) => file.startsWith(prefix)),
@@ -281,27 +285,14 @@ async function purge(
       new URL(MARKER, pipeline.verification.url).href,
     ]),
   ];
-  for (let offset = 0; offset < files.length; offset += 30) {
-    const response = await io.fetch(
-      `https://api.cloudflare.com/client/v4/zones/${pipeline.cloudflareZoneId}/purge_cache`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${io.cloudflareToken()}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ files: files.slice(offset, offset + 30) }),
-        signal: AbortSignal.any([signal, AbortSignal.timeout(30_000)]),
-        redirect: "error",
-      },
-    );
-    const raw: unknown = await response.json();
-    if (
-      !response.ok ||
-      !z.object({ success: z.literal(true) }).safeParse(raw).success
-    )
-      throw new Error("Selected static-site URL cache purge failed");
-  }
+  await purgeCloudflareUrls({
+    zoneId: pipeline.cloudflareZoneId,
+    files,
+    signal,
+    fence,
+    fetch: io.fetch,
+    token: io.cloudflareToken,
+  });
 }
 
 /**
@@ -344,7 +335,7 @@ async function activateOpened(
       }),
     writeReceipt: (value) =>
       fenced(() => io.writeReceipt(value, scratch, signal)),
-    purge: () => fenced(() => purge(pipeline, files, signal, io)),
+    purge: () => purge(pipeline, opened, io, fence),
   });
 }
 

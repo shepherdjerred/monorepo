@@ -1,5 +1,11 @@
 import type { OpsFacets } from "@shepherdjerred/ops-model/facets.ts";
-import { MailIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import {
+  LayoutTemplateIcon,
+  MailIcon,
+  MonitorIcon,
+  MoonIcon,
+  SunIcon,
+} from "lucide-react";
 
 import { APPS, TOOLS } from "./external-links.ts";
 import type {
@@ -81,6 +87,15 @@ export const coreCommands: readonly ModuleCommand[] = [
     ],
     run: ({ navigate }) => {
       navigate("/reports?verdict=attention");
+    },
+  },
+  {
+    id: "kit",
+    label: "Open the console kit gallery",
+    icon: LayoutTemplateIcon,
+    keywords: ["kit", "gallery", "components", "console-ui", "design"],
+    run: ({ navigate }) => {
+      navigate("/kit");
     },
   },
   {

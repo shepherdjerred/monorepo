@@ -29,9 +29,8 @@ Prettier, and optionally React/React Native/accessibility layers:
 | `tsconfigRootDir` | `process.cwd()`       | Root for typed linting                                                                                                   |
 | `projectService`  | `true`                | typescript-eslint project service setting                                                                                |
 | `tsconfigPaths`   | `["./tsconfig.json"]` | Paths for the import resolver                                                                                            |
-| `useBunResolver`  | `true`                | Bun-aware import resolution (disabled for RN)                                                                            |
+| `useBunResolver`  | `true`                | Bun-aware import resolution                                                                                              |
 | `react`           | `false`               | React + React Hooks rules                                                                                                |
-| `reactNative`     | `false`               | React Native rules (implies `react`)                                                                                     |
 | `accessibility`   | `false`               | jsx-a11y rules                                                                                                           |
 | `customRules`     | see source            | Toggles for optional custom rules (no-use-effect, no-dto-naming, structured logging, shadcn tokens, knip/jscpd analysis) |
 
@@ -42,7 +41,7 @@ package entry and importable directly from `./configs/*`:
 
 - `baseConfig` — type-checked TS, unicorn, regexp, comments, no-secrets
 - `importsConfig` — eslint-plugin-import with the TS/Bun resolver
-- `reactConfig` / `reactNativeConfig` — React, Hooks, RN rules
+- `reactConfig` — React and Hooks rules
 - `accessibilityConfig` — jsx-a11y
 - `astroConfig` — eslint-plugin-astro (not part of `recommended`; spread it in
   for Astro packages)

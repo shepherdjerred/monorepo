@@ -71,12 +71,19 @@ export async function executePrismaInsertImportedEvent(
 
     let fingerprintRegistered = false;
     if (existingFp === null) {
-      await tx.issueFingerprint.create({
-        data: {
+      await tx.issueFingerprint.upsert({
+        where: {
+          projectId_fingerprint: {
+            projectId: input.projectId,
+            fingerprint: input.computedFingerprint,
+          },
+        },
+        create: {
           projectId: input.projectId,
           fingerprint: input.computedFingerprint,
           issueId: targetIssue.id,
         },
+        update: {},
       });
       fingerprintRegistered = true;
     } else if (

@@ -135,7 +135,45 @@
         ]
       },
       "resolvedDescription": "Skarner rips a boulder from the ground, empowering his next 3 Attacks with 20/25/30/35/40% Attack Speed and dealing 10/20/30/40/50 (+90% bonus AD) (+3% bonus Health) physical damage to surrounding enemies. His final Attack will deal an additional 11% max Health physical damage and Slow affected foes by 40% for 1s. Recast: Skarner ends this Ability and throws his boulder, dealing 10/20/30/40/50 (+90% bonus AD) (+3% bonus Health) + 11% max Health physical damage, and additionally Slowing the first enemy hit — and any other surrounding enemies — by 40% for 1s.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "skarnerqclawattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "skarnerqrockthrow",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "W": {
       "name": "Seismic Bastion",
@@ -207,7 +245,15 @@
         ]
       },
       "resolvedDescription": "Skarner gains 8% max Health Shield for 2.5s and triggers an earthquake that deals 50/70/90/110/130 (+80% AP) magic damage and Slows nearby enemies by 20% for 1s.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Ixtal's Impact",
@@ -405,7 +451,15 @@
         ]
       },
       "resolvedDescription": "Skarner charges forward, steering toward the chosen direction and ignoring terrain. If he runs into a champion or large monster, Skarner drags them along for the rest of his charge. Colliding into a wall with an enemy in tow deals 30/60/90/120/150 (+120% bonus AD) (+6% max Health) physical damage to the enemy and Stuns them for 1.1s. Skarner can Recast this Ability to end his charge early.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Impale",
@@ -474,7 +528,15 @@
         ]
       },
       "resolvedDescription": "Skarner's tails lash forward, dealing 150/250/350 (+100% AP) magic damage and Suppressing the first 3 champions he hits for 1.5s. Those hit are dragged along by Skarner for the duration of this Ability. If Skarner hits at least one champion he gains 40% Move Speed for 1.5 seconds. If Shattered Earth is active, Skarner will cast Upheaval first.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.75,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

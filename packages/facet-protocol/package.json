@@ -5,6 +5,11 @@
   "type": "module",
   "main": "generated/index.ts",
   "types": "generated/index.ts",
+  "exports": {
+    ".": "./generated/index.ts",
+    "./presentation/audio/complete.wav": "./presentation/audio/complete.wav",
+    "./recurrence": "./recurrence/index.ts"
+  },
   "scripts": {
     "generate": "bun run generate.ts"
   }

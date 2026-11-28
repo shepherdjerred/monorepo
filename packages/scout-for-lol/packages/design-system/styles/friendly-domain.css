@@ -1,0 +1,687 @@
+/* Domain components on the soft surfaces: faces, strips, bars, rank lockups and
+   the hero panels. Values follow the approved mockups (d9.css, d11*.css) and
+   draw colour only from the tokens and the variables in friendly.css. */
+
+/* ---------- face: a round champion portrait ---------- */
+
+.scout-face {
+  --scout-face-ground: var(--scout-color-surface);
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: var(--scout-face-size, 46px);
+  height: var(--scout-face-size, 46px);
+  border-radius: 50%;
+}
+
+.scout-face[data-size="26"] {
+  --scout-face-size: 26px;
+}
+
+.scout-face[data-size="36"] {
+  --scout-face-size: 36px;
+}
+
+.scout-face[data-size="40"] {
+  --scout-face-size: 40px;
+}
+
+.scout-face[data-size="46"] {
+  --scout-face-size: 46px;
+}
+
+.scout-face[data-size="72"] {
+  --scout-face-size: 72px;
+}
+
+.scout-face[data-size="76"] {
+  --scout-face-size: 76px;
+}
+
+.scout-face[data-size="92"] {
+  --scout-face-size: 92px;
+}
+
+.scout-face__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.scout-face__mark {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  width: clamp(14px, calc(var(--scout-face-size, 46px) * 0.43), 22px);
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px var(--scout-face-ground);
+}
+
+.scout-face__mark[data-result="win"] {
+  background: var(--scout-color-success-on-surface);
+  color: var(--scout-color-surface);
+}
+
+.scout-face__mark[data-result="loss"] {
+  background: var(--scout-face-ground);
+  box-shadow:
+    0 0 0 2.5px var(--scout-face-ground),
+    inset 0 0 0 2px var(--scout-color-danger-on-surface);
+}
+
+.scout-face__mark[data-result="loss"]::after {
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--scout-color-danger-on-surface);
+  content: "";
+}
+
+/* ---------- name: one line in a row, cut with an ellipsis ---------- */
+
+.scout-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- person: a round initial ---------- */
+
+.scout-person {
+  --scout-face-ground: var(--scout-color-surface);
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+
+.scout-person__initial {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--scout-surface-inset-strong);
+  color: var(--scout-color-text);
+  font: 700 20px/1 var(--scout-font-display);
+}
+
+.scout-person[data-size="s"] .scout-person__initial {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+
+.scout-person[data-size="l"] .scout-person__initial {
+  width: 60px;
+  height: 60px;
+  font-size: 25px;
+}
+
+.scout-person[data-you="true"] .scout-person__initial {
+  background: var(--scout-color-primary);
+  color: var(--scout-color-primary-text);
+}
+
+/* On the open ground the disc is a step darker than the canvas, not a panel
+   tint; "you" keeps its colour. */
+.scout-soft-panel--open
+  .scout-person:not([data-you="true"])
+  .scout-person__initial {
+  background: color-mix(
+    in srgb,
+    var(--scout-color-text) 10%,
+    var(--scout-color-canvas)
+  );
+}
+
+.scout-person__live {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--scout-color-success-on-surface);
+  box-shadow: 0 0 0 2.5px var(--scout-face-ground);
+}
+
+.scout-person__badge {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px var(--scout-face-ground);
+  object-fit: cover;
+}
+
+.scout-person[data-size="s"] .scout-person__badge {
+  right: -5px;
+  bottom: -5px;
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scout-person__live::after {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    animation: scout-live-pulse 1.4s ease-in-out infinite alternate;
+    content: "";
+  }
+}
+
+@keyframes scout-live-pulse {
+  from {
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--scout-color-success-on-surface) 30%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 5px
+      color-mix(in srgb, var(--scout-color-success-on-surface) 22%, transparent);
+  }
+}
+
+/* ---------- result strip: the last games, oldest to newest ---------- */
+
+.scout-result-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding-left: 1px;
+}
+
+.scout-result-strip__dot {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--scout-color-text-muted) 32%, transparent);
+}
+
+.scout-result-strip__dot[data-result="win"] {
+  background: var(--scout-color-success-on-surface);
+  box-shadow: none;
+}
+
+.scout-result-strip__dot[data-result="loss"] {
+  box-shadow: inset 0 0 0 2px
+    color-mix(
+      in srgb,
+      var(--scout-color-danger-on-surface) 58%,
+      var(--scout-color-surface)
+    );
+}
+
+.scout-result-strip__streak {
+  display: inline-flex;
+  gap: 8px;
+  margin: -7px -2px -7px 0;
+  padding: 7px 9px;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-win-soft);
+}
+
+.scout-result-strip__streak[data-result="loss"] {
+  background: var(--scout-loss-soft);
+}
+
+@media (max-width: 720px) {
+  .scout-result-strip {
+    gap: 3px;
+  }
+
+  .scout-result-strip__dot {
+    flex: 1 1 0;
+    width: auto;
+    max-width: 14px;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .scout-result-strip__streak {
+    flex: 3.7 1 0;
+    gap: 3px;
+    margin: -5px -5px -5px 0;
+    padding: 5px;
+  }
+}
+
+/* ---------- win rate: a bar, or a dot on a track ---------- */
+
+.scout-win-rate[data-variant="bar"] {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+}
+
+.scout-win-rate__track {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset);
+}
+
+.scout-win-rate[data-you="true"] .scout-win-rate__track {
+  background: var(--scout-color-surface);
+}
+
+.scout-win-rate__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--scout-radius-pill);
+  background: color-mix(
+    in srgb,
+    var(--scout-color-text-muted) 58%,
+    var(--scout-color-surface)
+  );
+}
+
+.scout-win-rate[data-you="true"] .scout-win-rate__fill {
+  background: var(--scout-color-primary);
+}
+
+.scout-win-rate[data-variant="bar"] .scout-win-rate__even {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: color-mix(
+    in srgb,
+    var(--scout-color-text-muted) 60%,
+    transparent
+  );
+}
+
+.scout-win-rate__value {
+  flex: none;
+  min-width: 3.5rem;
+  text-align: right;
+  font: 700 20px/1.3 var(--scout-font-display);
+}
+
+.scout-win-rate[data-variant="range"] {
+  position: relative;
+  display: block;
+  max-width: 420px;
+  height: 12px;
+  margin: 18px 0 28px;
+}
+
+.scout-win-rate__rail {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset);
+  box-shadow: var(--scout-ring);
+}
+
+.scout-win-rate__band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--scout-radius-pill);
+  background: color-mix(
+    in srgb,
+    var(--scout-color-primary) 44%,
+    var(--scout-color-surface)
+  );
+}
+
+.scout-win-rate__dot {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  background: var(--scout-color-primary);
+  box-shadow: 0 0 0 4px var(--scout-color-surface);
+}
+
+.scout-win-rate[data-variant="range"] .scout-win-rate__even {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: color-mix(
+    in srgb,
+    var(--scout-color-text-muted) 60%,
+    transparent
+  );
+}
+
+.scout-win-rate[data-variant="range"] .scout-win-rate__even > span {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 2px;
+  transform: translateX(-88%);
+  color: var(--scout-color-text-muted);
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.scout-win-rate__end {
+  position: absolute;
+  top: 100%;
+  margin-top: 7px;
+  transform: translateX(-50%);
+  color: var(--scout-color-text-muted);
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.scout-win-rate__end[data-end="high"] {
+  transform: translateX(-30%);
+}
+
+/* ---------- rank lockup: the crest, the rank and LP, a quieter line ---------- */
+
+.scout-rank-lockup {
+  gap: 10px;
+}
+
+.scout-rank-lockup > span {
+  display: block;
+}
+
+.scout-rank-lockup strong,
+.scout-rank-lockup small:not(.scout-rank-display__detail) {
+  color: var(--scout-color-primary);
+  font: 700 24px/1.25 var(--scout-font-display);
+}
+
+.scout-rank-lockup small:not(.scout-rank-display__detail)::before {
+  content: ", ";
+}
+
+.scout-rank-lockup .scout-rank-display__detail {
+  display: block;
+  color: var(--scout-color-text-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ---------- hero art: a champion fading in from one edge ---------- */
+
+.scout-hero-art {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  --scout-art-x: 50%;
+}
+
+.scout-hero-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: var(--scout-art-x) var(--scout-art-y, 50%);
+}
+
+.scout-hero-art[data-mirrored="true"] img {
+  transform: scaleX(-1);
+}
+
+/* ---------- hero panel: words on one side, art on the other ---------- */
+
+.scout-hero-panel .scout-hero-art {
+  --scout-art-y: 22%;
+  --scout-art-x: 60%;
+}
+
+.scout-hero-panel .scout-hero-art[data-side="start"][data-mirrored="false"],
+.scout-hero-panel .scout-hero-art[data-side="end"][data-mirrored="true"] {
+  --scout-art-x: 40%;
+}
+
+.scout-hero-panel .scout-hero-art[data-side="end"] {
+  left: 40%;
+  right: 0;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    color-mix(in srgb, var(--scout-color-text) 35%, transparent) 24%,
+    var(--scout-color-text) 60%
+  );
+}
+
+.scout-hero-panel .scout-hero-art[data-side="start"] {
+  left: 0;
+  right: 40%;
+  mask-image: linear-gradient(
+    to left,
+    transparent 0,
+    color-mix(in srgb, var(--scout-color-text) 35%, transparent) 24%,
+    var(--scout-color-text) 60%
+  );
+}
+
+.scout-hero-panel__text {
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 60%;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.25rem 0 2.25rem 2.75rem;
+}
+
+.scout-hero-panel[data-align="end"] .scout-hero-panel__text {
+  margin-left: auto;
+  align-items: flex-end;
+  padding: 2.25rem 2.75rem 2.25rem 0;
+  text-align: right;
+}
+
+.scout-hero-panel__action {
+  position: absolute;
+  top: 1.375rem;
+  z-index: 2;
+}
+
+.scout-hero-panel__action[data-side="end"] {
+  right: 1.5rem;
+}
+
+.scout-hero-panel__action[data-side="start"] {
+  left: 1.5rem;
+}
+
+.scout-hero-panel[data-art="none"] {
+  min-height: 0;
+}
+
+.scout-hero-panel[data-art="none"] .scout-hero-panel__text {
+  width: auto;
+  padding: 2.125rem 2.75rem;
+}
+
+/* ---------- duel hero: two champions facing each other ---------- */
+
+.scout-duel-hero {
+  min-height: 20rem;
+}
+
+.scout-duel-hero .scout-hero-art {
+  --scout-art-x: 25%;
+  width: 37%;
+}
+
+.scout-duel-hero .scout-hero-art[data-side="start"] {
+  left: 0;
+  --scout-art-x: 78%;
+  mask-image: linear-gradient(
+    to left,
+    transparent 0,
+    color-mix(in srgb, var(--scout-color-text) 30%, transparent) 30%,
+    var(--scout-color-text) 78%
+  );
+}
+
+.scout-duel-hero .scout-hero-art[data-side="start"][data-mirrored="true"] {
+  --scout-art-x: 22%;
+}
+
+.scout-duel-hero .scout-hero-art[data-side="end"] {
+  right: 0;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    color-mix(in srgb, var(--scout-color-text) 30%, transparent) 30%,
+    var(--scout-color-text) 78%
+  );
+}
+
+.scout-duel-hero .scout-hero-art[data-side="end"][data-mirrored="true"] {
+  --scout-art-x: 75%;
+}
+
+.scout-duel-hero__text {
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.75rem 1.5rem 1.875rem;
+  text-align: center;
+}
+
+/* ---------- narrower ---------- */
+
+@media (max-width: 720px) {
+  /* [data-side] matches the specificity of the desktop side rules, which
+     set left, right and a horizontal mask, so these replace them. */
+  .scout-hero-panel .scout-hero-art[data-side] {
+    position: relative;
+    inset: auto;
+    width: auto;
+    height: 11.25rem;
+    --scout-art-x: 62%;
+    --scout-art-y: 20%;
+    mask-image: linear-gradient(
+      to bottom,
+      var(--scout-color-text) 50%,
+      transparent
+    );
+  }
+
+  .scout-hero-panel .scout-hero-art[data-side="start"][data-mirrored="false"],
+  .scout-hero-panel .scout-hero-art[data-side="end"][data-mirrored="true"] {
+    --scout-art-x: 38%;
+  }
+
+  .scout-hero-panel__text,
+  .scout-hero-panel[data-align="end"] .scout-hero-panel__text {
+    width: auto;
+    margin-left: 0;
+    align-items: flex-start;
+    padding: 0 1.375rem 1.625rem;
+    text-align: left;
+  }
+
+  .scout-hero-panel__action {
+    top: 0.875rem;
+  }
+
+  .scout-hero-panel__action[data-side="end"] {
+    right: 0.875rem;
+  }
+
+  .scout-hero-panel__action[data-side="start"] {
+    left: 0.875rem;
+  }
+
+  .scout-hero-panel[data-art="none"] .scout-hero-panel__text {
+    padding: 4rem 1.375rem 1.5rem;
+  }
+
+  .scout-duel-hero {
+    min-height: 0;
+  }
+
+  /* The two champions share the top edge and overlap by a tenth. The start
+     one is whole and sits underneath; the end one fades in across the overlap,
+     so each half blends into the other art, never into the panel colour. The
+     fade must finish inside the overlap (a tenth of the panel is 18% of one
+     art box), or the start art's edge shows as a seam. */
+  .scout-duel-hero .scout-hero-art[data-side] {
+    top: 0;
+    bottom: auto;
+    width: 55%;
+    height: 12rem;
+    --scout-art-y: 50%;
+    mask-image: none;
+  }
+
+  .scout-duel-hero .scout-hero-art[data-side="end"] {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      var(--scout-color-text) 16%
+    );
+  }
+
+  /* One fade into the panel across both arts, rather than a mask on each: two
+     faded layers stacked in the overlap would leave a seam at the start art's
+     edge. It also leaves the heading a clean ground below the art. */
+  .scout-duel-hero::before {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    height: 12rem;
+    background: linear-gradient(
+      to bottom,
+      transparent 40%,
+      var(--scout-color-surface)
+    );
+    content: "";
+  }
+
+  .scout-duel-hero .scout-hero-art[data-side="start"] {
+    --scout-art-x: 70%;
+  }
+
+  .scout-duel-hero .scout-hero-art[data-side="start"][data-mirrored="true"] {
+    --scout-art-x: 30%;
+  }
+
+  .scout-duel-hero .scout-hero-art[data-side="end"] {
+    --scout-art-x: 42%;
+  }
+
+  .scout-duel-hero .scout-hero-art[data-side="end"][data-mirrored="true"] {
+    --scout-art-x: 58%;
+  }
+
+  .scout-duel-hero__text {
+    padding: 11.75rem 1.25rem 1.625rem;
+  }
+}

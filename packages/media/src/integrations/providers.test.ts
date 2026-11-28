@@ -39,6 +39,30 @@ describe("public tracker contracts", () => {
     ).resolves.toMatchObject([{ infoHash: hash, sizeBytes: 123 }]);
   });
 
+  it("continues a full Knaben search page even when none of the raw listings can be downloaded", async () => {
+    const provider = new KnabenProvider(() =>
+      Promise.resolve(
+        Response.json({
+          hits: Array.from({ length: 100 }, (_, index) => ({
+            id: String(index),
+            title: "Synthetic",
+            bytes: 123,
+            hash: null,
+            seeders: 0,
+            details: "https://knaben.org/fixture",
+            magnetUrl: null,
+          })),
+        }),
+      ),
+    );
+    const page = await provider.searchPage({
+      query: "Synthetic",
+      kind: "movie",
+    });
+    expect(page).toMatchObject({ candidates: [], nextPage: 2 });
+    expect(page.listingIds).toHaveLength(100);
+  });
+
   it("reads native Knaben recent pages and counts non-downloadable rows when continuing", async () => {
     const calls: URL[] = [];
     const row = {
@@ -235,7 +259,7 @@ describe("legacy public parsing contracts", () => {
 
 describe("private family protocol", () => {
   it.each(["privatehd", "avistaz", "animez"] as const)(
-    "reads %s recent pages without requiring a title or narrowing to one media type",
+    "reads %s recent and movie search pages with separate endpoint criteria",
     async (providerId) => {
       const pages: string[] = [];
       const row = {
@@ -261,13 +285,13 @@ describe("private family protocol", () => {
             "Bearer synthetic",
           );
           expect(url.pathname).toBe("/api/v1/jackett/torrents");
-          expect(url.searchParams.get("search")).toBe("");
+          const searching = url.searchParams.get("search") === "Synthetic";
           expect(url.searchParams.get("limit")).toBe("50");
           expect(url.searchParams.get("in")).toBe(
             providerId === "animez" ? null : "1",
           );
           expect(url.searchParams.get("type")).toBe(
-            providerId === "animez" ? null : "0",
+            providerId === "animez" ? null : searching ? "1" : "0",
           );
           const page = url.searchParams.get("page");
           pages.push(page ?? "missing");
@@ -302,7 +326,15 @@ describe("private family protocol", () => {
           },
         ],
       });
-      expect(pages).toEqual(["1", "2"]);
+      const search = { query: "Synthetic", kind: "movie" as const };
+      const firstSearch = await provider.searchPage(search);
+      expect(firstSearch.nextPage).toBe(2);
+      expect(firstSearch.listingIds).toHaveLength(50);
+      expect(await provider.searchPage({ ...search, page: 2 })).toMatchObject({
+        listingIds: ["/torrent/42"],
+        nextPage: null,
+      });
+      expect(pages).toEqual(["1", "2", "1", "2"]);
     },
   );
   it.each(["privatehd", "avistaz", "animez"] as const)(

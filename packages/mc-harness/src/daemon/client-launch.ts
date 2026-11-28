@@ -23,6 +23,7 @@ export type LaunchedClient = {
   pid: number;
   exited: Promise<number>;
   exitCode: () => number | null;
+  failureReason?: () => string | undefined;
   kill: (signal: NodeJS.Signals) => void | Promise<void>;
 };
 

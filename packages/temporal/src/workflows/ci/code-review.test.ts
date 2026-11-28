@@ -521,6 +521,8 @@ describe("PR code-review first-round P0/P1 veto retention", () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const statuses: PostCodeReviewCommitStatusInput[] = [];
     const checkedProviders: (ProviderId | null)[] = [];
+    const p0VetoPosted = Promise.withResolvers<"p0-veto">();
+    const p1BlockPosted = Promise.withResolvers<"p1-block">();
     let p0Open = true;
     let p1Open = true;
 
@@ -531,6 +533,16 @@ describe("PR code-review first-round P0/P1 veto retention", () => {
         activities: buildCoordinatorBridgeActivities(environment, {
           postCodeReviewCommitStatus: async (status) => {
             statuses.push(status);
+            if (status.state !== "failure") return;
+            if (status.reason === "p0-veto") {
+              p0VetoPosted.resolve("p0-veto");
+            } else if (
+              status.description.includes(
+                "1 unresolved P0/P1 finding(s) from CodeRabbit",
+              )
+            ) {
+              p1BlockPosted.resolve("p1-block");
+            }
           },
           triggerAndObserveProvider: async () => ({
             ...reviewedObservation(),
@@ -570,34 +582,26 @@ describe("PR code-review first-round P0/P1 veto retention", () => {
           const workflowClient = realTimeWorkflowClient(environment);
           try {
             const handle = await startPrReview(workflowClient, 410, "sha-410");
+            const completed = (async () => {
+              await handle.result();
+              return "completed" as const;
+            })();
 
-            await vi.waitFor(() => {
-              expect(
-                statuses.some(
-                  (s) => s.state === "failure" && s.reason === "p0-veto",
-                ),
-              ).toBe(true);
-            });
+            expect(await Promise.race([p0VetoPosted.promise, completed])).toBe(
+              "p0-veto",
+            );
 
             p0Open = false;
             await handle.signal("recheckReview");
 
-            await vi.waitFor(() => {
-              expect(
-                statuses.some(
-                  (s) =>
-                    s.state === "failure" &&
-                    s.description.includes(
-                      "1 unresolved P0/P1 finding(s) from CodeRabbit",
-                    ),
-                ),
-              ).toBe(true);
-            });
+            expect(await Promise.race([p1BlockPosted.promise, completed])).toBe(
+              "p1-block",
+            );
             expect(statuses.some((s) => s.state === "success")).toBe(false);
 
             p1Open = false;
             await handle.signal("recheckReview");
-            await handle.result();
+            await completed;
 
             expect(checkedProviders.every((id) => id === "coderabbit")).toBe(
               true,

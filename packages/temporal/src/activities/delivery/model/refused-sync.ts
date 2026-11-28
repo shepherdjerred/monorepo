@@ -4,6 +4,7 @@ import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
 import {
   SyncedArgoHistorySchema,
+  assertComparedApplication,
   latestArgoSyncedHistory,
 } from "#lib/delivery/argocd-proof.ts";
 import {
@@ -18,6 +19,7 @@ import { credentialSyncPrunes } from "#lib/delivery/credential-prune.ts";
 import { workerSyncPrunes } from "#lib/delivery/workers/worker-prune.ts";
 import { alertDashboardSyncPrunes } from "#lib/delivery/alert-dashboard/prune.ts";
 import { serviceProbesSyncPrunes } from "#lib/delivery/service-probes/prune.ts";
+import { clusterObservabilitySyncPrunes } from "#lib/delivery/cluster-observability/prune.ts";
 import { renderedRelease } from "#lib/delivery/retired-route-prune.ts";
 import { recordStage } from "./stages.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
@@ -92,7 +94,13 @@ export async function syncPruneDecision(
   current: DeploymentDetail,
   recipe: KubernetesApplicationRecipe,
   rendered: RenderedApplication,
+  application: unknown,
 ) {
+  // Every prune guard below reads Argo's comparison; a failed one proves
+  // nothing. `application` is the sync step's own read, taken after
+  // apply-safety hard-refreshed the written body, so it describes this
+  // revision.
+  assertComparedApplication(rendered.name, application);
   // A preserved world switches images only with fresh preservation proof.
   minecraftSyncFence(current, recipe);
   // A forum release replaces the prior release's terminal migration Job;
@@ -113,6 +121,7 @@ export async function syncPruneDecision(
   return (
     (await alertDashboardSyncPrunes(release, argoRequest)) ||
     (await serviceProbesSyncPrunes(release, argoRequest)) ||
+    (await clusterObservabilitySyncPrunes(release, argoRequest)) ||
     (await workerSyncPrunes(current, rendered, argoRequest))
   );
 }

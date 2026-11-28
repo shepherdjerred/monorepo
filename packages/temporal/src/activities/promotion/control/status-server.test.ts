@@ -194,3 +194,118 @@ it("pages authenticated Reddit post rows and preserves legacy audit behavior", a
     status: "unavailable",
   });
 });
+
+it("completes a >10s status read over Bun.serve without closing the idle socket (AI-834)", async () => {
+  const store = memoryPromotionStore();
+  const baseData = await readProductionPromotionStatus(store);
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    idleTimeout: 30,
+    fetch: promotionStatusFetch("fixture-token", async () => {
+      await Bun.sleep(10_500);
+      return baseData;
+    }),
+  });
+  try {
+    expect(server.port).toBeGreaterThan(0);
+    const response = await fetch(
+      `http://127.0.0.1:${String(server.port)}/api/v1/promotion`,
+      {
+        headers: { authorization: "Bearer fixture-token" },
+        signal: AbortSignal.timeout(15_000),
+      },
+    );
+    expect(response.status).toBe(200);
+    const body: unknown = await response.json();
+    expect(body).toHaveProperty("scheduling", "scheduled");
+  } finally {
+    await server.stop(true);
+  }
+}, 20_000);
+
+it("parallelizes independent status read branches and caches settled batch cleanups (AI-834)", async () => {
+  const backing = memoryPromotionStore();
+  await backing.put("batches/index.json", ["batch-settled"], undefined);
+  await backing.put(
+    "batches/batch-settled.json",
+    {
+      version: 1,
+      id: "batch-settled",
+      pid: 1234,
+      mode: "run",
+      startedAt: "2026-11-22T07:00:00.000Z",
+      updatedAt: "2026-11-22T07:05:00.000Z",
+      finishedAt: "2026-11-22T07:05:00.000Z",
+      entries: [
+        {
+          targetId: "disboard-native-bump",
+          status: "completed",
+          phase: "verified",
+          summary: "Bumped",
+          startedAt: "2026-11-22T07:00:00.000Z",
+          finishedAt: "2026-11-22T07:05:00.000Z",
+          occurrenceId: "occ-1",
+        },
+      ],
+    },
+    undefined,
+  );
+  await backing.put(
+    "cleanup/occ-1.json",
+    {
+      status: "deleted",
+      summary: "Removed transient message",
+    },
+    undefined,
+  );
+
+  const startedBranches = new Set<string>();
+  let releaseBarrier: (() => void) | undefined;
+  const allThreeStarted = new Promise<void>((resolve) => {
+    releaseBarrier = resolve;
+  });
+  const cleanupReads: string[] = [];
+  let gateInitialReads = true;
+
+  const instrumentedStore = {
+    ...backing,
+    read: async <T>(key: string, schema: z.ZodType<T>) => {
+      if (key.startsWith("cleanup/")) cleanupReads.push(key);
+      if (gateInitialReads) {
+        if (key.startsWith("targets/")) startedBranches.add("states");
+        if (key === "batches/index.json") startedBranches.add("batches");
+        if (key.startsWith("ai/daily/") || key.startsWith("solver/"))
+          startedBranches.add("spend");
+        if (startedBranches.size === 3) releaseBarrier?.();
+        if (
+          key === "batches/index.json" ||
+          key.startsWith("targets/") ||
+          key.startsWith("ai/daily/")
+        ) {
+          await allThreeStarted;
+        }
+      }
+      return await backing.read(key, schema);
+    },
+  };
+
+  const first = await readProductionPromotionStatus(instrumentedStore);
+  expect([...startedBranches].sort()).toEqual(["batches", "spend", "states"]);
+  expect(cleanupReads).toEqual(["cleanup/occ-1.json"]);
+  expect(
+    first.history.find(
+      (entry) => entry.id === "batch:batch-settled:disboard-native-bump",
+    )?.cleanup,
+  ).toBe("deleted: Removed transient message");
+
+  gateInitialReads = false;
+  const second = await readProductionPromotionStatus(instrumentedStore);
+  // Settled batch and its settled cleanup are both served from cache.
+  expect(cleanupReads).toEqual(["cleanup/occ-1.json"]);
+  expect(
+    second.history.find(
+      (entry) => entry.id === "batch:batch-settled:disboard-native-bump",
+    )?.cleanup,
+  ).toBe("deleted: Removed transient message");
+});

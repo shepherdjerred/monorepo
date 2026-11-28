@@ -1,0 +1,56 @@
+/*
+ * Chips: 22px, 1px line border, radius 5. A tag (`children`) or a
+ * label/value pair; a chip with `href` is a link. Spacing between chips
+ * belongs to their container (gap), never to the chip.
+ */
+@layer ui.components {
+  .ui-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 7px;
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-sm);
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .ui-chip svg {
+    width: 12px;
+    height: 12px;
+    flex: none;
+  }
+  .ui-chip[data-kind="tag"] {
+    color: var(--ui-ink-2);
+  }
+  .ui-chip[data-kind="tag"][data-sev] {
+    color: var(--ui-sev-ink);
+  }
+  .ui-chip[data-sev] svg {
+    color: var(--ui-sev);
+  }
+  a.ui-chip:hover {
+    border-color: var(--ui-btn-edge);
+    color: var(--ui-ink);
+  }
+  .ui-chip-value {
+    color: var(--ui-ink);
+    font-family: var(--ui-font-mono);
+    font-weight: var(--ui-weight-regular);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .ui-chip[data-sev] .ui-chip-value {
+    color: var(--ui-sev-ink);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+}

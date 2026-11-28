@@ -18,7 +18,7 @@ The server exposes two listeners with strict surface separation:
 
 ## Subscription Ownership
 
-- **Code-owned (`source = 'code'`):** Public feeds in `Repo Stack` and `Blogs` live in `src/catalog/catalog.ts` alongside typed `AutoReadRule` regexes (`PRERELEASE_RULE`, negated `AI_SDK_ONLY_RULE`, and `hidden: true`). Server startup reconciles `source = 'code'` categories and feeds transactionally into SQLite without touching user feeds. Reader API and UI mutations against `code` feeds return `403`.
+- **Code-owned (`source = 'code'`):** Public feeds across `Engineering & Infra`, `AI`, and `Essays & Personal Blogs` live in `src/catalog/catalog.ts` alongside typed single or multi-clause `AutoReadRule` definitions matching `title`, `url`, or parsed RSS/Atom `<category>` tags (`STRICT_RELEASE_RULES`, `BLOG_PRERELEASE_RULE`, negated `AI_SDK_ONLY_RULE`, vendor noise rules, and `hidden: true`). Server startup reconciles `source = 'code'` categories and feeds transactionally into SQLite, removes obsolete managed categories, and retroactively sweeps unstarred unread entries against updated `autoRead` rules without touching user feeds. Reader API and UI mutations against `code` feeds return `403`.
 - **User-owned (`source = 'user'`):** Private credential-bearing feeds (such as LWN subscriber URLs) and feeds added via NetNewsWire `quickadd` or the console dialog live in SQLite. Query strings on `user` feed URLs are redacted (`?[REDACTED]`) in logs, error messages, and console listing responses.
 
 ## Commands

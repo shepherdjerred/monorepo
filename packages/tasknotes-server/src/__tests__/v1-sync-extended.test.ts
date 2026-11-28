@@ -33,10 +33,7 @@ const ProjectWireSchema = z.object({
   is_deleted: z.boolean(),
 });
 
-const ReminderWireSchema = z.object({
-  id: z.string(),
-  task_id: z.string(),
-  reminder_type: z.string(),
+const ReminderWireSchema = z.looseObject({
   minute_offset: z.number().optional(),
   due_datetime: z.string().optional(),
   is_notified: z.boolean(),
@@ -237,10 +234,20 @@ describe("v1 Reminders, Filters & Command Replay", () => {
       ],
     });
 
+    const taskId = created.temp_id_mapping["tmp-task-r"];
     const remId = created.temp_id_mapping["tmp-rem-1"] ?? "";
     const fltId = created.temp_id_mapping["tmp-flt-1"] ?? "";
+    expect(taskId).toMatch(/.+/);
+    expect(remId).not.toBe("");
     expect(created.reminders).toHaveLength(1);
-    expect(created.reminders[0]?.due_datetime).toBe("2026-12-01T09:00:00.000Z");
+    expect(created.reminders[0]).toMatchObject({
+      id: remId,
+      task_id: taskId,
+      reminder_type: "absolute",
+      due_datetime: "2026-12-01T09:00:00.000Z",
+      is_notified: false,
+      is_deleted: false,
+    });
     expect(created.reminders[0]?.updated_at).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
     );
@@ -273,6 +280,7 @@ describe("v1 Reminders, Filters & Command Replay", () => {
         },
       ],
     });
+    expect(updated.reminders[0]?.["reminder_type"]).toBe("relative");
     expect(updated.reminders[0]?.due_datetime).toBeUndefined();
     expect(updated.reminders[0]?.minute_offset).toBe(30);
     expect(updated.reminders[0]?.is_notified).toBe(true);

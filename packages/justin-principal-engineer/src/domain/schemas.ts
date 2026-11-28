@@ -160,6 +160,17 @@ export const ConfigSchema = z.object({
 });
 export type Config = z.infer<typeof ConfigSchema>;
 
+export const StaleBaseReportSchema = z.object({
+  stale: z.boolean(),
+  headSha: z.string(),
+  mergeBaseSha: z.string(),
+  mainHeadSha: z.string(),
+  behindBy: z.number().int().nonnegative(),
+  verdict: z.enum(["up_to_date", "disjoint_clean", "stale_overlap"]),
+  reasons: z.array(z.string()),
+});
+export type StaleBaseReport = z.infer<typeof StaleBaseReportSchema>;
+
 export const PrHealthSchema = z.object({
   prNumber: z.number().int().positive(),
   prUrl: z.url(),
@@ -173,6 +184,7 @@ export const PrHealthSchema = z.object({
     }),
   ),
   nextSteps: z.array(z.string()),
+  staleBase: StaleBaseReportSchema.optional(),
 });
 export type PrHealth = z.infer<typeof PrHealthSchema>;
 

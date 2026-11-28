@@ -11,6 +11,7 @@ import {
   isHumanReview,
 } from "#lib/ci/github.ts";
 import { buildPrHealthReport } from "#lib/ci/health.ts";
+import { evaluateStaleBase } from "#lib/ci/stale-base/evaluate.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
 import { requiredChecks } from "#lib/ci/readiness.ts";
 import { coordinationSummary, formatCoordination } from "#lib/forum.ts";
@@ -28,15 +29,22 @@ export async function healthCommand(
     getPullRequest(number, REPOSITORY),
   ]);
   if (pr === null) throw new Error(`PR #${String(number)} could not be read`);
-  const snapshot = await new CiObserver(
-    GitHubClient.shared(token),
-    config,
-  ).snapshot(number, undefined, true);
-  const merge = await checkMergeConflicts(
+  const github = GitHubClient.shared(token);
+  const snapshot = await new CiObserver(github, config).snapshot(
     number,
-    snapshot.pr.base.ref,
-    snapshot.pr.head.sha,
+    undefined,
+    true,
   );
+  const [merge, staleBase] = await Promise.all([
+    checkMergeConflicts(number, snapshot.pr.base.ref, snapshot.pr.head.sha),
+    evaluateStaleBase({
+      github,
+      prNumber: number,
+      headSha: snapshot.pr.head.sha,
+      baseRef: snapshot.pr.base.ref,
+      mainHeadSha: snapshot.main.headSha,
+    }),
+  ]);
   const humanReviews = snapshot.reviews.filter(isHumanReview);
   const report = buildPrHealthReport({
     pr: {
@@ -49,6 +57,7 @@ export async function healthCommand(
     merge,
     ciPipeline: snapshot.pipeline,
     snapshot,
+    staleBase,
     githubChecks: requiredChecks(snapshot).map((check) => ({
       name: check.name,
       state: check.state,

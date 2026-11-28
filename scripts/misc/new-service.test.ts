@@ -2,13 +2,19 @@ import { afterEach, describe, expect, test } from "vitest";
 import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import {
   formatChecklist,
   loadRegistrationInputs,
   parseBakeTargets,
   registrationFindings,
 } from "../checks/service-registration.ts";
-import { scaffoldService } from "./new-service.ts";
+import {
+  cliWrittenFiles,
+  DOCKERHUB_SYNTH_OUTPUT,
+  postScaffoldCommands,
+  scaffoldService,
+} from "./new-service.ts";
 import {
   parseServiceOptions,
   type ServiceOptions,
@@ -126,6 +132,7 @@ describe("scaffoldService", () => {
 
       expect(files).toEqual(
         expect.arrayContaining([
+          "packages/version-catalog/src/image-registry.json",
           `packages/${options.name}/Dockerfile`,
           `packages/${options.name}/package.json`,
           `packages/${options.name}/src/index.ts`,
@@ -135,6 +142,14 @@ describe("scaffoldService", () => {
           `packages/homelab/src/cdk8s/src/resources/argo-applications/apps/${options.name}.ts`,
         ]),
       );
+      expect(cliWrittenFiles(files)).toContain(DOCKERHUB_SYNTH_OUTPUT);
+      expect(
+        postScaffoldCommands("/repo").map((step) => step.command.join(" ")),
+      ).toEqual([
+        "bun install",
+        "bun run --cwd packages/homelab-cdktn synth",
+        "bun run generate:catalog",
+      ]);
       for (const file of files)
         expect(await Bun.file(path.join(root, file)).exists(), file).toBe(true);
     },
@@ -257,8 +272,10 @@ describe("scaffoldService", () => {
       `fixture-notes\n  [ ] chart:fixture-notes: add ${HELM_ROOT}/fixture-notes/Chart.yaml`,
     );
   });
+});
 
-  test("refuses a service that exists and writes nothing", async () => {
+describe("scaffoldService collisions and pre-provisioned images", () => {
+  test("reuses a pre-provisioned private image and refuses existing services", async () => {
     const root = await fixtureTree();
     await scaffoldService(root, WEB);
     const catalog = path.join(root, "packages/ops-model/catalog-document.json");
@@ -266,10 +283,60 @@ describe("scaffoldService", () => {
     await expect(scaffoldService(root, WEB)).rejects.toThrow(
       "packages/fixture-notes/package.json already exists",
     );
-    // An image the registry already names, with no file of its own to collide.
+
+    const RegistryDoc = z.looseObject({
+      images: z.array(
+        z.looseObject({ name: z.string(), visibility: z.string() }),
+      ),
+    });
+    const ExemptionsDoc = z.looseObject({
+      pendingPrivateImages: z.record(z.string(), z.string()),
+    });
+
+    const preprovRoot = await fixtureTree();
+    await rewrite(
+      preprovRoot,
+      "packages/version-catalog/src/image-registry.json",
+      (text) => {
+        const parsed = RegistryDoc.parse(JSON.parse(text));
+        parsed.images.push({ name: WEB.name, visibility: "private" });
+        return JSON.stringify(parsed, null, 2);
+      },
+    );
+    await rewrite(
+      preprovRoot,
+      "scripts/checks/service-registration-exemptions.json",
+      (text) => {
+        const parsed = ExemptionsDoc.parse(JSON.parse(text));
+        parsed.pendingPrivateImages[WEB.name] = "pre-provisioned";
+        return JSON.stringify(parsed, null, 2);
+      },
+    );
+    expect(await checklist(preprovRoot)).toBe("");
+    await scaffoldService(preprovRoot, WEB);
+    expect(await checklist(preprovRoot)).toBe("");
+    const updatedExemptions = ExemptionsDoc.parse(
+      await Bun.file(
+        path.join(
+          preprovRoot,
+          "scripts/checks/service-registration-exemptions.json",
+        ),
+      ).json(),
+    );
+    expect(updatedExemptions.pendingPrivateImages[WEB.name]).toBeUndefined();
+
+    // An image the registry already names for another service or as public is refused.
+    await expect(
+      scaffoldService(root, {
+        ...WORKER,
+        name: "windows-cross-compiler-winui",
+      }),
+    ).rejects.toThrow(
+      "image-registry.json already declares windows-cross-compiler-winui",
+    );
     await expect(
       scaffoldService(root, { ...WORKER, name: "ci-base" }),
-    ).rejects.toThrow("image-registry.json already declares ci-base");
+    ).rejects.toThrow("already declares image:ci-base");
     expect(await Bun.file(catalog).text()).toBe(before);
     expect(
       await Bun.file(path.join(root, "packages/ci-base/package.json")).exists(),

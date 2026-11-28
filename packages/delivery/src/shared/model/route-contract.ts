@@ -126,6 +126,12 @@ export const DeploymentDetailV2Schema = DeploymentDetailSchema.extend({
     })
     .nullable()
     .optional(),
+  /**
+   * Declared `operator-run` stages that have not yet been attested (section 5).
+   * Empty once every declared stage is attested; absent for other recipe kinds
+   * and from servers that predate it.
+   */
+  pendingAttestationStages: z.array(IdentifierSchema).optional(),
 });
 export type DeploymentDetailV2 = z.infer<typeof DeploymentDetailV2Schema>;
 

@@ -429,3 +429,22 @@ export async function prepareGitSpiceMerge(
   );
   return { ok: true };
 }
+
+export function createLiveGitSpiceHooks(
+  number: number,
+  observer: CiObserver,
+  env: EnvMap,
+): {
+  preflight: (signal: AbortSignal) => Promise<void>;
+  prepareMerge: (
+    target: MergeTarget,
+    signal: AbortSignal,
+  ) => Promise<MergePreparation>;
+} {
+  return {
+    preflight: (signal) =>
+      preflightGitSpiceLand({ number, observer, signal, env }),
+    prepareMerge: (target, signal) =>
+      prepareGitSpiceMerge(target, signal, { env }),
+  };
+}

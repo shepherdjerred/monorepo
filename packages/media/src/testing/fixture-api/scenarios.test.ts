@@ -3,10 +3,16 @@ import { householdState } from "#client/discover/card.ts";
 import { CatalogDetailSchema, CatalogSearchSchema } from "#shared/api.ts";
 import { CatalogFeedSchema } from "#shared/catalog/contract.ts";
 import { ApiErrorSchema } from "#shared/contract.ts";
+import { AttachImportedRequestsSchema } from "#shared/personal-migration/contract.ts";
 import { UNAVAILABLE_FEED } from "./fixtures/catalog.ts";
 import { FEATURED } from "./fixtures/titles.ts";
 import { FixtureScenarioSchema, SCENARIO_COOKIE } from "./scenario.ts";
-import { createFixtureApi } from "./server.ts";
+import {
+  createFixtureApi,
+  FIXTURE_CSRF_COOKIE,
+  FIXTURE_CSRF_TOKEN,
+  PERSONA_COOKIE,
+} from "./server.ts";
 
 const handle = createFixtureApi({
   defaultPersona: "member",
@@ -167,5 +173,72 @@ describe("fixture scenarios", () => {
       status: 400,
       code: "fixture_scenario_invalid",
     });
+  });
+
+  it("issues a CSRF cookie on session reads and persona switches so writes reach the 501 router", async () => {
+    const logged: string[] = [];
+    const api = createFixtureApi({
+      defaultPersona: "owner",
+      log: (line) => {
+        logged.push(line);
+      },
+    });
+    const expectedCsrf = `${FIXTURE_CSRF_COOKIE}=${FIXTURE_CSRF_TOKEN}; Path=/; SameSite=Lax`;
+
+    const me = api(new Request("http://fixture.invalid/api/v1/me"));
+    expect(me?.status).toBe(200);
+    expect(me?.headers.getSetCookie()).toEqual([expectedCsrf]);
+
+    const meWithExistingCsrf = api(
+      new Request("http://fixture.invalid/api/v1/me", {
+        headers: { cookie: `${FIXTURE_CSRF_COOKIE}=browser-test` },
+      }),
+    );
+    expect(meWithExistingCsrf?.status).toBe(200);
+    expect(meWithExistingCsrf?.headers.getSetCookie()).toEqual([]);
+
+    const switched = api(
+      new Request("http://fixture.invalid/api/fixture/persona/owner"),
+    );
+    expect(switched?.status).toBe(303);
+    expect(switched?.headers.getSetCookie()).toEqual([
+      `${PERSONA_COOKIE}=owner; Path=/; SameSite=Lax`,
+      expectedCsrf,
+    ]);
+
+    const csrfHeaders = {
+      "content-type": "application/json",
+      cookie: `${FIXTURE_CSRF_COOKIE}=${FIXTURE_CSRF_TOKEN}`,
+      "x-csrf-token": FIXTURE_CSRF_TOKEN,
+    };
+
+    const attach = api(
+      new Request("http://fixture.invalid/api/v1/requests/imported/attach", {
+        method: "POST",
+        headers: csrfHeaders,
+        body: JSON.stringify({}),
+      }),
+    );
+    expect(attach?.status).toBe(200);
+    expect(AttachImportedRequestsSchema.parse(await attach?.json())).toEqual({
+      attached: 0,
+    });
+    expect(logged).toEqual([]);
+
+    const write = api(
+      new Request("http://fixture.invalid/api/v1/requests/movies", {
+        method: "POST",
+        headers: csrfHeaders,
+        body: JSON.stringify({ tmdbId: FEATURED.movie.tmdbId }),
+      }),
+    );
+    expect(write?.status).toBe(501);
+    expect(ApiErrorSchema.parse(await write?.json())).toEqual({
+      error: {
+        code: "fixture_read_only",
+        message: "The fixture API is read-only; this change was not saved.",
+      },
+    });
+    expect(logged).toEqual(["refused write: POST /api/v1/requests/movies"]);
   });
 });

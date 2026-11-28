@@ -70,6 +70,15 @@ describe("RenovatePage rendering, tabs, and LLM version-delta drawer", () => {
     );
   });
 
+  it("explains when a dependency dashboard has no ranking yet", () => {
+    const html = renderRenovatePage("/renovate", {
+      ...getFixtureRenovate(),
+      ranking: undefined,
+    });
+    expect(html).toContain("No dependency assessment has been recorded yet.");
+    expect(html).toContain("Dependency update queue");
+  });
+
   it("renders KPIs, meters, charts, conditional banners, and Open PRs tab with version mismatch highlight", () => {
     const fixture = getFixtureRenovate();
     const enriched: RenovateFacet = {

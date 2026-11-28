@@ -1,6 +1,7 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import { exportDashboardWithHelmEscaping } from "@shepherdjerred/homelab/cdk8s/grafana/dashboard-export.ts";
 import {
+  addCiAgentQueuePanels,
   addCiCapacityHealthPanels,
   addCiIoPanels,
 } from "./ci-capacity-panels.ts";
@@ -21,6 +22,7 @@ export function createCiCapacityDashboard() {
     .timezone("browser")
     .editable();
 
+  addCiAgentQueuePanels(builder);
   addCiCapacityHealthPanels(builder);
   addCiIoPanels(builder);
 

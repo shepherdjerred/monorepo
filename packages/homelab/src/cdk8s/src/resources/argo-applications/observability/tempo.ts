@@ -182,6 +182,11 @@ metrics_generator:
   return helmApplication(chart, {
     name: "tempo",
     namespace: "tempo",
+    metadata: {
+      annotations: {
+        "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+      },
+    },
     chart: "tempo",
     // https://github.com/grafana/helm-charts/tree/main/charts/tempo
     repoUrl: "https://grafana.github.io/helm-charts",

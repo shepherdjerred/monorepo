@@ -105,7 +105,10 @@ stopped-database restore. Operator review uses the existing agent queue plus pri
 
 ## Contributor verification
 
-Minecraft CI runs unit tests and one light Paper smoke lane. The smoke command
+Minecraft CI runs unit tests on pull requests. One light Paper smoke runs
+nightly on main as the second workflow of the extended pipeline, not on pull
+requests; run `bun run --cwd packages/the-storm test:smoke` locally after a
+change that could affect it. The smoke command
 explicitly selects `tests/e2e/plugin.e2e.test.ts` and
 `tests/e2e/server.e2e.test.ts`: startup, plugin loading, client connections and
 basic protocol interactions. Keep these files small. The lane builds the
@@ -119,10 +122,11 @@ the `excludedSuites` of `ci-tests.json`, outside both the `ci` and `extended`
 test tiers of the repository-wide rule (root `AGENTS.md`): they need a real
 Paper server or native client, which neither tier starts.
 
-The headless whole-match bot simulations are part of that acceptance. Their
-classes carry the JUnit tag `simulation`; the Gradle `test` task excludes the
-tag, so CI never runs them. Run them after changing bot behavior, rwf match
-rules, kits or shipped maps:
+The headless whole-match bot simulations carry the JUnit tag `simulation`.
+Gradle's PR `test` task excludes the tag, while `:rwfbots:simulationTest` runs
+in the `extended` tier (`test:extended:jvm` locally before marking a PR ready
+and nightly `ci-extended-verify` on `main`). Run them after changing bot
+behavior, rwf match rules, kits or shipped maps:
 
 ```bash
 cd packages/the-storm/plugin

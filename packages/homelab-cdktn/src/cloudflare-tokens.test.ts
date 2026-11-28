@@ -1,7 +1,7 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { VersionedTerraformSchema, synthesizedStack } from "#src/testing.ts";
+import { VersionedTerraformSchema, useSynthesizedApp } from "#src/testing.ts";
 
 const MANAGED = "cloudflare_api_token.managed";
 
@@ -38,9 +38,9 @@ const DesiredStateSchema = z.looseObject({
   cloudflare_api_tokens: z.record(z.string(), TokenSchema),
 });
 
-async function cloudflareTokens() {
-  return synthesizedStack("cloudflare-tokens", ConfigurationSchema);
-}
+const readStack = useSynthesizedApp();
+const cloudflareTokens = () =>
+  readStack("cloudflare-tokens", ConfigurationSchema);
 
 /** The committed registry the stack runner injects as `cloudflare_api_tokens`. */
 async function committedTokens() {
@@ -54,7 +54,7 @@ async function committedTokens() {
 }
 
 describe("cloudflare-tokens", () => {
-  test("keeps the one token address, its rename and its encrypted state", async () => {
+  test("keeps the one token address, its rename and its encrypted state", () => {
     const {
       resource,
       moved,
@@ -62,7 +62,7 @@ describe("cloudflare-tokens", () => {
       import: imports,
       terraform,
       variable,
-    } = await cloudflareTokens();
+    } = cloudflareTokens();
     expect(
       Object.entries(resource).flatMap(([type, byName]) =>
         Object.keys(byName).map((name) => `${type}.${name}`),
@@ -97,8 +97,8 @@ describe("cloudflare-tokens", () => {
     expect(variable["cloudflare_api_tokens"]).not.toHaveProperty("default");
   });
 
-  test("a deferred consumer neither creates a credential nor publishes a handoff", async () => {
-    const { resource, output, locals } = await cloudflareTokens();
+  test("a deferred consumer neither creates a credential nor publishes a handoff", () => {
+    const { resource, output, locals } = cloudflareTokens();
     const managed = resource["cloudflare_api_token"]?.["managed"];
     // Only `managed` entries become instances, under their registry keys...
     expect(managed).toMatchObject({
@@ -126,8 +126,8 @@ describe("cloudflare-tokens", () => {
     }
   });
 
-  test("a token carries exactly its declared policies, condition, validity and status", async () => {
-    const { resource, variable } = await cloudflareTokens();
+  test("a token carries exactly its declared policies, condition, validity and status", () => {
+    const { resource, variable } = cloudflareTokens();
     // Permission groups are reduced to their ids, and each resource map is
     // encoded inside OpenTofu so its rendering never depends on synthesis.
     expect(resource["cloudflare_api_token"]?.["managed"]).toEqual({
@@ -148,8 +148,8 @@ describe("cloudflare-tokens", () => {
     });
   });
 
-  test("a token with s3_credential hands off the derived R2 keys to its own item", async () => {
-    const { locals } = await cloudflareTokens();
+  test("a token with s3_credential hands off the derived R2 keys to its own item", () => {
+    const { locals } = cloudflareTokens();
     expect(Object.keys(locals)).toEqual([
       "r2_s3_credential_fields",
       "r2_s3_credential_handoffs",

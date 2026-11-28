@@ -51,4 +51,16 @@
       font-size: 1rem;
     }
   }
+
+  @media (forced-colors: active) {
+    .field[data-active="true"] {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+    .field:focus-within {
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+  }
 }
