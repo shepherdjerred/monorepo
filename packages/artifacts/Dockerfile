@@ -70,18 +70,6 @@ FROM runtime AS smoke
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 ARG SMOKE_TARGET=artifacts
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
-# The service boots without reaching its database, object store or Flags, and
-# answers /healthz on the internal host class: the smoke's Host (127.0.0.1)
-# must differ from both origins below. The values are placeholders, set on the
-# one command so they never enter an image layer's environment.
-RUN bunx --no-install prisma --version && \
-    DATABASE_URL=postgresql://smoke:smoke@127.0.0.1:15432/artifacts \
-    S3_ENDPOINT=http://127.0.0.1:19000 \
-    AWS_ACCESS_KEY_ID=smoke AWS_SECRET_ACCESS_KEY=smoke \
-    ARTIFACTS_APP_ORIGIN=http://artifacts.smoke.test \
-    ARTIFACTS_CONTENT_ORIGIN=http://artifacts-content.smoke.test \
-    ARTIFACTS_OPERATOR_LOGINS=smoke@example.test \
-    ENVIRONMENT=test FEATURE_FLAGS_MODE=disabled \
-    bun /app/ci/scripts/images/smoke-app-in-image.ts
+RUN bunx --no-install prisma --version && bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

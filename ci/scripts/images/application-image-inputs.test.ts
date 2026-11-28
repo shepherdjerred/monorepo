@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { BootstrapSchema as ArtifactsBootstrapSchema } from "../../../packages/artifacts/src/infrastructure/config.ts";
+import { imageSmokeCommand } from "./smoke-app-in-image.ts";
 
 const repoRoot = new URL("../../..", import.meta.url).pathname;
 
@@ -115,6 +117,26 @@ describe("application image inputs", () => {
     expect(dockerfile).toContain(
       'exec "$(command -v bun || echo /tmp/smoke-bun)" /app/ci/scripts/images/smoke-app-in-image.ts',
     );
+  });
+
+  test("boots Artifacts with the shared smoke command's isolated environment", () => {
+    // The exact-digest harness supplies no app-specific environment.
+    const config = ArtifactsBootstrapSchema.parse(
+      imageSmokeCommand("artifacts").env,
+    );
+    expect(config).toMatchObject({
+      HOST: "127.0.0.1",
+      ENVIRONMENT: "test",
+      FEATURE_FLAGS_MODE: "disabled",
+    });
+    expect(new URL(config.DATABASE_URL).hostname).toBe(config.HOST);
+    expect(new URL(config.S3_ENDPOINT).hostname).toBe(config.HOST);
+    const hosts = new Set([
+      config.HOST,
+      new URL(config.ARTIFACTS_APP_ORIGIN).hostname,
+      new URL(config.ARTIFACTS_CONTENT_ORIGIN).hostname,
+    ]);
+    expect(hosts.size).toBe(3);
   });
 
   test("pins and verifies mozilla/sccache for both architectures in Rust Dockerfiles", async () => {
