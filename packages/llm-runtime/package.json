@@ -8,7 +8,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./usage": "./src/usage.ts"
+    "./usage": "./src/usage.ts",
+    "./batch": "./src/batch.ts"
   },
   "scripts": {
     "build": "bun --no-install build src/index.ts --outdir dist --target bun --external ai --external zod --external prom-client --external '@ai-sdk/*' --external '@opentelemetry/api' --external '@shepherdjerred/llm-models' --external '@shepherdjerred/llm-observability' --external '@shepherdjerred/llm-observability/*'",
