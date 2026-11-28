@@ -14,6 +14,22 @@ const protocol = "8bbfcd5af2bc92db";
 const sha256 = (bytes) =>
   new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
 
+const bloomMaterialsSha256 =
+  "edda022b5e925b62ccf05430623e339873cb06a67e7a6ef02764a5a3552f683b";
+const bloomMaterialPath =
+  "Maps/KitPieces/Howling_Abyss/Bloom/Materials/Default/";
+const twilightCanopyTexture =
+  "d2790f312b3727d7b810bd79c338f45f98f6593d095d159a2c2b95707c64a5c3";
+// These four materials use the authored normal-pass foliage shader
+// {8b183f26}, with source alpha / one minus source alpha and no alpha test.
+const blendedCanopyTextures = {
+  Bloom_Foliage_Kinkou_Canopy_MAT_Shader:
+    "4445406cbe0ed90257663fa394e737ab41708d674d03d21eec9b8c069be9d0ef",
+  Bloom_Foliage_Twilight_Canopy_MAT_Shader: twilightCanopyTexture,
+  Bloom_Foliage_Twilight_Canopy_FloatingB_MAT_Shader: twilightCanopyTexture,
+  Bloom_Foliage_Twilight_Canopy_FloatingD_MAT_Shader: twilightCanopyTexture,
+};
+
 async function readPinned({ path, sha256: expected }) {
   assert.match(expected, /^[a-f0-9]{64}$/u, "Expected SHA-256 input pin");
   const bytes = await Bun.file(path).bytes();
@@ -135,6 +151,18 @@ async function buildPackage(inputs) {
     terrainResource("materials/materials.json"),
   );
   assert.deepEqual(materials.coverage, terrain.coverage);
+  assert.equal(materials.source.materialsSha256, bloomMaterialsSha256);
+  const blendedCanopies = new Map(
+    Object.entries(blendedCanopyTextures).map(([name, texture]) => [
+      bloomMaterialPath + name,
+      texture,
+    ]),
+  );
+  for (const [name, texture] of blendedCanopies) {
+    const binding = materials.bindings[name];
+    assert.equal(binding?.sha256, texture, `Wrong diffuse texture for ${name}`);
+    assert.equal(binding.alphaTest, 0, `Unexpected alpha cutoff for ${name}`);
+  }
   const bindings = [];
   for (const [material, binding] of Object.entries(materials.bindings)) {
     const { sha256: textureDigest, alphaTest, width, height } = binding;
@@ -144,7 +172,14 @@ async function buildPackage(inputs) {
     assert.equal(input.sha256, textureDigest);
     const url = `/map-textures/${textureDigest}.png`;
     await add(url, input);
-    bindings.push({ material, url, alphaTest, width, height });
+    bindings.push({
+      material,
+      url,
+      alphaTest,
+      width,
+      height,
+      ...(blendedCanopies.has(material) ? { sourceAlphaBlend: true } : {}),
+    });
   }
 
   const { min, max, x, z, step, movementOrigin } = terrain.navigation;

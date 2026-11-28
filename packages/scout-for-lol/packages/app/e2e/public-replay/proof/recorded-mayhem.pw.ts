@@ -58,6 +58,17 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
   await expect(score).toContainText(/Red team\s*0\s*kills/);
   const opening = await readRecordedDraw(page);
   expect(opening.texturedIndices).toBeGreaterThan(0);
+  // The four authored canopy materials cover 150 terrain submeshes.
+  expect(opening.terrainBlendDraws).toHaveLength(150);
+  expect(
+    opening.terrainBlendDraws.reduce((sum, draw) => sum + draw.indexCount, 0),
+  ).toBe(83_592);
+  for (const draw of opening.terrainBlendDraws) {
+    expect(draw).toMatchObject({
+      depthWrites: false,
+      factors: [770, 771, 770, 771],
+    });
+  }
   expect(
     new Set(opening.actorOrigins.map((origin) => origin.join(","))).size,
   ).toBe(10);

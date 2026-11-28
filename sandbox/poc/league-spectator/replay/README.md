@@ -1404,6 +1404,8 @@ worker supplies the recorded player names, scoreboard, and elimination jumps.
 The end-of-match check compares all ten player rows and the winner against the
 original ROFL footer. Include the pinned `data/maps/shipping/map12/map12.bin`
 as `experienceMap` to show total XP and progress from the original KIWI curve.
+The Bloom package uses the authored source-alpha blending on four canopy
+materials. The browser check verifies their 150 draws and disabled depth writes.
 
 For the controlled Bloom river comparison, prepare the original FlowMapRiver
 geometry and materials in a fresh private cache directory using the same build's
