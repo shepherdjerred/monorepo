@@ -19,6 +19,10 @@ import {
 
 const welcomeFrames = 127_490;
 const minionFrames = 96_800;
+const combatFrames = 102_418;
+const combatTime = 1719.9504140625;
+const combatWav =
+  "02e373efb53b3f063203c1398b358ff064334e48191ed910673d7e36d73c0300";
 const objectiveCues = [
   { mediaId: 56_523_430, frames: 232_332, time: 758.777796875 },
   { mediaId: 963_276_642, frames: 314_891, time: 922.249119140625 },
@@ -88,6 +92,85 @@ async function setupDirectAnnouncer(
   return oracle;
 }
 
+function expectedCombatAudio(paths: Iterable<string>) {
+  const expected = Bun.env["SCOUT_REPLAY_E2E_WITH_COMBAT_AUDIO"] === "1";
+  const combatPaths = [...paths].filter((resource) =>
+    resource.startsWith("combat-audio/"),
+  );
+  expect(combatPaths.toSorted()).toEqual(
+    expected ? ["combat-audio/329446178.wav", "combat-audio/cue.json"] : [],
+  );
+  return {
+    expected,
+    toggle: expected
+      ? "Replay audio comparison"
+      : "Announcer preview (Female1 English)",
+  };
+}
+
+async function verifyCombatAudio(
+  page: Page,
+  expected: boolean,
+  requested: Iterable<string>,
+) {
+  if (!expected) return;
+  const play = page.getByRole("button", { name: "Play", exact: true });
+  const pause = page.getByRole("button", { name: "Pause", exact: true });
+  const speed = page.getByRole("combobox", { name: "Speed" });
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  const combatStarts = async () => {
+    const { starts } = await readRecordedAudioProbe(page);
+    return starts.filter(({ wavSha256 }) => wavSha256 === combatWav);
+  };
+  const combatCount = async () => {
+    const starts = await combatStarts();
+    return starts.length;
+  };
+  await pause.click();
+  await speed.selectOption("1");
+  await seek(page, 1719);
+  const initialCount = await combatCount();
+  await play.click();
+  await expect.poll(combatCount).toBe(initialCount + 1);
+  const firstStarts = await combatStarts();
+  const scheduled = firstStarts.at(-1);
+  if (scheduled === undefined) throw new Error("Missing scheduled combat cue");
+  expect(scheduled).toMatchObject({ frames: combatFrames, offset: 0, rate: 1 });
+  expect(scheduled.peak).toBeGreaterThan(0);
+  expect(scheduled.delay).toBeCloseTo(combatTime - 1719, 1);
+  await vision.selectOption("blue");
+  await expect
+    .poll(async () => {
+      const { stops } = await readRecordedAudioProbe(page);
+      return stops;
+    })
+    .toContain(scheduled.id);
+  await pause.click();
+
+  await seek(page, 1720.5);
+  await speed.selectOption("4");
+  await vision.selectOption("blue");
+  await play.click();
+  const slider = page.getByRole("slider", { name: "Replay time" });
+  await expect
+    .poll(async () => Number(await slider.inputValue()))
+    .toBeGreaterThan(1720.5);
+  expect(await combatStarts()).toHaveLength(initialCount + 1);
+  await pause.click();
+  await seek(page, 1720.5);
+  await vision.selectOption("all");
+  await play.click();
+  await expect.poll(combatCount).toBe(initialCount + 2);
+  const resumedStarts = await combatStarts();
+  const resumed = resumedStarts.at(-1);
+  if (resumed === undefined) throw new Error("Missing resumed combat cue");
+  expect(resumed.rate).toBe(4);
+  expect(resumed.offset).toBeCloseTo(1720.5 - combatTime, 1);
+  expect(
+    [...requested].filter((url) => url.includes("/combat-audio/")),
+  ).toHaveLength(2);
+}
+
 test.use({
   launchOptions: {
     args: [
@@ -106,6 +189,7 @@ test("announcer preview stays silent until enabled and follows the replay clock"
     throw new Error("A loopback base URL is required.");
   const fixture = await readRecordedReplay();
   const direct = fixture.announcerEvents !== undefined;
+  const combat = expectedCombatAudio(fixture.paths.values());
   const clipPaths = [...fixture.paths.keys()].filter(
     (url) => url.includes("/announcer-preview/") && url.endsWith(".wav"),
   );
@@ -121,7 +205,7 @@ test("announcer preview stays silent until enabled and follows the replay clock"
   await installRecordedAudioProbe(page);
   await page.goto(replayPath);
   const toggle = page.getByRole("button", {
-    name: "Announcer preview (Female1 English)",
+    name: combat.toggle,
   });
   const play = page.getByRole("button", { name: "Play", exact: true });
   const pause = page.getByRole("button", { name: "Pause", exact: true });
@@ -143,6 +227,9 @@ test("announcer preview stays silent until enabled and follows the replay clock"
   });
   for (const clipPath of clipPaths)
     expect(traffic.requested).not.toContain(clipPath);
+  expect(
+    [...traffic.requested].some((url) => url.includes("/combat-audio/")),
+  ).toBe(false);
 
   await seek(page, 19);
   await toggle.click();
@@ -242,6 +329,7 @@ test("announcer preview stays silent until enabled and follows the replay clock"
     expect(transition.delay).toBeGreaterThan(0);
     expect(transition.delay).toBeCloseTo((cue.time - start) / playbackRate, 1);
   }
+  await verifyCombatAudio(page, combat.expected, traffic.requested);
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   const muted = await readRecordedAudioProbe(page);
@@ -254,7 +342,10 @@ test("announcer preview stays silent until enabled and follows the replay clock"
     expect(
       new Map(
         muted.starts
-          .filter(({ rate, offset }) => rate === 1 && offset === 0)
+          .filter(
+            ({ rate, offset, wavSha256 }) =>
+              rate === 1 && offset === 0 && wavSha256 !== combatWav,
+          )
           .map(({ frames, wavSha256 }) => [frames, wavSha256]),
       ),
     ).toEqual(

@@ -15,6 +15,7 @@ export type ReplayPresentationControls = {
   perspectives: readonly ReplayPerspective[];
   directedCamera: boolean;
   announcerPreview?: ReplayPresentationCapabilities["announcerPreview"];
+  combatAudioComparison?: ReplayPresentationCapabilities["combatAudioComparison"];
   timelineEvents?: ReplayPresentationCapabilities["timelineEvents"];
   unitVisibility?: ReplayPresentationCapabilities["unitVisibility"];
 };
@@ -43,6 +44,9 @@ export function replayPresentationControls(
     ...(capabilities.announcerPreview === undefined
       ? {}
       : { announcerPreview: capabilities.announcerPreview }),
+    ...(capabilities.combatAudioComparison === undefined
+      ? {}
+      : { combatAudioComparison: capabilities.combatAudioComparison }),
   };
 }
 
@@ -53,6 +57,20 @@ export type ReplayPlaybackControlsProps = {
     action: (active: ReplaySession) => void | Promise<void>,
   ) => Promise<void>;
 };
+
+function replayAudioLabels(controls: ReplayPresentationControls) {
+  if (controls.combatAudioComparison === true)
+    return {
+      toggle: "Replay audio comparison",
+      unavailable: "Audio preview could not start.",
+    };
+  return controls.announcerPreview === "female1-en-us"
+    ? {
+        toggle: "Announcer preview (Female1 English)",
+        unavailable: "Announcer preview could not start.",
+      }
+    : undefined;
+}
 
 export function ReplayControls(props: {
   state: ReplaySessionState;
@@ -72,6 +90,7 @@ export function ReplayControls(props: {
   const { state } = props;
   const cameraView = state.cameraView;
   const controls = props.controls ?? nativeControls;
+  const audio = replayAudioLabels(controls);
   const [requestedTime, setRequestedTime] = useState<number | null>(null);
   const [sound, setSound] = useState<"off" | "loading" | "on" | "unavailable">(
     "off",
@@ -318,7 +337,7 @@ export function ReplayControls(props: {
           Map overview
         </Button>
       )}
-      {controls.announcerPreview === "female1-en-us" && (
+      {audio !== undefined && (
         <div>
           <Button
             type="button"
@@ -344,11 +363,11 @@ export function ReplayControls(props: {
               });
             }}
           >
-            Announcer preview (Female1 English)
+            {audio.toggle}
           </Button>
           {sound === "unavailable" && (
             <p role="status" className="text-xs text-scout-subtle">
-              Announcer preview could not start.
+              {audio.unavailable}
             </p>
           )}
         </div>

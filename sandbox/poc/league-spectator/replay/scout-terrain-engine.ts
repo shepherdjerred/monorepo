@@ -357,6 +357,9 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   }
   const announcerProfile = localManifest.capabilities.announcerPreview;
   const particlePreview = localManifest.capabilities.particlePreview;
+  const combatAudioComparison =
+    localManifest.capabilities.mapId === 11 &&
+    localManifest.capabilities.combatAudioComparison !== undefined;
   const mayhemImpactComparison =
     localManifest.capabilities.mapId === 12 &&
     localManifest.capabilities.mayhemImpactComparison !== undefined;
@@ -371,16 +374,21 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   if (
     announcerProfile !== undefined ||
     particlePreview !== undefined ||
-    mayhemImpactComparison
+    mayhemImpactComparison ||
+    combatAudioComparison
   ) {
     const replayDigest = await sha256Hex(replay);
-    if (replayDigest !== localManifest.capabilities.replaySha256)
+    if (replayDigest !== localManifest.capabilities.replaySha256) {
+      const source = combatAudioComparison
+        ? "combat audio comparison"
+        : particlePreview === undefined && !mayhemImpactComparison
+          ? "announcer preview"
+          : "particle preview";
       throw new ReplayCapabilityError(
         "incompatible-build",
-        particlePreview === undefined && !mayhemImpactComparison
-          ? "The announcer preview belongs to another saved replay."
-          : "The particle preview belongs to another saved replay.",
+        `The ${source} belongs to another saved replay.`,
       );
+    }
   }
   if (
     scene.workerMotion === undefined ||
@@ -417,15 +425,20 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "engine-unavailable",
       "The motion decoder returned no observed participant positions.",
     );
+  const includeAnnouncer =
+    announcerProfile !== undefined && loaded.announcerCues?.length !== 0;
   const announcer =
-    announcerProfile !== undefined &&
-    loaded.announcerCues?.length !== 0 &&
+    (includeAnnouncer || combatAudioComparison) &&
     typeof AudioContext !== "undefined"
       ? new ScoutTerrainAnnouncer(
           resources,
           localManifest.capabilities.replaySha256,
           signal,
-          loaded.announcerCues,
+          {
+            announcer: includeAnnouncer,
+            combat: combatAudioComparison,
+            decodedCues: loaded.announcerCues,
+          },
         )
       : undefined;
   const data = prepareScene(loaded.scene, loaded.heights, {
@@ -589,7 +602,12 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       minimapUrl,
       timelineEvents,
       ...(particlePreview === undefined ? {} : { particlePreview }),
-      ...(announcer === undefined ? {} : { announcerPreview: "female1-en-us" }),
+      ...(announcer !== undefined && includeAnnouncer
+        ? { announcerPreview: "female1-en-us" }
+        : {}),
+      ...(announcer !== undefined && combatAudioComparison
+        ? { combatAudioComparison: true }
+        : {}),
     },
     ...(announcer === undefined
       ? {}

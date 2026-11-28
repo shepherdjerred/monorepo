@@ -186,6 +186,7 @@ const mayhemImpactComparisonTrack = familyTrack.extend({
   worldImpact: worldQuadTrack.extend({
     paths: worldQuadTrack.shape.paths.length(2),
   }),
+  additionalWorldImpacts: z.array(worldQuadTrack).max(8).optional(),
 });
 const particleTrack = z.discriminatedUnion("schema", [
   singleFamilyTrack,
@@ -474,23 +475,23 @@ export async function loadRecordedTerrainParticles(
     palettePaths.add(unmaskedQuad.palette);
     basePaths.add(unmaskedQuad.texture);
   }
-  const impact = track.schema === 8 ? track.worldImpact : undefined;
-  const impactAt =
-    impact === undefined
-      ? undefined
-      : compileWorldPaths(impact.paths, duration, {
-          texture: impact.texture,
-          palette: impact.palette,
-          blend: "src-alpha-one" as const,
-          alphaTest: true,
-          depthTest: true,
-          worldUnmaskedQuad: true as const,
-          mayhemImpactComparison: true as const,
-        });
-  if (impact !== undefined) {
+  const impactTracks =
+    track.schema === 8
+      ? [track.worldImpact, ...(track.additionalWorldImpacts ?? [])]
+      : [];
+  const impactsAt = impactTracks.map((impact) => {
     palettePaths.add(impact.palette);
     basePaths.add(impact.texture);
-  }
+    return compileWorldPaths(impact.paths, duration, {
+      texture: impact.texture,
+      palette: impact.palette,
+      blend: "src-alpha-one" as const,
+      alphaTest: true,
+      depthTest: true,
+      worldUnmaskedQuad: true as const,
+      mayhemImpactComparison: true as const,
+    });
+  });
   const expectedTextures = new Set([...palettePaths, ...basePaths]);
   if (
     (track.schema === 1 && expectedTextures.size !== 3) ||
@@ -567,7 +568,8 @@ export async function loadRecordedTerrainParticles(
   );
   const maximumDuration = Math.max(...lifetimes.values());
   function sampleAt(timeSeconds: number) {
-    if (impactAt !== undefined) return impactAt(timeSeconds);
+    if (impactsAt.length > 0)
+      return impactsAt.flatMap((read) => read(timeSeconds));
     const legacyParticles = [];
     let first = 0;
     let end = track.effects.length;

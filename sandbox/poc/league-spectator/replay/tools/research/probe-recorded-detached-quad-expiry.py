@@ -38,9 +38,8 @@ def run(image, event, fields, cadence, supplied_random, camera=None, *,
     impact = observe_delay_only or configure_impact_shape is not None
     if impact:
         assert (camera is None) == observe_delay_only and 0 <= supplied_random < 1
-        assert fields["3bf0b4ed"]["classHash"] == "4f4e2ed7"
-        delay = fields["22e763bc"]["value"]
-        assert delay == 0.5
+        assert fields["3bf0b4ed"]["classHash"] in ("4f4e2ed7", "ee39916f")
+        delay = fields.get("22e763bc", {"value": 0})["value"]
     else:
         assert fields["3bf0b4ed"]["classHash"] == "ee39916f"
         offset = v(fields["3bf0b4ed"]["fields"]["e5f268dd"]["value"])
@@ -206,7 +205,8 @@ def run(image, event, fields, cadence, supplied_random, camera=None, *,
             shape = stop + 0x7900
             configure_impact_shape(fields["3bf0b4ed"]["fields"], call, put, shape, stop + 0xB000)
             put(definition + 0x238, "Q", shape)
-            put(definition + 0x240, "3f", *v(constant("563d4a22")))
+            if "563d4a22" in fields:
+                put(definition + 0x240, "3f", *v(constant("563d4a22")))
             put(definition + 0x3E8, "3f", *v(constant("f0eb7084")))
             put(definition + 0x3D0, "3f", *v(constant("5932ff9c")))
     else:
@@ -223,17 +223,22 @@ def run(image, event, fields, cadence, supplied_random, camera=None, *,
 
     if camera is not None:
         put(definition + 0x14, "B", fields["fa784eab"]["value"])
-        assert fields["3559e15b"]["value"] == 1
         if impact:
             assert "37ddb774" not in fields
-            put(definition + 0x2D0, "I", flags | 0x100008)
+            if "3559e15b" in fields:
+                assert fields["3559e15b"]["value"] == 1
+                put(definition + 0x2D0, "I", flags | 0x100008)
+            if "7b7a7318" in fields:
+                put(definition + 0x70, "h", fields["7b7a7318"]["value"])
         else:
+            assert fields["3559e15b"]["value"] == 1
             put(definition + 0x17, "B", fields["b9516a6f"]["value"])
             put(definition + 0x70, "hB", fields["7b7a7318"]["value"], fields["6563bee8"]["value"])
             put(definition + 0x77, "B", fields["b99310f4"]["value"])
             assert fields["37ddb774"]["value"] == 1 and "dddde180" not in fields and "8d2e2474" not in fields
             put(definition + 0x2D0, "I", flags | 0x10100A)
-        put(definition + 0x150, "4f", *v(constant("83cdeaa1"), "XYZW"))
+        if "83cdeaa1" in fields:
+            put(definition + 0x150, "4f", *v(constant("83cdeaa1"), "XYZW"))
         wrapper = stop + 0x6900
         emitter_entity = stop + 0x6C00
         put(emitter_entity + 0x188, "Q", wrapper)

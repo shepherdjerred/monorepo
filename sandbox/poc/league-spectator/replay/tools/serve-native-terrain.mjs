@@ -56,8 +56,10 @@ const { positionals, values } = parseArgs({
     "canonical-match": { type: "string" },
     "canonical-match-sha256": { type: "string" },
     "rift-startup-archive": { type: "string" },
+    "rift-minimap": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
+    "combat-audio-comparison": { type: "string" },
     "announcer-catalog": { type: "string" },
     "recorded-particles": { type: "string" },
     "recorded-particles-sha256": { type: "string" },
@@ -130,6 +132,11 @@ const { positionals, values } = parseArgs({
 const [terrainRoot, threeCore, replayPath, ...receiptPaths] = positionals;
 const rawReplayOnly = receiptPaths.length === 0;
 const privatePackageOutput = values["private-package-output"];
+const combatAudioInput = values["combat-audio-comparison"];
+assert.ok(
+  combatAudioInput === undefined || privatePackageOutput !== undefined,
+  "Combat audio comparison requires private package output",
+);
 const recoveryPath = values["scout-recovery-db"];
 const canonicalMatchPath = values["canonical-match"];
 const canonicalMatchDigest = values["canonical-match-sha256"];
@@ -2922,7 +2929,30 @@ const routes = new Map([
 ]);
 if (navgridBytes !== undefined) {
   routes.set("/heights.bin", [navgridBytes, "application/octet-stream"]);
-  routes.set("/minimap.png", [await readPinned("topography.png"), "image/png"]);
+  const mapPath = values["rift-minimap"];
+  if (mapPath === undefined) {
+    routes.set("/minimap.png", [
+      await readPinned("topography.png"),
+      "image/png",
+    ]);
+  } else {
+    assert.ok(
+      currentBuild && privatePackageOutput !== undefined,
+      "Authored Default Rift minimap requires an exact .8428 private package",
+    );
+    const { readCurrentRiftMinimap } =
+      await import("./research/prepare-current-rift-minimap.mjs");
+    routes.set("/minimap.png", [
+      await readCurrentRiftMinimap(mapPath),
+      "image/png",
+    ]);
+  }
+} else {
+  assert.equal(
+    values["rift-minimap"],
+    undefined,
+    "Authored Rift minimap requires the reviewed navigation grid",
+  );
 }
 if (materialRoutes !== undefined) {
   for (const [path, response] of materialRoutes) routes.set(path, response);
@@ -2959,6 +2989,13 @@ assert.ok(await Bun.file(threeCore).exists(), "Missing local Three.js vendor");
 if (privatePackageOutput !== undefined) {
   const { readLocalRecordedParticles, writeLocalScoutTerrainPackage } =
     await import("./build-local-scout-terrain-package.mjs");
+  const combatAudioFiles =
+    combatAudioInput === undefined
+      ? undefined
+      : await import("./research/read-local-combat-audio-comparison.mjs").then(
+          ({ readLocalCombatAudioComparison }) =>
+            readLocalCombatAudioComparison(combatAudioInput, identity),
+        );
   const particleFiles =
     particleManifest === undefined
       ? undefined
@@ -2973,6 +3010,7 @@ if (privatePackageOutput !== undefined) {
     routes,
     threeCore,
     announcerFiles,
+    combatAudioFiles,
     particleFiles,
   });
   console.log(JSON.stringify(result));

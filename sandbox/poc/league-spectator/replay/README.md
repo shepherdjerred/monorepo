@@ -415,9 +415,29 @@ This path requires Bun and an offline uv environment with
 pinned Match-V5 evidence, or Scout Desktop recovery. Public replay admission
 continues to require its own source and comparison evidence.
 
+To use the authored Default Rift minimap in a private `.8428` package,
+extract it with the terrain texture exporter and pass its PNG to the builder
+as `--rift-minimap`. The PNG supplies the base background. Camera interactions
+and actor markers still use the recorded world coordinates. Elemental and
+Baron background switching requires separate replay evidence.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-current-rift-minimap.mjs $installation $terrainTextureExporter $newPrivateMinimap
+```
+
 For a new `.8428` Rift replay, check its opening against the pinned archived
 skin census before building a package. The preflight can also verify each
 opening model against an existing archive-scoped champion catalog.
+
+The local Rift package can compare Senna's recorded ground-hit cue with
+`--combat-audio-comparison $audioInputs`. The input JSON names the pinned native
+creation receipt in `creationReceipt` and the original decoded Wwise clip in
+`wav`. The comparison places the unprocessed clip at the ROFL event time in
+all-vision mode. Native update-frame timing, spatial attenuation, and mix
+settings require separate evidence. Use the **Replay audio comparison** toggle
+to hear the cue. Run the recorded announcer proof with
+`SCOUT_REPLAY_E2E_WITH_ANNOUNCER=1` and `SCOUT_REPLAY_E2E_WITH_COMBAT_AUDIO=1`
+to check the exact clip, pause and speed handling, and team-vision cancellation.
 
 ```powershell
 bun tools/research/inspect-current-rift-admission.mjs $replayPath $canonicalMatch $canonicalMatchSha256 $exactByteMaps $archivedSkinCensus $censusSha256 --catalog $championModels --catalog-sha256 $championCatalogSha256 --selection-output $newPrivateSkinSelection
@@ -1461,9 +1481,12 @@ reference, the verified PNG paths `texture` and `palette`, the translated quad
 shader paths `vertex` and `fragment`, and a new private `output` directory.
 Set the Mayhem package's `mayhemImpactComparison` to the printed track path and
 digest. The rendered interval uses native samples with controlled random inputs
-and the all-vision material. It covers the two detached Flash draws during the
-first fight. Other emitters and the original replay random state require their
-own evidence.
+and the all-vision material for the two detached Flash draws. Add the recorded
+Maokai sapling burst by running the probe on its placement, emitter and texture
+with `--component maokai-sphere --geometry`, then pass its `source`, pinned
+`geometry`, `material`, and `texture` under `maokaiSphere` in the author
+inputs. Other emitters and the original replay random state require their own
+evidence.
 
 ## Local Scout player demo
 

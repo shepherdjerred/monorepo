@@ -130,8 +130,13 @@ export async function readLocalRecordedParticleResources(
   if (impactComparison) {
     assert.deepEqual(track.families, []);
     assert.deepEqual(track.effects, []);
-    expectedTextures.add(track.worldImpact.texture);
-    expectedTextures.add(track.worldImpact.palette);
+    for (const { texture, palette } of [
+      track.worldImpact,
+      ...(track.additionalWorldImpacts ?? []),
+    ]) {
+      expectedTextures.add(texture);
+      expectedTextures.add(palette);
+    }
   }
   if (track.schema === 1) assert.equal(expectedTextures.size, 3);
   assert.equal(track.textures.files.length, expectedTextures.size);
@@ -219,6 +224,7 @@ export async function writeLocalScoutTerrainPackage({
   routes,
   threeCore,
   announcerFiles,
+  combatAudioFiles,
   particleFiles,
   impactComparisonFiles,
 }) {
@@ -243,6 +249,10 @@ export async function writeLocalScoutTerrainPackage({
     assert.equal(map.mayhemMapSkin, "Bloom");
   }
   for (const [path, bytes] of announcerFiles ?? []) resources.set(path, bytes);
+  if (combatAudioFiles !== undefined) {
+    assert.equal(map.mapId, 11);
+    for (const [path, bytes] of combatAudioFiles) resources.set(path, bytes);
+  }
   const recordedParticleFiles = particleFiles ?? impactComparisonFiles;
   if (recordedParticleFiles !== undefined)
     for (const [path, bytes] of packageLocalRecordedParticles(
@@ -288,6 +298,9 @@ export async function writeLocalScoutTerrainPackage({
       ...(announcerFiles === undefined
         ? {}
         : { announcerPreview: "female1-en-us" }),
+      ...(combatAudioFiles === undefined
+        ? {}
+        : { combatAudioComparison: "packet-clock-dry-source" }),
       ...(particleFiles === undefined
         ? {}
         : { particlePreview: "verified-partial-effects" }),

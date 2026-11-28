@@ -51,11 +51,19 @@ def configure_spawn_shape(fields, call, put, shape, scratch):
         put(axis_data + index * 12, "3f", *(axis["value"][lane] for lane in "XYZ"))
 
 
+def configure_point_shape(fields, call, put, shape, _scratch):
+    assert set(fields) == {"e5f268dd"}
+    offset = fields["e5f268dd"]["value"]
+    call(0x17C59D0, shape)
+    put(shape + 8, "3f", *(offset[lane] for lane in "XYZ"))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("archive", "source_receipt", "typed_effect", "texture"):
         parser.add_argument(name, type=Path)
     parser.add_argument("--geometry", action="store_true")
+    parser.add_argument("--component", choices=("flash", "maokai-sphere"), default="flash")
     args = parser.parse_args()
     if not __debug__:
         raise RuntimeError("Run this probe with Python assertions enabled")
@@ -66,8 +74,16 @@ def main():
     spec.loader.exec_module(harness)
 
     archive_sha = "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7"
-    source_sha = "12eff6675a2a8b86ee51290c724fca394d42aadffddfd41c638017790c6958f3"
-    typed_sha = "abb416ee3c2f3ceba9de8b7ba107df530be5ee6f981c29c4d1ff52e5a3f722bd"
+    if args.component == "flash":
+        source_sha = "12eff6675a2a8b86ee51290c724fca394d42aadffddfd41c638017790c6958f3"
+        typed_sha = "abb416ee3c2f3ceba9de8b7ba107df530be5ee6f981c29c4d1ff52e5a3f722bd"
+        effect, index, name, scale = "e70b381c", 1, "Flash", 1
+        configure_shape = configure_spawn_shape
+    else:
+        source_sha = "2c9bd39530461371932a7c5452cb0c29e46141991b9aa73666b33d7e520d3ee6"
+        typed_sha = "6523d669544243fd2bd1cd8669cd8bd18dc1941024adf3a9a0e3375407a8d6b1"
+        effect, index, name, scale = "81229b71", 8, "Sphere_core", 1.25
+        configure_shape = configure_point_shape
     original = json.loads(checked_bytes(args.source_receipt, source_sha))
     typed = json.loads(checked_bytes(args.typed_effect, typed_sha))
     texture_sha = original["emitter"]["textureSha256"]
@@ -75,14 +91,14 @@ def main():
     image = harness.read_replication_image(
         checked_bytes(args.archive, archive_sha), harness.CURRENT_BUILD
     )
-    fields = typed["fields"]["868eb76a"]["elements"][1]["fields"]
-    assert typed["pathHash"] == "e70b381c"
-    assert fields["3d25b8ce"]["value"] == "Flash"
+    fields = typed["fields"]["868eb76a"]["elements"][index]["fields"]
+    assert typed["pathHash"] == effect
+    assert fields["3d25b8ce"]["value"] == name
     assert fields["3c6468f4"]["value"] == original["emitter"]["texture"]
 
     observations = []
     for placement in original["placements"]:
-        assert placement["flags"] == 32 and placement["scaleRate"] == [1, 1]
+        assert placement["flags"] == 32 and placement["scaleRate"] == [scale, 1]
         event = {"descriptor": {
             "positions": [placement["position"]],
             "scaleRate": placement["scaleRate"],
@@ -97,7 +113,7 @@ def main():
                         **harness.run(
                             image, event, fields, cadence, supplied_random, camera,
                             observe_delay_only=not args.geometry,
-                            configure_impact_shape=configure_spawn_shape if args.geometry else None,
+                            configure_impact_shape=configure_shape if args.geometry else None,
                         ),
                     })
 

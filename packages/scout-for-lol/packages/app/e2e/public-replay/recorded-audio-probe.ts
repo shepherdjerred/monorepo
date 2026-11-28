@@ -10,6 +10,7 @@ type RecordedAudioProbe = {
     delay: number;
     offset: number;
     rate: number;
+    peak: number;
   }[];
   stops: number[];
 };
@@ -96,6 +97,9 @@ export async function installRecordedAudioProbe(page: Page) {
               delay: when - (performance.now() - started) / 1000,
               offset,
               rate: this.playbackRate.value,
+              peak: this.buffer
+                .getChannelData(0)
+                .reduce((peak, sample) => Math.max(peak, Math.abs(sample)), 0),
             });
           }
 

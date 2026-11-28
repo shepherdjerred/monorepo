@@ -112,6 +112,22 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
       expect(frame.recordedParticleDraws).toBe(draws);
       expect(frame.recordedDepthDisabledParticleDraws).toBe(0);
     }
+    if (
+      [...fixture.paths.values()].includes(
+        "recorded-particles/ed32f9d687e5b8932f4dd361d4bb8e0966ada34195d2c3cb7846f1867660b1ae.png",
+      )
+    ) {
+      for (const [time, draws] of [
+        [81.1, 0],
+        [81.3, 1],
+        [82.4, 0],
+      ] as const) {
+        await seek(page, time);
+        const frame = await readRecordedDraw(page);
+        expect(frame.recordedParticleDraws).toBe(draws);
+        expect(frame.recordedDepthDisabledParticleDraws).toBe(0);
+      }
+    }
   }
   await seek(page, 60);
   expect(await readRecordedDraw(page)).toMatchObject({

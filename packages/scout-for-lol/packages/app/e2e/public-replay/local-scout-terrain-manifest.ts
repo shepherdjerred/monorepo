@@ -15,6 +15,7 @@ export const LocalScoutTerrainManifestSchema =
       z.strictObject({
         mapId: z.literal(11),
         gameMode: z.literal("CLASSIC"),
+        combatAudioComparison: z.literal("packet-clock-dry-source").optional(),
         ...recordedReplayCapabilities,
       }),
       z

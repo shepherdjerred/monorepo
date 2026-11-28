@@ -55,15 +55,27 @@ const TimelineSchema = z.strictObject({
 
 type Clock = Pick<
   ReplaySessionState,
-  "timeSeconds" | "durationSeconds" | "rate" | "playing"
+  "timeSeconds" | "durationSeconds" | "rate" | "playing" | "perspective"
 >;
+
+const CombatCueSchema = z.strictObject({
+  replaySha256: digest,
+  scope: z.literal("packet-clock-dry-source"),
+  timeSeconds: z.number().positive(),
+  mediaId: z.literal(329446178),
+});
+type Cue = {
+  resource: string;
+  timeSeconds: number;
+  allVisionOnly?: true;
+};
 
 export class ScoutTerrainAnnouncer {
   #context: AudioContext | undefined;
-  #sounds: { timeSeconds: number; buffer: AudioBuffer }[] | undefined;
+  #sounds: (Cue & { buffer: AudioBuffer })[] | undefined;
   #clock: Clock | undefined;
-  #sources = new Set<AudioBufferSourceNode>();
-  #scheduled = false;
+  #sources = new Map<AudioBufferSourceNode, boolean>();
+  #scheduled = { announcer: false, combat: false };
   #enabled = false;
   #request = 0;
 
@@ -71,7 +83,11 @@ export class ScoutTerrainAnnouncer {
     private readonly resources: ReplayResources,
     private readonly replaySha256: string,
     private readonly signal: AbortSignal,
-    private readonly decodedCues?: AnnouncerCues,
+    private readonly options: {
+      announcer: boolean;
+      combat: boolean;
+      decodedCues?: AnnouncerCues;
+    },
   ) {}
 
   async setEnabled(enabled: boolean) {
@@ -102,8 +118,8 @@ export class ScoutTerrainAnnouncer {
     }
   }
 
-  async #readCues() {
-    if (this.decodedCues !== undefined) return this.decodedCues;
+  async #readAnnouncerCues() {
+    if (this.options.decodedCues !== undefined) return this.options.decodedCues;
     const bytes = await this.resources.read("announcer-preview/cues.json");
     const timeline = TimelineSchema.parse(
       JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
@@ -113,23 +129,43 @@ export class ScoutTerrainAnnouncer {
     return timeline.cues;
   }
 
+  async #readCombatCue(): Promise<Cue> {
+    const bytes = await this.resources.read("combat-audio/cue.json");
+    const cue = CombatCueSchema.parse(
+      JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    );
+    if (cue.replaySha256 !== this.replaySha256)
+      throw new Error("Combat audio cue belongs to another replay");
+    return {
+      resource: `combat-audio/${String(cue.mediaId)}.wav`,
+      timeSeconds: cue.timeSeconds,
+      allVisionOnly: true,
+    };
+  }
+
   async #loadSounds(context: AudioContext) {
-    const cues = await this.#readCues();
-    const media = new Map<number, Promise<AudioBuffer>>();
+    const [announcer, combat] = await Promise.all([
+      this.options.announcer ? this.#readAnnouncerCues() : [],
+      this.options.combat ? this.#readCombatCue() : undefined,
+    ]);
+    const cues: Cue[] = announcer.map(({ mediaId, timeSeconds }) => ({
+      resource: `announcer-preview/${String(mediaId)}.wav`,
+      timeSeconds,
+    }));
+    if (combat !== undefined) cues.push(combat);
+    const media = new Map<string, Promise<AudioBuffer>>();
     return Promise.all(
-      cues.map(async ({ mediaId, timeSeconds }) => {
-        let buffer = media.get(mediaId);
+      cues.map(async (cue) => {
+        let buffer = media.get(cue.resource);
         if (buffer === undefined) {
-          buffer = this.resources
-            .read(`announcer-preview/${mediaId}.wav`)
-            .then((wav) => {
-              this.signal.throwIfAborted();
-              return context.decodeAudioData(wav.buffer);
-            });
-          media.set(mediaId, buffer);
+          buffer = this.resources.read(cue.resource).then((wav) => {
+            this.signal.throwIfAborted();
+            return context.decodeAudioData(wav.buffer);
+          });
+          media.set(cue.resource, buffer);
         }
         return {
-          timeSeconds,
+          ...cue,
           buffer: await buffer,
         };
       }),
@@ -140,36 +176,51 @@ export class ScoutTerrainAnnouncer {
     if (
       this.#clock?.playing !== clock.playing ||
       this.#clock.rate !== clock.rate
-    )
+    ) {
       this.invalidate();
+    } else if (
+      this.options.combat &&
+      this.#clock.perspective !== clock.perspective
+    ) {
+      this.#scheduled.combat = false;
+      this.#stopSources(true);
+    }
     this.#clock = clock;
     this.#schedule();
   }
 
   invalidate() {
-    this.#scheduled = false;
-    for (const source of this.#sources) {
+    this.#scheduled.announcer = false;
+    this.#scheduled.combat = false;
+    this.#stopSources(false);
+  }
+
+  #stopSources(combatOnly: boolean) {
+    for (const [source, isCombat] of this.#sources) {
+      if (combatOnly && !isCombat) continue;
       source.onended = null;
       source.stop();
       source.disconnect();
+      this.#sources.delete(source);
     }
-    this.#sources.clear();
   }
 
   #schedule() {
     const clock = this.#clock;
     const context = this.#context;
-    if (
-      !this.#enabled ||
-      this.#scheduled ||
-      !clock?.playing ||
-      !context ||
-      !this.#sounds
-    )
-      return;
-    this.#scheduled = true;
+    if (!this.#enabled || !clock?.playing || !context || !this.#sounds) return;
+    const scheduleAnnouncer =
+      this.options.announcer && !this.#scheduled.announcer;
+    const scheduleCombat =
+      this.options.combat &&
+      !this.#scheduled.combat &&
+      clock.perspective === "all";
+    if (!scheduleAnnouncer && !scheduleCombat) return;
+    this.#scheduled.announcer ||= scheduleAnnouncer;
+    this.#scheduled.combat ||= scheduleCombat;
     const audioTime = context.currentTime;
-    for (const { timeSeconds, buffer } of this.#sounds) {
+    for (const { timeSeconds, buffer, allVisionOnly } of this.#sounds) {
+      if (allVisionOnly ? !scheduleCombat : !scheduleAnnouncer) continue;
       const start = Math.max(timeSeconds, clock.timeSeconds);
       const end = Math.min(
         timeSeconds + buffer.duration,
@@ -189,7 +240,7 @@ export class ScoutTerrainAnnouncer {
         start - timeSeconds,
         end - start,
       );
-      this.#sources.add(source);
+      this.#sources.set(source, allVisionOnly === true);
     }
   }
 
