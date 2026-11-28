@@ -90,6 +90,15 @@ function stubActivities(
       if (input.bucket === options.failBucket) {
         throw ApplicationFailure.nonRetryable("S3 is down", "S3Down");
       }
+      if (input.bucket === options.failAfterDeleting?.bucket) {
+        // Delete some objects, then fail without reporting them, as a chunk
+        // does when a later listing call exhausts its retries.
+        await sweepRuleChunk(
+          { ...input, deleteBudget: options.failAfterDeleting.count },
+          { client: options.s3 },
+        );
+        throw ApplicationFailure.nonRetryable("listing failed", "S3Down");
+      }
       return sweepRuleChunk(input, {
         client: options.s3,
         maxPages: options.maxPages,
@@ -107,6 +116,7 @@ type RunOptions = {
   input?: { dryRun?: boolean };
   maxPages?: number;
   failBucket?: string;
+  failAfterDeleting?: { bucket: string; count: number };
 };
 
 async function run(options: RunOptions) {
@@ -281,11 +291,35 @@ describe("runSeaweedfsLifecycleEnforcer", () => {
     expect(requestedModes.length).toBeGreaterThanOrEqual(6);
   }, 60_000);
 
+  test("a chunk that deletes and then fails stops all later deletes in the run", async () => {
+    const s3 = fixture();
+    const { report, requestedModes } = await run({
+      s3,
+      policy: policy({ mode: "delete", maxDeletes: 1000 }),
+      failAfterDeleting: { bucket: "alpha", count: 3 },
+    });
+    // alpha lost three objects the run could not count; beta must not delete.
+    expect(s3.keys("alpha")).toHaveLength(4);
+    expect(s3.keys("beta")).toHaveLength(7);
+    expect(report.buckets[0]).toMatchObject({
+      bucket: "alpha",
+      error: "listing failed",
+    });
+    expect(report.buckets[1]?.rules[0]).toMatchObject({
+      mode: "report",
+      candidates: 5,
+      deleted: 0,
+    });
+    expect(report.buckets[1]?.rules[0]?.note).toContain("deletes stopped");
+    expect(requestedModes.at(-1)).toBe("report");
+    expect(report.totals.failedBuckets).toBe(1);
+  }, 60_000);
+
   test("a failing bucket is recorded and the other buckets still run", async () => {
     const s3 = fixture();
     const { report, published } = await run({
       s3,
-      policy: policy({ mode: "delete" }),
+      policy: policy(),
       failBucket: "alpha",
     });
     expect(report.buckets[0]).toMatchObject({
@@ -294,7 +328,10 @@ describe("runSeaweedfsLifecycleEnforcer", () => {
     });
     expect(report.buckets[0]?.rules[0]?.status).toBe("failed");
     expect(s3.keys("alpha")).toHaveLength(7);
-    expect(s3.keys("beta")).toEqual(["keep/forever", "old/fresh"]);
+    expect(report.buckets[1]?.rules[0]).toMatchObject({
+      status: "complete",
+      candidates: 5,
+    });
     expect(report.totals.failedBuckets).toBe(1);
     expect(published).toHaveLength(1);
   }, 60_000);

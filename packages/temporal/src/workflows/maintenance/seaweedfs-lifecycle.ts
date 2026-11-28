@@ -152,6 +152,13 @@ async function sweepRule(
       // Keep what earlier chunks found or deleted; the bucket is marked failed.
       run.status = "failed";
       run.note = failureMessage(error);
+      if (run.mode === "delete") {
+        // The failed chunk may have deleted objects the run cannot count, so
+        // the cap can no longer be trusted: fail closed and report only for
+        // the rest of the run rather than reconciling from heartbeats.
+        state.deleteBudget = 0;
+        state.deletesHalted = `a delete chunk failed in ${bucket}`;
+      }
       break;
     }
     absorbChunk(state, run, chunk);

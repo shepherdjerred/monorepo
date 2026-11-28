@@ -101,6 +101,7 @@ toolkit flags apply --file lifecycle-stage.json
 `buckets` is a comma-separated allowlist (`ci-handoff,cook`) or `*` for every bucket.
 `max-deletes` caps objects deleted per run across all buckets; the run stops at the cap and reports `cap-reached`.
 Buckets outside the allowlist are still reported.
+If a delete chunk fails, the run cannot count what that chunk deleted, so every later bucket in the run is report-only and the failed bucket shows `error` in the report.
 
 ## 4. Enable deletes
 
