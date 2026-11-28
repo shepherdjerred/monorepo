@@ -20,6 +20,7 @@ type SamplingWindow = {
   follow?: number;
   verifyParticleDraws?: true;
   verifyIndexedParticleDraws?: true;
+  verifyMaskedGroundDraws?: true;
 };
 const reviewedScenes = [
   { label: "opening", timeSeconds: 15 },
@@ -52,10 +53,27 @@ const reviewedTeamViews = [
 ] as const;
 type WorkerLifetime = { openedMs: number; closedMs: number | null };
 
+function verifySamplingDraws(
+  window: SamplingWindow,
+  counts: {
+    particleDraws: number;
+    indexedParticleDraws: number;
+    maskedGroundDraws: number;
+  },
+) {
+  if (window.verifyParticleDraws === true)
+    expect(counts.particleDraws).toBeGreaterThan(0);
+  if (window.verifyIndexedParticleDraws === true)
+    expect(counts.indexedParticleDraws).toBeGreaterThan(0);
+  if (window.verifyMaskedGroundDraws === true)
+    expect(counts.maskedGroundDraws).toBeGreaterThan(0);
+}
+
 declare global {
   var recordedFrameStarts: number[];
   var recordedPerformanceParticleDraws: number;
   var recordedPerformanceIndexedParticleDraws: number;
+  var recordedPerformanceMaskedGroundDraws: number;
 }
 
 async function installFrameProbe(page: Page) {
@@ -64,6 +82,7 @@ async function installFrameProbe(page: Page) {
     globalThis.recordedFrameStarts = starts;
     globalThis.recordedPerformanceParticleDraws = 0;
     globalThis.recordedPerformanceIndexedParticleDraws = 0;
+    globalThis.recordedPerformanceMaskedGroundDraws = 0;
     const gl = WebGL2RenderingContext.prototype;
     const clear = Reflect.get(gl, "clear");
     gl.clear = function (mask) {
@@ -76,8 +95,11 @@ async function installFrameProbe(page: Page) {
       clear.call(this, mask);
     };
     const particlePrograms = new WeakSet<WebGLProgram>();
+    const maskedGroundPrograms = new WeakSet<WebGLProgram>();
     const activePrograms = new WeakMap<WebGL2RenderingContext, boolean>();
+    const activeMaskedGround = new WeakMap<WebGL2RenderingContext, boolean>();
     const getUniformBlockIndex = Reflect.get(gl, "getUniformBlockIndex");
+    const getUniformLocation = Reflect.get(gl, "getUniformLocation");
     const useProgram = Reflect.get(gl, "useProgram");
     const drawElements = Reflect.get(gl, "drawElements");
     gl.getUniformBlockIndex = function (program, name) {
@@ -89,22 +111,39 @@ async function installFrameProbe(page: Page) {
         particlePrograms.add(program);
       return index;
     };
+    gl.getUniformLocation = function (program, name) {
+      const location = getUniformLocation.call(this, program, name);
+      if (location !== null && name === "NAVMESH_MASK_TEXTURE_SharedTexture")
+        maskedGroundPrograms.add(program);
+      return location;
+    };
     gl.useProgram = function (program) {
       activePrograms.set(
         this,
         program !== null && particlePrograms.has(program),
+      );
+      activeMaskedGround.set(
+        this,
+        program !== null && maskedGroundPrograms.has(program),
       );
       useProgram.call(this, program);
     };
     gl.drawElements = function (mode, count, type, offset) {
       drawElements.call(this, mode, count, type, offset);
       if (
+        count === 12 &&
+        mode === this.TRIANGLES &&
+        type === this.UNSIGNED_SHORT &&
+        activeMaskedGround.get(this) === true
+      )
+        globalThis.recordedPerformanceMaskedGroundDraws += 1;
+      if (
         count > 0 &&
         mode === this.TRIANGLES &&
         activePrograms.get(this) === true
       ) {
         globalThis.recordedPerformanceParticleDraws += 1;
-        if (count !== 6)
+        if (count !== 6 && activeMaskedGround.get(this) !== true)
           globalThis.recordedPerformanceIndexedParticleDraws += 1;
       }
     };
@@ -229,8 +268,11 @@ async function currentRiftSamplingWindows(
             timeSeconds: 1714,
             follow: 1_073_742_170,
             verifyParticleDraws: true as const,
-            ...(track?.schema === 4 || track?.schema === 5
+            ...(track !== undefined && "worldRibbon" in track
               ? { verifyIndexedParticleDraws: true as const }
+              : {}),
+            ...(track?.schema === 6
+              ? { verifyMaskedGroundDraws: true as const }
               : {}),
           },
         ]
@@ -295,8 +337,6 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
       timeSeconds: sceneTime,
       perspective = "all",
       follow = null,
-      verifyParticleDraws = false,
-      verifyIndexedParticleDraws = false,
     } = scene;
     await camera.selectOption(
       follow === null ? "free" : `player:${String(follow)}`,
@@ -310,9 +350,10 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
       await page
         .getByRole("combobox", { name: "Speed" })
         .selectOption(String(rate));
-      const indexedAtStart = await page.evaluate(
-        () => globalThis.recordedPerformanceIndexedParticleDraws,
-      );
+      const beforeDraws = await page.evaluate(() => ({
+        indexed: globalThis.recordedPerformanceIndexedParticleDraws,
+        masked: globalThis.recordedPerformanceMaskedGroundDraws,
+      }));
       await play.click();
       await expect
         .poll(async () => Number(await clock.inputValue()))
@@ -338,17 +379,24 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
         sampleMilliseconds,
       );
       const finalTime = Number(await clock.inputValue());
-      const indexedParticleDraws = await page.evaluate(
-        (before) => globalThis.recordedPerformanceIndexedParticleDraws - before,
-        indexedAtStart,
+      const { indexedParticleDraws, maskedGroundDraws } = await page.evaluate(
+        (before) => ({
+          indexedParticleDraws:
+            globalThis.recordedPerformanceIndexedParticleDraws - before.indexed,
+          maskedGroundDraws:
+            globalThis.recordedPerformanceMaskedGroundDraws - before.masked,
+        }),
+        beforeDraws,
       );
       const workersAtEnd = page.workers().length;
       await page.getByRole("button", { name: "Pause", exact: true }).click();
       expect(starts.length).toBeGreaterThan(1);
       expect(finalTime).toBeGreaterThan(initialTime);
-      if (verifyParticleDraws) expect(particleDraws).toBeGreaterThan(0);
-      if (verifyIndexedParticleDraws)
-        expect(indexedParticleDraws).toBeGreaterThan(0);
+      verifySamplingDraws(scene, {
+        particleDraws,
+        indexedParticleDraws,
+        maskedGroundDraws,
+      });
       samples.push({
         scene: label,
         requestedStartTime: sceneTime,
@@ -361,6 +409,7 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
         workersAtEnd,
         particleDraws,
         indexedParticleDraws,
+        maskedGroundDraws,
         ...summarizeFrameStarts(starts),
       });
     }

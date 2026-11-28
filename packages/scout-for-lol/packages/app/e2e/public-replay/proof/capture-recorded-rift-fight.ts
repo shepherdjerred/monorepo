@@ -112,6 +112,7 @@ try {
       actorDraws: number;
       particleDraws: number;
       depthDisabledParticleDraws: number;
+      maskedGroundDraws: number;
     }[] = [];
     const chunks: Blob[] = [];
     recorder.addEventListener("dataavailable", (event) =>
@@ -136,6 +137,7 @@ try {
         actorOrigins,
         recordedParticleDraws,
         recordedDepthDisabledParticleDraws,
+        recordedMaskedGroundDraws,
       } = globalThis.recordedReplayDraw;
       // At fixed zoom and pitch the homogeneous translation columns change
       // as the followed actor moves. Keep them for cross-package comparison.
@@ -150,6 +152,7 @@ try {
         actorDraws: actorOrigins.length,
         particleDraws: recordedParticleDraws,
         depthDisabledParticleDraws: recordedDepthDisabledParticleDraws,
+        maskedGroundDraws: recordedMaskedGroundDraws,
       });
       if (clock.valueAsNumber >= endSeconds || now - startedAt > 25_000) {
         recorder.stop();

@@ -5,7 +5,8 @@ import { chromium, expect, type Page } from "@playwright/test";
 import { PublicReplayDescriptorSchema } from "@scout-for-lol/domain/artifacts/public-replay.ts";
 import { seek } from "#replay-e2e/recorded-replay-fixture.ts";
 
-type Geometry = "world-ribbon" | "billboard" | "depth-test-off";
+type Geometry =
+  "world-ribbon" | "billboard" | "depth-test-off" | "masked-ground";
 type RecordedSubmission = {
   selected: boolean;
   mode: number;
@@ -44,10 +45,13 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
     const clear = originalMethod("clear");
     const drawElements = originalMethod("drawElements");
     const getUniformBlockIndex = originalMethod("getUniformBlockIndex");
+    const getUniformLocation = originalMethod("getUniformLocation");
     const useProgram = originalMethod("useProgram");
     const programs = new WeakSet<WebGLProgram>();
+    const maskedGroundPrograms = new WeakSet<WebGLProgram>();
     let uploads = new Map<number, { bytes: Uint8Array; hash: number }>();
     let particleProgramActive = false;
+    let maskedGroundActive = false;
     globalThis.recordedParticleVisibility = {
       suppress: false,
       frame: { generation: 0, suppressed: false, draws: [] },
@@ -62,8 +66,16 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
         programs.add(program);
       return index;
     };
+    prototype.getUniformLocation = function (program, name) {
+      const location = getUniformLocation.call(this, program, name);
+      if (location !== null && name === "NAVMESH_MASK_TEXTURE_SharedTexture")
+        maskedGroundPrograms.add(program);
+      return location;
+    };
     prototype.useProgram = function (program) {
       particleProgramActive = program !== null && programs.has(program);
+      maskedGroundActive =
+        program !== null && maskedGroundPrograms.has(program);
       uploads = new Map();
       useProgram.call(this, program);
     };
@@ -71,7 +83,7 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
       apply(original, context: WebGL2RenderingContext, args: unknown[]) {
         const [target, data] = args;
         if (
-          particleProgramActive &&
+          (particleProgramActive || maskedGroundActive) &&
           (target === context.ARRAY_BUFFER ||
             target === context.ELEMENT_ARRAY_BUFFER) &&
           args.length === 3 &&
@@ -106,18 +118,32 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
       }
       clear.call(this, mask);
     };
+    function matchesGeometry(
+      indexCount: number,
+      depthTest: boolean,
+      worldRibbon: boolean,
+    ) {
+      if (maskedGroundActive)
+        return (
+          targetGeometry === "masked-ground" &&
+          indexCount === 12 &&
+          !depthTest &&
+          !worldRibbon
+        );
+      if (targetGeometry === "world-ribbon") return worldRibbon;
+      if (worldRibbon || indexCount !== 6) return false;
+      return targetGeometry === "billboard"
+        ? depthTest
+        : targetGeometry === "depth-test-off" && !depthTest;
+    }
     prototype.drawElements = function (mode, indexCount, indexType, offset) {
-      if (particleProgramActive) {
+      if (particleProgramActive || maskedGroundActive) {
         const worldRibbon = this.isEnabled(this.POLYGON_OFFSET_FILL);
         const depthTest = this.isEnabled(this.DEPTH_TEST);
         const selected =
           mode === this.TRIANGLES &&
           indexType === this.UNSIGNED_SHORT &&
-          (targetGeometry === "world-ribbon"
-            ? worldRibbon
-            : !worldRibbon &&
-              indexCount === 6 &&
-              depthTest === (targetGeometry === "billboard"));
+          matchesGeometry(indexCount, depthTest, worldRibbon);
         const vertices = uploads.get(this.ARRAY_BUFFER);
         const indices = uploads.get(this.ELEMENT_ARRAY_BUFFER);
         const hex = (data: Uint8Array) =>
@@ -262,8 +288,9 @@ assert.ok(
     follow !== undefined &&
     (geometry === "world-ribbon" ||
       geometry === "billboard" ||
-      geometry === "depth-test-off"),
-  "Usage: bun capture-recorded-particle-visibility.ts <loopback replay URL> <new evidence directory> <seconds> <follow ID> <world-ribbon|billboard|depth-test-off>",
+      geometry === "depth-test-off" ||
+      geometry === "masked-ground"),
+  "Usage: bun capture-recorded-particle-visibility.ts <loopback replay URL> <new evidence directory> <seconds> <follow ID> <world-ribbon|billboard|depth-test-off|masked-ground>",
 );
 const preview = new URL(previewArgument);
 assert.equal(preview.protocol, "http:");

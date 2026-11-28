@@ -29,7 +29,7 @@ export async function readLocalRecordedParticles(path, digest, identity) {
     "Recorded particle manifest digest differs",
   );
   const track = JSON.parse(bytes);
-  assert.ok([1, 2, 3, 4, 5].includes(track.schema));
+  assert.ok([1, 2, 3, 4, 5, 6].includes(track.schema));
   assert.equal(track.kind, "recorded-native-terrain-particles");
   assert.equal(track.build, "16.23.841.8428");
   assert.equal(track.build, identity.build);
@@ -48,11 +48,11 @@ export async function readLocalRecordedParticles(path, digest, identity) {
           components.flatMap(({ texture, palette }) => [texture, palette]),
         ),
   );
-  if (track.schema === 4 || track.schema === 5) {
+  if (track.schema >= 4) {
     expectedTextures.add(track.worldRibbon.texture);
     expectedTextures.add(track.worldRibbon.palette);
   }
-  if (track.schema === 5)
+  if (track.schema >= 5)
     for (const { components } of track.families)
       for (const { depthTest } of components)
         assert.equal(
@@ -60,12 +60,26 @@ export async function readLocalRecordedParticles(path, digest, identity) {
           "boolean",
           "Missing particle depth test state",
         );
+  const maskedQuad = track.schema === 6 ? track.worldMaskedQuad : undefined;
+  if (track.schema === 6) {
+    assert.ok(maskedQuad, "Missing masked ground particle track");
+    const { width, height } = maskedQuad.mask;
+    assert.ok(
+      [width, height].every(
+        (size) => Number.isInteger(size) && size >= 1 && size <= 4096,
+      ),
+    );
+    expectedTextures.add(maskedQuad.texture);
+    expectedTextures.add(maskedQuad.palette);
+  }
   if (track.schema === 1) assert.equal(expectedTextures.size, 3);
   assert.equal(track.textures.files.length, expectedTextures.size);
   assert.equal(declaredTextures.size, expectedTextures.size);
   assert.ok([...expectedTextures].every((file) => declaredTextures.has(file)));
   const shaders = [track.shaders.vertex, track.shaders.fragment];
   if (track.schema >= 3) shaders.push(track.shaders.noAlphaTestFragment);
+  if (maskedQuad !== undefined)
+    shaders.push(maskedQuad.vertexShader, maskedQuad.fragmentShader);
   for (const [file, pattern] of [
     ...[...expectedTextures].map((path) => [
       path,
@@ -75,6 +89,9 @@ export async function readLocalRecordedParticles(path, digest, identity) {
       path,
       /^recorded-particles\/([a-f0-9]{64})\.glsl$/,
     ]),
+    ...(maskedQuad === undefined
+      ? []
+      : [[maskedQuad.mask.path, /^recorded-particles\/([a-f0-9]{64})\.r8$/]]),
   ]) {
     const match = pattern.exec(file);
     assert.ok(
@@ -87,6 +104,12 @@ export async function readLocalRecordedParticles(path, digest, identity) {
       match[1],
       "Recorded particle asset digest differs",
     );
+    if (maskedQuad?.mask.path === file)
+      assert.equal(
+        asset.length,
+        maskedQuad.mask.width * maskedQuad.mask.height,
+        "Recorded particle mask byte length differs",
+      );
     files.set(file, asset);
   }
   return files;

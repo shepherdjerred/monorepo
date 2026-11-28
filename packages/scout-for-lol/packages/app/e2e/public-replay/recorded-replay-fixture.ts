@@ -66,6 +66,15 @@ const WorldRibbon = z.object({
     }),
   ),
 });
+const DepthQualifiedParticleTrack = FamilyParticleTrack.extend({
+  worldRibbon: WorldRibbon,
+  families: z.array(
+    z.object({
+      id: z.string(),
+      components: z.array(ParticleComponent.extend({ depthTest: z.boolean() })),
+    }),
+  ),
+});
 
 export async function readRecordedParticleTrack(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -86,17 +95,12 @@ export async function readRecordedParticleTrack(
         schema: z.literal(4),
         worldRibbon: WorldRibbon,
       }),
-      FamilyParticleTrack.extend({
+      DepthQualifiedParticleTrack.extend({
         schema: z.literal(5),
-        worldRibbon: WorldRibbon,
-        families: z.array(
-          z.object({
-            id: z.string(),
-            components: z.array(
-              ParticleComponent.extend({ depthTest: z.boolean() }),
-            ),
-          }),
-        ),
+      }),
+      DepthQualifiedParticleTrack.extend({
+        schema: z.literal(6),
+        worldMaskedQuad: WorldRibbon,
       }),
     ])
     .parse(
@@ -129,17 +133,28 @@ function expectedParticleDraws(
     track.families.map(({ id, components: parts }) => [id, parts]),
   );
   const ribbons =
-    track.schema === 4 || track.schema === 5
-      ? track.worldRibbon.paths.filter(
-          ({ start, end, samples }) =>
-            time < end && samples.some(({ age }) => age <= time - start),
-        ).length
+    "worldRibbon" in track
+      ? expectedWorldParticleDraws(track.worldRibbon, time)
+      : 0;
+  const maskedGround =
+    track.schema === 6
+      ? expectedWorldParticleDraws(track.worldMaskedQuad, time)
       : 0;
   return track.effects.reduce((draws, { start, family }) => {
     const parts = families.get(family);
     if (parts === undefined) throw new Error("Missing recorded effect family.");
     return draws + expectedFor(start, parts, time);
-  }, ribbons);
+  }, ribbons + maskedGround);
+}
+
+function expectedWorldParticleDraws(
+  track: z.infer<typeof WorldRibbon>,
+  time: number,
+) {
+  return track.paths.filter(
+    ({ start, end, samples }) =>
+      time < end && samples.some(({ age }) => age <= time - start),
+  ).length;
 }
 
 function ammoWitnessClocks(
@@ -168,7 +183,7 @@ async function verifySnowflashDraws(
   page: Page,
   track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
 ) {
-  if (track.schema !== 5) return;
+  if (track.schema !== 5 && track.schema !== 6) return;
   const snowflash = track.families.find(
     ({ id }) => id === "anivia-q-snowflash",
   );
@@ -196,6 +211,32 @@ async function verifySnowflashDraws(
         ];
       })
       .toEqual([total, depthDisabled]);
+  }
+}
+
+async function verifyMaskedGroundDraws(
+  page: Page,
+  track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
+) {
+  if (track.schema !== 6) return;
+  expect(track.worldMaskedQuad.paths).toHaveLength(1);
+  for (const [seconds, expected] of [
+    [1712.7, 0],
+    [1713.2, 1],
+    [1714.7, 1],
+    [1714.8, 0],
+    [1713.2, 1],
+  ] as const) {
+    expect(expectedWorldParticleDraws(track.worldMaskedQuad, seconds)).toBe(
+      expected,
+    );
+    await seek(page, seconds);
+    await expect
+      .poll(async () => {
+        const draw = await readRecordedDraw(page);
+        return [draw.recordedParticleDraws, draw.recordedMaskedGroundDraws];
+      })
+      .toEqual([expectedParticleDraws(track, seconds), expected]);
   }
 }
 
@@ -231,6 +272,7 @@ export async function verifyRecordedParticlePreview(
       0,
     );
   await vision.selectOption("all");
+  await verifyMaskedGroundDraws(page, track);
   await verifySnowflashDraws(page, track);
   if (track.effects.length > 100) {
     // Five distinct impacts share one start time in the recorded fight.
@@ -253,7 +295,7 @@ export async function verifyRecordedParticlePreview(
     await expectAt(1719, 1);
   }
   if (
-    (track.schema === 3 || track.schema === 4 || track.schema === 5) &&
+    (track.schema === 3 || "worldRibbon" in track) &&
     track.families.some(({ id }) => id === "senna-soul-death")
   ) {
     await expectAt(254.7, 0);
@@ -261,7 +303,7 @@ export async function verifyRecordedParticlePreview(
     await expectAt(255.3, 0);
     await expectAt(255, 1);
   }
-  if (track.schema === 4 || track.schema === 5) {
+  if ("worldRibbon" in track) {
     for (const seconds of [1713.9, 1714.3, 1714.7, 1714.9, 1715.2, 1714.3])
       await expectAt(seconds, expectedDraws(seconds));
     await vision.selectOption("blue");

@@ -930,10 +930,18 @@ uv run --with unicorn python $snowflashProbe $macGameExecutable $reviewedSnowfla
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-anivia-snowflash.mjs $ammoTrackDirectory $fightPlacements $fightStopReceipt $snowflashLow $snowflashHigh $snowflashSample $snowflashMip0 $newPrivateParticleDirectory
 ```
 
-The Illaoi spawn probe captures the original `Ground_SLOW2` arbitrary quads at
-the recorded detached origin. It also checks the native stop request. It supplies
-an identity attachment and leaves ground-mask, fog and post-stop scheduling
-outside the CPU geometry receipt.
+The Illaoi spawn probe records the original `Ground_SLOW2` world-space quads
+at the detached replay origin. It initializes the inner render system's UV
+scale through the archived constructor and executes the stop on a separate
+wrapper. The producer checks both quads' packed UVs and indices at each sample.
+Schema 6 binds those bytes to the original All-vision masked shader and the
+archived client's default-quality R8 mask. The pass uses the same constant
+opaque-white palette value as the original 1×1 fallback. The preview interval
+ends at the recorded stop. Team visibility and post-stop rendering are open.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-illaoi-ground-mask.mjs $snowflashTrackDirectory $nativeIllaoi120Hz $initialMaskReceipt $illaoiRingMip0 $defaultQualityMaskR8 $illaoiVertexGlsl $illaoiFragmentGlsl $newPrivateParticleDirectory
+```
 
 Use the pinned original Map11 navgrid to compare the initial navigation mask
 with the archived `.8428` producer. The probe runs the original CPU expansion
@@ -990,7 +998,8 @@ The control defaults to Playwright Chromium. Set
 `SCOUT_REPLAY_E2E_PERF_GRAPHICS=edge` for installed Edge and keep the same
 graphics mode when comparing receipts.
 The `billboard` selector covers depth-tested quads. Use `depth-test-off` for
-quads whose original draw state disables depth testing.
+billboards whose original draw state disables depth testing and `masked-ground`
+for the masked world-space pass.
 
 ```powershell
 bun packages/scout-for-lol/packages/app/e2e/public-replay/proof/capture-recorded-particle-visibility.ts $loopbackReplayUrl $newPrivateAttributionDirectory 1714.3 1073742170 world-ribbon

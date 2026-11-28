@@ -15,6 +15,7 @@ type RecordedDraw = {
   animationPaletteDraws: { indexCount: number; hash: number }[];
   recordedParticleDraws: number;
   recordedDepthDisabledParticleDraws: number;
+  recordedMaskedGroundDraws: number;
   viewProjection: number[];
 };
 
@@ -34,6 +35,7 @@ export async function installRecordedDrawProbe(page: Page) {
       animationPaletteDraws: [],
       recordedParticleDraws: 0,
       recordedDepthDisabledParticleDraws: 0,
+      recordedMaskedGroundDraws: 0,
       viewProjection: [],
     };
     globalThis.recordedReplayDraw = draw;
@@ -55,10 +57,12 @@ export async function installRecordedDrawProbe(page: Page) {
     const terrainUniforms = new WeakSet<WebGLUniformLocation>();
     const terrainPrograms = new WeakSet<WebGLProgram>();
     const particlePrograms = new WeakSet<WebGLProgram>();
+    const maskedGroundPrograms = new WeakSet<WebGLProgram>();
     const actorUniforms = new WeakSet<WebGLUniformLocation>();
     const viewUniforms = new WeakSet<WebGLUniformLocation>();
     let terrainActive = false;
     let particlesActive = false;
+    let maskedGroundActive = false;
     let textured = false;
     let pendingActor: number[] | undefined;
     let paletteHash: number | undefined;
@@ -73,6 +77,8 @@ export async function installRecordedDrawProbe(page: Page) {
         actorUniforms.add(location);
       if (location !== null && name === "viewProjection")
         viewUniforms.add(location);
+      if (location !== null && name === "NAVMESH_MASK_TEXTURE_SharedTexture")
+        maskedGroundPrograms.add(program);
       return location;
     };
     gl.getUniformBlockIndex = function (program, name) {
@@ -87,6 +93,8 @@ export async function installRecordedDrawProbe(page: Page) {
     gl.useProgram = function (program) {
       terrainActive = program !== null && terrainPrograms.has(program);
       particlesActive = program !== null && particlePrograms.has(program);
+      maskedGroundActive =
+        program !== null && maskedGroundPrograms.has(program);
       pendingActor = undefined;
       paletteHash = undefined;
       useProgram.call(this, program);
@@ -129,17 +137,33 @@ export async function installRecordedDrawProbe(page: Page) {
         draw.animationPaletteDraws = [];
         draw.recordedParticleDraws = 0;
         draw.recordedDepthDisabledParticleDraws = 0;
+        draw.recordedMaskedGroundDraws = 0;
         pendingActor = undefined;
         paletteHash = undefined;
       }
       clear.call(this, mask);
     };
-    gl.drawElements = function (mode, count, type, offset) {
-      if (particlesActive && count > 0 && mode === this.TRIANGLES) {
-        draw.recordedParticleDraws += 1;
-        if (!this.isEnabled(this.DEPTH_TEST))
-          draw.recordedDepthDisabledParticleDraws += 1;
+    function countParticle(
+      context: WebGL2RenderingContext,
+      count: number,
+      type: number,
+    ) {
+      if ((!particlesActive && !maskedGroundActive) || count <= 0) return;
+      draw.recordedParticleDraws += 1;
+      if (maskedGroundActive) {
+        if (
+          count === 12 &&
+          type === context.UNSIGNED_SHORT &&
+          !context.isEnabled(context.DEPTH_TEST) &&
+          !context.isEnabled(context.POLYGON_OFFSET_FILL)
+        )
+          draw.recordedMaskedGroundDraws += 1;
+      } else if (!context.isEnabled(context.DEPTH_TEST)) {
+        draw.recordedDepthDisabledParticleDraws += 1;
       }
+    }
+    gl.drawElements = function (mode, count, type, offset) {
+      if (mode === this.TRIANGLES) countParticle(this, count, type);
       if (terrainActive && textured) {
         draw.texturedIndices += count;
         draw.terrainDrawOffsets.push(offset);

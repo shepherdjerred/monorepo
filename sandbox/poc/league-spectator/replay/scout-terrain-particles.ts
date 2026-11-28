@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const png = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.png$/);
 const glsl = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.glsl$/);
+const r8 = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.r8$/);
 const quadComponent = z.object({
   texture: png,
   indices: z.literal("000001000200000002000300"),
@@ -68,40 +69,33 @@ const multipleProgramsTrack = familyTrack.extend({
     .min(1),
   shaders: trackIdentity.shape.shaders.extend({ noAlphaTestFragment: glsl }),
 });
+const worldFrame = z.strictObject({
+  age: z.number().positive(),
+  vertices: z
+    .string()
+    .min(168)
+    .max(57344)
+    .regex(/^[a-f0-9]+$/),
+  indices: z
+    .string()
+    .min(12)
+    .max(12288)
+    .regex(/^[a-f0-9]+$/),
+});
+const worldPath = z.strictObject({
+  handle: particleEffect.shape.handle,
+  start: z.number().nonnegative(),
+  end: z.number().positive(),
+  samples: z.array(worldFrame).min(1).max(960),
+});
+const worldTrack = z.strictObject({
+  texture: png,
+  palette: png,
+  paths: z.array(worldPath).min(1).max(256),
+});
 const indexedRibbonTrack = multipleProgramsTrack.extend({
   schema: z.literal(4),
-  worldRibbon: z.strictObject({
-    texture: png,
-    palette: png,
-    paths: z
-      .array(
-        z.strictObject({
-          handle: particleEffect.shape.handle,
-          start: z.number().nonnegative(),
-          end: z.number().positive(),
-          samples: z
-            .array(
-              z.strictObject({
-                age: z.number().positive(),
-                vertices: z
-                  .string()
-                  .min(168)
-                  .max(57344)
-                  .regex(/^[a-f0-9]+$/),
-                indices: z
-                  .string()
-                  .min(12)
-                  .max(12288)
-                  .regex(/^[a-f0-9]+$/),
-              }),
-            )
-            .min(1)
-            .max(960),
-        }),
-      )
-      .min(1)
-      .max(256),
-  }),
+  worldRibbon: worldTrack,
 });
 const depthStateTrack = indexedRibbonTrack.extend({
   schema: z.literal(5),
@@ -115,12 +109,43 @@ const depthStateTrack = indexedRibbonTrack.extend({
     )
     .min(1),
 });
+const dimension = z.number().int().min(1).max(4096);
+const worldCoordinate = z
+  .number()
+  .refine((lane) => Number.isFinite(Math.fround(lane)));
+const worldScale = worldCoordinate.refine((lane) => Math.fround(lane) > 0);
+const maskedWorldTrack = depthStateTrack.extend({
+  schema: z.literal(6),
+  worldMaskedQuad: worldTrack.extend({
+    vertexShader: glsl,
+    fragmentShader: glsl,
+    mask: z.strictObject({ path: r8, width: dimension, height: dimension }),
+    worldToUv: z.tuple([
+      worldScale,
+      worldScale,
+      worldCoordinate,
+      worldCoordinate,
+    ]),
+    paths: z
+      .array(
+        worldPath.extend({
+          samples: z
+            .array(worldFrame.extend({ age: z.number().nonnegative() }))
+            .min(1)
+            .max(960),
+        }),
+      )
+      .min(1)
+      .max(256),
+  }),
+});
 const particleTrack = z.discriminatedUnion("schema", [
   singleFamilyTrack,
   familyTrack,
   multipleProgramsTrack,
   indexedRibbonTrack,
   depthStateTrack,
+  maskedWorldTrack,
 ]);
 
 function normalizeTrack(track: z.infer<typeof particleTrack>) {
@@ -173,20 +198,19 @@ function decodeVertices(value: string, localPlane: boolean) {
   return bytes;
 }
 
-function compileWorldRibbon(
-  {
-    paths,
-    texture,
-    palette,
-  }: z.infer<typeof indexedRibbonTrack>["worldRibbon"],
+function compileWorldPaths<Style extends object>(
+  paths: readonly z.infer<typeof worldPath>[],
   duration: number,
+  style: Style,
 ) {
   if (new Set(paths.map(({ handle }) => handle)).size !== paths.length)
-    throw new Error("A recorded ribbon repeats a missile handle.");
+    throw new Error("A recorded world particle repeats an effect handle.");
   const compiled = paths.map(({ start, end, samples }) => {
     if (start >= end || end > duration)
-      throw new Error("A recorded ribbon interval is outside the replay.");
-    let previous = 0;
+      throw new Error(
+        "A recorded world particle interval is outside the replay.",
+      );
+    let previous = -1;
     const frames = samples.map(
       ({ age, vertices: packed, indices: rawIndices }) => {
         if (
@@ -195,31 +219,31 @@ function compileWorldRibbon(
           rawIndices.length % 12 !== 0
         )
           throw new Error(
-            "A recorded ribbon sample has an invalid time or index layout.",
+            "A recorded world particle sample has an invalid time or index layout.",
           );
         previous = age;
         const vertices = decodeVertices(packed, false);
         const indices = decodeHex(rawIndices);
         const count = vertices.length / 28;
+        const quadCount = count / 4;
+        if (
+          "worldMaskedQuad" in style &&
+          (!Number.isInteger(quadCount) || indices.length !== quadCount * 12)
+        )
+          throw new Error(
+            "A recorded masked particle needs complete indexed quads.",
+          );
         const view = new DataView(indices.buffer);
         for (let offset = 0; offset < indices.length; offset += 2)
           if (view.getUint16(offset, true) >= count)
             throw new Error(
-              "A recorded ribbon index is outside its vertex data.",
+              "A recorded world particle index is outside its vertex data.",
             );
         return { age, vertices, indices };
       },
     );
     return { start, end, frames };
   });
-  const style = {
-    texture,
-    palette,
-    blend: "src-alpha-one" as const,
-    alphaTest: true,
-    depthTest: true,
-    worldRibbon: true as const,
-  };
   return (time: number) =>
     compiled.flatMap(({ start, end, frames }) => {
       if (time < start || time >= end) return [];
@@ -283,16 +307,37 @@ export async function loadRecordedTerrainParticles(
     );
   const palettePaths = new Set(components.map(({ palette }) => palette));
   const basePaths = new Set(components.map(({ texture }) => texture));
+  const duration = identity.durationMilliseconds / 1000;
   const worldRibbonAt =
     "worldRibbon" in track
-      ? compileWorldRibbon(
-          track.worldRibbon,
-          identity.durationMilliseconds / 1000,
-        )
+      ? compileWorldPaths(track.worldRibbon.paths, duration, {
+          texture: track.worldRibbon.texture,
+          palette: track.worldRibbon.palette,
+          blend: "src-alpha-one" as const,
+          alphaTest: true,
+          depthTest: true,
+          worldRibbon: true as const,
+        })
       : undefined;
   if ("worldRibbon" in track) {
     palettePaths.add(track.worldRibbon.palette);
     basePaths.add(track.worldRibbon.texture);
+  }
+  const maskedQuad = track.schema === 6 ? track.worldMaskedQuad : undefined;
+  const maskedQuadAt =
+    maskedQuad === undefined
+      ? undefined
+      : compileWorldPaths(maskedQuad.paths, duration, {
+          texture: maskedQuad.texture,
+          palette: maskedQuad.palette,
+          blend: "src-alpha-one" as const,
+          alphaTest: false,
+          depthTest: false,
+          worldMaskedQuad: true as const,
+        });
+  if (maskedQuad !== undefined) {
+    palettePaths.add(maskedQuad.palette);
+    basePaths.add(maskedQuad.texture);
   }
   const expectedTextures = new Set([...palettePaths, ...basePaths]);
   if (
@@ -357,20 +402,47 @@ export async function loadRecordedTerrainParticles(
           });
       }
     }
-    return worldRibbonAt === undefined
-      ? legacyParticles
-      : [...worldRibbonAt(timeSeconds), ...legacyParticles];
+    const particles =
+      worldRibbonAt === undefined
+        ? legacyParticles
+        : [...worldRibbonAt(timeSeconds), ...legacyParticles];
+    return maskedQuadAt === undefined
+      ? particles
+      : [...particles, ...maskedQuadAt(timeSeconds)];
   }
 
   const shader = async (path: string) => decoder.decode(await read(`/${path}`));
-  const [vertexShader, fragmentShader, noAlphaTestFragmentShader] =
-    await Promise.all([
-      shader(track.shaders.vertex),
-      shader(track.shaders.fragment),
-      noAlphaTestFragment === undefined
-        ? undefined
-        : shader(noAlphaTestFragment),
+  const maskedAssets = async (quad: NonNullable<typeof maskedQuad>) => {
+    const { path, width, height } = quad.mask;
+    const bytes = await read(`/${path}`);
+    if (bytes.byteLength !== width * height)
+      throw new Error(
+        "The recorded particle mask does not match its dimensions.",
+      );
+    const [vertexShader, fragmentShader] = await Promise.all([
+      shader(quad.vertexShader),
+      shader(quad.fragmentShader),
     ]);
+    return {
+      vertexShader,
+      fragmentShader,
+      mask: new Uint8Array(bytes),
+      width,
+      height,
+      worldToUv: quad.worldToUv,
+    };
+  };
+  const [
+    vertexShader,
+    fragmentShader,
+    noAlphaTestFragmentShader,
+    worldMaskedQuad,
+  ] = await Promise.all([
+    shader(track.shaders.vertex),
+    shader(track.shaders.fragment),
+    noAlphaTestFragment === undefined ? undefined : shader(noAlphaTestFragment),
+    maskedQuad === undefined ? undefined : maskedAssets(maskedQuad),
+  ]);
   const images = new Map<string, ImageBitmap>();
   const closeImages = () => {
     for (const image of images.values()) image.close();
@@ -393,6 +465,7 @@ export async function loadRecordedTerrainParticles(
         vertexShader,
         fragmentShader,
         noAlphaTestFragmentShader,
+        worldMaskedQuad,
         palettes: fromPaths(palettePaths),
         baseTextures: fromPaths(basePaths),
       },

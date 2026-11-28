@@ -268,6 +268,28 @@ def main():
     put(color_curve + 0x38, "QII", curves_data + 0x20, n, n)
     put(curves_data, f"{n}f", *times)
     put(curves_data + 0x20, f"{n * 4}f", *colors)
+
+    # The original render-system constructor initializes the opacity and base
+    # UV factors together. Run its member writes on a separate object so the
+    # detached placement supplied to this probe keeps its own transform.
+    native_init_shadow = stop + 0x6000
+    native_init_frame = stop + 0x6400
+    native_init_position = stop + 0x6500
+    put(native_init_position, "3f", *root_pos)
+    for register, value in (
+        (reg.UC_X86_REG_RBX, native_init_shadow),
+        (reg.UC_X86_REG_RBP, native_init_frame),
+        (reg.UC_X86_REG_R12, native_init_position),
+        (reg.UC_X86_REG_R15, resource),
+    ):
+        vm.reg_write(register, value)
+    call(0x178EC57, native_init_shadow, end=image.base + 0x178ED28)
+    native_modulators = bytes(vm.mem_read(native_init_shadow + 0x1F0, 8))
+    assert native_modulators.hex() == "0000803f0000803f"
+    vm.mem_write(system + 0x1F0, native_modulators)
+    base_uv_predicate = bool(vm.mem_read(link + 0xE8, 1)[0])
+    assert not base_uv_predicate
+
     writer = struct.unpack("<Q", vm.mem_read(struct.unpack("<Q", vm.mem_read(primitive, 8))[0] + 0x28, 8))[0]
     view, draw, geometry, indices, vertices = [stop + n for n in (0xA000, 0xA100, 0xA200, 0xA300, 0xA400)]
     put(image.base + 0x24DC310, "Q", view + 0x88)
@@ -284,11 +306,16 @@ def main():
         index_end, vertex_end = struct.unpack("<2Q", vm.mem_read(geometry, 16))
         if index_end == indices:
             return None
+        assert vertex_end - vertices == 8 * 28
+        vertex_bytes = bytes(vm.mem_read(vertices, vertex_end - vertices))
+        expected_uvs = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        base_uvs = [struct.unpack_from("<2e", vertex_bytes, offset + 16) for offset in range(0, len(vertex_bytes), 28)]
+        assert base_uvs == expected_uvs * 2
         return {
             "indices": index_end - indices,
             "indexBytes": bytes(vm.mem_read(indices, index_end - indices)).hex(),
             "vertices": vertex_end - vertices,
-            "vertexBytes": bytes(vm.mem_read(vertices, min(vertex_end - vertices, 256))).hex(),
+            "vertexBytes": vertex_bytes.hex(),
         }
 
     previous_clock_marker = bytes(image.image[0x2140974:0x2140978])
@@ -366,17 +393,23 @@ def main():
         timeline.append([currentTime, count, snapshot() if count else None])
         if currentTime == stop_age:
             entity = stop + 0xD700
-            put(entity + 0x188, "Q", system)
+            # The packet entity points to the effect wrapper. The writer's
+            # internal render system is a different object at wrapper + 0x28.
+            wrapper = stop + 0xD900
+            put(wrapper + 0x28, "Q", system)
+            put(entity + 0x188, "Q", wrapper)
             direct_stop = struct.unpack_from("<Q", image.image, 0x238CF98 + 0x210)[0] - image.base
             assert direct_stop == 0x378780
             call(direct_stop, entity)
             assert vm.mem_read(entity + 0x188, 8) == bytes(8)
-            assert vm.mem_read(system + 0x19, 1) == b"\x08"
+            assert vm.mem_read(wrapper + 0x19, 2) == b"\x08\x08"
+            assert vm.mem_read(system + 0x1F0, 8) == native_modulators
             stop_control = {
                 "age": stop_age,
                 "request": stop_row,
                 "nativeVirtualRva": direct_stop,
-                "nativeSystemStopByte": 8,
+                "nativeWrapperStopBytes": "0808",
+                "renderSystemUvUnchanged": True,
                 "entitySystemPointerCleared": True,
                 "externalCallbackSupplied": False,
                 "residentPoolCountAfterStop": struct.unpack("<I", vm.mem_read(pool + 0x10, 4))[0],
@@ -423,6 +456,13 @@ def main():
         "timeline": timeline,
         "transform": transform,
         "stopControl": stop_control,
+        "uvControl": {
+            "initializerStartRva": 0x178EC57,
+            "initializerEndRva": 0x178ED28,
+            "ownedRenderSystemOffset": 0x1F0,
+            "nativeModulatorPairHex": native_modulators.hex(),
+            "baseUvPredicate": base_uv_predicate,
+        },
     }
     with args.output.open("xb") as handle:
         handle.write((json.dumps(data, separators=(",", ":")) + "\n").encode("utf-8"))

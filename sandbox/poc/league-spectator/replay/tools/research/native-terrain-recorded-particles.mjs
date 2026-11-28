@@ -35,7 +35,7 @@ function createProgram(gl, vertexSource, fragmentSource) {
   }
 }
 
-function saveState(gl, uniformCount) {
+function saveState(gl, uniformCount, textureCount) {
   const get = (key) => gl.getParameter(key);
   const program = get(gl.CURRENT_PROGRAM);
   const vertexArray = get(gl.VERTEX_ARRAY_BINDING);
@@ -45,7 +45,7 @@ function saveState(gl, uniformCount) {
     gl.getIndexedParameter(gl.UNIFORM_BUFFER_BINDING, index),
   );
   const activeTexture = get(gl.ACTIVE_TEXTURE);
-  const textures = Array.from({ length: 4 }, (_, index) => {
+  const textures = Array.from({ length: textureCount }, (_, index) => {
     gl.activeTexture(gl.TEXTURE0 + index);
     return {
       texture: get(gl.TEXTURE_BINDING_2D),
@@ -98,14 +98,17 @@ export function createRecordedParticleRenderer(
     vertexShader,
     fragmentShader,
     noAlphaTestFragmentShader,
+    worldMaskedQuad,
     palettes,
     baseTextures,
   },
 ) {
-  const restore = saveState(gl, 5);
+  const textureCount = worldMaskedQuad === undefined ? 4 : 5;
+  const restore = saveState(gl, 5, textureCount);
   const program = createProgram(gl, vertexShader, fragmentShader);
   const programs = [program];
   let noAlphaTestProgram;
+  let maskedProgram;
   const vertexArray = gl.createVertexArray();
   const buffers = [];
   const textures = [];
@@ -133,7 +136,10 @@ export function createRecordedParticleRenderer(
     }
     return buffer;
   }
-  function createTexture(image, { repeat = false, integer = false } = {}) {
+  function createTexture(
+    image,
+    { repeat = false, integer = false, mask } = {},
+  ) {
     const texture = gl.createTexture();
     if (!texture) throw Error("Unable to allocate recorded particle texture");
     textures.push(texture);
@@ -156,7 +162,37 @@ export function createRecordedParticleRenderer(
         gl.UNSIGNED_INT,
         new Uint32Array(1),
       );
-    else if (image === null)
+    else if (mask !== undefined) {
+      const unpackParameters = [
+        [gl.UNPACK_ALIGNMENT, 1],
+        [gl.UNPACK_ROW_LENGTH, 0],
+        [gl.UNPACK_SKIP_ROWS, 0],
+        [gl.UNPACK_SKIP_PIXELS, 0],
+        [gl.UNPACK_FLIP_Y_WEBGL, false],
+        [gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false],
+      ].map(([name, value]) => [name, value, gl.getParameter(name)]);
+      const unpackBuffer = gl.getParameter(gl.PIXEL_UNPACK_BUFFER_BINDING);
+      try {
+        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+        for (const [name, value] of unpackParameters)
+          gl.pixelStorei(name, value);
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.R8,
+          mask.width,
+          mask.height,
+          0,
+          gl.RED,
+          gl.UNSIGNED_BYTE,
+          mask.mask,
+        );
+      } finally {
+        for (const [name, , previous] of unpackParameters)
+          gl.pixelStorei(name, previous);
+        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, unpackBuffer);
+      }
+    } else if (image === null)
       gl.texImage2D(
         gl.TEXTURE_2D,
         0,
@@ -190,6 +226,14 @@ export function createRecordedParticleRenderer(
       );
       programs.push(noAlphaTestProgram);
     }
+    if (worldMaskedQuad !== undefined) {
+      maskedProgram = createProgram(
+        gl,
+        worldMaskedQuad.vertexShader,
+        worldMaskedQuad.fragmentShader,
+      );
+      programs.push(maskedProgram);
+    }
     gl.useProgram(program);
     gl.bindVertexArray(vertexArray);
     const vertexBuffer = createBuffer(gl.ARRAY_BUFFER);
@@ -211,6 +255,8 @@ export function createRecordedParticleRenderer(
       );
     }
     const cameraBlock = new Float32Array(148);
+    if (worldMaskedQuad !== undefined)
+      cameraBlock.set(worldMaskedQuad.worldToUv, 88);
     const uniformBuffers = [
       createUniform(
         0,
@@ -231,12 +277,16 @@ export function createRecordedParticleRenderer(
     ];
     // The program without alpha testing stores its sRGB debug flag at the
     // offset occupied by the threshold in the other program.
+    const noAlphaTestPrograms = programs.slice(1);
     const noAlphaTestGlobals =
-      noAlphaTestProgram === undefined
+      noAlphaTestPrograms.length === 0
         ? undefined
-        : createUniform(3, "Globals_ps", new Uint32Array(4), [
-            noAlphaTestProgram,
-          ]);
+        : createUniform(
+            3,
+            "Globals_ps",
+            new Uint32Array(4),
+            noAlphaTestPrograms,
+          );
     for (const linkedProgram of programs) {
       gl.useProgram(linkedProgram);
       for (const [unit, name] of [
@@ -244,6 +294,9 @@ export function createRecordedParticleRenderer(
         "TEXTURE_TX",
         "PARTICLE_COLOR_TEXTURE_TX",
         "PIXEL_COLOR_REMAP_RAMP_SharedTexture",
+        ...(linkedProgram === maskedProgram
+          ? ["NAVMESH_MASK_TEXTURE_SharedTexture"]
+          : []),
       ].entries()) {
         const location = gl.getUniformLocation(linkedProgram, name);
         if (location === null)
@@ -263,12 +316,16 @@ export function createRecordedParticleRenderer(
         createTexture(image, { repeat: true }),
       ]),
     );
+    const navMask =
+      worldMaskedQuad === undefined
+        ? undefined
+        : createTexture(null, { mask: worldMaskedQuad });
     const worldVertices = new Uint8Array(verticesPerQuad * vertexStride);
     const vertexView = new DataView(worldVertices.buffer);
 
     function draw(viewProjection, camera, particles) {
       if (particles.length === 0) return;
-      const restoreDraw = saveState(gl, uniformBuffers.length);
+      const restoreDraw = saveState(gl, uniformBuffers.length, textureCount);
       let restoreRibbon;
       try {
         gl.useProgram(program);
@@ -299,6 +356,11 @@ export function createRecordedParticleRenderer(
         }
         gl.bindSampler(1, null);
         gl.bindSampler(2, null);
+        if (navMask !== undefined) {
+          gl.activeTexture(gl.TEXTURE4);
+          gl.bindTexture(gl.TEXTURE_2D, navMask);
+          gl.bindSampler(4, null);
+        }
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
         gl.disable(gl.CULL_FACE);
@@ -320,11 +382,18 @@ export function createRecordedParticleRenderer(
           vertices,
           indices,
           worldRibbon,
+          worldMaskedQuad: masked,
         } of particles) {
-          const particleProgram = alphaTest ? program : noAlphaTestProgram;
+          const particleProgram = masked
+            ? maskedProgram
+            : alphaTest
+              ? program
+              : noAlphaTestProgram;
           if (particleProgram === undefined)
             throw Error(
-              "The recorded particle needs a program without alpha testing",
+              masked
+                ? "The recorded particle needs a masked program"
+                : "The recorded particle needs a program without alpha testing",
             );
           if (particleProgram !== activeProgram) {
             gl.useProgram(particleProgram);
@@ -339,7 +408,23 @@ export function createRecordedParticleRenderer(
           const paletteTexture = uploadedPalettes.get(palette);
           if (!base || !paletteTexture)
             throw Error("Missing recorded particle texture");
-          if (worldRibbon === true) {
+          if (masked) {
+            restoreRibbon?.();
+            restoreRibbon = undefined;
+            if (
+              worldRibbon ||
+              alphaTest ||
+              depthTest ||
+              blend !== "src-alpha-one" ||
+              !(vertices instanceof Uint8Array) ||
+              vertices.length === 0 ||
+              vertices.length % worldVertices.length !== 0 ||
+              !(indices instanceof Uint8Array) ||
+              indices.length !==
+                (vertices.length / worldVertices.length) * indicesPerQuad * 2
+            )
+              throw Error("Invalid recorded masked world quad");
+          } else if (worldRibbon === true) {
             if (
               !(vertices instanceof Uint8Array) ||
               vertices.length === 0 ||
@@ -411,16 +496,22 @@ export function createRecordedParticleRenderer(
           gl.bindTexture(gl.TEXTURE_2D, base);
           gl.bufferData(
             gl.ARRAY_BUFFER,
-            worldRibbon === true ? vertices : worldVertices,
+            masked || worldRibbon === true ? vertices : worldVertices,
             gl.STREAM_DRAW,
           );
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STREAM_DRAW);
-          gl.drawElements(
-            gl.TRIANGLES,
-            indices.length / 2,
-            gl.UNSIGNED_SHORT,
-            0,
-          );
+          const offsetEnabled = masked && gl.isEnabled(gl.POLYGON_OFFSET_FILL);
+          if (offsetEnabled) gl.disable(gl.POLYGON_OFFSET_FILL);
+          try {
+            gl.drawElements(
+              gl.TRIANGLES,
+              indices.length / 2,
+              gl.UNSIGNED_SHORT,
+              0,
+            );
+          } finally {
+            if (offsetEnabled) gl.enable(gl.POLYGON_OFFSET_FILL);
+          }
         }
       } finally {
         restoreRibbon?.();
