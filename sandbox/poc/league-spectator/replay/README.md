@@ -406,6 +406,15 @@ uv run --no-project --with unicorn python sandbox/poc/league-spectator/replay/to
 
 Standard Rift packages require Map11 and `CLASSIC`.
 
+For a private `.8428` package, pass
+`--rift-startup-archive $macGameExecutable` to derive the map and mode from
+the replay itself. The builder runs the pinned original startup reader and
+checks the archive digest and the replay digest before accepting Map11 CLASSIC.
+This path requires Bun and an offline uv environment with
+`unicorn==2.1.4` available. Use one provenance source per package: native startup,
+pinned Match-V5 evidence, or Scout Desktop recovery. Public replay admission
+continues to require its own source and comparison evidence.
+
 For a new `.8428` Rift replay, check its opening against the pinned archived
 skin census before building a package. The preflight can also verify each
 opening model against an existing archive-scoped champion catalog.

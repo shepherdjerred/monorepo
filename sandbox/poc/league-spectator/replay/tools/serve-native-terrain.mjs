@@ -55,6 +55,7 @@ const { positionals, values } = parseArgs({
     "scout-recovery-db": { type: "string" },
     "canonical-match": { type: "string" },
     "canonical-match-sha256": { type: "string" },
+    "rift-startup-archive": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
     "announcer-catalog": { type: "string" },
@@ -132,6 +133,14 @@ const privatePackageOutput = values["private-package-output"];
 const recoveryPath = values["scout-recovery-db"];
 const canonicalMatchPath = values["canonical-match"];
 const canonicalMatchDigest = values["canonical-match-sha256"];
+const riftStartupArchive = values["rift-startup-archive"];
+assert.ok(
+  riftStartupArchive === undefined ||
+    (privatePackageOutput !== undefined &&
+      canonicalMatchPath === undefined &&
+      recoveryPath === undefined),
+  "Native Rift startup requires a private package without another provenance source",
+);
 assert.equal(
   canonicalMatchPath === undefined,
   canonicalMatchDigest === undefined,
@@ -1459,13 +1468,6 @@ const shortFixture =
   "d7cabb0b7ba965f317863d128238847a0b9b0e4cc0cdbcfa3077c537b10fdf2b";
 const reviewedReplay =
   shortFixture || identity.replaySha256 === proof.replaySha256;
-// The current digest was corroborated by mode, queue and map messages in the
-// saved Riot client log. The current Map11 geometry, navgrid and texture input
-// bytes also matched the reviewed terrain export.
-const reviewedCurrentReplay =
-  currentBuild &&
-  identity.replaySha256 ===
-    "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
 if (canonicalMatchPath !== undefined) {
   const { verifyCanonicalRecordedRift } =
     await import("./research/verify-canonical-rift-replay.mjs");
@@ -1476,13 +1478,21 @@ if (canonicalMatchPath !== undefined) {
     replay,
   );
 }
+if (riftStartupArchive !== undefined) {
+  const { verifyNativeCurrentRiftStartup } =
+    await import("./research/verify-native-current-rift-startup.mjs");
+  await verifyNativeCurrentRiftStartup(riftStartupArchive, replayPath, replay);
+}
 if (shortFixture) {
   assert.ok(rawReplayOnly);
   assert.equal(identity.durationMilliseconds, 76063);
 } else if (reviewedReplay) {
   for (const [field, value] of Object.entries(identity))
     assert.equal(proof[field], value);
-} else if (!reviewedCurrentReplay && canonicalMatchPath === undefined) {
+} else if (
+  canonicalMatchPath === undefined &&
+  riftStartupArchive === undefined
+) {
   assert.ok(recoveryPath, "Replay lacks reviewed Map11 provenance");
   const { verifyRecordedRift } =
     await import("./research/recorded-terrain-provenance.mjs");
@@ -1720,8 +1730,12 @@ if (values["terrain-materials"] !== undefined) {
 }
 // The base export omits Infernal replacements. Preserve the existing
 // conservative omission when a match lacks the reviewed base-variant evidence.
+const reviewedBaseTerrainReplay =
+  currentBuild &&
+  identity.replaySha256 ===
+    "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
 const missingReplacementMeshControllerIds =
-  infernalTerrainExport === undefined && !reviewedCurrentReplay
+  infernalTerrainExport === undefined && !reviewedBaseTerrainReplay
     ? [0x4aefd282, 0xa8951ff3]
     : [];
 if (terrainVisibilityPath !== undefined) {
