@@ -1,5 +1,6 @@
 import { defineConfig, devices, type Project } from "@playwright/test";
 import { env } from "node:process";
+import { CHAMPION_META_FIXTURE_INDEX } from "./src/constants.ts";
 import {
   auditProjectGrep,
   auditProjects,
@@ -125,8 +126,7 @@ export default defineConfig({
             // Astro 7 backgrounds dev servers when it detects an AI agent.
             // Playwright owns this foreground process; ignoring Astro's own
             // lock avoids leaving a stale PID after Playwright stops it.
-            command:
-              "ASTRO_DEV_BACKGROUND=0 bun --no-install run dev -- --host 127.0.0.1 --port 4321 --ignore-lock",
+            command: `CHAMPION_META_SNAPSHOT_FILE=${CHAMPION_META_FIXTURE_INDEX} ASTRO_DEV_BACKGROUND=0 bun --no-install run dev -- --host 127.0.0.1 --port 4321 --ignore-lock`,
             cwd: "../../../../packages/scout-for-lol/packages/frontend",
             url: "http://127.0.0.1:4321/",
             reuseExistingServer: env["CI"] !== "true",

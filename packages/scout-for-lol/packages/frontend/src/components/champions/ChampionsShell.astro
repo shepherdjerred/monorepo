@@ -1,0 +1,25 @@
+---
+import "../../styles/champions.css";
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../layout/Navbar.astro";
+import Footer from "../layout/Footer.astro";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+  <div class="champions-page">
+    <Navbar activePage="champions" />
+    <main class="champions-main">
+      <div class="champions-wrap">
+        <slot />
+      </div>
+    </main>
+    <Footer />
+  </div>
+</Layout>

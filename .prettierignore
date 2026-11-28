@@ -49,6 +49,10 @@ packages/trmnl-dashboard/trmnl/*/src/settings.yml
 **/generated/**
 **/src-tauri/gen/**
 
+# The fixture champion snapshot is written compact by the same code as the
+# committed one (`scripts/write-champion-meta-fixture.ts`); a test compares bytes.
+packages/scout-for-lol/packages/frontend/src/lib/champion-meta/__fixtures__/snapshot-v2/
+
 # Changelogs (mostly machine-generated)
 **/CHANGELOG.md
 

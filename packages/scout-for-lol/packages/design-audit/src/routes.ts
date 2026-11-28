@@ -30,6 +30,20 @@ const publicRoutes: AuditRoute[] = [
     golden: true,
   },
   {
+    name: "champions",
+    surface: "public",
+    path: "/champions/",
+    authenticated: false,
+    golden: true,
+  },
+  {
+    name: "champion",
+    surface: "public",
+    path: "/champions/ahri/middle/",
+    authenticated: false,
+    golden: true,
+  },
+  {
     name: "privacy",
     surface: "public",
     path: "/privacy/",

@@ -42,17 +42,24 @@ design-audit database and skips external Discord and production credentials.
 The browser configuration lives at
 `packages/scout-for-lol/packages/design-audit/playwright.config.ts`.
 
+The marketing site is started with `CHAMPION_META_SNAPSHOT_FILE` set to the
+fixture snapshot's `index.json`
+(`packages/scout-for-lol/packages/frontend/src/lib/champion-meta/__fixtures__/snapshot-v2/champion-meta/`),
+so the `/champions/` and `/champions/ahri/middle/` routes render made-up data
+instead of whatever the committed snapshot holds. An external marketing origin
+must be built the same way for those two routes to exist.
+
 ## Browser matrix
 
 | Coverage boundary                                 |   Cases |
 | ------------------------------------------------- | ------: |
-| All routes, four themes, Chromium desktop         |     228 |
-| All routes, classic-light, Chromium tablet/mobile |     114 |
-| Additional golden-route Chromium combinations     |     160 |
-| All routes, modern-light, WebKit desktop/mobile   |     114 |
-| **Total**                                         | **616** |
+| All routes, four themes, Chromium desktop         |     252 |
+| All routes, classic-light, Chromium tablet/mobile |     126 |
+| Additional golden-route Chromium combinations     |     180 |
+| All routes, modern-light, WebKit desktop/mobile   |     126 |
+| **Total**                                         | **684** |
 
-The 16 golden routes cover all four themes and all four Chromium viewports.
+The 18 golden routes cover all four themes and all four Chromium viewports.
 Firefox is not part of the supported browser boundary. The scheduled CI
 step remains advisory through `soft_fail` while consecutive main runs establish
 stability.

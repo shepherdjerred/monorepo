@@ -1,0 +1,590 @@
+/* The public champion pages on the friendly design system. Panels, chips,
+   folds, the hero, faces, the win-rate bar and the setup row and champion
+   card come from the design system (`friendly*.css`); what is here is the page
+   frame and the sections no shared component covers. Values follow the
+   approved D11 mockups (d9.css, d10.css, d10-index.css and d11*.css) and draw
+   every colour from the Scout tokens, so the page follows the skin and mode. */
+
+.champions-page {
+  min-height: 100vh;
+  background: var(--scout-color-canvas);
+  color: var(--scout-color-text);
+  font-family: var(--scout-font-body);
+}
+
+.champions-main {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--scout-color-text);
+}
+
+/* ---------- frame ---------- */
+
+.champions-wrap {
+  display: grid;
+  max-width: 1128px;
+  margin: 0 auto;
+  padding: 32px 32px 56px;
+  gap: 28px;
+}
+
+.champions-wrap > * {
+  min-width: 0;
+}
+
+.champions-main :where(h1, h2, h3, p, ul, ol) {
+  margin: 0;
+}
+
+.champions-main :where(ul, ol) {
+  padding: 0;
+  list-style: none;
+}
+
+.champions-main :where(a) {
+  color: inherit;
+}
+
+/* ---------- type ---------- */
+
+.champions-main h1,
+.champions-h1 {
+  font: 700 60px/1 var(--scout-font-display);
+  letter-spacing: 0.005em;
+}
+
+.champions-main h2 {
+  font: 700 24px/1.2 var(--scout-font-display);
+}
+
+.champions-main h3 {
+  font: 700 20px/1.25 var(--scout-font-display);
+}
+
+.champions-lead {
+  margin-top: 10px;
+  font: 500 32px/1.2 var(--scout-font-display);
+  text-wrap: balance;
+}
+
+.champions-sub {
+  max-width: 58ch;
+  margin-top: 8px;
+  color: var(--scout-color-text-muted);
+  text-wrap: pretty;
+}
+
+.champions-quiet {
+  color: var(--scout-color-text-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.champions-honest {
+  margin-top: 8px;
+}
+
+.champions-main b {
+  font-weight: 700;
+}
+
+.champions-link {
+  color: var(--scout-color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--scout-color-primary) 34%,
+    transparent
+  );
+  text-underline-offset: 4px;
+}
+
+.champions-link:hover {
+  text-decoration-color: currentcolor;
+}
+
+.champions-mini {
+  color: var(--scout-color-text-muted);
+}
+
+.champions-main h3.champions-mini {
+  font: 600 15px/1.4 var(--scout-font-body);
+}
+
+.champions-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.champions-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.champions-lane {
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- hero ---------- */
+
+.champions-hero .scout-hero-panel__text {
+  padding-top: 22px;
+  padding-bottom: 24px;
+}
+
+.champions-hero .champions-lead {
+  max-width: 27ch;
+}
+
+.champions-crumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--scout-color-text-muted);
+  font-size: 15px;
+}
+
+.champions-crumb a {
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--scout-color-text-muted) 40%,
+    transparent
+  );
+  text-underline-offset: 4px;
+}
+
+.champions-crumb a:hover {
+  color: var(--scout-color-text);
+}
+
+.champions-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 22px;
+}
+
+.champions-hero .champions-verdict {
+  display: flex;
+  max-width: none;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.champions-tier {
+  display: grid;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--scout-color-primary);
+  color: var(--scout-color-primary-text);
+  font-family: var(--scout-font-body);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.champions-hero .scout-win-rate[data-variant="range"] {
+  width: 100%;
+}
+
+.champions-hero .champions-sub {
+  max-width: 46ch;
+}
+
+.champions-hero .champions-lane-sub {
+  margin-top: 2px;
+}
+
+/* ---------- setup ---------- */
+
+.champions-setup .champions-steps {
+  margin-top: 10px;
+}
+
+.champions-folds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.champions-folds .scout-fold {
+  background: var(--scout-color-surface);
+  box-shadow: var(--scout-shadow-float);
+}
+
+.champions-folds .scout-fold[open] {
+  flex: 1 1 100%;
+  order: 2;
+}
+
+.champions-alternatives {
+  display: grid;
+  gap: 6px;
+}
+
+/* ---------- later in the game ---------- */
+
+.champions-later-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 24px 56px;
+  margin-top: 20px;
+}
+
+.champions-length {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 124px;
+  align-items: baseline;
+  gap: 14px;
+  padding: 9px 0;
+}
+
+.champions-length + .champions-length {
+  box-shadow: 0 -1px 0
+    color-mix(in srgb, var(--scout-color-text) 7%, transparent);
+}
+
+.champions-length-label {
+  font-weight: 600;
+}
+
+.champions-fig {
+  flex: none;
+  color: var(--scout-color-text-muted);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.champions-fig b {
+  margin-right: 3px;
+  color: var(--scout-color-text);
+  font: 700 20px/1 var(--scout-font-display);
+}
+
+.champions-length-games {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.champions-things {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  margin-top: 12px;
+}
+
+.champions-things + .champions-things {
+  margin-top: 14px;
+}
+
+.champions-thing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ---------- matchups ---------- */
+
+.champions-versus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 44px;
+  margin-top: 14px;
+}
+
+.champions-vs-head,
+.champions-vs {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 84px 84px;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.champions-vs-head {
+  align-items: end;
+  padding: 0 4px 0 0;
+}
+
+.champions-vs-head h3 {
+  grid-column: 1 / span 2;
+}
+
+.champions-vs-head .champions-quiet {
+  justify-self: end;
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.champions-vs-list {
+  display: grid;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.champions-vs {
+  padding: 4px 0;
+}
+
+.champions-vs-text {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+  line-height: 1.3;
+}
+
+.champions-vs-text b {
+  font: 700 20px/1.3 var(--scout-font-display);
+}
+
+.champions-note {
+  display: inline-block;
+  margin-top: 1px;
+  padding: 2px 11px;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset-strong);
+  color: var(--scout-color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.champions-vs-fig {
+  display: grid;
+  line-height: 1.3;
+  text-align: right;
+}
+
+.champions-vs-fig b {
+  font: 700 20px/1.3 var(--scout-font-display);
+}
+
+.champions-vs-fig .champions-quiet {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ---------- cards ---------- */
+
+.champions-cards {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.champions-cards > li {
+  display: flex;
+  min-width: 0;
+}
+
+.champions-cards .scout-champion-card {
+  width: 100%;
+}
+
+/* ---------- index controls ---------- */
+
+.ix-bar {
+  margin-top: 14px;
+}
+
+.ix-all .champions-cards {
+  margin-top: 20px;
+}
+
+.ix-all .scout-chip {
+  background: var(--scout-color-surface);
+  box-shadow: var(--scout-shadow-float);
+}
+
+.ix-all .scout-chip:hover {
+  background: var(--scout-surface-inset);
+}
+
+.ix-all .scout-chip[aria-pressed="true"] {
+  background: var(--scout-color-primary);
+  box-shadow: none;
+  color: var(--scout-color-primary-text);
+}
+
+.ix-find {
+  position: relative;
+  display: block;
+  flex: 0 1 300px;
+  width: 100%;
+  max-width: 300px;
+  color: var(--scout-color-text-muted);
+}
+
+.ix-find svg {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  margin-top: -9px;
+  pointer-events: none;
+}
+
+.ix-find input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: 0 20px 0 44px;
+  border: 0;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-color-surface);
+  box-shadow: var(--scout-shadow-float);
+  color: var(--scout-color-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ix-find input::placeholder {
+  color: var(--scout-color-text-muted);
+  opacity: 1;
+}
+
+.ix-find input:hover {
+  background: var(--scout-surface-inset);
+}
+
+.ix-find input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* ---------- narrower ---------- */
+
+@media (max-width: 1180px) {
+  .champions-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .champions-main {
+    font-size: 16px;
+  }
+
+  .champions-wrap {
+    gap: 20px;
+    padding: 20px 16px 44px;
+  }
+
+  .champions-main h1,
+  .champions-h1 {
+    font-size: 46px;
+  }
+
+  .champions-lead {
+    font-size: 27px;
+  }
+
+  .champions-main .scout-soft-panel--panel {
+    padding: 24px 22px 26px;
+  }
+
+  .champions-main .scout-soft-panel--open {
+    padding: 6px 6px 2px;
+  }
+
+  .champions-main .scout-chip {
+    height: 44px;
+  }
+
+  .champions-main .champions-link,
+  .champions-crumb a {
+    padding-block: 13px;
+  }
+
+  .champions-hero .champions-verdict {
+    align-items: flex-start;
+  }
+
+  .champions-folds {
+    display: grid;
+  }
+
+  .champions-later-cols,
+  .champions-versus {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .champions-length {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .champions-length-games {
+    grid-column: 1 / -1;
+    margin-top: -12px;
+    text-align: left;
+  }
+
+  .champions-vs-head,
+  .champions-vs {
+    grid-template-columns: 40px minmax(0, 1fr) 72px 72px;
+    column-gap: 10px;
+  }
+
+  .champions-vs .scout-face {
+    --scout-face-size: 40px;
+  }
+
+  .champions-vs-text {
+    display: contents;
+  }
+
+  .champions-vs-text b {
+    align-self: center;
+  }
+
+  .champions-note {
+    grid-row: 2;
+    grid-column: 2 / -1;
+    justify-self: start;
+    margin-top: 4px;
+  }
+
+  .champions-vs-fig b {
+    font-size: 18px;
+  }
+
+  .champions-vs-fig .champions-quiet,
+  .champions-vs-head .champions-quiet {
+    font-size: 12px;
+  }
+
+  .champions-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .ix-find {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .ix-find input {
+    height: 48px;
+    font-size: 16px;
+  }
+}

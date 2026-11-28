@@ -1,32 +1,22 @@
 ---
-import Layout from "../../../layouts/Layout.astro";
-import Navbar from "../../../components/layout/Navbar.astro";
-import Footer from "../../../components/layout/Footer.astro";
-import ChampionDetail from "#src/components/champions/ChampionDetail.astro";
+import ChampionPage from "#src/components/champions/ChampionPage.astro";
 import { championMetaSnapshot } from "#src/components/champions/snapshot.ts";
-import { roleLabel, roleSlug } from "#src/lib/champion-meta/snapshot.ts";
+import { roleFromSlug, roleSlug } from "#src/lib/champion-meta/snapshot.ts";
 
-export function getStaticPaths() {
-  return championMetaSnapshot.champions.flatMap((champion) =>
-    champion.slices.map((slice) => ({
-      params: { slug: champion.slug, role: roleSlug(slice.context.role) },
-      props: { champion, slice },
+export async function getStaticPaths() {
+  const { index } = await championMetaSnapshot;
+  return index.champions.flatMap((champion) =>
+    champion.roles.map((entry) => ({
+      params: { slug: champion.slug, role: roleSlug(entry.role) },
     })),
   );
 }
 
-const { champion, slice } = Astro.props;
+const { slug, role: roleParam } = Astro.params;
+const role = roleParam === undefined ? undefined : roleFromSlug(roleParam);
+if (slug === undefined || role === undefined) {
+  throw new Error(`Unknown champion route ${String(slug)}/${roleParam}`);
+}
 ---
 
-<Layout
-  title={`${champion.name} ${roleLabel(slice.context.role)} builds, runes and win rate · Scout for LoL`}
-  description={`${champion.name} ${roleLabel(slice.context.role)} win rate, builds, runes and skill order, with the games, patch, queue and rank bracket behind every figure.`}
->
-  <div class="bg-scout-surface">
-    <Navbar activePage="champions" />
-    <main>
-      <ChampionDetail champion={champion} slice={slice} />
-    </main>
-    <Footer />
-  </div>
-</Layout>
+<ChampionPage slug={slug} role={role} />

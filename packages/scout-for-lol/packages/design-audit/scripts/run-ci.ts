@@ -1,4 +1,5 @@
 import path from "node:path";
+import { CHAMPION_META_FIXTURE_INDEX } from "#src/constants.ts";
 
 const SHARD_COUNT = 16;
 const POLL_INTERVAL_MS = 250;
@@ -103,7 +104,11 @@ async function runAudit(): Promise<number> {
       cwd: path.join(packagesRoot, "frontend"),
       readyUrl: "http://127.0.0.1:4321/",
       timeoutMs: 120_000,
-      environment: { ...Bun.env, ASTRO_DEV_BACKGROUND: "0" },
+      environment: {
+        ...Bun.env,
+        ASTRO_DEV_BACKGROUND: "0",
+        CHAMPION_META_SNAPSHOT_FILE: CHAMPION_META_FIXTURE_INDEX,
+      },
     }),
     spawnServer({
       name: "Scout docs site",

@@ -333,4 +333,22 @@ describe("ChampionCard", () => {
     expect(html).not.toContain("scout-champion-card__lane-line");
     expect(html).not.toContain("scout-champion-card__tier");
   });
+
+  test("leaves out the win rate and games when they are not given", () => {
+    const html = renderToStaticMarkup(
+      <ChampionCard
+        champion="Jinx"
+        href="#jinx"
+        lane={{ label: "Bot", icon: "adc" }}
+        tier="S tier"
+      />,
+    );
+    expect(html).toContain('href="#jinx"');
+    expect(html).toContain("Bot");
+    expect(html).toContain("S tier");
+    expect(html).not.toContain("scout-champion-card__win");
+    expect(html).not.toContain("scout-champion-card__from");
+    expect(html).not.toContain("wins");
+    expect(html).not.toContain("games");
+  });
 });

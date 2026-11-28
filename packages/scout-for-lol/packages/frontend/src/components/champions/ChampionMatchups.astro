@@ -1,0 +1,78 @@
+---
+import { ChampionFace } from "@scout-for-lol/design-system/domain/profile/champion-face";
+import { formatPercent } from "@scout-for-lol/design-system/domain/profile/win-rate-bar";
+import {
+  matchupsModel,
+  type MatchupRow,
+} from "#src/components/champions/matchups.ts";
+import type { SnapshotChampion } from "#src/lib/champion-meta/snapshot-v2-schema.ts";
+
+interface Props {
+  champion: SnapshotChampion;
+  role: SnapshotChampion["slices"][number]["context"]["role"];
+}
+
+const { champion, role } = Astro.props;
+const opponents =
+  champion.matchups.find((group) => group.role === role)?.opponents ?? [];
+const { wellAgainst, hardAgainst } = matchupsModel(opponents);
+const sides: { heading: string; rows: MatchupRow[] }[] = [
+  { heading: "Does well against", rows: wellAgainst },
+  { heading: "Has a hard time against", rows: hardAgainst },
+].filter((side) => side.rows.length > 0);
+---
+
+{sides.length > 0 && (
+  <section
+    class="scout-soft-panel scout-soft-panel--panel champions-matchups"
+    aria-labelledby="vs-h"
+  >
+    <h2 id="vs-h">Matchups</h2>
+    <div class="champions-versus">
+      {sides.map((side) => (
+        <div>
+          <div class="champions-vs-head">
+            <h3 class="champions-mini">{side.heading}</h3>
+            <span class="champions-quiet" aria-hidden="true">
+              Wins the game
+            </span>
+            <span class="champions-quiet" aria-hidden="true">
+              Ahead at 15
+            </span>
+          </div>
+          <ul class="champions-vs-list">
+            {side.rows.map((row) => (
+              <li class="champions-vs">
+                <ChampionFace champion={row.id} size={46} alt="" />
+                <span class="champions-vs-text">
+                  <b>{row.name}</b>
+                  {row.note !== null && (
+                    <span class="champions-note">{row.note}</span>
+                  )}
+                </span>
+                <span class="champions-vs-fig">
+                  <span class="scout-sr-only">Wins the game </span>
+                  <b>{formatPercent(row.winRate)}</b>
+                  <span class="champions-quiet">
+                    {row.games.toLocaleString("en-US")} games
+                  </span>
+                </span>
+                {row.lane === null ? (
+                  <span class="champions-vs-fig" />
+                ) : (
+                  <span class="champions-vs-fig">
+                    <span class="scout-sr-only">Ahead at 15 minutes </span>
+                    <b>{formatPercent(row.lane.aheadRate)}</b>
+                    <span class="champions-quiet">
+                      {row.lane.games.toLocaleString("en-US")} games
+                    </span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+)}

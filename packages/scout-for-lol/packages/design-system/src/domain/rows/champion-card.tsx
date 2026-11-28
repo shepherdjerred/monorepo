@@ -16,9 +16,13 @@ export type ChampionCardProps = {
   champion: string | number;
   href: string;
   lane?: ChampionCardLane;
-  /** Win rate in percent, and the games behind it. */
-  winRate: number;
-  games: number;
+  /**
+   * Win rate in percent, and the games behind it. Both are left out where the
+   * card only points at a champion, as under "More champions" on a champion
+   * page; a card that shows a win rate should show its games too.
+   */
+  winRate?: number;
+  games?: number;
   /** Win rate in lane in percent, and the games behind it. */
   laneWinRate?: number;
   laneGames?: number;
@@ -51,12 +55,16 @@ export function ChampionCard({
           {lane.label}
         </span>
       )}
-      <span className="scout-champion-card__win">
-        <b>{formatPercent(winRate)}</b> wins
-      </span>
-      <span className="scout-champion-card__from">
-        from {gamesLabel(games)}
-      </span>
+      {winRate === undefined ? null : (
+        <span className="scout-champion-card__win">
+          <b>{formatPercent(winRate)}</b> wins
+        </span>
+      )}
+      {games === undefined ? null : (
+        <span className="scout-champion-card__from">
+          from {gamesLabel(games)}
+        </span>
+      )}
       {laneWinRate === undefined ? null : (
         <span className="scout-champion-card__from scout-champion-card__lane-line">
           <span>Wins lane {formatPercent(laneWinRate)}</span>
