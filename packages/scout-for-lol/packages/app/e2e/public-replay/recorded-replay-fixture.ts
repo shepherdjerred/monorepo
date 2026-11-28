@@ -92,12 +92,73 @@ export async function readRecordedParticleTrack(
     );
 }
 
+function expectedFor(
+  start: number,
+  parts: z.infer<typeof ParticleComponents>,
+  time: number,
+) {
+  const age = time - start;
+  return parts.filter(
+    ({ lifetime, samples }) =>
+      age < lifetime && samples.some((sample) => sample.age <= age),
+  ).length;
+}
+
+function expectedParticleDraws(
+  track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
+  time: number,
+) {
+  if (track.schema === 1)
+    return track.effects.reduce(
+      (draws, { start }) => draws + expectedFor(start, track.components, time),
+      0,
+    );
+  const families = new Map(
+    track.families.map(({ id, components: parts }) => [id, parts]),
+  );
+  const ribbons =
+    track.schema === 4
+      ? track.worldRibbon.paths.filter(
+          ({ start, end, samples }) =>
+            time < end && samples.some(({ age }) => age <= time - start),
+        ).length
+      : 0;
+  return track.effects.reduce((draws, { start, family }) => {
+    const parts = families.get(family);
+    if (parts === undefined) throw new Error("Missing recorded effect family.");
+    return draws + expectedFor(start, parts, time);
+  }, ribbons);
+}
+
+function ammoWitnessClocks(
+  components: z.infer<typeof ParticleComponents> | undefined,
+  effects: { start: number }[],
+  expectedAmmoDraws: (seconds: number) => number,
+) {
+  if (components === undefined) return [];
+  expect(effects).toHaveLength(2);
+  const firstSample = Math.min(
+    ...components.flatMap(({ samples }) => samples.map(({ age }) => age)),
+  );
+  const lifetime = Math.max(...components.map((part) => part.lifetime));
+  return effects.flatMap(({ start }) => {
+    const before = Math.floor(start * 10) / 10;
+    const active = Math.ceil((start + firstSample) * 10) / 10;
+    const after = Math.ceil((start + lifetime) * 10) / 10;
+    expect(expectedAmmoDraws(before)).toBe(0);
+    expect(expectedAmmoDraws(active)).toBe(1);
+    expect(expectedAmmoDraws(after)).toBe(0);
+    return [before, active, after, active];
+  });
+}
+
 export async function verifyRecordedParticlePreview(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
 ) {
   const track = await readRecordedParticleTrack(fixture);
   if (track === undefined) return;
+  const expectedDraws = (time: number) => expectedParticleDraws(track, time);
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
   const count = async () => {
     const draw = await readRecordedDraw(page);
@@ -107,47 +168,34 @@ export async function verifyRecordedParticlePreview(
     await seek(page, seconds);
     await expect.poll(count).toBe(draws);
   };
-  const expectedDraws = (time: number) => {
-    const expectedFor = (
-      start: number,
-      parts: z.infer<typeof ParticleComponents>,
-    ) => {
-      const age = time - start;
-      return parts.filter(
-        ({ lifetime, samples }) =>
-          age < lifetime && samples.some((sample) => sample.age <= age),
-      ).length;
-    };
-    if (track.schema === 1)
-      return track.effects.reduce(
-        (draws, { start }) => draws + expectedFor(start, track.components),
-        0,
-      );
-    const families = new Map(
-      track.families.map(({ id, components: parts }) => [id, parts]),
+  const ammoId = "heimerdinger-q-ammo-spend";
+  const ammo =
+    track.schema === 1
+      ? undefined
+      : track.families.find(({ id }) => id === ammoId);
+  const ammoEffects =
+    track.schema === 1
+      ? []
+      : track.effects.filter(({ family }) => family === ammoId);
+  const expectedAmmoDraws = (seconds: number) =>
+    ammoEffects.reduce(
+      (draws, { start }) =>
+        draws + expectedFor(start, ammo?.components ?? [], seconds),
+      0,
     );
-    const ribbons =
-      track.schema === 4
-        ? track.worldRibbon.paths.filter(
-            ({ start, end, samples }) =>
-              time < end && samples.some(({ age }) => age <= time - start),
-          ).length
-        : 0;
-    return track.effects.reduce((draws, { start, family }) => {
-      const parts = families.get(family);
-      if (parts === undefined)
-        throw new Error("Missing recorded effect family.");
-      return draws + expectedFor(start, parts);
-    }, ribbons);
-  };
-
   await vision.selectOption("all");
   if (track.effects.length > 100) {
     // Five distinct impacts share one start time in the recorded fight.
     await expectAt(1715.7, 10);
-    await expectAt(1716, 0);
+    await expectAt(1716, expectedAmmoDraws(1716));
     await expectAt(1715.7, 10);
   }
+  for (const seconds of ammoWitnessClocks(
+    ammo?.components,
+    ammoEffects,
+    expectedAmmoDraws,
+  ))
+    await expectAt(seconds, expectedDraws(seconds));
   if (
     track.schema !== 1 &&
     track.families.some(({ id }) => id === "kaisa-e-activation")
