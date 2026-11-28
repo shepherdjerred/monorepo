@@ -1,11 +1,10 @@
+import { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import type { PrismaClient } from "#generated/prisma/client.ts";
 import { createFeedsPrismaClient } from "./sql.ts";
 import { PostgresFeedsStore } from "./store.ts";
-import { asyncFeedsRepository } from "@shepherdjerred/feeds/server/sqlite-repository.ts";
 import { FEEDS_STORE_CONTRACT } from "@shepherdjerred/feeds/server/contract/contract.ts";
 import { SAMPLE_CATALOG } from "@shepherdjerred/feeds/server/contract/support.ts";
-import { FeedsStore } from "@shepherdjerred/feeds/server/store.ts";
 import { createMigratedTestDatabase } from "./test-database.ts";
 import type {
   FeedsRepository,
@@ -143,21 +142,73 @@ async function seedSearchCorpus(store: FeedsRepository): Promise<void> {
   });
 }
 
+/**
+ * The FTS5 expression the SQLite store built from console input: quoted
+ * phrases as written, every other word as a prefix. Kept as the reference
+ * that PostgreSQL search is checked against.
+ */
+function fts5Expression(raw: string): string | null {
+  const clauses: string[] = [];
+  const remainder = raw
+    .trim()
+    .replaceAll(/"([^"]*)"/gu, (_full, inner: string) => {
+      const words = inner.match(/[\p{L}\p{N}_]+/gu) ?? [];
+      if (words.length > 0) {
+        clauses.push(`"${words.join(" ")}"`);
+      }
+      return " ";
+    });
+  for (const token of remainder.match(/[\p{L}\p{N}_]+/gu) ?? []) {
+    clauses.push(`"${token}"*`);
+  }
+  return clauses.length > 0 ? clauses.join(" ") : null;
+}
+
+/** Corpus positions FTS5 matches for `q`, newest (highest) first. */
+function fts5Matches(q: string): number[] {
+  const db = new Database(":memory:");
+  try {
+    db.run(
+      "CREATE VIRTUAL TABLE corpus USING fts5(title, author, tokenize='unicode61')",
+    );
+    const insert = db.query(
+      "INSERT INTO corpus (rowid, title, author) VALUES (?, ?, ?)",
+    );
+    SEARCH_CORPUS.forEach((entry, index) => {
+      insert.run(index + 1, entry.title, entry.author);
+    });
+    const expression = fts5Expression(q);
+    return expression === null
+      ? []
+      : db
+          .query<{ readonly rowid: number }, [string]>(
+            "SELECT rowid FROM corpus WHERE corpus MATCH ? ORDER BY rowid DESC",
+          )
+          .all(expression)
+          .map((row) => row.rowid - 1);
+  } finally {
+    db.close();
+  }
+}
+
 describe("PostgreSQL search parity with SQLite FTS5", () => {
-  test("every query returns the same entries on both stores", async () => {
-    const sqlite = asyncFeedsRepository(FeedsStore.open(":memory:"));
+  test("every query returns the entries FTS5 returns, in the same order", async () => {
     const postgres = await openPostgresStore();
     try {
-      await seedSearchCorpus(sqlite);
       await seedSearchCorpus(postgres);
       let matchingQueries = 0;
       for (const q of SEARCH_QUERIES) {
-        const [expected, actual] = await Promise.all([
-          sqlite.queryEntries({ view: "all", q, limit: 500 }),
-          postgres.queryEntries({ view: "all", q, limit: 500 }),
-        ]);
-        expect({ q, ...actual }).toEqual({ q, ...expected });
-        matchingQueries += actual.totalMatching > 0 ? 1 : 0;
+        const page = await postgres.queryEntries({
+          view: "all",
+          q,
+          limit: 500,
+        });
+        const positions = page.items.map((item) =>
+          Number(/\/search\/(\d+)$/u.exec(item.url)?.[1]),
+        );
+        expect({ q, positions }).toEqual({ q, positions: fts5Matches(q) });
+        expect(page.totalMatching).toBe(positions.length);
+        matchingQueries += positions.length > 0 ? 1 : 0;
       }
       expect(matchingQueries).toBeGreaterThan(30);
       expect(
@@ -167,7 +218,7 @@ describe("PostgreSQL search parity with SQLite FTS5", () => {
         await postgres.queryEntries({ view: "all", q: '"here here"' }),
       ).toMatchObject({ totalMatching: 0 });
     } finally {
-      await Promise.all([sqlite.close(), postgres.close()]);
+      await postgres.close();
     }
   });
 });

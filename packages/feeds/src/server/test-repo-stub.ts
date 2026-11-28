@@ -1,5 +1,5 @@
 import type { CreateUserFeedBody } from "@shepherdjerred/feeds/shared/contract.ts";
-import type { SyncFeedsRepository } from "./sqlite-repository.ts";
+import type { SyncFeedsRepository } from "./test-async-repository.ts";
 import type { StoredFeed } from "./types.ts";
 
 export function buildStubUserFeedRecord(

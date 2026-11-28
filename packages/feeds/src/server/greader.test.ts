@@ -4,7 +4,7 @@ import { createGoogleReaderRoutes } from "./greader.ts";
 import {
   asyncFeedsRepository,
   type SyncFeedsRepository,
-} from "./sqlite-repository.ts";
+} from "./test-async-repository.ts";
 import {
   buildStubUserFeedRecord,
   createNoopConsoleQueries,

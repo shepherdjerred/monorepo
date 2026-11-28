@@ -81,7 +81,7 @@ type PolledEntryState = {
 };
 
 /**
- * Feeds' PostgreSQL store. It keeps the SQLite store's behaviour: every
+ * Feeds' PostgreSQL store. It keeps the behaviour Feeds had on SQLite: every
  * write runs in its own transaction, one at a time in this process (SQLite
  * serialized writers too), and entry IDs come from the same in-process
  * microsecond allocator, so the newest entry always has the highest ID.

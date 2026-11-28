@@ -12,7 +12,6 @@
       "tier": "extended",
       "args": [
         "src/server/postgres/store.integration.test.ts",
-        "src/migration/import-sqlite.integration.test.ts",
         "--testTimeout",
         "60000",
         "--hookTimeout",

@@ -1,6 +1,6 @@
 import type { FeedsRepository } from "./types.ts";
 
-/** The SQLite store's synchronous form of {@link FeedsRepository}. */
+/** A synchronous test double's form of {@link FeedsRepository}. */
 export type SyncFeedsRepository = {
   [K in keyof FeedsRepository]: (
     ...args: Parameters<FeedsRepository[K]>
@@ -16,7 +16,7 @@ function lift<A extends unknown[], R>(
     });
 }
 
-/** Presents the synchronous SQLite store through the async repository. */
+/** Presents a synchronous test double through the async repository. */
 export function asyncFeedsRepository(
   store: SyncFeedsRepository,
 ): FeedsRepository {

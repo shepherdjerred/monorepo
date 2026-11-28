@@ -183,7 +183,7 @@ function scopeConditions(options: WhereOptions): Sql[] {
   return conds;
 }
 
-/** The SQLite store's `buildEntryWhere`, with search on the tsvector. */
+/** The console's entry filters, with search on the tsvector. */
 export function entryWhere(
   options: WhereOptions,
 ):

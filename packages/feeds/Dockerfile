@@ -62,8 +62,8 @@ USER 1000:1000
 CMD ["bun", "src/index.ts"]
 
 FROM runtime AS smoke
-# The smoke migrates a throwaway PostgreSQL, imports a SQLite file into it in
-# --cutover mode, and serves from it. The database server is installed in this
+# The smoke migrates a throwaway PostgreSQL and serves from it. The database
+# server is installed in this
 # stage only; the pushed `image` stage inherits from `runtime` unchanged.
 USER 0
 # Unpinned on purpose: Debian drops superseded point releases from the archive.
