@@ -37,7 +37,7 @@ import {
   readPlayerChampionPool,
   readPlayerMatchHistory,
 } from "#src/reports/duckdb/lake-reads.ts";
-import { STANDARD_COMMUNITY_QUEUES } from "#src/trpc/router/consumer/standard-rift.ts";
+import { STANDARD_COMMUNITY_QUEUES } from "#src/reports/lanes/standard-rift.ts";
 import type { CommunityPlayer } from "#src/trpc/router/consumer/community-insights.ts";
 import type { z } from "zod";
 

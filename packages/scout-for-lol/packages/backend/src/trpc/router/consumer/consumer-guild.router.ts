@@ -15,7 +15,7 @@ import {
   buildCommunityInsights,
   squadChemistry,
 } from "#src/trpc/router/consumer/community-insights.ts";
-import { STANDARD_COMMUNITY_QUEUES } from "#src/trpc/router/consumer/standard-rift.ts";
+import { STANDARD_COMMUNITY_QUEUES } from "#src/reports/lanes/standard-rift.ts";
 import { listLivePrematchGames } from "#src/temporal/prematch/prematch-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
