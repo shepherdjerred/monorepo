@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { zstdDecompressSync } from "node:zlib";
-import { replayTimedPacketEnvelopes } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-packet-clock.mjs";
 import {
   openReplay,
   replayPacketEnvelopes,
 } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/transport.mjs";
 import { createNativeTerrainChampionCreation88Reader } from "./native-terrain-champion-identities.mjs";
 import { createExactTerrainByteCodecs } from "./native-terrain-positions-944.mjs";
+import { readRecordedRiftEffectPackets } from "./recorded-rift-effect-packets.mjs";
+import { bindRecordedRiftEffectReceipt } from "./recorded-rift-effect-receipts.mjs";
 
 const build = "16.23.841.8428";
 const originalReplaySha256 =
@@ -126,60 +127,17 @@ async function openReviewedReplay(path, positionCodecsPath) {
   assert.equal(new Set(openings.map(({ context }) => context)).size, 10);
   const owner = openings.find(({ champion }) => champion === "Heimerdinger");
   assert.equal(owner.skinId, reviewedSkin);
-  return { replay, replaySha256, owner: owner.context, openings };
-}
-
-// Independently bind the receipt rows to original packet bytes and clocks.
-// The reviewed archived decoder receipt supplies the decoded handles and positions.
-function verifyPacketProvenance(replay, receipt, window = [0, Infinity]) {
-  const expected = new Map();
-  for (const { sequence, stamp, context, packetSha256 } of receipt.events) {
-    assert.ok(Number.isSafeInteger(sequence) && sequence >= 0);
-    assert.match(packetSha256, /^[a-f0-9]{64}$/);
-    const identity = `${stamp}:${context}:${packetSha256}`;
-    assert.equal(expected.get(sequence) ?? identity, identity);
-    expected.set(sequence, identity);
-  }
-  let opcode;
-  let context = 0;
-  let packetCount = 0;
-  let sequence = 0;
-  for (const packet of replayTimedPacketEnvelopes(
-    replayPacketEnvelopes(replay, inflate),
-  )) {
-    const packetSequence = sequence++;
-    if (packet.blockOffset === 0) {
-      opcode = undefined;
-      context = 0;
-    }
-    opcode = packet.explicitOpcode ?? opcode;
-    context =
-      packet.marker & 32
-        ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
-        : packet.paramBits;
-    if (
-      packet.stream !== 1 ||
-      opcode !== 938 ||
-      packet.timeSeconds < window[0] ||
-      packet.timeSeconds >= window[1]
-    )
-      continue;
-    packetCount++;
-    const identity = expected.get(packetSequence);
-    if (identity === undefined) continue;
-    assert.equal(
-      `${packet.timeSeconds}:${context}:${sha256(packet.payload)}`,
-      identity,
-      "Recorded effect packet provenance differs",
-    );
-    expected.delete(packetSequence);
-  }
-  assert.equal(
-    packetCount,
-    receipt.packetCount,
-    "Opcode 938 packet count differs",
+  const effectPackets = Array.from(
+    readRecordedRiftEffectPackets(replay, inflate),
+    ({ payload, ...packet }) => ({ ...packet, packetSha256: sha256(payload) }),
   );
-  assert.equal(expected.size, 0, "Recorded effect packet provenance differs");
+  return {
+    replay,
+    replaySha256,
+    owner: owner.context,
+    openings,
+    effectPackets,
+  };
 }
 
 async function readPlacements(values) {
@@ -217,8 +175,12 @@ async function readPlacements(values) {
   ])
     assert.ok(Number.isSafeInteger(count) && count > 0);
   assert.ok(receipt.events.length <= receipt.entryCount);
-  verifyPacketProvenance(opening.replay, receipt);
-  return { events: receipt.events, ...opening };
+  const events = bindRecordedRiftEffectReceipt(
+    opening.effectPackets,
+    receipt,
+    "create",
+  );
+  return { events, ...opening };
 }
 
 function compileEffects(
@@ -345,10 +307,15 @@ async function compileKaisaFamily(values, opening) {
       row.status === "detached-placement-confirmed",
   );
   assert.equal(events.length, 2);
-  verifyPacketProvenance(opening.replay, { ...fight, events }, fight.window);
+  const verifiedEvents = bindRecordedRiftEffectReceipt(
+    opening.effectPackets,
+    { ...fight, events },
+    "create",
+    fight.window,
+  );
   const lifetime = Math.fround(0.15);
   const effects = compileEffects(
-    events,
+    verifiedEvents,
     owner.context,
     opening.replay.duration,
     {
@@ -407,7 +374,11 @@ async function compileSennaFamily(values, opening) {
   assert.equal(receipt.replaySha256, opening.replaySha256);
   assert.equal(receipt.executableSha256, executableSha256);
   assert.equal(receipt.events.length, 8);
-  verifyPacketProvenance(opening.replay, receipt);
+  const events = bindRecordedRiftEffectReceipt(
+    opening.effectPackets,
+    receipt,
+    "create",
+  );
   const textures = [
     [base, sennaTextureDigest],
     [color, kaisaTextureDigests[0]],
@@ -417,7 +388,7 @@ async function compileSennaFamily(values, opening) {
   });
   const lifetime = Math.fround(0.4);
   const effects = compileEffects(
-    receipt.events,
+    events,
     owner.context,
     opening.replay.duration,
     { key: 0x06896eea, lifetime, secondaryIsZero: true },

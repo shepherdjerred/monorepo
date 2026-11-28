@@ -817,7 +817,10 @@ uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay
 Extract opcode 1164 separately to verify recorded stop requests. The packet
 tool prints the corpus SHA-256 for the archived reader. The stop receipt
 identifies the target handle and original stop branch. Live registry state and
-emitter teardown remain separate from the request.
+emitter teardown remain separate from the request. The extractor and the
+track author share the build-gated wire reader. The receipt is bound to a
+physical packet ordinal, clock, context, and payload digest. The ordinal
+preserves order when multiple packets share a clock.
 
 ```powershell
 $stopDigest = bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath --opcode 1164 $newPrivateStopCorpus
@@ -906,6 +909,21 @@ the known effect clocks. Use the video to review the scene and effect coverage.
 
 ```powershell
 bun packages/scout-for-lol/packages/app/e2e/public-replay/proof/capture-recorded-rift-fight.ts $loopbackReplayUrl $newPrivateCaptureDirectory
+```
+
+Use the pixel attribution control on a clock where the family under review is
+the only active effect of its draw class. It captures the whole scene twice
+with the selected draws enabled and twice with only those draws suppressed.
+The mask reports pixels that change between the two conditions and agree
+within each condition. The receipt retains the replay and package digests,
+clock, camera, and intercepted submissions. This checks the visible contribution
+at that instant and camera. The continuous capture checks ordinary playback.
+The control defaults to Playwright Chromium. Set
+`SCOUT_REPLAY_E2E_PERF_GRAPHICS=edge` for installed Edge and keep the same
+graphics mode when comparing receipts.
+
+```powershell
+bun packages/scout-for-lol/packages/app/e2e/public-replay/proof/capture-recorded-particle-visibility.ts $loopbackReplayUrl $newPrivateAttributionDirectory 1714.3 1073742170 world-ribbon
 ```
 
 The animation verifier samples an explicitly chosen authored clip against the

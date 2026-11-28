@@ -2,11 +2,8 @@ import { createHash } from "node:crypto";
 import { realpath, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative } from "node:path";
 import { zstdDecompressSync } from "node:zlib";
-import {
-  openReplay,
-  replayPacketEnvelopes,
-} from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/transport.mjs";
-import { replayTimedPacketEnvelopes } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-packet-clock.mjs";
+import { openReplay } from "../../transport.mjs";
+import { readRecordedRiftEffectPackets } from "./recorded-rift-effect-packets.mjs";
 
 // Keep the original replay and extracted packet bodies in the local authoring process.
 const [path, flag, opcodeArgument, output, ...extra] = process.argv.slice(2);
@@ -28,36 +25,24 @@ if (stops) {
 const bytes = await Bun.file(path).arrayBuffer();
 const sha256 = createHash("sha256").update(new Uint8Array(bytes)).digest("hex");
 const replay = openReplay(bytes);
-if (replay.build !== "16.23.841.8428" || replay.protocol !== "8bbfcd5af2bc92db")
-  throw Error("Recorded particle packet build or protocol differs");
 const decompress = (input, output) =>
   zstdDecompressSync(input, { maxOutputLength: output.length });
 const packets = [];
 const selectedOpcode = stops ? 1164 : 938;
-let opcode = null;
-let context = 0;
-let sequence = 0;
-for (const envelope of replayTimedPacketEnvelopes(
-  replayPacketEnvelopes(replay, decompress),
-)) {
-  if (envelope.blockOffset === 0) {
-    opcode = null;
-    context = 0;
-  }
-  opcode = envelope.explicitOpcode ?? opcode;
-  context =
-    envelope.marker & 32
-      ? (context + ((envelope.paramBits << 24) >> 24)) >>> 0
-      : envelope.paramBits;
-  if (opcode === selectedOpcode && envelope.stream === 1)
+for (const {
+  opcode,
+  timeSeconds,
+  sequence,
+  context,
+  payload,
+} of readRecordedRiftEffectPackets(replay, decompress))
+  if (opcode === selectedOpcode)
     packets.push([
-      envelope.timeSeconds,
+      timeSeconds,
       sequence,
       context,
-      Buffer.from(envelope.payload).toString("hex"),
+      Buffer.from(payload).toString("hex"),
     ]);
-  sequence++;
-}
 if (stops) {
   const corpus = {
     replaySha256: sha256,
