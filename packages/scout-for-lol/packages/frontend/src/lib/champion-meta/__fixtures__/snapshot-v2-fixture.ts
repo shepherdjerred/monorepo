@@ -218,12 +218,24 @@ function opponentsOf(spec: ChampionSpec, role: RoleSpec) {
         laneGames * (0.5 + (noise(low, high, 2) - 0.5) * 0.2),
       );
       const ahead = spec.id === low ? laneForLow : laneGames - laneForLow;
+      const matchupRate = wins / games;
       return {
         championId: other.id,
         championName: other.name,
         games,
         wins,
         winRate: wilson(wins, games),
+        // The two most played spell pairs, the first doing better.
+        spells: SETUPS[role.role].spells.slice(0, 2).map((spellIds, rank) => ({
+          spellIds,
+          ...counted(
+            games,
+            rank === 0 ? 0.64 : 0.28,
+            matchupRate + (rank === 0 ? 0.05 : -0.07),
+            low * 1000 + high + rank,
+          ),
+          denominator: "matchup_games" as const,
+        })),
         lane: {
           games: laneGames,
           ahead,

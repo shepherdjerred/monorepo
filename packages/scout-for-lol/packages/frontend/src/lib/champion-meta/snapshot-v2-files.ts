@@ -84,7 +84,7 @@ export function parseChampion(
   return { path, champion };
 }
 
-function parseMatchup(
+export function parseMatchup(
   files: SnapshotTexts,
   champion: SnapshotChampion,
   role: SnapshotMatchup["context"]["role"],

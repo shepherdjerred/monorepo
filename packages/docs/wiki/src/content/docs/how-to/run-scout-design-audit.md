@@ -13,7 +13,7 @@ reference](/reference/scout-design-audit/).
 
 ## 1. Run the complete local audit
 
-From the repository root, run the same 684-case matrix as the scheduled check:
+From the repository root, run the same 702-case matrix as the scheduled check:
 
 ```bash
 ASTRO_DEV_BACKGROUND=0 CI=true TZ=UTC \

@@ -1,0 +1,27 @@
+---
+import MatchupPage from "#src/components/champions/matchup/MatchupPage.astro";
+import { listedMatchups } from "#src/components/champions/matchup/pages.ts";
+import { championMetaSnapshot } from "#src/components/champions/snapshot.ts";
+import { roleFromSlug, roleSlug } from "#src/lib/champion-meta/snapshot.ts";
+
+export async function getStaticPaths() {
+  const snapshot = await championMetaSnapshot;
+  return listedMatchups(await snapshot.champions()).map((entry) => ({
+    params: {
+      slug: entry.slug,
+      role: roleSlug(entry.role),
+      opponent: entry.opponent,
+    },
+  }));
+}
+
+const { slug, role: roleParam, opponent } = Astro.params;
+const role = roleParam === undefined ? undefined : roleFromSlug(roleParam);
+if (slug === undefined || role === undefined || opponent === undefined) {
+  throw new Error(
+    `Unknown matchup route ${String(slug)}/${roleParam}/vs/${String(opponent)}`,
+  );
+}
+---
+
+<MatchupPage slug={slug} role={role} opponent={opponent} />

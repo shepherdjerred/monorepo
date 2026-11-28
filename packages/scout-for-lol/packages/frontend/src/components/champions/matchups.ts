@@ -7,7 +7,8 @@ import type { SnapshotChampion } from "#src/lib/champion-meta/snapshot-v2-schema
  * appears only on the side its win rate is on.
  */
 
-type Opponent = SnapshotChampion["matchups"][number]["opponents"][number];
+export type Opponent =
+  SnapshotChampion["matchups"][number]["opponents"][number];
 
 export type MatchupRow = {
   id: number;
@@ -36,7 +37,8 @@ function noteOf(opponent: Opponent): string | null {
   return lane < 0.5 && game > 0.5 ? "Loses lane, wins the game" : null;
 }
 
-function rowOf(opponent: Opponent): MatchupRow {
+/** One opponent as a row: win rate and lane in percent, with the games behind each. */
+export function matchupRow(opponent: Opponent): MatchupRow {
   return {
     id: opponent.id,
     name: opponent.name,
@@ -59,11 +61,11 @@ export function matchupsModel(opponents: readonly Opponent[]): MatchupsModel {
     .filter((opponent) => opponent.winRate.value > 0.5)
     .toSorted((a, b) => b.winRate.lower - a.winRate.lower)
     .slice(0, SIDE_ROWS)
-    .map((opponent) => rowOf(opponent));
+    .map((opponent) => matchupRow(opponent));
   const hardAgainst = opponents
     .filter((opponent) => opponent.winRate.value < 0.5)
     .toSorted((a, b) => a.winRate.upper - b.winRate.upper)
     .slice(0, SIDE_ROWS)
-    .map((opponent) => rowOf(opponent));
+    .map((opponent) => matchupRow(opponent));
   return { wellAgainst, hardAgainst };
 }

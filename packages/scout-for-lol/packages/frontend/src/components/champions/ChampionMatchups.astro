@@ -5,6 +5,10 @@ import {
   matchupsModel,
   type MatchupRow,
 } from "#src/components/champions/matchups.ts";
+import {
+  matchupHref,
+  pageOpponents,
+} from "#src/components/champions/matchup/pages.ts";
 import type { SnapshotChampion } from "#src/lib/champion-meta/snapshot-v2-schema.ts";
 
 interface Props {
@@ -15,6 +19,7 @@ interface Props {
 const { champion, role } = Astro.props;
 const opponents =
   champion.matchups.find((group) => group.role === role)?.opponents ?? [];
+const pages = pageOpponents(champion, role);
 const { wellAgainst, hardAgainst } = matchupsModel(opponents);
 const sides: { heading: string; rows: MatchupRow[] }[] = [
   { heading: "Does well against", rows: wellAgainst },
@@ -41,35 +46,43 @@ const sides: { heading: string; rows: MatchupRow[] }[] = [
             </span>
           </div>
           <ul class="champions-vs-list">
-            {side.rows.map((row) => (
-              <li class="champions-vs">
-                <ChampionFace champion={row.id} size={46} alt="" />
-                <span class="champions-vs-text">
-                  <b>{row.name}</b>
-                  {row.note !== null && (
-                    <span class="champions-note">{row.note}</span>
-                  )}
-                </span>
-                <span class="champions-vs-fig">
-                  <span class="scout-sr-only">Wins the game </span>
-                  <b>{formatPercent(row.winRate)}</b>
-                  <span class="champions-quiet">
-                    {row.games.toLocaleString("en-US")} games
-                  </span>
-                </span>
-                {row.lane === null ? (
-                  <span class="champions-vs-fig" />
-                ) : (
-                  <span class="champions-vs-fig">
-                    <span class="scout-sr-only">Ahead at 15 minutes </span>
-                    <b>{formatPercent(row.lane.aheadRate)}</b>
-                    <span class="champions-quiet">
-                      {row.lane.games.toLocaleString("en-US")} games
+            {side.rows.map((row) => {
+              const href = pages.has(row.slug)
+                ? matchupHref(champion.slug, role, row.slug)
+                : undefined;
+              const Row = href === undefined ? "div" : "a";
+              return (
+                <li>
+                  <Row class="champions-vs" href={href}>
+                    <ChampionFace champion={row.id} size={46} alt="" />
+                    <span class="champions-vs-text">
+                      <b>{row.name}</b>
+                      {row.note !== null && (
+                        <span class="champions-note">{row.note}</span>
+                      )}
                     </span>
-                  </span>
-                )}
-              </li>
-            ))}
+                    <span class="champions-vs-fig">
+                      <span class="scout-sr-only">Wins the game </span>
+                      <b>{formatPercent(row.winRate)}</b>
+                      <span class="champions-quiet">
+                        {row.games.toLocaleString("en-US")} games
+                      </span>
+                    </span>
+                    {row.lane === null ? (
+                      <span class="champions-vs-fig" />
+                    ) : (
+                      <span class="champions-vs-fig">
+                        <span class="scout-sr-only">Ahead at 15 minutes </span>
+                        <b>{formatPercent(row.lane.aheadRate)}</b>
+                        <span class="champions-quiet">
+                          {row.lane.games.toLocaleString("en-US")} games
+                        </span>
+                      </span>
+                    )}
+                  </Row>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}

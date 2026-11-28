@@ -45,21 +45,22 @@ The browser configuration lives at
 The marketing site is started with `CHAMPION_META_SNAPSHOT_FILE` set to the
 fixture snapshot's `index.json`
 (`packages/scout-for-lol/packages/frontend/src/lib/champion-meta/__fixtures__/snapshot-v2/champion-meta/`),
-so the `/champions/` and `/champions/ahri/middle/` routes render made-up data
+so the `/champions/`, `/champions/ahri/middle/` and
+`/champions/ahri/middle/vs/syndra/` routes render made-up data
 instead of whatever the committed snapshot holds. An external marketing origin
-must be built the same way for those two routes to exist.
+must be built the same way for those three routes to exist.
 
 ## Browser matrix
 
 | Coverage boundary                                 |   Cases |
 | ------------------------------------------------- | ------: |
-| All routes, four themes, Chromium desktop         |     252 |
-| All routes, classic-light, Chromium tablet/mobile |     126 |
-| Additional golden-route Chromium combinations     |     180 |
-| All routes, modern-light, WebKit desktop/mobile   |     126 |
-| **Total**                                         | **684** |
+| All routes, four themes, Chromium desktop         |     256 |
+| All routes, classic-light, Chromium tablet/mobile |     128 |
+| Additional golden-route Chromium combinations     |     190 |
+| All routes, modern-light, WebKit desktop/mobile   |     128 |
+| **Total**                                         | **702** |
 
-The 18 golden routes cover all four themes and all four Chromium viewports.
+The 19 golden routes cover all four themes and all four Chromium viewports.
 Firefox is not part of the supported browser boundary. The scheduled CI
 step remains advisory through `soft_fail` while consecutive main runs establish
 stability.

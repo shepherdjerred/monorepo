@@ -71,6 +71,17 @@ export const SmallSample: Story = {
   },
 };
 
+/** Under a matchup: the figures, then one short fact. */
+export const WithNote: Story = {
+  render: oneColumn,
+  args: {
+    champion: "Garen",
+    winRate: 48.9,
+    games: 410,
+    note: "Wins lane, loses the game",
+  },
+};
+
 const cards: ChampionCardProps[] = [
   {
     champion: "Jinx",

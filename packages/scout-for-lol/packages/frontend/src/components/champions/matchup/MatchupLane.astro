@@ -1,0 +1,43 @@
+---
+import {
+  WinRateBar,
+  formatPercent,
+} from "@scout-for-lol/design-system/domain/profile/win-rate-bar";
+import type { LaneModel } from "#src/components/champions/matchup/model.ts";
+
+interface Props {
+  lane: LaneModel;
+}
+
+const { lane } = Astro.props;
+// The track spans 30 to 70 percent, wider when the likely range needs it.
+const domain: [number, number] = [
+  Math.min(30, Math.floor(lane.range.low) - 2),
+  Math.max(70, Math.ceil(lane.range.high) + 2),
+];
+---
+
+<section
+  class="scout-soft-panel scout-soft-panel--panel champions-mu-lane"
+  aria-labelledby="lane-h"
+>
+  <h2 id="lane-h">In lane</h2>
+  <p class="champions-lead">{lane.lead}</p>
+  <p class="champions-mu-fig">
+    <span class="champions-mu-label">{lane.label}</span>
+    <b>{formatPercent(lane.aheadRate)}</b>
+    <span class="champions-quiet">
+      of {lane.games.toLocaleString("en-US")} games
+    </span>
+  </p>
+  <WinRateBar
+    variant="range"
+    value={lane.aheadRate}
+    even
+    range={lane.range}
+    domain={domain}
+  />
+  {lane.overall !== null && (
+    <p class="champions-quiet champions-mu-usual">{lane.overall}</p>
+  )}
+</section>

@@ -5,6 +5,7 @@ import {
   dayRange,
   indexContextLine,
   laneWindow,
+  matchupContextLine,
 } from "./public-context.ts";
 import { EMPTY_SNAPSHOT_V2 } from "./snapshot-v2-schema.ts";
 import { openSnapshot } from "./snapshot-v2-load.ts";
@@ -45,6 +46,16 @@ describe("the context lines", () => {
     );
     expect(championContextLine(1, index, false)).toBe(
       "From 1 game on patch 16.23, Ranked Solo/Duo, Emerald to Diamond, 7 to 20 Nov.",
+    );
+  });
+
+  test("a matchup line names the role and counts the matchup's games", async () => {
+    const { index } = await openSnapshot(FIXTURE_INDEX);
+    expect(matchupContextLine("MIDDLE", 1050, index, true)).toBe(
+      "Mid. From 1,050 games on patch 16.23, Ranked Solo/Duo, Emerald to Diamond, 7 to 20 Nov. Lane figures from 14 to 20 Nov.",
+    );
+    expect(matchupContextLine("UTILITY", 31, index, false)).toBe(
+      "Support. From 31 games on patch 16.23, Ranked Solo/Duo, Emerald to Diamond, 7 to 20 Nov.",
     );
   });
 

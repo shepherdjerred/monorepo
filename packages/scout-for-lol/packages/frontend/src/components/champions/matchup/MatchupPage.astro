@@ -1,0 +1,45 @@
+---
+import ChampionsShell from "#src/components/champions/ChampionsShell.astro";
+import { championMetaSnapshot } from "#src/components/champions/snapshot.ts";
+import MatchupFacts from "#src/components/champions/matchup/MatchupFacts.astro";
+import MatchupHero from "#src/components/champions/matchup/MatchupHero.astro";
+import MatchupLane from "#src/components/champions/matchup/MatchupLane.astro";
+import MatchupOthers from "#src/components/champions/matchup/MatchupOthers.astro";
+import { matchupPageModel } from "#src/components/champions/matchup/model.ts";
+import { roleLabel, roleSlug } from "#src/lib/champion-meta/snapshot.ts";
+import type { MetaRole } from "@scout-for-lol/data/meta/meta-serving.ts";
+
+interface Props {
+  slug: string;
+  role: MetaRole;
+  opponent: string;
+}
+
+const { slug, role, opponent } = Astro.props;
+const snapshot = await championMetaSnapshot;
+const matchup = await snapshot.matchup(slug, role, opponent);
+const champion = await snapshot.champion(slug);
+const opponentChampion = await snapshot.champion(opponent);
+const model = matchupPageModel({
+  matchup,
+  champion,
+  opponentChampion,
+  index: snapshot.index,
+});
+---
+
+<ChampionsShell title={model.title} description={model.description}>
+  <MatchupHero matchup={matchup} model={model} />
+  {/* Scout's tips mount here, with the other side's tips in a native
+      <details> below them: the snapshot holds no tips yet, so neither renders. */}
+  {model.lane !== null && <MatchupLane lane={model.lane} />}
+  <MatchupFacts championName={champion.name} spellFact={model.spellFact} />
+  <MatchupOthers
+    championName={champion.name}
+    home={{
+      href: `/champions/${champion.slug}/${roleSlug(role)}/`,
+      label: `See ${champion.name} in ${roleLabel(role)}`,
+    }}
+    others={model.others}
+  />
+</ChampionsShell>

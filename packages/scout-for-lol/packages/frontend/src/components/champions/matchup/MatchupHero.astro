@@ -1,0 +1,65 @@
+---
+import { ChampionFace } from "@scout-for-lol/design-system/domain/profile/champion-face";
+import { DuelHero } from "@scout-for-lol/design-system/domain/profile/duel-hero";
+import {
+  Chip,
+  ChipLane,
+} from "@scout-for-lol/design-system/components/surfaces/chip";
+import type { MatchupPageModel } from "#src/components/champions/matchup/model.ts";
+import { matchupHref } from "#src/components/champions/matchup/pages.ts";
+import type { SnapshotMatchup } from "#src/lib/champion-meta/snapshot-v2-schema.ts";
+import { roleSlug } from "#src/lib/champion-meta/snapshot.ts";
+
+interface Props {
+  matchup: SnapshotMatchup;
+  model: MatchupPageModel;
+}
+
+const { matchup, model } = Astro.props;
+const { champion, opponent } = matchup;
+const { role } = matchup.context;
+---
+
+<DuelHero
+  aria-labelledby="matchup-h"
+  start={{ champion: champion.id }}
+  end={{ champion: opponent.id }}
+  className="champions-duel"
+>
+  <nav class="champions-crumb" aria-label="Breadcrumb">
+    <a href="/champions/">Champions</a>
+    <span aria-hidden="true">/</span>
+    <a href={`/champions/${champion.slug}/${roleSlug(role)}/`}>
+      {champion.name}
+    </a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">Against {opponent.name}</span>
+  </nav>
+  <h1 id="matchup-h" class="champions-h1">
+    {champion.name} <span class="champions-vs-word">against</span>{" "}
+    {opponent.name}
+  </h1>
+  <p class="champions-lead">{model.lead}</p>
+  <p class="champions-sub">{model.sub}</p>
+  {model.otherSide !== null && (
+    <div
+      class="champions-controls champions-side"
+      role="group"
+      aria-label="Which side you are playing"
+    >
+      <Chip href={matchupHref(champion.slug, role, opponent.slug)} pressed>
+        <ChipLane>
+          <ChampionFace champion={champion.id} size={26} alt="" />
+        </ChipLane>
+        I'm playing {champion.name}
+      </Chip>
+      <Chip href={model.otherSide.href}>
+        <ChipLane>
+          <ChampionFace champion={opponent.id} size={26} alt="" />
+        </ChipLane>
+        I'm playing {opponent.name}
+      </Chip>
+    </div>
+  )}
+  <p class="champions-quiet champions-honest">{model.context}</p>
+</DuelHero>
