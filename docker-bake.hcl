@@ -353,7 +353,7 @@ target "artifacts" {
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "glitter-boys-launcher", "redlib", "the-storm-server", "velero-plugin", "zfs-driver"]
+  targets = ["buildkitd", "caddy-s3proxy", "glitter-boys-launcher", "redlib", "the-storm-server", "velero-plugin", "zfs-driver"]
 }
 
 # The launcher telemetry service: a Rust workspace built from its own package.
@@ -363,6 +363,16 @@ target "glitter-boys-launcher" {
   tags       = imagetags("glitter-boys-launcher")
   cache-from = cachefrom("glitter-boys-launcher")
   cache-to   = cacheto("glitter-boys-launcher")
+}
+
+# The CI BuildKit daemon: upstream moby/buildkit plus the rewritten-layer reuse
+# patch (packages/homelab/images/buildkitd/README.md).
+target "buildkitd" {
+  context    = "packages/homelab/images/buildkitd"
+  target     = "image"
+  tags       = imagetags("buildkitd")
+  cache-from = cachefrom("buildkitd")
+  cache-to   = cacheto("buildkitd")
 }
 
 target "zfs-driver" {

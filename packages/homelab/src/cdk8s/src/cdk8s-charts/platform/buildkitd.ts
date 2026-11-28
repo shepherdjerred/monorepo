@@ -8,5 +8,8 @@ export function createBuildkitdChart(app: App) {
     disableResourceNameHashes: true,
   });
 
-  createBuildkitdDeployment(chart);
+  // Run the patched daemon (packages/homelab/images/buildkitd) until upstream
+  // BuildKit reuses timestamp-rewritten layers itself; its README says how to
+  // switch back to `upstream` and drop the patch.
+  createBuildkitdDeployment(chart, { image: "rewrite-reuse" });
 }

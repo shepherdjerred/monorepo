@@ -663,7 +663,8 @@
         "macos-cross-compiler",
         "windows-cross-compiler",
         "windows-cross-compiler-winui",
-        "woodpecker-config-extension"
+        "woodpecker-config-extension",
+        "buildkitd"
       ],
       "bootstrapImages": [],
       "bugsinkProjects": [],

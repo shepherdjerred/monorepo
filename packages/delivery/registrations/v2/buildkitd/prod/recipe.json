@@ -1,5 +1,5 @@
 {
-  "id": "buildkitd/prod/2",
+  "id": "buildkitd/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -27,7 +27,12 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:buildkitd",
-    "artifactParameters": {},
+    "artifactParameters": {
+      "delivery.dependencies.buildkitd": {
+        "component": "image:buildkitd",
+        "format": "reference"
+      }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

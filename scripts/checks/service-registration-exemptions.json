@@ -6,9 +6,7 @@
     "windows-cross-compiler": "public toolchain image, built by the CI-image pipeline",
     "windows-cross-compiler-winui": "public toolchain image, built by the CI-image pipeline"
   },
-  "pendingPrivateImages": {
-    "buildkitd": "patched CI BuildKit daemon: its private Docker Hub repository is provisioned before the build target and catalog ownership land"
-  },
+  "pendingPrivateImages": {},
   "chartsWithoutRecipe": {
     "storm-forum-beta": "inactive chart: the catalog has no storm-forum/beta environment yet, so no recipe exists",
     "charts": "self-bootstrap: charts/prod deploys charts-bootstrap from Docker Hub OCI so recovering charts never depends on charts",
