@@ -1,6 +1,9 @@
 import type { AlertmanagerClient } from "@shepherdjerred/ops-clients/alertmanager.ts";
 import type { BugsinkClient } from "@shepherdjerred/ops-clients/bugsink.ts";
-import type { WoodpeckerClient } from "@shepherdjerred/ops-clients/woodpecker.ts";
+import type {
+  BranchStatus,
+  WoodpeckerClient,
+} from "@shepherdjerred/ops-clients/woodpecker.ts";
 import type { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
 import type { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import type { TrackerClient } from "@shepherdjerred/ops-clients/tracker.ts";
@@ -138,11 +141,20 @@ export async function collectTalos(talosctl: Talosctl): Promise<OpsCollection> {
   return mapTalos(machines, services);
 }
 
+/**
+ * `main`'s verdict for the snapshot. `publishSignal` then reports the same
+ * verdict to Incidents; it records its own failures and never fails the
+ * collection.
+ */
 export async function collectCi(
   woodpecker: WoodpeckerClient,
   context: OpsContext,
+  publishSignal: (status: BranchStatus) => Promise<unknown>,
 ): Promise<OpsCollection> {
-  return mapCi(await woodpecker.branchStatus("main"), context);
+  const status = await woodpecker.branchStatus("main");
+  const collection = mapCi(status, context);
+  await publishSignal(status);
+  return collection;
 }
 
 export async function collectGitHub(

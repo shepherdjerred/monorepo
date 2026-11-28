@@ -1461,6 +1461,7 @@
       "devDependencies": {
         "@shepherdjerred/delivery": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/incidents": "workspace:*",
         "@temporalio/testing": "1.26.0",
         "@types/bun": "1.4.5",
         "@types/lodash": "^4.17.24",
@@ -2828,6 +2829,7 @@
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/glitter-context": "workspace:*",
         "@shepherdjerred/home-assistant": "workspace:*",
+        "@shepherdjerred/incidents": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",

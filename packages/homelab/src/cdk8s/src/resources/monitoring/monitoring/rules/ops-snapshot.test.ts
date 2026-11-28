@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getOpsSnapshotRuleGroups,
+  INCIDENTS_SIGNAL_FAILING_FOR,
   OPS_SNAPSHOT_SOURCE_STALE_SECONDS,
   OPS_SNAPSHOT_STALE_SECONDS,
 } from "./ops-snapshot.ts";
@@ -46,6 +47,42 @@ describe("ops snapshot freshness rules", () => {
     expect(sourceStale.annotations?.["summary"]).toContain(
       '{{ "{{" }} $labels.source {{ "}}" }}',
     );
+  });
+});
+
+describe("IncidentsSignalDeliveryFailing", () => {
+  it("pages per producer once every post has failed for half an hour", () => {
+    const failing = rule("IncidentsSignalDeliveryFailing");
+
+    expect(INCIDENTS_SIGNAL_FAILING_FOR).toBe("30m");
+    expect(failing.expr.value).toBe(
+      "max by (source) (incidents_signal_post_ok) == 0",
+    );
+    expect(failing.for).toBe("30m");
+    expect(failing.labels?.["severity"]).toBe("warning");
+  });
+
+  it("matches a producer whose last post failed and clears once one succeeds", async () => {
+    const expr = rule("IncidentsSignalDeliveryFailing").expr.value;
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        {
+          series: "0x40",
+          expected: [{ labels: '{source="main-ci"}', value: 0 }],
+        },
+        { series: "0x20 1x20", expected: [] },
+      ].map(({ series, expected }) => ({
+        interval: "1m",
+        input_series: [
+          {
+            series: 'incidents_signal_post_ok{source="main-ci",pod="ops-a"}',
+            values: series,
+          },
+        ],
+        promql_expr_test: [{ expr, eval_time: "40m", exp_samples: expected }],
+      })),
+    });
   });
 });
 

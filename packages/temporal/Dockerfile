@@ -573,6 +573,7 @@ COPY --parents \
   packages/scout-for-lol/packages/temporal \
   packages/ops-model \
   packages/ops-clients \
+  packages/incidents/src/shared \
   ./
 
 # Built artifacts from the build stage.
