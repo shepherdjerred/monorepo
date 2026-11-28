@@ -55,6 +55,7 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                       request,
                       "championAnimationCatalog",
                     ),
+                    participants: property(response, "participants"),
                     stats: property(response, "championStats"),
                     inventoryTracks: property(
                       response,

@@ -723,6 +723,17 @@ const TerrainVisibilitySchema = z.object({
     .optional(),
 });
 
+const TerrainParticipantsSchema = z
+  .array(
+    z.object({
+      participantId: z.number().int().nonnegative(),
+      name: z.string(),
+      championName: z.string(),
+      teamId,
+    }),
+  )
+  .length(10);
+
 const TerrainSceneFields = z.object({
   identity: z.object({
     build: z.enum([terrainPositionBuild, currentTerrainPositionBuild]),
@@ -776,16 +787,7 @@ const TerrainSceneFields = z.object({
   neutralObjectiveKills: NeutralObjectiveKillsSchema.optional(),
   inhibitorLosses: inhibitorLosses.optional(),
   playerState: PlayerStateSchema.optional(),
-  participants: z
-    .array(
-      z.object({
-        participantId: z.number().int().nonnegative(),
-        name: z.string(),
-        championName: z.string(),
-        teamId,
-      }),
-    )
-    .length(10),
+  participants: z.union([TerrainParticipantsSchema, z.tuple([])]),
   frames: z.array(terrainFrame),
   decodedPositionFrames: z.array(terrainFrame).optional(),
   motion: z.unknown().optional(),
@@ -915,6 +917,20 @@ export const SceneSchema = TerrainSceneFields.refine(
       "The FlowMap comparison requires the reviewed textured Bloom scene.",
   },
 )
+  .refine(
+    (scene) =>
+      scene.participants.length !== 0 ||
+      (scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion?.championModelCatalog !== undefined &&
+        scene.frames.length === 0 &&
+        scene.decodedPositionFrames === undefined &&
+        scene.motion === undefined),
+    {
+      path: ["participants"],
+      message:
+        "A replay-derived roster requires the exact archive model catalog and motion worker.",
+    },
+  )
   .refine(
     ({ identity, inhibitorModels }) =>
       validInhibitorRanges(
@@ -1410,6 +1426,12 @@ const WorkerPlayerNames = z
 const WorkerMotionResponse = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ready"),
+    participants: TerrainParticipantsSchema.refine(
+      (rows) =>
+        new Set(rows.map(({ participantId }) => participantId)).size === 10 &&
+        rows.filter(({ teamId }) => teamId === 100).length === 5,
+      "Expected a unique replay-derived roster with five players per side.",
+    ).optional(),
     frames: z.array(
       z.object({
         timeSeconds: z.number().nonnegative(),
@@ -1527,7 +1549,7 @@ function validateWorkerTerrainVisibility(
 }
 
 async function loadWorkerMotion(
-  identity: TerrainScene["identity"],
+  { identity, participants }: TerrainScene,
   workerMotion: NonNullable<TerrainScene["workerMotion"]>,
   signal: AbortSignal,
   assets: TerrainMotionAssets,
@@ -1573,6 +1595,7 @@ async function loadWorkerMotion(
           {
             identity,
             ...workerMotion,
+            ...(participants.length === 0 ? { deriveParticipants: true } : {}),
             replayBytes,
             decoderBytes,
             ...(teamVisionActors === undefined
@@ -1584,6 +1607,8 @@ async function loadWorkerMotion(
       },
     );
     if (result.type === "error") throw new Error(result.message);
+    if ((result.participants !== undefined) !== (participants.length === 0))
+      throw Error("Replay motion worker returned unexpected roster data.");
     if (
       (result.championModels !== undefined) !==
       (workerMotion.championModelCatalog !== undefined)
@@ -1716,14 +1741,17 @@ async function loadWorkerMotion(
         ...(result.structureModels?.instances ?? []),
         ...(result.nexusModels?.instances ?? []),
       ].map(({ context }) => context);
-      const contexts = new Set([
+      const boundContexts = [
         ...teamVisionActors.contexts,
+        ...(result.participants ?? []).map(
+          ({ participantId }) => participantId,
+        ),
         ...decodedContexts,
-      ]);
+      ];
+      const contexts = new Set(boundContexts);
       const received = new Set(result.teamVision.map(({ context }) => context));
       if (
-        contexts.size !==
-          teamVisionActors.contexts.size + decodedContexts.length ||
+        contexts.size !== boundContexts.length ||
         received.size !== contexts.size ||
         result.teamVision.length !== contexts.size ||
         [...received].some((context) => !contexts.has(context))
@@ -2093,35 +2121,36 @@ function validateSelectedChampionModels(
 }
 
 export async function loadSceneMotion(
-  scene: TerrainScene,
+  source: TerrainScene,
   signal: AbortSignal,
   assets: TerrainMotionAssets,
 ) {
-  if (scene.motion === undefined && scene.workerMotion === undefined)
-    return { scene, heights: undefined };
-  if (scene.navgrid === undefined)
+  if (source.motion === undefined && source.workerMotion === undefined)
+    return { scene: source, heights: undefined };
+  const { navgrid } = source;
+  if (navgrid === undefined)
     throw new Error("Replay motion is missing navigation terrain metadata.");
   const [heights, decoded] = await Promise.all([
     assets.read("/heights.bin").then((buffer) => new Float32Array(buffer)),
-    scene.workerMotion === undefined
+    source.workerMotion === undefined
       ? undefined
       : loadWorkerMotion(
-          scene.identity,
-          scene.workerMotion,
+          source,
+          source.workerMotion,
           signal,
           assets,
-          teamVisionActorBindings(scene),
+          teamVisionActorBindings(source),
         ),
   ]);
-  if (decoded === undefined) return { scene, heights };
+  if (decoded === undefined) return { scene: source, heights };
+  const scene =
+    decoded.participants === undefined
+      ? source
+      : { ...source, participants: decoded.participants };
   const championModels = decoded.championModels;
   if (championModels !== undefined)
     validateSelectedChampionModels(scene, championModels);
-  const ground = createNavgridGroundHeight(
-    scene.mapBounds,
-    scene.navgrid,
-    heights,
-  );
+  const ground = createNavgridGroundHeight(scene.mapBounds, navgrid, heights);
   const teams = new Map(
     scene.participants.map((participant) => [
       participant.participantId,

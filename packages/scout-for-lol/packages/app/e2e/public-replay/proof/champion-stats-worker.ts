@@ -75,6 +75,7 @@ const teamVision = z.array(
 );
 const reply = z.object({
   requestKeys: z.array(z.string()),
+  participants: z.array(z.unknown()).length(10).optional(),
   decodeChampionStats: z.boolean(),
   decodeChampionInventory: z.boolean(),
   decodeChampionExperience: z.boolean(),
@@ -183,6 +184,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionAnimation: boolean;
     animationModelCount: number | undefined;
     directChampionModels: boolean;
+    deriveParticipants: boolean;
     directInhibitors: boolean;
     directTurrets: boolean;
     directNexus: boolean;
@@ -223,6 +225,7 @@ export async function verifyDirectChampionStatsWorker(
   expect(actual.decodeChampionStats).toBe(directChampionStats);
   expect(actual.decodeChampionInventory).toBe(directChampionInventory);
   expect(actual.decodeChampionExperience).toBe(directChampionExperience);
+  expect(actual.participants !== undefined).toBe(fixture.deriveParticipants);
   const directChampionAnimationModels = animationModelCount !== undefined;
   const legacyAnimationCatalog =
     directChampionAnimation && !directChampionAnimationModels;
@@ -232,6 +235,7 @@ export async function verifyDirectChampionStatsWorker(
     championAnimationCatalog: legacyAnimationCatalog,
     championAnimationModelCatalog: directChampionAnimationModels,
     championModelCatalog: fixture.directChampionModels,
+    deriveParticipants: fixture.deriveParticipants,
     inhibitorCatalog: fixture.directInhibitors,
     turretCatalog: fixture.directTurrets,
     nexusCatalog: fixture.directNexus,

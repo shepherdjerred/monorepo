@@ -58,12 +58,62 @@ def configure_point_shape(fields, call, put, shape, _scratch):
     put(shape + 8, "3f", *(offset[lane] for lane in "XYZ"))
 
 
+def read_repeated_flash(original, inventory_path, stop_path):
+    inventory_sha256 = "75f6b56c4fd7bfbc7a08b50e004b1ff008264bf6951f1e7695a2931a2956bcf2"
+    inventory = json.loads(checked_bytes(inventory_path, inventory_sha256))
+    stops = json.loads(checked_bytes(
+        stop_path, "1a5325b1f52a5629d555ffecf13f413549530e1b8f2fd2d2d1723ddcd8dc45e8"
+    ))
+    for field in ("build", "protocol", "replaySha256"):
+        assert inventory[field] == original[field]
+    assert stops["replaySha256"] == original["replaySha256"]
+    assert stops["inventorySha256"] == inventory_sha256
+    assert not stops["matching"]
+
+    # Character resource resolver: Miss Fortune skin 21's E hit dirt.
+    entries = [
+        entry for entry in inventory["events"]
+        if entry["owner"] == 1073741897 and entry["resourceKey"] == 2132659164
+    ]
+    assert len(entries) == len({entry["handle"] for entry in entries}) == 28
+    assert stops["targetHandles"] == sorted(entry["handle"] for entry in entries)
+    assert len({entry["sequence"] for entry in entries}) == 14
+    assert stops["first"] == entries[0]["stamp"]
+    assert stops["last"] >= entries[-1]["stamp"] + 0.6500000357627869
+    placements = []
+    for entry in entries:
+        assert entry["parent"] == 0 and entry["status"] == "detached-placement-confirmed"
+        descriptor = entry["descriptor"]
+        assert descriptor["flags"] == 32 and descriptor["scaleRate"] == [1, 1]
+        placements.append({
+            "handle": entry["handle"],
+            "owner": entry["owner"],
+            "position": descriptor["positions"][0],
+            "flags": descriptor["flags"],
+            "scaleRate": descriptor["scaleRate"],
+            "timeSeconds": entry["stamp"],
+            "sequence": entry["sequence"],
+            "packetSha256": entry["packetSha256"],
+        })
+    by_handle = {placement["handle"]: placement for placement in placements}
+    for prior in original["placements"]:
+        assert by_handle[prior["handle"]] == {
+            **prior,
+            "timeSeconds": original["packet"]["time"],
+            "sequence": original["packet"]["sequence"],
+            "packetSha256": original["packet"]["payloadSha256"],
+        }
+    return placements
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("archive", "source_receipt", "typed_effect", "texture"):
         parser.add_argument(name, type=Path)
     parser.add_argument("--geometry", action="store_true")
     parser.add_argument("--component", choices=("flash", "maokai-sphere"), default="flash")
+    parser.add_argument("--repeat-flash-inventory", type=Path)
+    parser.add_argument("--repeat-flash-stop-window", type=Path)
     args = parser.parse_args()
     if not __debug__:
         raise RuntimeError("Run this probe with Python assertions enabled")
@@ -85,6 +135,16 @@ def main():
         effect, index, name, scale = "81229b71", 8, "Sphere_core", 1.25
         configure_shape = configure_point_shape
     original = json.loads(checked_bytes(args.source_receipt, source_sha))
+    repeated = args.repeat_flash_inventory is not None or args.repeat_flash_stop_window is not None
+    if repeated and (
+        args.component != "flash" or not args.geometry
+        or args.repeat_flash_inventory is None or args.repeat_flash_stop_window is None
+    ):
+        parser.error("Repeated Flash requires both original controls and Flash geometry")
+    placements = (
+        read_repeated_flash(original, args.repeat_flash_inventory, args.repeat_flash_stop_window)
+        if repeated else original["placements"]
+    )
     typed = json.loads(checked_bytes(args.typed_effect, typed_sha))
     texture_sha = original["emitter"]["textureSha256"]
     checked_bytes(args.texture, texture_sha)
@@ -97,7 +157,7 @@ def main():
     assert fields["3c6468f4"]["value"] == original["emitter"]["texture"]
 
     observations = []
-    for placement in original["placements"]:
+    for placement in placements:
         assert placement["flags"] == 32 and placement["scaleRate"] == [scale, 1]
         event = {"descriptor": {
             "positions": [placement["position"]],
@@ -129,6 +189,7 @@ def main():
         "originalUpdateRva": 0x1786280,
         "originalBirthHelperRva": 0x1789DF0,
         "observations": observations,
+        **({"repeatedPlacements": placements} if repeated else {}),
         "scope": {
             "suppliedUpdateCadence": True,
             "suppliedRandomSamples": True,

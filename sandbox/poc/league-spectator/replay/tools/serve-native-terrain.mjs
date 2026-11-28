@@ -74,6 +74,7 @@ const { positionals, values } = parseArgs({
     "champion-models": { type: "string" },
     "champion-catalog-sha256": { type: "string" },
     "champion-models-from-replay": { type: "boolean" },
+    "participants-from-replay": { type: "boolean" },
     "champion-animation-cues": { type: "string" },
     "champion-animation-cues-sha256": { type: "string" },
     "champion-animation-catalog": { type: "string" },
@@ -1399,6 +1400,11 @@ const replayBuffer = new Uint8Array(bytes).buffer;
 const replay = openReplay(replayBuffer);
 const currentBuild = replay.build === currentTerrainPositionBuild;
 const decodeChampionModels = values["champion-models-from-replay"] === true;
+const decodeParticipants = values["participants-from-replay"] === true;
+assert.ok(
+  !decodeParticipants || decodeChampionModels,
+  "Replay-derived participants require --champion-models-from-replay",
+);
 assert.ok(
   !decodeChampionModels ||
     (currentBuild &&
@@ -2925,7 +2931,15 @@ const routes = new Map([
   ["/three.core.js", [Bun.file(threeCore), "text/javascript; charset=utf-8"]],
   ["/map.json", [metadata, "application/json"]],
   ["/map.bin", [mesh, "application/octet-stream"]],
-  ["/scene.json", [JSON.stringify(scene), "application/json"]],
+  [
+    "/scene.json",
+    [
+      JSON.stringify(
+        decodeParticipants ? { ...scene, participants: [] } : scene,
+      ),
+      "application/json",
+    ],
+  ],
 ]);
 if (navgridBytes !== undefined) {
   routes.set("/heights.bin", [navgridBytes, "application/octet-stream"]);

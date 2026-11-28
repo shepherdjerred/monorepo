@@ -6,6 +6,7 @@ import {
 } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-lane-minion-health.mjs";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
+import { bindNativeSceneParticipants } from "./native-position-participants.mjs";
 import { createCurrentChampionAnimationCueAccumulator } from "./native-terrain-animation-cue-reader.mjs";
 import {
   indexChampionAnimationActions,
@@ -315,6 +316,7 @@ async function prepareMotion({
   replayBytes,
   decoderBytes,
   allowCurrentBuild = false,
+  deriveParticipants,
   decodeChampionStats,
   decodePlayerState,
   decodeChampionInventory,
@@ -367,6 +369,13 @@ async function prepareMotion({
   )
     throw Error(
       "Replay-derived champion models require the reviewed current build.",
+    );
+  if (
+    deriveParticipants !== undefined &&
+    (deriveParticipants !== true || championModelCatalog === undefined)
+  )
+    throw Error(
+      "Replay-derived participants require the exact archive model catalog.",
     );
   if (
     decodePlayerState !== undefined &&
@@ -517,6 +526,11 @@ async function prepareMotion({
     ...replayPreparation,
     observations: { ...replayPreparation.observations, binding },
   };
+  const participants =
+    deriveParticipants === true
+      ? bindNativeSceneParticipants(identity, prepared.observations)
+          .participants
+      : undefined;
   const recordedPlayerState =
     decodePlayerState === true
       ? readCurrentRecordedPlayerState(
@@ -774,6 +788,7 @@ async function prepareMotion({
     : undefined;
   return {
     type: "ready",
+    ...(participants === undefined ? {} : { participants }),
     frames: keyframes.frames,
     motion,
     coverage,

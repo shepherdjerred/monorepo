@@ -30,6 +30,7 @@ STACK = STOP + 0xF008
 HEAP = STOP + 0x10000
 EMPTY = bytes(0x100000)
 MAP_BOUNDS_XZ = (-1.1048965454101562, 32.75579833984375, 14718.400390625, 14792.2109375)
+BLOOM_TERRAIN_SHA256 = "b3e29e66817b13c4104f68e2a33f7ec2d65eab8f51f0bd01f8b48dd1f0f73cf4"
 ALLOCATORS = {0x14A0300, 0x14A2030, 0x14C5B20}
 
 
@@ -42,8 +43,9 @@ def swap(value):
 
 
 class GroupedReader:
-    def __init__(self, image):
+    def __init__(self, image, map_bounds_xz=MAP_BOUNDS_XZ):
         self.image = image
+        self.map_bounds_xz = map_bounds_xz
         self.machine = Uc(UC_ARCH_X86, UC_MODE_64)
         self.machine.mem_map(image.base, len(image.image))
         self.machine.mem_write(image.base, bytes(image.image))
@@ -181,7 +183,7 @@ class GroupedReader:
         return int.from_bytes(self.machine.mem_read(address, 4).translate(table), "little")
 
     def placement(self, group, entry, handle, owner, resource_key):
-        for offset, value in zip((0xBC, 0xC4, 0xDC, 0xE4), MAP_BOUNDS_XZ, strict=True):
+        for offset, value in zip((0xBC, 0xC4, 0xDC, 0xE4), self.map_bounds_xz, strict=True):
             self.machine.mem_write(GRID + offset, struct.pack("<f", value))
         self.machine.reg_write(r.UC_X86_REG_R12, GRID)
         self.call(0x16DB78C, end=self.image.base + 0x16DB7E9)
@@ -216,6 +218,7 @@ def main():
         help="Inventory every creation entry within a half-open replay-clock interval",
     )
     parser.add_argument("--corpus-sha256", help="Bind an inventory to a different replay packet corpus")
+    parser.add_argument("--bloom-terrain-receipt", type=Path, help="Use the recorded Bloom terrain bounds for a pinned inventory")
     args = parser.parse_args()
     corpus_bytes = args.packets.read_bytes()
     if args.corpus_sha256 is not None:
@@ -236,7 +239,23 @@ def main():
         raise ValueError("Unsupported recorded particle-create corpus identity")
     if args.corpus_sha256 is None and (replay_digest, len(packets)) != (REPLAY_SHA256, PACKET_COUNT):
         raise ValueError("Replay identity differs from the exact roster binding")
-    reader = GroupedReader(read_replication_image(args.archive.read_bytes(), CURRENT_BUILD))
+    bounds = MAP_BOUNDS_XZ
+    if args.bloom_terrain_receipt is not None:
+        if args.inventory is None or args.corpus_sha256 is None:
+            parser.error("Bloom terrain requires a pinned inventory corpus")
+        terrain_bytes = args.bloom_terrain_receipt.read_bytes()
+        if sha256(terrain_bytes).hexdigest() != BLOOM_TERRAIN_SHA256:
+            raise ValueError("Recorded Bloom terrain receipt differs")
+        terrain = json.loads(terrain_bytes)
+        if (
+            (terrain["configuredMapId"], terrain["mode"], terrain["configurationMapSkin"])
+            != (12, "KIWI", "Bloom")
+            or terrain["replaySha256"] != replay_digest
+        ):
+            raise ValueError("Recorded particle-create corpus does not belong to Bloom terrain")
+        navigation = terrain["navigation"]
+        bounds = tuple(navigation[key][lane] for key in ("min", "max") for lane in (0, 2))
+    reader = GroupedReader(read_replication_image(args.archive.read_bytes(), CURRENT_BUILD), bounds)
     if args.inventory is not None:
         start, end = args.inventory
         if not (math.isfinite(start) and math.isfinite(end) and 0 <= start < end):

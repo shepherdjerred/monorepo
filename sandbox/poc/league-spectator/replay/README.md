@@ -478,6 +478,12 @@ reads the ten exact opening skin selectors. The renderer requests the selected
 GLBs by digest and checks their bindings against any authored animation catalog
 before drawing. The rest of the private package is still tied to the saved replay.
 
+Add `--participants-from-replay` with `--champion-models-from-replay` to
+omit match participant IDs and champion names from the scene. The existing
+worker pass binds the original hero creation and team packets to the replay
+footer. The resulting roster supplies camera, vision, and item inventory.
+The package still pins its source replay digest and duration.
+
 To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose
@@ -1487,6 +1493,16 @@ with `--component maokai-sphere --geometry`, then pass its `source`, pinned
 `geometry`, `material`, and `texture` under `maokaiSphere` in the author
 inputs. Other emitters and the original replay random state require their own
 evidence.
+
+To collect repeated casts of the same Flash emitter during the opening fight,
+extract the original creation inventory for `82.7 84.4` with
+`extract-recorded-heimer-impacts.py --inventory` and `--bloom-terrain-receipt`
+pointing to the pinned Bloom terrain receipt. Keep the raw stop-window receipt
+through the last sampled lifetime. Give the Flash geometry probe both receipts
+as `--repeat-flash-inventory` and `--repeat-flash-stop-window` with `--geometry`.
+Set `repeatOpeningFlash` to `true` in the author inputs while retaining the
+original two-placement source receipt. The author requires the native inventory
+and geometry pins for all 28 placements.
 
 To include recorded champion animation, prepare clips using the exact replay
 and the archived executable. Use the source and ordinal model manifests bound

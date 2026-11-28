@@ -405,15 +405,16 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     replay: async () => replay.slice(0),
     worker: () => resources.worker("replay-motion-worker.mjs"),
   });
-  const inventoryInput =
-    scene.workerMotion.decodeChampionInventory === true
-      ? motion.then(({ scene }) => scene.championInventory)
-      : Promise.resolve(scene.championInventory);
+  const inventoryScene =
+    scene.workerMotion.decodeChampionInventory === true ||
+    scene.participants.length === 0
+      ? motion.then(({ scene }) => scene)
+      : Promise.resolve(scene);
   const [loaded, inventory] = await Promise.all([
     motion,
-    inventoryInput.then((data) =>
+    inventoryScene.then((scene) =>
       loadRecordedInventory(
-        data,
+        scene.championInventory,
         scene.participants.map(({ participantId }) => participantId),
         scene.identity.durationMilliseconds,
         (path) => resources.objectUrl(path, "image/png"),

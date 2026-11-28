@@ -16,6 +16,13 @@ const flash = {
   birth: [0.5, Math.fround(0.15)],
   firstEmptyAge: 0.6500000357627869,
 };
+const repeatedFlash = {
+  ...flash,
+  placementCount: 28,
+  repeated: true,
+  geometrySha256:
+    "921252fda613d6c74045592264ab8d77955ca9726dfe0b145c5c9d2473daf0d7",
+};
 const maokaiSphere = {
   sourceSha256:
     "2c9bd39530461371932a7c5452cb0c29e46141991b9aa73666b33d7e520d3ee6",
@@ -52,12 +59,17 @@ assert.ok(
   "Supply a private impact comparison input JSON file",
 );
 const inputs = JSON.parse(await readFile(inputPath));
+assert.ok(
+  inputs.repeatOpeningFlash === undefined || inputs.repeatOpeningFlash === true,
+);
 const output = resolve(inputs.output);
 const cache = await realpath(".cache");
 const parent = relative(cache, await realpath(dirname(output)));
 assert.ok(!isAbsolute(parent) && parent.split(/[\\/]/u, 1)[0] !== "..");
 async function prepareImpact(inputs, profile) {
   assert.match(inputs.geometry.sha256, /^[a-f0-9]{64}$/u);
+  if (profile.geometrySha256 !== undefined)
+    assert.equal(inputs.geometry.sha256, profile.geometrySha256);
 
   const [source, proof, materialBytes, texture] = await Promise.all([
     pinned(inputs.source, profile.sourceSha256).then(JSON.parse),
@@ -97,10 +109,37 @@ async function prepareImpact(inputs, profile) {
   assert.equal(proof.scope.suppliedRandomSamples, true);
   assert.equal(proof.scope.geometryObserved, true);
   assert.equal(proof.scope.browserDrawSubmitted, false);
-  assert.equal(source.placements.length, profile.placementCount);
+  assert.equal(
+    proof.repeatedPlacements !== undefined,
+    profile.repeated === true,
+  );
+  const placements = profile.repeated
+    ? proof.repeatedPlacements
+    : source.placements;
+  assert.equal(placements.length, profile.placementCount);
+  assert.equal(
+    new Set(placements.map(({ handle }) => handle)).size,
+    placements.length,
+  );
+  if (profile.repeated) {
+    assert.equal(new Set(placements.map(({ sequence }) => sequence)).size, 14);
+    for (const prior of source.placements) {
+      assert.deepEqual(
+        placements.find(({ handle }) => handle === prior.handle),
+        {
+          ...prior,
+          timeSeconds: source.packet.time,
+          sequence: source.packet.sequence,
+          packetSha256: source.packet.payloadSha256,
+        },
+      );
+    }
+  }
   assert.equal(proof.observations.length, profile.placementCount * 8);
 
-  const paths = source.placements.map(({ handle }) => {
+  const paths = placements.map(({ handle, timeSeconds }) => {
+    const time = profile.repeated ? timeSeconds : source.packet.time;
+    assert.ok(Number.isFinite(time) && time >= 0);
     const controls = proof.observations.filter((row) => row.handle === handle);
     assert.equal(controls.length, 8);
     for (const cadence of [60, 120]) {
@@ -131,8 +170,8 @@ async function prepareImpact(inputs, profile) {
     const sample = controls.find(({ cadence }) => cadence === 120);
     return {
       handle,
-      start: source.packet.time + sample.births[0][0],
-      end: source.packet.time + sample.firstEmptyFloat32Age,
+      start: time + sample.births[0][0],
+      end: time + sample.firstEmptyFloat32Age,
       samples: sample.geometry.map(([age, [indices, vertices]]) => ({
         age: age - sample.births[0][0],
         indices,
@@ -152,7 +191,7 @@ async function prepareImpact(inputs, profile) {
 }
 
 const [primary, secondary, palette, vertex, fragment] = await Promise.all([
-  prepareImpact(inputs, flash),
+  prepareImpact(inputs, inputs.repeatOpeningFlash ? repeatedFlash : flash),
   inputs.maokaiSphere === undefined
     ? undefined
     : prepareImpact(inputs.maokaiSphere, maokaiSphere),
@@ -172,6 +211,24 @@ const files = new Map([
 ]);
 if (secondary !== undefined)
   files.set(secondary.worldImpact.texture, secondary.texture);
+const originalFlashHandles = new Set(
+  primary.source.placements.map(({ handle }) => handle),
+);
+const worldImpact = {
+  ...primary.worldImpact,
+  paths: primary.worldImpact.paths.filter(({ handle }) =>
+    originalFlashHandles.has(handle),
+  ),
+};
+const additionalWorldImpacts = [];
+if (inputs.repeatOpeningFlash)
+  additionalWorldImpacts.push({
+    ...primary.worldImpact,
+    paths: primary.worldImpact.paths.filter(
+      ({ handle }) => !originalFlashHandles.has(handle),
+    ),
+  });
+if (secondary !== undefined) additionalWorldImpacts.push(secondary.worldImpact);
 const track = {
   schema: 8,
   kind: "recorded-native-terrain-particles",
@@ -185,10 +242,8 @@ const track = {
   },
   effects: [],
   families: [],
-  worldImpact: primary.worldImpact,
-  ...(secondary === undefined
-    ? {}
-    : { additionalWorldImpacts: [secondary.worldImpact] }),
+  worldImpact,
+  ...(additionalWorldImpacts.length === 0 ? {} : { additionalWorldImpacts }),
   textures: {
     files: [...files.keys()].filter((path) => path.endsWith(".png")),
   },

@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import path from "node:path";
+import { z } from "zod";
 import {
   installRecordedDrawProbe,
   readRecordedDraw,
@@ -24,6 +26,64 @@ import {
 
 const mayhemReplaySha256 =
   "4bb0f94d3ceb19df374c0937a9e59dcc866a5b92e4727b81c6c7d5b3aca970b7";
+
+const worldImpact = z.object({
+  texture: z.string(),
+  paths: z.array(z.unknown()),
+});
+
+async function verifyMayhemImpacts(
+  page: Page,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+) {
+  const leaves = new Set(fixture.paths.values());
+  if (!leaves.has("recorded-particles.json")) return;
+  expect(fixture.particlePreview).toBeUndefined();
+  const track = z
+    .object({
+      worldImpact,
+      additionalWorldImpacts: z.array(worldImpact).optional(),
+    })
+    .parse(
+      await Bun.file(path.join(fixture.root, "recorded-particles.json")).json(),
+    );
+  const flashPlacements = [
+    track.worldImpact,
+    ...(track.additionalWorldImpacts ?? []),
+  ]
+    .filter(({ texture }) => texture === track.worldImpact.texture)
+    .reduce((count, { paths }) => count + paths.length, 0);
+  expect([2, 28]).toContain(flashPlacements);
+  const flash =
+    flashPlacements === 28
+      ? ([
+          [83.2, 0],
+          [83.4, 2],
+          [84.7, 2],
+          [84.8, 2],
+          [85.1, 0],
+        ] as const)
+      : ([
+          [84.7, 0],
+          [84.8, 2],
+          [85, 0],
+        ] as const);
+  const maokai = leaves.has(
+    "recorded-particles/ed32f9d687e5b8932f4dd361d4bb8e0966ada34195d2c3cb7846f1867660b1ae.png",
+  )
+    ? ([
+        [81.1, 0],
+        [81.3, 1],
+        [82.4, 0],
+      ] as const)
+    : [];
+  for (const [time, draws] of [...flash, ...maokai]) {
+    await seek(page, time);
+    const frame = await readRecordedDraw(page);
+    expect(frame.recordedParticleDraws).toBe(draws);
+    expect(frame.recordedDepthDisabledParticleDraws).toBe(0);
+  }
+}
 
 test("signed-out Bloom replay plays the opening fight at 1× and restores a share", async ({
   page,
@@ -51,8 +111,8 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
   const slider = page.getByRole("slider", { name: "Replay time" });
   const camera = page.getByRole("combobox", { name: "Camera" });
   const score = page.getByRole("group", { name: "Replay team score" });
-  const laneModels = [...fixture.paths.values()].filter((path) =>
-    path.startsWith("world-unit-models/"),
+  const laneModels = [...fixture.paths.values()].filter((asset) =>
+    asset.startsWith("world-unit-models/"),
   );
   const laneMinions = page.locator("[data-map-actor=minion]");
   await expect(play).toBeEnabled();
@@ -99,36 +159,7 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
       }),
     ),
   ).not.toBe(openingPixels);
-  if ([...fixture.paths.values()].includes("recorded-particles.json")) {
-    // The supplied-random comparison is private and has no particle product badge.
-    expect(fixture.particlePreview).toBeUndefined();
-    for (const [time, draws] of [
-      [84.7, 0],
-      [84.8, 2],
-      [85, 0],
-    ] as const) {
-      await seek(page, time);
-      const frame = await readRecordedDraw(page);
-      expect(frame.recordedParticleDraws).toBe(draws);
-      expect(frame.recordedDepthDisabledParticleDraws).toBe(0);
-    }
-    if (
-      [...fixture.paths.values()].includes(
-        "recorded-particles/ed32f9d687e5b8932f4dd361d4bb8e0966ada34195d2c3cb7846f1867660b1ae.png",
-      )
-    ) {
-      for (const [time, draws] of [
-        [81.1, 0],
-        [81.3, 1],
-        [82.4, 0],
-      ] as const) {
-        await seek(page, time);
-        const frame = await readRecordedDraw(page);
-        expect(frame.recordedParticleDraws).toBe(draws);
-        expect(frame.recordedDepthDisabledParticleDraws).toBe(0);
-      }
-    }
-  }
+  await verifyMayhemImpacts(page, fixture);
   await seek(page, 60);
   expect(await readRecordedDraw(page)).toMatchObject({
     actorOrigins: opening.actorOrigins,

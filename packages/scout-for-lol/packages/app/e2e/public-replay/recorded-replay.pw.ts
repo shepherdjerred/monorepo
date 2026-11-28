@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import path from "node:path";
+import { z } from "zod";
 import {
   readFooterScores,
   verifyFooterRoster,
@@ -42,6 +44,13 @@ import {
   verifyRecordedStructures,
   verifyRecordedWorldActors,
 } from "./recorded-world-assertions.ts";
+
+async function sceneDerivesRoster(root: string) {
+  const { participants } = z
+    .object({ participants: z.array(z.unknown()) })
+    .parse(await Bun.file(path.join(root, "scene.json")).json());
+  return participants.length === 0;
+}
 
 function verifyCameraProjection(
   draw: Awaited<ReturnType<typeof readRecordedDraw>>,
@@ -160,7 +169,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   await expect(score.getByText(result.winner)).toHaveCount(0);
   const { cueCount, terrainVisibility } = await verifyDirectChampionStatsWorker(
     page,
-    fixture,
+    { ...fixture, deriveParticipants: await sceneDerivesRoster(fixture.root) },
   );
   const terrain = { ...fixture, terrainVisibility };
   const terrainRanges = await readRecordedTerrainRanges(terrain);
