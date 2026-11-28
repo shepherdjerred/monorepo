@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, type CSSProperties } from "react";
 import { paletteColor } from "./palette.ts";
 import {
   noteBounds,
@@ -7,6 +7,13 @@ import {
   type Note,
   type NoteModel,
 } from "./shapes.ts";
+
+/** The title's size reaches the stylesheet as a custom property, not inline typography. */
+function titleStyle(
+  size: keyof typeof TITLE_FONT,
+): CSSProperties & { "--ar-title-font": string } {
+  return { "--ar-title-font": `${String(TITLE_FONT[size])}px` };
+}
 
 const ARROW_HEAD = 16;
 
@@ -113,10 +120,7 @@ function Body({
     }
     case "title":
       return (
-        <div
-          className="ar-annot-title"
-          style={{ fontSize: TITLE_FONT[note.size] }}
-        >
+        <div className="ar-annot-title" style={titleStyle(note.size)}>
           {editing ? "" : note.text}
         </div>
       );

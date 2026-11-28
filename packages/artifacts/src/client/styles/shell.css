@@ -16,7 +16,7 @@
   border: 1px solid var(--ui-line);
   border-radius: 14px;
   background: var(--ui-panel);
-  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
+  box-shadow: var(--ui-shadow-menu);
 }
 .ar-fnav-links a {
   display: inline-block;
@@ -90,7 +90,6 @@
     right: 12px;
     max-width: none;
   }
-  .ar-fnav .ui-workspace-label,
   .ar-fnav-links,
   .ar-fnav-actions,
   .ar-fnav-end {
@@ -119,7 +118,7 @@
   border: 1px solid var(--ui-line);
   border-radius: 14px;
   background: var(--ui-panel);
-  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
+  box-shadow: var(--ui-shadow-menu);
 }
 .ar-panel-head {
   display: flex;
@@ -153,7 +152,7 @@
   border: 1px solid var(--ui-line);
   border-radius: 20px;
   background: var(--ui-panel);
-  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
+  box-shadow: var(--ui-shadow-menu);
   color: var(--ui-ink);
   cursor: pointer;
 }
