@@ -13,11 +13,14 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import {
+  LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
   LAKE_SCHEMA_EPOCH,
   LAKE_TABLE_COLUMNS,
   lakeSchemaFingerprint,
   lakeSchemaFingerprintOf,
+  lakeSchemaStatus,
 } from "#src/report-lake/schema.ts";
+import { LANE_RESULT_LAKE_COLUMNS } from "#src/report-lake/lane-results/lane-result-columns.ts";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 
 function tableSignature(
@@ -62,6 +65,7 @@ describe("lakeSchemaFingerprint", () => {
         TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
       ),
       tableSignature("timeline_coverage", TIMELINE_COVERAGE_LAKE_COLUMNS),
+      tableSignature("lane_results", LANE_RESULT_LAKE_COLUMNS),
     ].join("\n");
     const expected = new Bun.CryptoHasher("sha256")
       .update(`${independentSchema}\n`)
@@ -103,8 +107,8 @@ describe("lakeSchemaFingerprint", () => {
       epoch: LAKE_SCHEMA_EPOCH,
       fingerprint: lakeSchemaFingerprint(),
     }).toEqual({
-      epoch: 2,
-      fingerprint: "0d22d548965ee58c",
+      epoch: 3,
+      fingerprint: "e767138ef6f2cf23",
     });
 
     const SpecializedSchema = z.object({
@@ -146,6 +150,35 @@ describe("lakeSchemaFingerprint", () => {
           "/helm/parameters/scout.reportLakeSchemaEpoch",
         );
       }
+    }
+  });
+});
+
+describe("the declared predecessor schema", () => {
+  test("is exactly this schema without the lane_results table", () => {
+    const { lane_results: _added, ...predecessor } = LAKE_TABLE_COLUMNS;
+
+    expect(lakeSchemaFingerprintOf(predecessor)).toBe(
+      LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+    );
+    expect(LAKE_PREDECESSOR_SCHEMA_FINGERPRINT).not.toBe(
+      lakeSchemaFingerprint(),
+    );
+  });
+
+  test("is the only other fingerprint a published build may carry", () => {
+    expect(lakeSchemaStatus(lakeSchemaFingerprint())).toBe("current");
+    expect(lakeSchemaStatus(LAKE_PREDECESSOR_SCHEMA_FINGERPRINT)).toBe(
+      "predecessor",
+    );
+    // e086a72a1a8176aa is the retired participant-kind predecessor.
+    for (const other of [
+      "e086a72a1a8176aa",
+      "c0d6dcb0944686f1",
+      "1a45b23ce7f086cb",
+      undefined,
+    ]) {
+      expect(lakeSchemaStatus(other)).toBe("unknown");
     }
   });
 });

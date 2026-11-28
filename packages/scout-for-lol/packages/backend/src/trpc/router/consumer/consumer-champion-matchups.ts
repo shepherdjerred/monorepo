@@ -5,7 +5,7 @@ import type {
   LakeMatchupGame,
   LakeMatchupParticipant,
 } from "#src/reports/duckdb/consumer/pages/champion-matchup-reads.ts";
-import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+import { buildRoleMatchups } from "#src/reports/lanes/role-matchups.ts";
 import type { ChampionPagePerson } from "#src/trpc/router/consumer/consumer-champion-people.ts";
 
 /** Games against one opponent, with the lane result of those that have a timeline. */

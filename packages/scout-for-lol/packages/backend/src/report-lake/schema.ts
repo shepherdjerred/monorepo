@@ -16,6 +16,7 @@ import {
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS as importedTimelineParticipantFrameLakeColumns,
 } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
+import { LANE_RESULT_LAKE_COLUMNS } from "#src/report-lake/lane-results/lane-result-columns.ts";
 
 const ACCOUNT_LAKE_COLUMNS = importedAccountLakeColumns;
 const COMPETITION_RANK_HISTORY_LAKE_COLUMNS =
@@ -121,7 +122,7 @@ export function duckDbEmptySelect(
  * an older image that refuses to boot against the upgraded on-PVC lake
  * (`AI-658`).
  */
-export const LAKE_SCHEMA_EPOCH = 2;
+export const LAKE_SCHEMA_EPOCH = 3;
 
 export function lakeSchemaFingerprint(): string {
   return lakeSchemaFingerprintOf(LAKE_TABLE_COLUMNS);
@@ -144,6 +145,7 @@ export const LAKE_TABLE_COLUMNS: LakeTableColumns = {
   timeline_event_participants: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
   timeline_participant_frames: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
   timeline_coverage: TIMELINE_COVERAGE_LAKE_COLUMNS,
+  lane_results: LANE_RESULT_LAKE_COLUMNS,
 };
 
 /** The fingerprint of a set of table column maps (see lakeSchemaFingerprint). */
@@ -157,4 +159,30 @@ export function lakeSchemaFingerprintOf(tables: LakeTableColumns): string {
     hasher.update(`${table}=${signature}\n`);
   }
   return hasher.digest("hex").slice(0, 16);
+}
+
+/**
+ * The one schema this checkout migrates from: the lake before the derived
+ * `lane_results` table existed. A fold that finds it published runs a full
+ * rebuild instead, so the table is derived for every match at once, and that
+ * rebuild accepts it as the build it replaces.
+ *
+ * This is a one-time allowance, not a bridge: `buildLaneResultsSource`
+ * (`reports/duckdb/lake/lane-results-source.ts`) answers "unavailable" for any build not at the
+ * current fingerprint, and no reader switches to the table until Beta and Prod
+ * have both published the rebuild. The follow-up deletes this constant and
+ * that gate together.
+ */
+export const LAKE_PREDECESSOR_SCHEMA_FINGERPRINT = "0d22d548965ee58c";
+
+export type LakeSchemaStatus = "current" | "predecessor" | "unknown";
+
+/** How a published build's recorded fingerprint relates to this checkout. */
+export function lakeSchemaStatus(
+  fingerprint: string | undefined,
+): LakeSchemaStatus {
+  if (fingerprint === lakeSchemaFingerprint()) return "current";
+  return fingerprint === LAKE_PREDECESSOR_SCHEMA_FINGERPRINT
+    ? "predecessor"
+    : "unknown";
 }

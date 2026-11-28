@@ -1,7 +1,7 @@
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { isArenaQueueOrMode } from "@scout-for-lol/data";
 import type { GuildMatchRow } from "#src/reports/duckdb/community/community-lake.ts";
-import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
+import { isStandardRiftGame } from "#src/reports/lanes/standard-rift.ts";
 
 export type CommunityPlayer = {
   id: number;

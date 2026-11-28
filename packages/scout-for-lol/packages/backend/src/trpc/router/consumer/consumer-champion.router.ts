@@ -28,7 +28,7 @@ import {
   QUALIFYING_GAMES,
 } from "#src/trpc/router/consumer/consumer-champion-index.ts";
 import { buildChampionMatchups } from "#src/trpc/router/consumer/consumer-champion-matchups.ts";
-import { LANE_DELTA_CHECKPOINT_MS } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+import { LANE_DELTA_CHECKPOINT_MS } from "#src/reports/lanes/role-matchups.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 import { enqueueChampionMasteryRefresh } from "#src/temporal/work-store.ts";
 import {

@@ -724,30 +724,35 @@
         "role": "top",
         "blueParticipantId": 1,
         "redParticipantId": 6,
+        "checkpoint": "missing",
         "at15": null
       },
       {
         "role": "jungle",
         "blueParticipantId": 2,
         "redParticipantId": 7,
+        "checkpoint": "missing",
         "at15": null
       },
       {
         "role": "middle",
         "blueParticipantId": 3,
         "redParticipantId": 8,
+        "checkpoint": "missing",
         "at15": null
       },
       {
         "role": "adc",
         "blueParticipantId": 4,
         "redParticipantId": 9,
+        "checkpoint": "missing",
         "at15": null
       },
       {
         "role": "support",
         "blueParticipantId": 5,
         "redParticipantId": 10,
+        "checkpoint": "missing",
         "at15": null
       }
     ]

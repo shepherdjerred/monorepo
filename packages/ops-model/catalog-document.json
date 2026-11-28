@@ -2784,7 +2784,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "scout-beta/4",
-      "configurationRevisionId": "scout-beta/2"
+      "configurationRevisionId": "scout-beta/3"
     },
     {
       "id": "scout-for-lol/prod",
@@ -2793,7 +2793,7 @@
       "automatic": true,
       "promotionSourceEnvironmentId": "scout-for-lol/beta",
       "recipeRevisionId": "scout-prod/3",
-      "configurationRevisionId": "scout-prod/2"
+      "configurationRevisionId": "scout-prod/3"
     },
     {
       "id": "birmel/prod",

@@ -3,7 +3,7 @@ import type {
   LakeMatchParticipantRow,
   LaneDeltaFrame,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
-import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
+import { isStandardRiftGame } from "#src/reports/lanes/standard-rift.ts";
 
 /** The participant columns pairing roles reads. */
 export type RoleMatchupRow = Pick<
@@ -26,6 +26,8 @@ export type RoleMatchup = {
   role: Lane;
   blueParticipantId: number;
   redParticipantId: number;
+  checkpoint: RoleCheckpoint;
+  /** Set only for a `complete` checkpoint. */
   at15: {
     timestampMs: number;
     goldDelta: number;
@@ -33,6 +35,20 @@ export type RoleMatchup = {
     xpDelta: number;
   } | null;
 };
+
+/** The participant columns a role pairing reads. */
+export type RoleMatchupParticipant = Pick<
+  LakeMatchParticipantRow,
+  | "match_id"
+  | "participant_id"
+  | "team_id"
+  | "team_position"
+  | "queue"
+  | "queue_id"
+  | "game_mode"
+  | "game_type"
+  | "map_id"
+>;
 
 /** A role pairing needs timeline frames, which are keyed by participant id. */
 function requiredParticipantId(row: RoleMatchupRow): number {
@@ -45,7 +61,7 @@ function requiredParticipantId(row: RoleMatchupRow): number {
 }
 
 function uniqueRoleParticipant(
-  rows: RoleMatchupRow[],
+  rows: readonly RoleMatchupRow[],
   teamId: number,
   role: Lane,
 ): RoleMatchupRow | null {
@@ -56,13 +72,36 @@ function uniqueRoleParticipant(
 }
 
 /**
+ * How a match's 15:00 checkpoint stands: `missing` when no frame falls in
+ * [15:00, 16:00) (the game ended first, or the frame is absent), `incomplete`
+ * when that frame omits one or more participants, else `complete`.
+ *
+ * An incomplete frame is Riot boundary data (a timeline's `participantFrames`
+ * is an open record), so it is a stated state with no lane result rather than
+ * an error: one such match must not fail the match page or a lake fold.
+ */
+export type RoleCheckpoint = "complete" | "missing" | "incomplete";
+
+function checkpointState(
+  rows: readonly RoleMatchupParticipant[],
+  framesByParticipant: ReadonlyMap<number, LaneDeltaFrame>,
+): RoleCheckpoint {
+  if (framesByParticipant.size === 0) return "missing";
+  return rows.every((row) =>
+    framesByParticipant.has(requiredParticipantId(row)),
+  )
+    ? "complete"
+    : "incomplete";
+}
+
+/**
  * `frames` are the participants' frames at the 15:00 checkpoint
- * (`fetchTimelineCheckpointFrames`). No frame means the game ended first or the
- * frame is missing, so the pairing carries no lane result.
+ * (`fetchTimelineCheckpointFrames`). Only a `complete` checkpoint gives the
+ * pairing a lane result.
  */
 export function buildRoleMatchups(options: {
-  rows: RoleMatchupRow[];
-  frames: LaneDeltaFrame[];
+  rows: readonly RoleMatchupRow[];
+  frames: readonly LaneDeltaFrame[];
 }): RoleMatchup[] | null {
   if (options.rows[0] === undefined || !isStandardRiftGame(options.rows[0])) {
     return null;
@@ -74,39 +113,38 @@ export function buildRoleMatchups(options: {
   if (options.rows.length !== 10 || blue.length !== 5 || red.length !== 5) {
     return null;
   }
-  const hasAt15 = options.frames.length > 0;
   const framesByParticipant = new Map(
     options.frames.map((frame) => [frame.participant_id, frame] as const),
   );
+  const checkpoint = checkpointState(options.rows, framesByParticipant);
   return LANE_ORDER.map((role) => {
     const blueParticipant = uniqueRoleParticipant(options.rows, 100, role);
     const redParticipant = uniqueRoleParticipant(options.rows, 200, role);
     if (blueParticipant === null || redParticipant === null) {
       return null;
     }
-    if (!hasAt15) {
+    const blueParticipantId = requiredParticipantId(blueParticipant);
+    const redParticipantId = requiredParticipantId(redParticipant);
+    const blueFrame = framesByParticipant.get(blueParticipantId);
+    const redFrame = framesByParticipant.get(redParticipantId);
+    if (
+      checkpoint !== "complete" ||
+      blueFrame === undefined ||
+      redFrame === undefined
+    ) {
       return {
         role,
-        blueParticipantId: requiredParticipantId(blueParticipant),
-        redParticipantId: requiredParticipantId(redParticipant),
+        blueParticipantId,
+        redParticipantId,
+        checkpoint,
         at15: null,
       };
     }
-    const blueFrame = framesByParticipant.get(
-      requiredParticipantId(blueParticipant),
-    );
-    const redFrame = framesByParticipant.get(
-      requiredParticipantId(redParticipant),
-    );
-    if (blueFrame === undefined || redFrame === undefined) {
-      throw new Error(
-        `Complete timeline for ${blueParticipant.match_id} is missing a 15-minute lane frame`,
-      );
-    }
     return {
       role,
-      blueParticipantId: requiredParticipantId(blueParticipant),
-      redParticipantId: requiredParticipantId(redParticipant),
+      blueParticipantId,
+      redParticipantId,
+      checkpoint,
       at15: {
         timestampMs: blueFrame.frame_timestamp_ms,
         goldDelta: blueFrame.total_gold - redFrame.total_gold,

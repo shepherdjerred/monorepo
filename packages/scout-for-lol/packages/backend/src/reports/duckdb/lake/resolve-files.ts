@@ -11,7 +11,13 @@ import {
   type CrawlLakeFiles,
 } from "#src/reports/duckdb/lake/crawl-files.ts";
 import { loadCrawlTombstones } from "#src/reports/duckdb/lake/crawl-tombstones.ts";
-import type { LakeFiles } from "#src/reports/duckdb/lake/files.ts";
+import type {
+  LakeFiles,
+  LaneResultsFiles,
+} from "#src/reports/duckdb/lake/files.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
+import { LANE_RESULTS_TABLE } from "#src/report-lake/lane-results/lane-result-columns.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 
 /**
  * Which files one report-lake query reads: the published build's Parquet,
@@ -81,6 +87,7 @@ export async function resolveLakeFiles(
       timelineParticipantFramesStaging,
       timelineCoverageParquet: [],
       timelineCoverageStaging,
+      laneResults: { status: "unavailable" },
       crawl: NO_CRAWL_LAKE_FILES,
       crawlTombstones: [],
     };
@@ -106,6 +113,7 @@ export async function resolveLakeFiles(
     globParquet(buildDir, "timeline_participant_frames"),
     globParquet(buildDir, "timeline_coverage"),
   ]);
+  const laneResults = await resolveLaneResultsFiles(buildDir);
   const accountsPath = path.join(buildDir, "accounts", "accounts.parquet");
   const accountsParquet = (await Bun.file(accountsPath).exists())
     ? accountsPath
@@ -143,8 +151,25 @@ export async function resolveLakeFiles(
     timelineParticipantFramesStaging,
     timelineCoverageParquet,
     timelineCoverageStaging,
+    laneResults,
     crawl,
     crawlTombstones,
+  };
+}
+
+/**
+ * Only a build written at the current fingerprint derived `lane_results`; the
+ * migration's predecessor build has none until its rebuild publishes.
+ */
+async function resolveLaneResultsFiles(
+  buildDir: string,
+): Promise<LaneResultsFiles> {
+  if ((await readBuildFingerprint(buildDir)) !== lakeSchemaFingerprint()) {
+    return { status: "unavailable" };
+  }
+  return {
+    status: "available",
+    parquet: await globParquet(buildDir, LANE_RESULTS_TABLE),
   };
 }
 

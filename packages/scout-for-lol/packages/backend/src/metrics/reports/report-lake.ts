@@ -20,6 +20,18 @@ export const reportLakeCompactionSkippedTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Matches derived into `lane_results` whose 15:00 checkpoint frame omits a
+ * participant, so they carry no lane result (`checkpoint_complete = false`).
+ * Riot boundary data; growth means timelines with partial frames are arriving.
+ */
+export const reportLakeLaneCheckpointIncompleteTotal = new Counter({
+  name: "report_lake_lane_checkpoint_incomplete_total",
+  help: "Matches derived into lane_results with an incomplete 15:00 checkpoint frame, by tier.",
+  labelNames: ["tier"] as const,
+  registers: [registry],
+});
+
 export const reportLakeStagingWritesTotal = new Counter({
   name: "report_lake_staging_writes_total",
   help: "Ingest-time staging file writes by table and status.",

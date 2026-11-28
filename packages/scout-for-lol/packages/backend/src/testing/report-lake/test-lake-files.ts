@@ -12,6 +12,26 @@ import { NO_CRAWL_LAKE_FILES } from "#src/reports/duckdb/lake/crawl-files.ts";
 
 export const TEST_GUILD_ID = DiscordGuildIdSchema.parse("123456789012345678");
 
+/**
+ * Lake sources the ScoutQL fixtures leave empty: competition history, timeline,
+ * lane results, and crawl. Spread into a `LakeFiles` literal.
+ */
+export const EMPTY_TIMELINE_AND_LANE_FILES = {
+  competitionRankHistoryParquet: [],
+  competitionRankHistoryStaging: [],
+  timelineEventsParquet: [],
+  timelineEventsStaging: [],
+  timelineEventParticipantsParquet: [],
+  timelineEventParticipantsStaging: [],
+  timelineParticipantFramesParquet: [],
+  timelineParticipantFramesStaging: [],
+  timelineCoverageParquet: [],
+  timelineCoverageStaging: [],
+  laneResults: { status: "unavailable" },
+  crawl: NO_CRAWL_LAKE_FILES,
+  crawlTombstones: [],
+} satisfies Partial<LakeFiles>;
+
 export const TEST_LAKE_FILES: LakeFiles = {
   matchesParquet: ["/lake/builds/b1/matches/month=2026-07/data_0.parquet"],
   matchesStaging: ["/lake/matches-recent/NA1_1.jsonl"],
@@ -26,18 +46,7 @@ export const TEST_LAKE_FILES: LakeFiles = {
   prematchParquet: ["/lake/builds/b1/prematch/month=2026-07/data_0.parquet"],
   prematchStaging: [],
   accountsParquet: "/lake/builds/b1/accounts/accounts.parquet",
-  competitionRankHistoryParquet: [],
-  competitionRankHistoryStaging: [],
-  timelineEventsParquet: [],
-  timelineEventsStaging: [],
-  timelineEventParticipantsParquet: [],
-  timelineEventParticipantsStaging: [],
-  timelineParticipantFramesParquet: [],
-  timelineParticipantFramesStaging: [],
-  timelineCoverageParquet: [],
-  timelineCoverageStaging: [],
-  crawl: NO_CRAWL_LAKE_FILES,
-  crawlTombstones: [],
+  ...EMPTY_TIMELINE_AND_LANE_FILES,
 };
 
 /** Flatten bound parameters to the scalar values they carry. */

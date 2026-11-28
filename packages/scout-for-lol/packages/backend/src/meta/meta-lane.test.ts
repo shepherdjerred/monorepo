@@ -28,7 +28,7 @@ import {
   type LaneDeltaFrame,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+import { buildRoleMatchups } from "#src/reports/lanes/role-matchups.ts";
 import {
   crawlRecord,
   memoryCrawlSegmentSource,

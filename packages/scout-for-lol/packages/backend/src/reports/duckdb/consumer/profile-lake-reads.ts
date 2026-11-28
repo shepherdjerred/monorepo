@@ -354,7 +354,7 @@ export type TimelineFrameRead = Omit<
   "match_id" | "month" | "observed_at"
 >;
 
-const LaneDeltaFrameSchema = z.object({
+export const LaneDeltaFrameSchema = z.object({
   participant_id: LakeIntSchema,
   frame_timestamp_ms: LakeIntSchema,
   total_gold: LakeIntSchema,

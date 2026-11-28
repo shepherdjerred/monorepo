@@ -435,23 +435,45 @@ wire-only compatibility fields. Folds and rebuilds reject an incompatible
 published fingerprint before creating a candidate build; schema changes require
 an explicit migration rather than mixing old and new Parquet columns.
 
-A migration is one declared predecessor, never a bridge. No migration is in
-flight: the build accepts only its own fingerprint. A migration declares the
-one older fingerprint it accepts, and while it is in flight:
+A migration is one declared predecessor, never a bridge. The current one adds
+the derived `lane_results` table (schema epoch 3):
 
+- `LAKE_PREDECESSOR_SCHEMA_FINGERPRINT` (`report-lake/schema.ts`) names the
+  one older schema this build accepts. A test pins it to the current schema
+  minus `lane_results`.
 - A fold that finds that schema published runs a full rebuild instead, so no
   fold mixes layouts. The rebuild accepts the predecessor as the build it
   replaces, and any other fingerprint still throws.
 - Only the scheduled lake job runs that rebuild, under its heartbeats. The
   boot fold and initial-history publishing skip their inline fold while the
-  migration is pending. Otherwise the single application pod, which uses a
-  Recreate rollout, would stay unready for the whole rebuild.
-- No read names the new columns, so Reports, ScoutQL, Dares and raw-document
-  analysis keep reading the predecessor build and staging while the rebuild
-  runs, and the lake stays available.
+  migration is pending (`reportLakeMigrationPending`). Otherwise the single
+  application pod, which uses a Recreate rollout, would stay unready for the
+  whole rebuild.
+- Until a stage publishes the rebuild, `buildLaneResultsSource`
+  (`reports/duckdb/lake/lane-results-source.ts`) answers `unavailable` for a build that is not at
+  the current fingerprint, and readers show that as "not yet available", not
+  as no lane games. No other read changes, so the lake stays available.
 - After Beta and Prod each publish a build at the current fingerprint, one
-  follow-up deletes the predecessor and the gate together. The columns then
-  become ordinary reads and ScoutQL catalog columns.
+  follow-up deletes the predecessor and the gate together.
+
+`lane_results` holds one row per laner per tracked match that
+`buildRoleMatchups` can pair: the laner and same-role opponent (PUUID,
+participant id, champion), team, role, win, queue and game time, whether the
+lake holds the match's timeline, and the gold, creep score and experience
+difference against the opponent at the 15:00 checkpoint. The checkpoint is the
+first frame stamped at or after 15:00 and before 16:00; with none (a shorter
+game, a missing frame, no timeline) the differences are `NULL` and
+`checkpoint_complete` is `NULL`. A checkpoint frame that omits a participant
+(Riot's `participantFrames` is an open record) gives `checkpoint_complete =
+false` and `NULL` differences for the whole match; `buildRoleMatchups`
+(`reports/lanes/role-matchups.ts`) states the same `incomplete` checkpoint to
+the match page instead of failing. "Ahead at 15" means a gold difference
+strictly greater than zero. Nothing is staged for it: a fold re-derives the
+matches its staged match or timeline rows name (`report-lake/lane-results/`), a
+rebuild derives all of them, and reads keep the newest derivation per laner.
+Each build manifest records `laneResultRows` and
+`laneResultIncompleteCheckpoints`, and
+`report_lake_lane_checkpoint_incomplete_total` counts incomplete checkpoints.
 
 Every participant has a `matches` row. `puuid` is non-null exactly when the row
 names a player; a bot or an unresolved player has a `NULL` `puuid` and its

@@ -741,6 +741,7 @@
         "role": "top",
         "blueParticipantId": 1,
         "redParticipantId": 6,
+        "checkpoint": "complete",
         "at15": {
           "timestampMs": 900023,
           "goldDelta": 380,
@@ -752,6 +753,7 @@
         "role": "jungle",
         "blueParticipantId": 2,
         "redParticipantId": 7,
+        "checkpoint": "complete",
         "at15": {
           "timestampMs": 900023,
           "goldDelta": 380,
@@ -763,6 +765,7 @@
         "role": "middle",
         "blueParticipantId": 3,
         "redParticipantId": 8,
+        "checkpoint": "complete",
         "at15": {
           "timestampMs": 900023,
           "goldDelta": 380,
@@ -774,6 +777,7 @@
         "role": "adc",
         "blueParticipantId": 4,
         "redParticipantId": 9,
+        "checkpoint": "complete",
         "at15": {
           "timestampMs": 900023,
           "goldDelta": 380,
@@ -785,6 +789,7 @@
         "role": "support",
         "blueParticipantId": 5,
         "redParticipantId": 10,
+        "checkpoint": "complete",
         "at15": {
           "timestampMs": 900023,
           "goldDelta": 380,
