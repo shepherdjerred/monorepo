@@ -1,0 +1,109 @@
+// Feeds' PostgreSQL schema. It mirrors the SQLite model the service started
+// on (src/server/store-sql.ts) column for column, so the one-shot importer
+// copies every row unchanged. Epoch columns stay integer seconds (and
+// milliseconds for crawled_at_ms) because the Reader API and the console
+// contract speak in those units.
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum FeedSource {
+  code
+  user
+
+  @@map("feed_source")
+}
+
+/// Key/value state; holds `subscriptions_etag` and the storage cutover marker.
+model Meta {
+  key   String @id
+  value String
+
+  @@map("meta")
+}
+
+model Category {
+  id        Int     @id @default(autoincrement())
+  label     String  @unique
+  managed   Boolean @default(false)
+  sortOrder Int     @default(100) @map("sort_order")
+  feeds     Feed[]
+
+  @@map("categories")
+}
+
+model Feed {
+  id                  Int        @id @default(autoincrement())
+  url                 String     @unique
+  title               String
+  categoryId          Int        @map("category_id")
+  category            Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  htmlUrl             String?    @map("html_url")
+  description         String?
+  source              FeedSource
+  hidden              Boolean    @default(false)
+  /// The auto-read rule as the exact JSON text it was declared with; rule
+  /// changes are detected by comparing this text.
+  autoReadJson        String?    @map("auto_read_json")
+  etag                String?
+  lastModified        String?    @map("last_modified")
+  lastPolledAt        BigInt?    @map("last_polled_at")
+  lastSuccessAt       BigInt?    @map("last_success_at")
+  lastStatus          Int?       @map("last_status")
+  lastError           String?    @map("last_error")
+  consecutiveFailures Int        @default(0) @map("consecutive_failures")
+  nextPollAfter       BigInt?    @map("next_poll_after")
+  entries             Entry[]
+
+  @@index([categoryId])
+  @@map("feeds")
+}
+
+model Entry {
+  /// Microsecond-epoch IDs allocated by the service, newest highest.
+  id              BigInt  @id
+  feedId          Int     @map("feed_id")
+  feed            Feed    @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  guid            String
+  url             String
+  title           String
+  author          String  @default("")
+  contentHtml     String  @default("") @map("content_html")
+  publishedAt     BigInt  @map("published_at")
+  crawledAtMs     BigInt  @map("crawled_at_ms")
+  enclosuresJson  String  @default("[]") @map("enclosures_json")
+  categoriesJson  String  @default("[]") @map("categories_json")
+  isRead          Boolean @default(false) @map("is_read")
+  isStarred       Boolean @default(false) @map("is_starred")
+  autoReadMatched Boolean @default(false) @map("auto_read_matched")
+  /// The search vector of `title` and `author` as a tsvector literal built by
+  /// src/server/search/search-tokens.ts, which tokenizes the way SQLite FTS5's
+  /// unicode61 tokenizer did.
+  searchDocument  String  @default("") @map("search_document")
+  /// GENERATED ALWAYS AS (search_document::tsvector) STORED, GIN-indexed.
+  searchVector    Unsupported("tsvector")? @default(dbgenerated()) @map("search_vector")
+
+  @@unique([feedId, guid])
+  @@index([feedId, id(sort: Desc)])
+  @@index([isRead, id(sort: Desc)])
+  @@index([isStarred, id(sort: Desc)])
+  @@index([publishedAt(sort: Desc)])
+  @@index([searchVector], type: Gin)
+  @@map("entries")
+}
+
+model ReaderSession {
+  tokenSha256 String @id @map("token_sha256")
+  username    String
+  createdAt   BigInt @map("created_at")
+  expiresAt   BigInt @map("expires_at")
+
+  @@map("reader_sessions")
+}

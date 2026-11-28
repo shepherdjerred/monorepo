@@ -195,25 +195,25 @@ function registerConsoleV1Routes(
   poller: FeedsPoller,
   metrics: FeedsMetrics,
 ): void {
-  app.get("/api/v1/summary", (c) => c.json(store.summary()));
+  app.get("/api/v1/summary", async (c) => c.json(await store.summary()));
 
-  app.get("/api/v1/entries", (c) => {
+  app.get("/api/v1/entries", async (c) => {
     const raw = Object.fromEntries(new URL(c.req.url).searchParams.entries());
     const parsed = EntriesQueryParamsSchema.parse(raw);
-    return c.json(store.queryEntries(parsed));
+    return c.json(await store.queryEntries(parsed));
   });
 
   app.post("/api/v1/entries/state", async (c) => {
     const body = UpdateEntriesStateBodySchema.parse(
       await parseJsonPayload(c.req.raw),
     );
-    const updated = store.updateEntriesState(body);
+    const updated = await store.updateEntriesState(body);
     return c.json({ updated });
   });
 
   app.post("/api/v1/entries/mark-all-read", async (c) => {
     const body = MarkAllReadBodySchema.parse(await parseJsonPayload(c.req.raw));
-    const updated = store.markAllRead(body);
+    const updated = await store.markAllRead(body);
     return c.json({ updated });
   });
 
@@ -223,8 +223,8 @@ function registerConsoleV1Routes(
     return c.json(result);
   });
 
-  app.get("/api/v1/feeds", (c) =>
-    c.json(store.listFeedsHealth(redactUrlForDisplay)),
+  app.get("/api/v1/feeds", async (c) =>
+    c.json(await store.listFeedsHealth(redactUrlForDisplay)),
   );
 
   app.post("/api/v1/feeds", async (c) => {
@@ -242,7 +242,7 @@ function registerConsoleV1Routes(
         body.autoRead !== undefined ||
         body.htmlUrl !== undefined
       ) {
-        const patched = store.updateUserFeed(discovered.feed.id, {
+        const patched = await store.updateUserFeed(discovered.feed.id, {
           hidden: body.hidden,
           ...(body.autoRead === undefined ? {} : { autoRead: body.autoRead }),
           ...(body.htmlUrl === undefined ? {} : { htmlUrl: body.htmlUrl }),
@@ -251,7 +251,7 @@ function registerConsoleV1Routes(
       }
       return c.json({ id: discovered.feed.id }, 201);
     }
-    const created = store.createUserFeed(body);
+    const created = await store.createUserFeed(body);
     if (!created.ok) return mutationFailureResponse(c, created);
     void backgroundRefreshFeed(poller, created.feed.id);
     return c.json({ id: created.feed.id }, 201);
@@ -262,15 +262,15 @@ function registerConsoleV1Routes(
     const body = UpdateUserFeedBodySchema.parse(
       await parseJsonPayload(c.req.raw),
     );
-    const updated = store.updateUserFeed(id, body);
+    const updated = await store.updateUserFeed(id, body);
     return updated.ok
       ? c.json({ id: updated.feed.id })
       : mutationFailureResponse(c, updated);
   });
 
-  app.delete("/api/v1/feeds/:id", (c) => {
+  app.delete("/api/v1/feeds/:id", async (c) => {
     const id = FeedIdParamSchema.parse(c.req.param("id"));
-    const deleted = store.deleteUserFeed(id);
+    const deleted = await store.deleteUserFeed(id);
     return deleted.ok
       ? c.json({ deleted: true })
       : mutationFailureResponse(c, deleted);
@@ -340,8 +340,8 @@ export function createFeedsConsoleApp(
   attachRequestMetrics(app, metrics, "console", clientRoot !== undefined);
 
   app.get("/healthz", (c) => c.text("ok"));
-  app.get("/metrics", (c) =>
-    c.body(metrics.render(store), 200, {
+  app.get("/metrics", async (c) =>
+    c.body(metrics.render(await store.summary()), 200, {
       "Content-Type": PROMETHEUS_CONTENT_TYPE,
       "Cache-Control": "no-store",
     }),

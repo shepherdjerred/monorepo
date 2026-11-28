@@ -37,6 +37,13 @@ import {
   queryReaderStreamIdsFromDb,
   querySummaryFromDb,
 } from "./store-queries.ts";
+import type { SyncFeedsRepository } from "./sqlite-repository.ts";
+import {
+  DEFAULT_MAX_READ_PER_FEED,
+  DEFAULT_PRUNE_MIN_AGE_SECONDS,
+  orderPolledEntriesChronologically,
+  STALE_POLL_ENTRY_MAX_AGE_SECONDS,
+} from "./store-shared.ts";
 import { reconcileCatalogInDb } from "./store-reconcile.ts";
 import {
   ensureSchemaMigrationsInDb,
@@ -50,7 +57,6 @@ import {
 } from "./store-sql.ts";
 import type {
   ConsoleEntriesQuery,
-  FeedsRepository,
   ParsedFeedEntry,
   ReaderStreamIdsPage,
   ReaderStreamQuery,
@@ -60,26 +66,12 @@ import type {
   StoreMutationFailure,
 } from "./types.ts";
 
-const DEFAULT_MAX_READ_PER_FEED = 5000;
-const STALE_POLL_ENTRY_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
-
 type ExistingPollEntryRow = {
   readonly id: number;
   readonly is_read: number;
   readonly is_starred: number;
   readonly auto_read_matched: number;
 };
-
-function orderPolledEntriesChronologically(
-  entries: readonly ParsedFeedEntry[],
-): readonly ParsedFeedEntry[] {
-  return entries
-    .map((entry, index) => ({ entry, index }))
-    .toSorted(
-      (a, b) => a.entry.publishedAt - b.entry.publishedAt || b.index - a.index,
-    )
-    .map(({ entry }) => entry);
-}
 
 function updateExistingPolledEntry(input: {
   readonly updateEntry: ReturnType<Database["query"]>;
@@ -138,7 +130,7 @@ function insertNewPolledEntry(input: {
   return matched;
 }
 
-export class FeedsStore implements FeedsRepository {
+export class FeedsStore implements SyncFeedsRepository {
   #lastEntryId: number;
 
   private constructor(private readonly db: Database) {
@@ -160,6 +152,15 @@ export class FeedsStore implements FeedsRepository {
     }
     db.run(SCHEMA_SQL);
     ensureSchemaMigrationsInDb(db);
+    return new FeedsStore(db);
+  }
+
+  /**
+   * Wraps an already-open database without applying the schema, so the
+   * PostgreSQL importer reads a read-only snapshot of the live file through
+   * the store's own queries.
+   */
+  static fromDatabase(db: Database): FeedsStore {
     return new FeedsStore(db);
   }
 
@@ -189,7 +190,7 @@ export class FeedsStore implements FeedsRepository {
     readonly nowSeconds?: number | undefined;
   }): number {
     const maxRead = options?.maxReadPerFeed ?? DEFAULT_MAX_READ_PER_FEED;
-    const minAge = options?.minAgeSeconds ?? 120 * 24 * 60 * 60;
+    const minAge = options?.minAgeSeconds ?? DEFAULT_PRUNE_MIN_AGE_SECONDS;
     const now = options?.nowSeconds ?? Math.floor(Date.now() / 1000);
     return this.db
       .query(

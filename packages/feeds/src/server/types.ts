@@ -113,92 +113,109 @@ export type StoreMutationFailure =
   | { readonly ok: false; readonly kind: "conflict"; readonly message: string }
   | { readonly ok: false; readonly kind: "invalid"; readonly message: string };
 
+export type PollSuccessInput = {
+  readonly feedId: number;
+  readonly polledAtSeconds: number;
+  readonly etag: string | null;
+  readonly lastModified: string | null;
+  readonly discoveredHtmlUrl?: string | null | undefined;
+  readonly entries: readonly ParsedFeedEntry[];
+};
+
+export type PollNotModifiedInput = {
+  readonly feedId: number;
+  readonly polledAtSeconds: number;
+  readonly etag?: string | null | undefined;
+  readonly lastModified?: string | null | undefined;
+};
+
+export type PollFailureInput = {
+  readonly feedId: number;
+  readonly polledAtSeconds: number;
+  readonly status: number | null;
+  readonly errorMessage: string;
+  readonly nextPollAfterSeconds: number;
+};
+
+export type PruneOptions = {
+  readonly maxReadPerFeed?: number | undefined;
+  readonly minAgeSeconds?: number | undefined;
+  readonly nowSeconds?: number | undefined;
+};
+
+export type ReaderSessionInput = {
+  readonly tokenSha256: string;
+  readonly username: string;
+  readonly nowSeconds: number;
+  readonly ttlSeconds: number;
+};
+
+export type EditEntryTagsInput = {
+  readonly ids: readonly number[];
+  readonly markRead?: boolean | undefined;
+  readonly markStarred?: boolean | undefined;
+};
+
+export type FeedMutationResult =
+  { readonly ok: true; readonly feed: StoredFeed } | StoreMutationFailure;
+
+export type OkMutationResult = { readonly ok: true } | StoreMutationFailure;
+
 export type FeedsRepository = {
-  close: () => void;
+  close: () => Promise<void>;
 
   // Boot & maintenance
-  reconcileCatalog: (feeds?: readonly DeclaredFeed[]) => {
+  reconcileCatalog: (feeds?: readonly DeclaredFeed[]) => Promise<{
     readonly upserted: number;
     readonly pruned: number;
-  };
-  pruneOldEntries: (options?: {
-    readonly maxReadPerFeed?: number | undefined;
-    readonly minAgeSeconds?: number | undefined;
-    readonly nowSeconds?: number | undefined;
-  }) => number;
+  }>;
+  pruneOldEntries: (options?: PruneOptions) => Promise<number>;
 
   // Poller reads & writes
-  listFeedsForPoll: (nowSeconds: number) => readonly StoredFeed[];
-  getFeedById: (id: number) => StoredFeed | undefined;
-  getFeedByUrl: (url: string) => StoredFeed | undefined;
-  recordPollNotModified: (input: {
-    readonly feedId: number;
-    readonly polledAtSeconds: number;
-    readonly etag?: string | null | undefined;
-    readonly lastModified?: string | null | undefined;
-  }) => void;
-  recordPollSuccess: (input: {
-    readonly feedId: number;
-    readonly polledAtSeconds: number;
-    readonly etag: string | null;
-    readonly lastModified: string | null;
-    readonly discoveredHtmlUrl?: string | null | undefined;
-    readonly entries: readonly ParsedFeedEntry[];
-  }) => { readonly inserted: number; readonly autoRead: number };
-  recordPollFailure: (input: {
-    readonly feedId: number;
-    readonly polledAtSeconds: number;
-    readonly status: number | null;
-    readonly errorMessage: string;
-    readonly nextPollAfterSeconds: number;
-  }) => void;
+  listFeedsForPoll: (nowSeconds: number) => Promise<readonly StoredFeed[]>;
+  getFeedById: (id: number) => Promise<StoredFeed | undefined>;
+  getFeedByUrl: (url: string) => Promise<StoredFeed | undefined>;
+  recordPollNotModified: (input: PollNotModifiedInput) => Promise<void>;
+  recordPollSuccess: (
+    input: PollSuccessInput,
+  ) => Promise<{ readonly inserted: number; readonly autoRead: number }>;
+  recordPollFailure: (input: PollFailureInput) => Promise<void>;
 
   // Console queries & mutations
-  summary: () => SummaryResponse;
-  listCategories: () => readonly CategorySummary[];
+  summary: () => Promise<SummaryResponse>;
+  listCategories: () => Promise<readonly CategorySummary[]>;
   listFeedsHealth: (
     redactUrl: (url: string, source: FeedSource) => string,
-  ) => FeedsListResponse;
-  queryEntries: (query: ConsoleEntriesQuery) => EntriesResponse;
-  updateEntriesState: (body: UpdateEntriesStateBody) => number;
-  markAllRead: (body: MarkAllReadBody) => number;
-  createUserFeed: (
-    body: CreateUserFeedBody,
-  ) => { readonly ok: true; readonly feed: StoredFeed } | StoreMutationFailure;
+  ) => Promise<FeedsListResponse>;
+  queryEntries: (query: ConsoleEntriesQuery) => Promise<EntriesResponse>;
+  updateEntriesState: (body: UpdateEntriesStateBody) => Promise<number>;
+  markAllRead: (body: MarkAllReadBody) => Promise<number>;
+  createUserFeed: (body: CreateUserFeedBody) => Promise<FeedMutationResult>;
   updateUserFeed: (
     id: number,
     body: UpdateUserFeedBody,
-  ) => { readonly ok: true; readonly feed: StoredFeed } | StoreMutationFailure;
-  deleteUserFeed: (id: number) => { readonly ok: true } | StoreMutationFailure;
+  ) => Promise<FeedMutationResult>;
+  deleteUserFeed: (id: number) => Promise<OkMutationResult>;
 
   // Reader API sessions & operations
-  createReaderSession: (input: {
-    readonly tokenSha256: string;
-    readonly username: string;
-    readonly nowSeconds: number;
-    readonly ttlSeconds: number;
-  }) => void;
+  createReaderSession: (input: ReaderSessionInput) => Promise<void>;
   validateReaderSession: (
     tokenSha256: string,
     nowSeconds: number,
-  ) => { readonly username: string } | undefined;
-  subscriptionsEtag: () => string;
-  listAllFeeds: () => readonly StoredFeed[];
-  listAllCategories: () => readonly StoredCategory[];
-  queryReaderStreamIds: (query: ReaderStreamQuery) => ReaderStreamIdsPage;
-  getEntriesByIds: (ids: readonly number[]) => readonly StoredEntry[];
-  editEntryTags: (input: {
-    readonly ids: readonly number[];
-    readonly markRead?: boolean | undefined;
-    readonly markStarred?: boolean | undefined;
-  }) => number;
+  ) => Promise<{ readonly username: string } | undefined>;
+  subscriptionsEtag: () => Promise<string>;
+  listAllFeeds: () => Promise<readonly StoredFeed[]>;
+  listAllCategories: () => Promise<readonly StoredCategory[]>;
+  queryReaderStreamIds: (
+    query: ReaderStreamQuery,
+  ) => Promise<ReaderStreamIdsPage>;
+  getEntriesByIds: (ids: readonly number[]) => Promise<readonly StoredEntry[]>;
+  editEntryTags: (input: EditEntryTagsInput) => Promise<number>;
   renameUserCategory: (
     oldLabel: string,
     newLabel: string,
-  ) => { readonly ok: true } | StoreMutationFailure;
-  deleteUserCategory: (
-    label: string,
-  ) => { readonly ok: true } | StoreMutationFailure;
+  ) => Promise<OkMutationResult>;
+  deleteUserCategory: (label: string) => Promise<OkMutationResult>;
 };
 
 export type FeedsPoller = {

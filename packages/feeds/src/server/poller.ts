@@ -109,14 +109,14 @@ function buildPollHeaders(feed: StoredFeed): Record<string, string> {
   return headers;
 }
 
-function recordFailedFeedPoll(options: {
+async function recordFailedFeedPoll(options: {
   readonly store: FeedsRepository;
   readonly feed: StoredFeed;
   readonly now: number;
   readonly status: number | null;
   readonly rawMessage: string;
   readonly retryAfter: string | null;
-}): SingleFeedPollResult {
+}): Promise<SingleFeedPollResult> {
   const { store, feed, now, status, rawMessage, retryAfter } = options;
   const safeError = sanitizeErrorMessage(rawMessage, feed.url);
   const nextPollAfterSeconds = computeNextPollAfterSeconds(
@@ -124,7 +124,7 @@ function recordFailedFeedPoll(options: {
     feed.consecutiveFailures,
     retryAfter,
   );
-  store.recordPollFailure({
+  await store.recordPollFailure({
     feedId: feed.id,
     polledAtSeconds: now,
     status,
@@ -150,7 +150,7 @@ async function pollOneFeed(options: {
   try {
     response = await fetchFeed(feed.url, { headers: buildPollHeaders(feed) });
   } catch (error) {
-    return recordFailedFeedPoll({
+    return await recordFailedFeedPoll({
       store,
       feed,
       now,
@@ -161,7 +161,7 @@ async function pollOneFeed(options: {
   }
 
   if (response.status === 304) {
-    store.recordPollNotModified({
+    await store.recordPollNotModified({
       feedId: feed.id,
       polledAtSeconds: now,
       etag: response.headers.get("etag") ?? feed.etag,
@@ -171,7 +171,7 @@ async function pollOneFeed(options: {
   }
 
   if (!isCompletePollResponse(response)) {
-    return recordFailedFeedPoll({
+    return await recordFailedFeedPoll({
       store,
       feed,
       now,
@@ -188,7 +188,7 @@ async function pollOneFeed(options: {
   try {
     parsed = parseFeedXml(response.body, response.finalUrl, now);
   } catch (error) {
-    return recordFailedFeedPoll({
+    return await recordFailedFeedPoll({
       store,
       feed,
       now,
@@ -198,7 +198,7 @@ async function pollOneFeed(options: {
     });
   }
 
-  const recorded = store.recordPollSuccess({
+  const recorded = await store.recordPollSuccess({
     feedId: feed.id,
     polledAtSeconds: now,
     etag: response.headers.get("etag"),
@@ -357,9 +357,9 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
       }
     }
 
-    const allFeeds = store.listAllFeeds();
+    const allFeeds = await store.listAllFeeds();
     const feedsToPoll =
-      options?.force === true ? allFeeds : store.listFeedsForPoll(now);
+      options?.force === true ? allFeeds : await store.listFeedsForPoll(now);
     const backedOff =
       options?.force === true
         ? 0
@@ -390,7 +390,7 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
     });
 
     await Promise.all(workers);
-    store.pruneOldEntries({ nowSeconds: now });
+    await store.pruneOldEntries({ nowSeconds: now });
 
     return {
       skippedByFlag: false,
@@ -423,7 +423,7 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
     },
 
     async refreshFeed(feedId, options) {
-      const feed = store.getFeedById(feedId);
+      const feed = await store.getFeedById(feedId);
       if (feed === undefined) {
         return {
           status: "failed",
@@ -463,7 +463,7 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
           ? trimmedCategory
           : "Uncategorized";
 
-      const created = store.createUserFeed({
+      const created = await store.createUserFeed({
         url: feedUrl,
         title,
         category,
@@ -474,7 +474,7 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
         return created;
       }
 
-      const recorded = store.recordPollSuccess({
+      const recorded = await store.recordPollSuccess({
         feedId: created.feed.id,
         polledAtSeconds: now,
         etag,
@@ -482,7 +482,8 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
         discoveredHtmlUrl: parsed.htmlUrl,
         entries: parsed.entries,
       });
-      const currentFeed = store.getFeedById(created.feed.id) ?? created.feed;
+      const currentFeed =
+        (await store.getFeedById(created.feed.id)) ?? created.feed;
       return {
         ok: true,
         feed: currentFeed,

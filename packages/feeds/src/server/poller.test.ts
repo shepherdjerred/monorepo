@@ -6,7 +6,11 @@ import {
   buildStubUserFeedRecord,
   createNoopConsoleQueries,
 } from "./test-repo-stub.ts";
-import type { FeedsRepository, ParsedFeedEntry, StoredFeed } from "./types.ts";
+import {
+  asyncFeedsRepository,
+  type SyncFeedsRepository,
+} from "./sqlite-repository.ts";
+import type { ParsedFeedEntry, StoredFeed } from "./types.ts";
 
 function createFakeStore(initialFeeds: readonly StoredFeed[] = []) {
   const feeds = new Map<number, StoredFeed>(initialFeeds.map((f) => [f.id, f]));
@@ -21,7 +25,7 @@ function createFakeStore(initialFeeds: readonly StoredFeed[] = []) {
     nextPollAfterSeconds: number;
   }[] = [];
 
-  const store: FeedsRepository = {
+  const syncStore: SyncFeedsRepository = {
     close: () => {
       /* noop */
     },
@@ -124,7 +128,7 @@ function createFakeStore(initialFeeds: readonly StoredFeed[] = []) {
   };
 
   return {
-    store,
+    store: asyncFeedsRepository(syncStore),
     feeds,
     notModifiedRecords,
     failureRecords,
@@ -359,9 +363,9 @@ describe("createFeedsPoller backoff, single-flight, and autodiscovery", () => {
     const { store } = createFakeStore();
     const recordedEntries: ParsedFeedEntry[] = [];
     const origRecordSuccess = store.recordPollSuccess.bind(store);
-    store.recordPollSuccess = (input) => {
+    store.recordPollSuccess = async (input) => {
       recordedEntries.push(...input.entries);
-      return origRecordSuccess(input);
+      return await origRecordSuccess(input);
     };
 
     const poller = createFeedsPoller({

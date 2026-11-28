@@ -120,12 +120,12 @@ async function parseImportPayload(
   return { token: queryToken, xmlText: await c.req.text() };
 }
 
-function editExistingSubscription(
+async function editExistingSubscription(
   c: ReaderContext,
   store: FeedsRepository,
   params: ParamsBag,
-): Response {
-  const feed = resolveFeedFromStream(store, params.get("s"));
+): Promise<Response> {
+  const feed = await resolveFeedFromStream(store, params.get("s"));
   if (feed === undefined) {
     return c.text("Subscription not found", 404);
   }
@@ -138,7 +138,7 @@ function editExistingSubscription(
     (extractLabels(params.getAll("r")).includes(feed.categoryLabel)
       ? "Uncategorized"
       : undefined);
-  const res = store.updateUserFeed(feed.id, {
+  const res = await store.updateUserFeed(feed.id, {
     ...(title === undefined ? {} : { title }),
     ...(nextCategory === undefined ? {} : { category: nextCategory }),
   });
@@ -155,7 +155,8 @@ async function subscribeNewFeed(
     return c.text("Invalid feed stream", 400);
   }
   const targetUrl = streamId.slice("feed/".length).trim();
-  if (deps.store.getFeedByUrl(targetUrl)?.source === "code") {
+  const existing = await deps.store.getFeedByUrl(targetUrl);
+  if (existing?.source === "code") {
     return c.text("Code-owned feeds cannot be modified via Reader API", 403);
   }
   const rawTitle = params.get("t")?.trim();
@@ -177,15 +178,15 @@ async function handleSubscriptionEdit(
 ): Promise<Response> {
   const action = params.get("ac");
   if (action === "unsubscribe") {
-    const feed = resolveFeedFromStream(deps.store, params.get("s"));
+    const feed = await resolveFeedFromStream(deps.store, params.get("s"));
     if (feed === undefined) {
       return c.text("Subscription not found", 404);
     }
-    const res = deps.store.deleteUserFeed(feed.id);
+    const res = await deps.store.deleteUserFeed(feed.id);
     return res.ok ? c.text("OK") : mapFailureResponse(c, res);
   }
   if (action === "edit") {
-    return editExistingSubscription(c, deps.store, params);
+    return await editExistingSubscription(c, deps.store, params);
   }
   return action === "subscribe"
     ? await subscribeNewFeed(c, deps, params)
@@ -203,14 +204,14 @@ function parseOptionalInt(
   return Number.isSafeInteger(n) ? n : undefined;
 }
 
-function handleStreamItemsIds(
+async function handleStreamItemsIds(
   c: ReaderContext,
   store: FeedsRepository,
   now: number,
-): Response {
+): Promise<Response> {
   c.header("Date", new Date(now * 1000).toUTCString());
   const qp = new URL(c.req.url).searchParams;
-  const stream = parseStreamTarget(qp.get("s") ?? undefined, store);
+  const stream = await parseStreamTarget(qp.get("s") ?? undefined, store);
   if (stream === undefined) {
     return c.json({ error: "invalid stream" }, 400);
   }
@@ -230,7 +231,7 @@ function handleStreamItemsIds(
     ),
   );
   const cursor = parseOptionalInt(qp.get("c"), POSITIVE_INT_PATTERN);
-  const page = store.queryReaderStreamIds({
+  const page = await store.queryReaderStreamIds({
     stream,
     excludeRead,
     limit,
@@ -245,7 +246,10 @@ function handleStreamItemsIds(
   });
 }
 
-function applyEditTags(store: FeedsRepository, params: ParamsBag): void {
+async function applyEditTags(
+  store: FeedsRepository,
+  params: ParamsBag,
+): Promise<void> {
   const ids = parseItemIds(params.getAll("i"));
   const addTags = params.getAll("a");
   const removeTags = params.getAll("r");
@@ -265,7 +269,7 @@ function applyEditTags(store: FeedsRepository, params: ParamsBag): void {
     markStarred = false;
   }
   if (ids.length > 0 && (markRead !== undefined || markStarred !== undefined)) {
-    store.editEntryTags({
+    await store.editEntryTags({
       ids,
       ...(markRead === undefined ? {} : { markRead }),
       ...(markStarred === undefined ? {} : { markStarred }),
@@ -305,7 +309,7 @@ function buildInnerReaderApp(
       return c.text("Error=BadAuthentication\n", 403);
     }
     const authToken = randomBytes(32).toString("hex");
-    deps.store.createReaderSession({
+    await deps.store.createReaderSession({
       tokenSha256: sha256Hex(authToken),
       username: deps.readerUser,
       nowSeconds: getNow(),
@@ -322,7 +326,7 @@ function buildInnerReaderApp(
         : GOOGLE_LOGIN_PATTERN.exec(authHeader)?.[1];
     const session =
       rawToken !== undefined && rawToken.length > 0
-        ? deps.store.validateReaderSession(sha256Hex(rawToken), getNow())
+        ? await deps.store.validateReaderSession(sha256Hex(rawToken), getNow())
         : undefined;
     if (session === undefined) {
       return c.text("Unauthorized", 401);
@@ -339,16 +343,18 @@ function buildInnerReaderApp(
     ),
   );
 
-  app.get("/reader/api/0/tag/list", (c) => {
-    const etag = `"tags-${deps.store.subscriptionsEtag().replaceAll(/^"|"$/gu, "")}"`;
+  app.get("/reader/api/0/tag/list", async (c) => {
+    const revision = await deps.store.subscriptionsEtag();
+    const etag = `"tags-${revision.replaceAll(/^"|"$/gu, "")}"`;
     c.header("ETag", etag);
     if (matchesIfNoneMatch(c.req.header("if-none-match"), etag)) {
       return c.body(null, 304);
     }
+    const categories = await deps.store.listAllCategories();
     return c.json({
       tags: [
         { id: "user/-/state/com.google/starred" },
-        ...deps.store.listAllCategories().map((cat) => ({
+        ...categories.map((cat) => ({
           id: `user/-/label/${cat.label}`,
           type: "folder",
         })),
@@ -356,14 +362,16 @@ function buildInnerReaderApp(
     });
   });
 
-  app.get("/reader/api/0/subscription/list", (c) => {
-    const etag = `"subs-${deps.store.subscriptionsEtag().replaceAll(/^"|"$/gu, "")}"`;
+  app.get("/reader/api/0/subscription/list", async (c) => {
+    const revision = await deps.store.subscriptionsEtag();
+    const etag = `"subs-${revision.replaceAll(/^"|"$/gu, "")}"`;
     c.header("ETag", etag);
     if (matchesIfNoneMatch(c.req.header("if-none-match"), etag)) {
       return c.body(null, 304);
     }
+    const feeds = await deps.store.listAllFeeds();
     return c.json({
-      subscriptions: deps.store.listAllFeeds().map((f) => ({
+      subscriptions: feeds.map((f) => ({
         id: `feed/${String(f.id)}`,
         title: f.title,
         categories: [
@@ -385,8 +393,7 @@ function buildInnerReaderApp(
       return c.text("Unauthorized", 401);
     }
     const requestedIds = parseItemIds(params.getAll("i"));
-    const stored =
-      requestedIds.length > 0 ? deps.store.getEntriesByIds(requestedIds) : [];
+    const stored = await deps.store.getEntriesByIds(requestedIds);
     const byId = new Map(stored.map((entry) => [entry.id, entry]));
     const items = requestedIds.flatMap((id) => {
       const entry = byId.get(id);
@@ -404,7 +411,7 @@ function buildInnerReaderApp(
     if (!checkToken(c, params.get("T"))) {
       return c.text("Unauthorized", 401);
     }
-    applyEditTags(deps.store, params);
+    await applyEditTags(deps.store, params);
     return c.text("OK");
   });
 
@@ -444,7 +451,7 @@ function buildInnerReaderApp(
     if (oldLabel === undefined || newLabel === undefined) {
       return c.text("Invalid category label", 400);
     }
-    const res = deps.store.renameUserCategory(oldLabel, newLabel);
+    const res = await deps.store.renameUserCategory(oldLabel, newLabel);
     return res.ok ? c.text("OK") : mapFailureResponse(c, res);
   });
 
@@ -457,12 +464,12 @@ function buildInnerReaderApp(
     if (label === undefined || label.length === 0) {
       return c.text("Invalid category label", 400);
     }
-    const res = deps.store.deleteUserCategory(label);
+    const res = await deps.store.deleteUserCategory(label);
     return res.ok ? c.text("OK") : mapFailureResponse(c, res);
   });
 
-  app.get("/reader/api/0/subscription/export", (c) =>
-    c.body(buildOpmlXml(deps.store.listAllFeeds()), 200, {
+  app.get("/reader/api/0/subscription/export", async (c) =>
+    c.body(buildOpmlXml(await deps.store.listAllFeeds()), 200, {
       "Content-Type": "text/x-opml; charset=utf-8",
     }),
   );
@@ -472,7 +479,7 @@ function buildInnerReaderApp(
     if (!checkToken(c, token)) {
       return c.text("Unauthorized", 401);
     }
-    return importOpmlXml(deps.store, xmlText)
+    return (await importOpmlXml(deps.store, xmlText))
       ? c.text("OK")
       : c.text("Invalid OPML document", 400);
   });

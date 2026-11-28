@@ -434,12 +434,21 @@ function stripTrailingXmlMisc(xml: string): string {
   return xml.slice(0, end);
 }
 
+/** A raw NUL or a character reference to one. */
+const XML_NUL_PATTERN = /\0|&#0+;|&#x0+;/giu;
+
 export function parseFeedXml(
   xml: string,
   feedUrl: string,
   fallbackNowSeconds?: number,
 ): ParsedFeedDocument {
-  const cleaned = stripTrailingXmlMisc(xml.replace(/^\u{FEFF}/u, "").trim());
+  // U+0000 is not an XML character and PostgreSQL text cannot hold it.
+  const cleaned = stripTrailingXmlMisc(
+    xml
+      .replace(/^\u{FEFF}/u, "")
+      .replaceAll(XML_NUL_PATTERN, "")
+      .trim(),
+  );
   if (cleaned.length === 0) {
     throw new Error("Feed XML body is empty");
   }

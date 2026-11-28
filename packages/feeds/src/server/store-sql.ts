@@ -1,15 +1,17 @@
 import type { Database } from "bun:sqlite";
-import { z } from "zod";
 import {
-  AutoReadRuleSchema,
-  EnclosureSchema,
   FeedSourceSchema,
-  normalizeAutoReadRules,
   type AutoReadRule,
-  type EntryView,
 } from "@shepherdjerred/feeds/shared/contract.ts";
 import { matchesAutoReadRule } from "./auto-read.ts";
-import type { StoredEntry, StoredFeed, StoreMutationFailure } from "./types.ts";
+import {
+  hidesHiddenFeeds,
+  parseAutoReadJson,
+  parseCategoriesJson,
+  parseEnclosuresJson,
+  type WhereOptions,
+} from "./store-shared.ts";
+import type { StoredEntry, StoredFeed } from "./types.ts";
 
 export type SqlParam = string | number | null;
 export type IdRow = { readonly id: number };
@@ -38,22 +40,6 @@ export type EntryRow = Omit<
   readonly isStarred: number;
   readonly autoReadMatched: number;
 };
-
-export type WhereOptions = {
-  readonly view: EntryView | undefined;
-  readonly category: string | undefined;
-  readonly feedId: number | undefined;
-  readonly q: string | undefined;
-  readonly cursor?: number | undefined;
-  readonly beforeId?: number | undefined;
-  readonly publishedBefore?: number | undefined;
-  readonly includeHidden?: boolean | undefined;
-  readonly excludeStarred?: boolean | undefined;
-  readonly unreadOnly?: boolean | undefined;
-};
-
-const EnclosuresArraySchema = z.array(EnclosureSchema);
-const CategoriesArraySchema = z.array(z.string());
 
 export const SCHEMA_SQL = [
   "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
@@ -87,24 +73,19 @@ export const ENTRY_SELECT_SQL = `SELECT e.id, e.feed_id AS feedId, f.title AS fe
 
 export function mapFeedRow(row: FeedRow): StoredFeed {
   const { autoReadJson, source, hidden, ...rest } = row;
-  const autoRead =
-    autoReadJson === null
-      ? null
-      : AutoReadRuleSchema.parse(JSON.parse(autoReadJson));
   return {
     ...rest,
     source: FeedSourceSchema.parse(source),
     hidden: hidden !== 0,
-    autoRead,
+    autoRead: parseAutoReadJson(autoReadJson),
   };
 }
 
 export function mapEntryRow(row: EntryRow): StoredEntry {
   const { enclosuresJson, isRead, isStarred, autoReadMatched, ...rest } = row;
-  const enclosures = EnclosuresArraySchema.parse(JSON.parse(enclosuresJson));
   return {
     ...rest,
-    enclosures,
+    enclosures: parseEnclosuresJson(enclosuresJson),
     isRead: isRead !== 0,
     isStarred: isStarred !== 0,
     autoReadMatched: autoReadMatched !== 0,
@@ -140,9 +121,7 @@ export function applyRetroactiveAutoReadForFeedInDb(
   );
   let matchedCount = 0;
   for (const row of unreadRows) {
-    const categories = CategoriesArraySchema.parse(
-      JSON.parse(row.categories_json),
-    );
+    const categories = parseCategoriesJson(row.categories_json);
     if (
       matchesAutoReadRule(rule, {
         title: row.title,
@@ -185,41 +164,6 @@ function sanitizeFtsQuery(raw: string): {
   };
 }
 
-export function validateHttpUrl(rawUrl: string): URL | StoreMutationFailure {
-  let parsed: URL;
-  try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return { ok: false, kind: "invalid", message: "Invalid URL" };
-  }
-  return parsed.protocol === "http:" || parsed.protocol === "https:"
-    ? parsed
-    : { ok: false, kind: "invalid", message: "URL must use http or https" };
-}
-
-export function validateOptionalAutoRead(
-  rule: AutoReadRule | null | undefined,
-): StoreMutationFailure | null {
-  if (rule === null || rule === undefined) {
-    return null;
-  }
-  const rules = normalizeAutoReadRules(rule);
-  if (rules.length === 0) {
-    return { ok: false, kind: "invalid", message: "Empty auto-read rule list" };
-  }
-  for (const single of rules) {
-    if (single.pattern.length === 0) {
-      return { ok: false, kind: "invalid", message: "Invalid auto-read regex" };
-    }
-    try {
-      new RegExp(single.pattern, single.flags).test("");
-    } catch {
-      return { ok: false, kind: "invalid", message: "Invalid auto-read regex" };
-    }
-  }
-  return null;
-}
-
 function appendBooleanScopeConditions(
   conds: string[],
   options: WhereOptions,
@@ -235,14 +179,7 @@ function appendBooleanScopeConditions(
   } else if (options.view === "auto-read") {
     conds.push("e.auto_read_matched = 1");
   }
-  const unscoped =
-    options.feedId === undefined && options.category === undefined;
-  const hidesStream =
-    options.view === undefined ||
-    options.view === "unread" ||
-    options.view === "all";
-  const hideUnscoped = options.includeHidden !== true;
-  if (hidesStream && unscoped && hideUnscoped) {
+  if (hidesHiddenFeeds(options)) {
     conds.push("f.hidden = 0");
   }
 }

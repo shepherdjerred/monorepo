@@ -147,6 +147,19 @@ describe("parseFeedXml", () => {
 describe("parseFeedXml sanitization and fallbacks", () => {
   const fixedNow = 1_760_000_000;
 
+  test("drops NUL characters, which XML forbids and PostgreSQL text cannot store", () => {
+    const parsed = parseFeedXml(
+      `<rss version="2.0"><channel><title>N\u0000ul</title><link>https://nul.example/</link>
+        <item><guid>nul-1</guid><title>A&#0;B&#x00;C\u0000D</title><link>https://nul.example/1</link>
+        <description>x&#0;y</description></item></channel></rss>`,
+      "https://nul.example/rss.xml",
+      fixedNow,
+    );
+    expect(parsed.title).toBe("Nul");
+    expect(parsed.entries[0]?.title).toBe("ABCD");
+    expect(JSON.stringify(parsed)).not.toContain(String.raw`\u0000`);
+  });
+
   test("strips XSS vectors while preserving safe article formatting and mailto links", () => {
     const xssXml = `<rss version="2.0"><channel><title>Sec</title><link>https://sec.example.com</link>
       <item>
