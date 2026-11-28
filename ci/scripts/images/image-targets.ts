@@ -62,6 +62,8 @@ export const APPLICATION_IMAGE_TARGETS =
   Object.keys(IMAGE_TARGET_OWNERS).sort();
 
 export const INFRASTRUCTURE_IMAGE_TARGETS: readonly string[] = [
+  // The patched BuildKit daemon (packages/homelab/images/buildkitd).
+  "buildkitd",
   "caddy-s3proxy",
   // A self-contained Rust service; it has no Bun install closure.
   "glitter-boys-launcher",

@@ -2085,6 +2085,10 @@
         {
           "name": "chart:buildkitd",
           "producer": "first-party"
+        },
+        {
+          "name": "image:buildkitd",
+          "producer": "first-party"
         }
       ],
       "ops": {
@@ -3434,7 +3438,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "buildkitd/prod/2",
+      "recipeRevisionId": "buildkitd/prod/3",
       "configurationRevisionId": "buildkitd/prod/1"
     },
     {
@@ -3687,6 +3691,11 @@
     {
       "dependent": "blackbox-exporter/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "buildkitd/prod",
+      "prerequisite": "1password/prod",
       "rule": "any-accepted"
     },
     {
