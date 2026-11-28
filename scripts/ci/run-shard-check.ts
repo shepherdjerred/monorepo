@@ -16,6 +16,11 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { run } from "../lib/run.ts";
 import { preparePrettierCache } from "./prettier-cache.ts";
+import {
+  PRETTIER_TOOLCHAIN_FILES,
+  prettierPluginNames,
+  prettierToolchainChanged,
+} from "./prettier/toolchain.ts";
 import { assertRootCheckInputs } from "./root-check-inputs.ts";
 import {
   matchShard,
@@ -107,6 +112,7 @@ const CHECK_GLOBAL_INPUTS: Record<CheckName, readonly string[]> = {
     "scripts/ci/repo-shards.ts",
     "scripts/ci/run-shard-check.ts",
     "scripts/ci/prettier-cache.ts",
+    "scripts/ci/prettier/toolchain.ts",
   ],
   "line-endings": [
     ".gitattributes",
@@ -123,6 +129,113 @@ const CHECK_GLOBAL_INPUTS: Record<CheckName, readonly string[]> = {
     "scripts/ci/run-shard-check.ts",
   ],
 };
+
+/** The file's content at `revision`, or null when it does not exist there. */
+function fileAtRevision(
+  repository: string,
+  revision: string,
+  file: string,
+): string | null {
+  const shown = Bun.spawnSync(["git", "show", `${revision}:${file}`], {
+    cwd: repository,
+  });
+  return shown.exitCode === 0 ? shown.stdout.toString() : null;
+}
+
+/** Plugins the HEAD configuration loads; null when it cannot be read. */
+function configuredPlugins(
+  configuration: string | null,
+  manifest: string | null,
+): string[] | null {
+  try {
+    return prettierPluginNames(configuration, manifest);
+  } catch (error) {
+    console.error(
+      `WARN: prettier could not map its plugins to bun.lock entries (${error instanceof Error ? error.message : String(error)}); checking the complete shard`,
+    );
+    return null;
+  }
+}
+
+/** `package.json` and `bun.lock` differ between `base` and HEAD where Prettier can see. */
+function prettierToolchainDiffers(
+  base: string,
+  changed: readonly string[],
+  repository: string,
+): boolean {
+  if (!changed.some((file) => PRETTIER_TOOLCHAIN_FILES.includes(file))) {
+    return false;
+  }
+  const revision = (name: string) => ({
+    "bun.lock": fileAtRevision(repository, name, "bun.lock"),
+    "package.json": fileAtRevision(repository, name, "package.json"),
+  });
+  const configuration = fileAtRevision(repository, "HEAD", ".prettierrc.json");
+  const plugins = configuredPlugins(
+    configuration,
+    fileAtRevision(repository, "HEAD", "package.json"),
+  );
+  if (plugins === null) return true;
+  const differs = prettierToolchainChanged(
+    changed,
+    revision(base),
+    revision("HEAD"),
+    plugins,
+  );
+  if (differs === null) {
+    console.error(
+      "WARN: prettier could not compare package.json and bun.lock; checking the complete shard",
+    );
+    return true;
+  }
+  return differs;
+}
+
+/** Files whose any change can alter how Prettier treats files outside the diff. */
+function changesPrettierEverywhere(file: string): boolean {
+  return (
+    file === ".editorconfig" ||
+    file.endsWith("/.editorconfig") ||
+    file === ".gitignore" ||
+    file.startsWith("patches/")
+  );
+}
+
+/**
+ * Whether something in the diff can change how Prettier (or another check)
+ * treats files outside it, so every file in the shard must be checked.
+ *
+ * `package.json` and `bun.lock` are Prettier global inputs only through the
+ * slices in prettier/toolchain.ts: they changed on about one commit in ten
+ * without Prettier noticing, and each such commit used to force a full run.
+ */
+function forcesCompleteShard(
+  check: CheckName,
+  base: string,
+  changed: readonly string[],
+  repository: string,
+): boolean {
+  const semantic = (file: string) =>
+    check === "prettier" && PRETTIER_TOOLCHAIN_FILES.includes(file);
+  if (
+    changed.some(
+      (file) => CHECK_GLOBAL_INPUTS[check].includes(file) && !semantic(file),
+    )
+  ) {
+    return true;
+  }
+  const prettierInputsChanged =
+    check === "prettier" &&
+    (changed.some((file) => changesPrettierEverywhere(file)) ||
+      prettierToolchainDiffers(base, changed, repository));
+  return (
+    prettierInputsChanged ||
+    (check === "line-endings" &&
+      changed.some(
+        (file) => file === ".gitattributes" || file.endsWith("/.gitattributes"),
+      ))
+  );
+}
 
 export function changedFilesForShard(
   check: CheckName,
@@ -153,18 +266,7 @@ export function changedFilesForShard(
     .toString()
     .split("\0")
     .filter((file) => file !== "");
-  return changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file)) ||
-    (check === "prettier" &&
-      changed.some(
-        (file) =>
-          file === ".editorconfig" ||
-          file.endsWith("/.editorconfig") ||
-          file === ".gitignore",
-      )) ||
-    (check === "line-endings" &&
-      changed.some(
-        (file) => file === ".gitattributes" || file.endsWith("/.gitattributes"),
-      ))
+  return forcesCompleteShard(check, base, changed, repository)
     ? null
     : changed.filter((file) => matchShard(file) === shard);
 }
