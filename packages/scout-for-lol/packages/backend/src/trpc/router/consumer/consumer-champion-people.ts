@@ -59,6 +59,8 @@ export async function getScopedChampionPlayers(
 export type ChampionPagePerson = {
   /** The lowest player id among the person's rows. */
   playerId: number;
+  /** Every player row the person has in scope, in id order. */
+  playerIds: number[];
   alias: string;
   isViewer: boolean;
   guilds: { guildId: DiscordGuildId; name: string }[];
@@ -89,11 +91,13 @@ export function groupChampionPagePeople(options: {
         : `discord:${player.discordId}`;
     const person = people.get(key) ?? {
       playerId: player.id,
+      playerIds: [],
       alias: player.alias,
       isViewer: player.discordId === options.viewerDiscordId,
       guilds: [],
       puuids: [],
     };
+    person.playerIds.push(player.id);
     person.guilds.push({
       guildId: DiscordGuildIdSchema.parse(player.serverId),
       name: guildName,

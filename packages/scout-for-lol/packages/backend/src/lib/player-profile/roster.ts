@@ -74,7 +74,7 @@ function groupPeople(players: RosterPlayerRow[]): RosterPlayerRow[][] {
   return [...people.values()];
 }
 
-function freshest(
+export function freshest(
   evidence: (RankEvidence | undefined)[],
 ): RankEvidence | undefined {
   return evidence
