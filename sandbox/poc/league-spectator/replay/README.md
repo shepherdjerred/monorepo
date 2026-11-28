@@ -454,6 +454,12 @@ Add `--turrets-from-replay` to resolve opening turrets and validate their
 snapshots during the browser's existing motion scan. The package carries the
 authored placements and model bindings. The worker keeps the same loss and
 snapshot checks and excludes disputed contexts from rendering and team vision.
+The `.8428` package draws the original settled `Rubble` and `RubbleBase`
+ranges after the recorded turret loss and the authored collapse clip duration.
+The opening models still hide those ranges. The settled ranges use the root
+joint only. Compared with samples from the authored `Destroyed` clips, their
+static vertices differ by at most 0.023 world units. Collapse animation and
+destruction effects still require playback support.
 For current-build inhibitors, use `--authored-inhibitor-catalog` and
 `--authored-inhibitor-catalog-sha256` in place of the prepared inhibitor
 manifest. The builder matches the authored registration order to the replay's
@@ -796,6 +802,16 @@ uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay
 uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/extract-recorded-heimer-impacts.py $macGameExecutable $packetInput $fightPlacements --inventory 1712 1721
 ```
 
+Extract opcode 1164 separately to verify recorded stop requests. The packet
+tool prints the corpus SHA-256 for the archived reader. The stop receipt
+identifies the target handle and original stop branch. Live registry state and
+emitter teardown remain separate from the request.
+
+```powershell
+$stopDigest = bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath --opcode 1164 $newPrivateStopCorpus
+uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/extract-recorded-particle-stops.py $macGameExecutable $newPrivateStopCorpus $stopDigest $newPrivateStopReceipt --window 1712 1724
+```
+
 Prepare the track with the original replay, its reviewed byte codecs, and the
 placement, native curve, texture, and shader receipts. The producer checks the
 packet hashes and clock against the original ROFL and binds the recorded skin
@@ -834,6 +850,27 @@ and contact dispatch arguments. Intermediate movement remains unverified.
 
 ```powershell
 bun sandbox/poc/league-spectator/replay/tools/research/verify-current-projectile-boundary.mjs $replayPath $macGameExecutable $newPrivateProjectileReceipt uv run --with unicorn python
+```
+
+For the same recorded fight, trace Maokai R movement with the verified missile
+inputs, the original movement controller, and the exact Map11 navgrid. The
+movement report stops each trace at its first recorded contact or stop. It
+records the clock and the original controller's position and velocity samples.
+The report covers movement only. Rendering needs the authored emitter and its
+activation, update, and teardown behavior.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/verify-rift-maokai-launches.mjs $replayPath $macGameExecutable $leagueInstallation $newPrivateLaunchStem uv run --with unicorn python
+uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-maokai-movement.py $macGameExecutable "$newPrivateLaunchStem.navgrid" "$newPrivateLaunchStem.json" $newPrivateMotionReceipt
+```
+
+Capture continuous 1× playback of the reviewed fight from a signed-out
+loopback Scout preview. The video and timeline cover 28:32–28:41. The timeline
+records the package digest, follow camera, actor draws, and particle draws at
+the known effect clocks. Use the video to review the scene and effect coverage.
+
+```powershell
+bun packages/scout-for-lol/packages/app/e2e/public-replay/proof/capture-recorded-rift-fight.ts $loopbackReplayUrl $newPrivateCaptureDirectory
 ```
 
 The animation verifier samples an explicitly chosen authored clip against the

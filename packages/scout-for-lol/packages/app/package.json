@@ -17,6 +17,7 @@
   },
   "imports": {
     "#architecture": "./architecture.config.ts",
+    "#replay-e2e/*": "./e2e/public-replay/*",
     "#src/*": "./src/*"
   },
   "dependencies": {

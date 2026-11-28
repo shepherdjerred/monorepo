@@ -152,7 +152,7 @@ export function readOrdinalAccessor(
 
 function prepareGlb(
   bytes,
-  { participantId, skinScale, hiddenRanges, inactiveModelRange },
+  { participantId, skinScale, hiddenRanges, inactiveModelRange, settledRubble },
 ) {
   const { gltf, binary } = readOrdinalChampionGlb(bytes);
   const meshNode = gltf.nodes[gltf.scenes[gltf.scene ?? 0].nodes[0]];
@@ -166,13 +166,18 @@ function prepareGlb(
   )
     throw Error(`Invalid ordinal skin palette for champion ${participantId}`);
   const hide = new Set(hiddenRanges.map((name) => name.toLowerCase()));
+  const inactiveRanges =
+    settledRubble?.ranges ??
+    (inactiveModelRange === undefined ? [] : [inactiveModelRange]);
+  const inactiveNames = new Set(
+    inactiveRanges.map((name) => name.toLowerCase()),
+  );
   if (
-    inactiveModelRange !== undefined &&
-    (inactiveModelRange !== "Destroyed" || !hide.has("destroyed"))
+    (inactiveModelRange !== undefined &&
+      (inactiveModelRange !== "Destroyed" || settledRubble !== undefined)) ||
+    [...inactiveNames].some((name) => !hide.has(name))
   )
-    throw Error(
-      "Inactive model range must be an authored hidden Destroyed range",
-    );
+    throw Error("Inactive model ranges must be hidden by the authored skin");
   const hidden = new Set();
   const textures = new Map();
   const primitives = [];
@@ -182,7 +187,7 @@ function prepareGlb(
     if (!material?.name)
       throw Error(`Missing ordinal material for champion ${participantId}`);
     const name = material.name.toLowerCase();
-    const inactive = inactiveModelRange !== undefined && name === "destroyed";
+    const inactive = inactiveNames.has(name);
     if (hide.has(name)) {
       hidden.add(name);
       if (!inactive) continue;
@@ -287,8 +292,8 @@ function prepareGlb(
   if (
     primitives.length === 0 ||
     hide.size !== hidden.size ||
-    (inactiveModelRange !== undefined &&
-      !primitives.some(({ inactive }) => inactive)) ||
+    primitives.filter(({ inactive }) => inactive).length !==
+      inactiveNames.size ||
     !Number.isFinite(topY)
   )
     throw Error(

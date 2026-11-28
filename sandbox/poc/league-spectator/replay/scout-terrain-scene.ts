@@ -143,6 +143,20 @@ const modelBinding = z.object({
 const inhibitorModelBinding = modelBinding.extend({
   inactiveModelRange: z.literal("Destroyed").optional(),
 });
+const renderedTurretBinding = modelBinding.extend({
+  settledRubble: z
+    .union([
+      z.strictObject({
+        ranges: z.tuple([z.literal("Rubble")]),
+        afterSeconds: z.literal(0.06666667),
+      }),
+      z.strictObject({
+        ranges: z.tuple([z.literal("Rubble"), z.literal("RubbleBase")]),
+        afterSeconds: z.literal(Math.fround(1.9)),
+      }),
+    ])
+    .optional(),
+});
 const ChampionModelsSchema = z.object({
   bindings: z
     .array(modelBinding.extend({ skinId: z.number().int().nonnegative() }))
@@ -759,7 +773,7 @@ const TerrainSceneFields = z.object({
       "Expected 22 accounted-for turret contexts",
     )
     .optional(),
-  structureModelBindings: z.array(modelBinding).length(2).optional(),
+  structureModelBindings: z.array(renderedTurretBinding).length(2).optional(),
   nexusModels: z
     .object({
       bindings: z.array(modelBinding).length(2),
@@ -900,8 +914,14 @@ export const SceneSchema = TerrainSceneFields.refine(
         scene.turretLosses === undefined &&
         bindings !== undefined &&
         bindings.every(
-          ({ participantId, url }) =>
-            ids.delete(participantId) && url.startsWith("/structure-models/"),
+          ({ participantId, url, settledRubble, hiddenRanges }) =>
+            ids.delete(participantId) &&
+            url.startsWith("/structure-models/") &&
+            (settledRubble === undefined ||
+              (settledRubble.ranges.length === participantId + 1 &&
+                settledRubble.ranges.every((range) =>
+                  hiddenRanges.includes(range),
+                ))),
         )
       );
     },

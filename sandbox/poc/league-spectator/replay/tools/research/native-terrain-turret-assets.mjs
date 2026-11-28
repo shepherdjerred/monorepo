@@ -9,6 +9,7 @@ export const currentTurretArchiveModels = {
     bytes: 1991848,
     sha256: "a89b1395de3af05d3e4dea9585cc2d4819c9b666b692876ad7a0ac4c252ec8ef",
     skinScale: 0.8999999761581421,
+    settledRubble: { ranges: ["Rubble"], afterSeconds: 0.06666667 },
     hiddenRanges: [
       "Stage1",
       "Stage2",
@@ -24,6 +25,10 @@ export const currentTurretArchiveModels = {
     bytes: 2802292,
     sha256: "0fc522597c23fd8cbc0c306f3b242cbfa87ce0e0c5e73ec6f0aa8204b17da454",
     skinScale: 1,
+    settledRubble: {
+      ranges: ["Rubble", "RubbleBase"],
+      afterSeconds: Math.fround(1.9),
+    },
     hiddenRanges: [
       "Stage1",
       "Stage2",

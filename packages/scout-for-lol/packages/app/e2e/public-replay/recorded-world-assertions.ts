@@ -7,6 +7,7 @@ import {
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
 import { replayPath, type readRecordedReplay } from "./recorded-replay-data.ts";
 import { seek } from "./recorded-replay-fixture.ts";
+import { verifyCurrentStructureLosses } from "./proof/recorded-turret-rubble-assertions.ts";
 
 export async function drawsNear(
   page: Page,
@@ -334,55 +335,6 @@ export async function verifyLaterRecordedLaneWaves(
   );
 }
 
-async function verifyCurrentStructureLosses(
-  page: Page,
-  paths: string[],
-  testInfo: TestInfo,
-) {
-  const witnesses = [
-    {
-      kind: "structure",
-      indices: 10_074,
-      position: [981, 10_441],
-      before: 856.4,
-      after: 856.5,
-    },
-    {
-      kind: "inhibitor",
-      indices: 6675,
-      position: [3210.616, 3217.527],
-      before: 2062.5,
-      after: 2062.6,
-    },
-    {
-      kind: "nexus",
-      indices: 14_340,
-      position: [13_243, 13_235],
-      before: 2407.2,
-      after: 2407.3,
-    },
-  ] as const;
-  for (const witness of witnesses) {
-    const { kind, indices, position, before, after } = witness;
-    if (!paths.some((url) => url.includes(`/${kind}-models/`))) continue;
-    await seek(page, before);
-    expect(await drawsNear(page, indices, position)).toBe(true);
-    await seek(page, after);
-    expect(await drawsNear(page, indices, position)).toBe(false);
-    await seek(page, before);
-    expect(await drawsNear(page, indices, position)).toBe(true);
-    await page.getByLabel("League of Legends replay scene").screenshot({
-      path: testInfo.outputPath(`recorded-current-${kind}-before-loss.png`),
-    });
-  }
-  if (paths.some((url) => url.includes("/inhibitor-models/"))) {
-    const events = page.getByRole("combobox", { name: "Jump to event" });
-    await expect(
-      events.getByRole("option", { name: /inhibitor destroyed/i }),
-    ).toHaveCount(5);
-  }
-}
-
 export async function verifyRecordedStructures(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -391,7 +343,7 @@ export async function verifyRecordedStructures(
 ) {
   const paths = [...fixture.paths.keys()];
   if (fixture.descriptor.gameBuild === "16.23.841.8428") {
-    await verifyCurrentStructureLosses(page, paths, testInfo);
+    await verifyCurrentStructureLosses(page, fixture, testInfo, drawsNear);
     return;
   }
   const assets = paths.filter((url) =>

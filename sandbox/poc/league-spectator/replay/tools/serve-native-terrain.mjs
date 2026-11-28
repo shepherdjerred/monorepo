@@ -1932,7 +1932,18 @@ if (values["turret-placements"] !== undefined) {
     };
     if (decodeTurrets) {
       verifiedTurretModels = structureModels;
-      scene.structureModelBindings = structures.bindings;
+      const { currentTurretArchiveModels } =
+        await import("./research/native-terrain-turret-assets.mjs");
+      const rubbleById = new Map(
+        turretCatalog.models.map(([asset, id]) => [
+          id,
+          currentTurretArchiveModels[asset].settledRubble,
+        ]),
+      );
+      scene.structureModelBindings = structures.bindings.map((binding) => ({
+        ...binding,
+        settledRubble: rubbleById.get(binding.participantId),
+      }));
     } else
       scene.structureModels = {
         bindings: structures.bindings,

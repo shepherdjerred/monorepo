@@ -460,6 +460,14 @@ export function createTerrainRenderer(
         inactiveModelRange === "Destroyed" ? [participantId] : [],
     ),
   );
+  const turretRubbleDelays = new Map(
+    (scene.structureModels?.bindings ?? []).flatMap(
+      ({ participantId, settledRubble }) =>
+        settledRubble === undefined
+          ? []
+          : [[participantId, settledRubble.afterSeconds]],
+    ),
+  );
   let disposed = false;
   let particleRenderer;
   function dispose() {
@@ -643,12 +651,20 @@ export function createTerrainRenderer(
       const visibleStructures =
         structureModels === undefined
           ? []
-          : structures.filter(
-              ({ context, destroyedAtSeconds }) =>
-                visible(context) &&
-                (destroyedAtSeconds === null ||
-                  frame.timeSeconds < destroyedAtSeconds),
-            );
+          : structures.flatMap((instance) => {
+              if (!visible(instance.context)) return [];
+              const { destroyedAtSeconds, participantId } = instance;
+              if (
+                destroyedAtSeconds === null ||
+                frame.timeSeconds < destroyedAtSeconds
+              )
+                return [instance];
+              const delay = turretRubbleDelays.get(participantId);
+              return delay !== undefined &&
+                frame.timeSeconds >= destroyedAtSeconds + delay
+                ? [{ ...instance, inactive: true }]
+                : [];
+            });
       modelRenderer.draw(
         viewProjection.elements,
         championModels === undefined ? [] : frame.markers,
