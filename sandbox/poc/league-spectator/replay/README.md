@@ -760,6 +760,20 @@ reports null links, other object classes, missing dependencies, and ambiguous
 definitions explicitly. Replay placement, lifetime, and pixel coverage have
 separate verification.
 
+The `16.23.841.8428` quad verifier checks the shader input layout in headless
+WebGL2. Run it from the repository root with the reviewed Hexshade vertex and
+fragment JSON files.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/verify-native-terrain-particle-quad-record.mjs $translatedVertex $translatedPixel
+```
+
+The verifier authenticates both shader translations and compares indexed and
+instanced framebuffer bytes for a controlled quad with atlas frame 1. It checks
+alpha cutoff and a frame without a draw. This establishes the buffer layout
+under the supplied geometry and textures. Recorded playback has its own
+activation, material, and visibility checks.
+
 The animation verifier samples an explicitly chosen authored clip against the
 original joint layout and checks exact rewind. The death verifier joins
 corroborated recorded deaths to authored clip and sound references from the
