@@ -17,6 +17,7 @@ import { bindNativeTerrainChampionIdentities } from "./native-terrain-champion-i
 import { prepareCurrentChampionModelBindings } from "./native-terrain-champion-opening.mjs";
 import { prepareNativeTerrainChampionKeyframes } from "./native-terrain-champion-keyframes.mjs";
 import { createCurrentReplayInhibitorCollector } from "./native-terrain-inhibitor-worker.mjs";
+import { createCurrentReplayTurretCollector } from "./native-terrain-turret-worker.mjs";
 import {
   createCurrentMap11ControllerObserver,
   verifyCurrentMap11ControllerGraph,
@@ -280,6 +281,7 @@ async function prepareMotion({
   decodeNeutralCamps,
   neutralCampSkins,
   inhibitorCatalog,
+  turretCatalog,
   terrainControllerGraph,
 }) {
   if (
@@ -303,6 +305,8 @@ async function prepareMotion({
     throw Error(
       "Replay-derived inhibitors require the reviewed current build.",
     );
+  if (turretCatalog !== undefined && !options.allowCurrentBuild)
+    throw Error("Replay-derived turrets require the reviewed current build.");
   if (
     championModelCatalog !== undefined &&
     (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
@@ -511,10 +515,15 @@ async function prepareMotion({
     inhibitorCatalog === undefined
       ? undefined
       : createCurrentReplayInhibitorCollector(prepared, inhibitorCatalog);
+  const turrets =
+    turretCatalog === undefined
+      ? undefined
+      : createCurrentReplayTurretCollector(prepared, turretCatalog);
   const dynamicActors =
     laneMinionCatalog !== undefined ||
     neutralModelIds !== undefined ||
-    inhibitors !== undefined;
+    inhibitors !== undefined ||
+    turrets !== undefined;
   const teamVision =
     decodeTeamVision === true
       ? createCurrentRecordedTeamVisionCollector(
@@ -530,6 +539,9 @@ async function prepareMotion({
       : undefined;
   if (teamVision !== undefined)
     for (const { context } of inhibitors?.instances ?? [])
+      teamVision.addCandidate(context, 0);
+  if (teamVision !== undefined)
+    for (const context of turrets?.candidateContexts ?? [])
       teamVision.addCandidate(context, 0);
   const rawWaypoints = createWaypointReaderFromCodecs(codecs);
   const readWaypoints = dynamicActors
@@ -583,6 +595,7 @@ async function prepareMotion({
     lane,
     neutral,
     inhibitors,
+    turrets,
   ].filter((collector) => collector !== undefined);
   const observe = (packet) => {
     for (const observer of observers) observer.observe(packet);
@@ -652,6 +665,7 @@ async function prepareMotion({
           includeCamps: decodeNeutralCamps,
           campSkins,
         });
+  const turretResult = turrets?.finish();
   const visibleDynamicContexts = dynamicActors
     ? new Set([
         ...(laneResult?.laneMinionInstances ?? []).map(
@@ -661,6 +675,9 @@ async function prepareMotion({
           ({ context }) => context,
         ),
         ...(inhibitors?.instances ?? []).map(({ context }) => context),
+        ...(turretResult?.structureModels.instances ?? []).map(
+          ({ context }) => context,
+        ),
       ])
     : undefined;
   return {
@@ -686,6 +703,7 @@ async function prepareMotion({
     ...(laneResult ?? {}),
     ...(neutralResult ?? {}),
     ...(inhibitors?.finish() ?? {}),
+    ...(turretResult ?? {}),
     ...(teamVision === undefined
       ? {}
       : { teamVision: teamVision.finish(visibleDynamicContexts) }),

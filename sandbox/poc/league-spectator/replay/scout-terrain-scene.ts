@@ -189,6 +189,132 @@ const transformColumn = z.tuple([
   z.number(),
   z.number(),
 ]);
+const worldTransform = z.tuple([
+  transformColumn,
+  transformColumn,
+  transformColumn,
+  transformColumn,
+]);
+const turretCatalog = z.strictObject({
+  build: z.literal(currentTerrainPositionBuild),
+  protocol: z.literal(terrainPositionProtocol),
+  placementReceipt: z.strictObject({
+    archivedBuild: z.string(),
+    archivedSha256: z.string(),
+    installedCompatibilityVersion: z.string(),
+    installedSha256: z.string(),
+    entryPath: z.string(),
+    attackableType: z.literal(0),
+    uniqueMatches: z.literal(24),
+    records: z
+      .array(
+        z.strictObject({
+          keyHash: z.number().int().nonnegative(),
+          mapNameHash: z.number().int().positive(),
+          explicitTeam: z.number().int().nullable(),
+          translation: position,
+          archivedOffset: z.number().int().nonnegative(),
+          installedOffset: z.number().int().nonnegative(),
+          bytes: z.number().int().positive(),
+          sha256: z.string(),
+        }),
+      )
+      .length(24),
+  }),
+  placeables: z
+    .array(
+      z.strictObject({
+        mapNameHash: z.number().int().positive().max(0xffffffff),
+        asset: z.string().min(1),
+        transform: worldTransform,
+        characterRecord: z.string().min(1),
+      }),
+    )
+    .length(24),
+  models: z.tuple([
+    z.tuple([z.literal("turret/0"), z.literal(0)]),
+    z.tuple([z.literal("turret/3"), z.literal(1)]),
+  ]),
+});
+const turretLosses = z.array(
+  z.object({
+    context: z.number().int().nonnegative(),
+    timeSeconds: z.number().nonnegative(),
+    worldPosition: position,
+  }),
+);
+const structureModelData = z.object({
+  instances: z
+    .array(
+      worldModelInstance.extend({
+        destroyedAtSeconds: z.number().nonnegative().nullable(),
+      }),
+    )
+    .min(1)
+    .max(22),
+  omittedContexts: z.array(participantId).optional(),
+});
+
+function hasDistinctTurretContexts({
+  instances,
+  omittedContexts,
+}: z.infer<typeof structureModelData>) {
+  const contexts = [
+    ...instances.map(({ context }) => context),
+    ...(omittedContexts ?? []),
+  ];
+  return contexts.length === 22 && new Set(contexts).size === 22;
+}
+
+function validateWorkerTurrets(
+  catalog: z.infer<typeof turretCatalog>,
+  structure: z.infer<typeof structureModelData>,
+  losses: z.infer<typeof turretLosses>,
+  duration: number,
+) {
+  const ids = new Map<string, number>(catalog.models);
+  const placements = new Map(
+    catalog.placeables.map(({ asset, transform: [x, y, z, origin] }) => [
+      origin.slice(0, 3).join(","),
+      {
+        id: ids.get(asset),
+        basis: [...x.slice(0, 3), ...y.slice(0, 3), ...z.slice(0, 3)],
+      },
+    ]),
+  );
+  const destroyed = new Map<number, (typeof structure.instances)[number]>();
+  for (const instance of structure.instances) {
+    const key = instance.position.join(",");
+    const placement = placements.get(key);
+    if (
+      instance.participantId !== placement?.id ||
+      instance.basis.some((axis, i) => axis !== placement.basis[i])
+    )
+      throw Error(
+        "Replay motion worker returned an unadmitted turret placement.",
+      );
+    placements.delete(key);
+    if (instance.destroyedAtSeconds !== null)
+      destroyed.set(instance.context, instance);
+  }
+  let previous = 0;
+  for (const loss of losses) {
+    const instance = destroyed.get(loss.context);
+    if (
+      instance?.destroyedAtSeconds !== loss.timeSeconds ||
+      loss.timeSeconds <= 0 ||
+      loss.timeSeconds > duration ||
+      loss.timeSeconds < previous ||
+      loss.worldPosition.some((axis, i) => axis !== instance.position[i])
+    )
+      throw Error("Replay motion worker returned an unadmitted turret loss.");
+    previous = loss.timeSeconds;
+    destroyed.delete(loss.context);
+  }
+  if (destroyed.size !== 0)
+    throw Error("Replay motion worker omitted a verified turret loss.");
+}
+
 const inhibitorCatalog = z.strictObject({
   build: z.literal(currentTerrainPositionBuild),
   protocol: z.literal(terrainPositionProtocol),
@@ -206,12 +332,7 @@ const inhibitorCatalog = z.strictObject({
         characterRecord: z.string().nullable(),
         asset: z.string().nullable(),
         explicitTeam: teamId.nullable(),
-        transform: z.tuple([
-          transformColumn,
-          transformColumn,
-          transformColumn,
-          transformColumn,
-        ]),
+        transform: worldTransform,
         placementSource: z.strictObject({
           archivedOffset: z.number().int().nonnegative(),
           installedOffset: z.number().int().nonnegative(),
@@ -498,15 +619,7 @@ const TerrainSceneFields = z.object({
     sourceMeshCount: z.number().int().positive(),
     meshTriangles: z.number().int().positive(),
   }),
-  turretLosses: z
-    .array(
-      z.object({
-        context: z.number().int().nonnegative(),
-        timeSeconds: z.number().nonnegative(),
-        worldPosition: position,
-      }),
-    )
-    .optional(),
+  turretLosses: turretLosses.optional(),
   dragonKills: z
     .array(
       z.object({
@@ -549,27 +662,14 @@ const TerrainSceneFields = z.object({
     .optional(),
   terrainVisibility: TerrainVisibilitySchema.optional(),
   championModels: ChampionModelsSchema.optional(),
-  structureModels: z
-    .object({
-      bindings: z.array(modelBinding).min(1),
-      instances: z
-        .array(
-          worldModelInstance.extend({
-            destroyedAtSeconds: z.number().nonnegative().nullable(),
-          }),
-        )
-        .min(1)
-        .max(22),
-      omittedContexts: z.array(participantId).optional(),
-    })
-    .refine(({ instances, omittedContexts }) => {
-      const contexts = [
-        ...instances.map(({ context }) => context),
-        ...(omittedContexts ?? []),
-      ];
-      return contexts.length === 22 && new Set(contexts).size === 22;
-    }, "Expected 22 accounted-for turret contexts")
+  structureModels: structureModelData
+    .extend({ bindings: z.array(modelBinding).min(1) })
+    .refine(
+      hasDistinctTurretContexts,
+      "Expected 22 accounted-for turret contexts",
+    )
     .optional(),
+  structureModelBindings: z.array(modelBinding).length(2).optional(),
   nexusModels: z
     .object({
       bindings: z.array(modelBinding).length(2),
@@ -622,6 +722,7 @@ const TerrainSceneFields = z.object({
         ChampionAnimationModelCatalogSchema.optional(),
       championModelCatalog: ChampionModelCatalogSchema.optional(),
       inhibitorCatalog: inhibitorCatalog.optional(),
+      turretCatalog: turretCatalog.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
       laneMinionCatalog: LaneMinionCatalogSchema.optional(),
@@ -667,6 +768,32 @@ export const SceneSchema = TerrainSceneFields.refine(
       "Recorded inhibitor inactive ranges must be ordered and within the replay.",
   },
 )
+  .refine(
+    (scene) => {
+      const catalog = scene.workerMotion?.turretCatalog;
+      const bindings = scene.structureModelBindings;
+      if (catalog === undefined) return bindings === undefined;
+      const ids = new Set<number>(catalog.models.map(([, id]) => id));
+      return (
+        scene.identity.build === catalog.build &&
+        scene.identity.protocol === catalog.protocol &&
+        scene.workerMotion?.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.structureModels === undefined &&
+        scene.turretLosses === undefined &&
+        bindings !== undefined &&
+        bindings.every(
+          ({ participantId, url }) =>
+            ids.delete(participantId) && url.startsWith("/structure-models/"),
+        )
+      );
+    },
+    {
+      path: ["workerMotion", "turretCatalog"],
+      message:
+        "Replay-derived turrets require an exact archive catalog and no prepared lifetimes.",
+    },
+  )
   .refine(
     (scene) => {
       const catalog = scene.workerMotion?.inhibitorCatalog;
@@ -1076,6 +1203,13 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
       .strictObject({ instances: z.array(inhibitorInstance).length(6) })
       .optional(),
     inhibitorLosses: inhibitorLosses.optional(),
+    structureModels: structureModelData
+      .refine(
+        hasDistinctTurretContexts,
+        "Expected 22 accounted-for turret contexts",
+      )
+      .optional(),
+    turretLosses: turretLosses.optional(),
     recordedPlayerState: z
       .strictObject({
         playerState: PlayerStateSchema,
@@ -1244,6 +1378,23 @@ async function loadWorkerMotion(
         terrainGraph,
         identity.durationMilliseconds / 1000,
       );
+    const turrets = workerMotion.turretCatalog;
+    if (
+      (result.structureModels !== undefined) !== (turrets !== undefined) ||
+      (result.turretLosses !== undefined) !== (turrets !== undefined)
+    )
+      throw Error("Replay motion worker returned unexpected turret coverage.");
+    if (
+      turrets !== undefined &&
+      result.structureModels !== undefined &&
+      result.turretLosses !== undefined
+    )
+      validateWorkerTurrets(
+        turrets,
+        result.structureModels,
+        result.turretLosses,
+        identity.durationMilliseconds / 1000,
+      );
     const inhibitors = workerMotion.inhibitorCatalog;
     if (
       (result.inhibitorModels !== undefined) !== (inhibitors !== undefined) ||
@@ -1272,6 +1423,7 @@ async function loadWorkerMotion(
         ...(result.laneMinionInstances ?? []),
         ...(result.neutralObjectiveInstances ?? []),
         ...(result.inhibitorModels?.instances ?? []),
+        ...(result.structureModels?.instances ?? []),
       ].map(({ context }) => context);
       const contexts = new Set([
         ...teamVisionActors.contexts,
@@ -1754,6 +1906,18 @@ export async function loadSceneMotion(
       motion: decoded.motion,
       decodedPositionFrames,
       ...neutrals,
+      ...(decoded.structureModels === undefined ||
+      scene.structureModelBindings === undefined
+        ? {}
+        : {
+            structureModels: {
+              bindings: scene.structureModelBindings,
+              ...decoded.structureModels,
+            },
+            turretLosses: decoded.turretLosses,
+            structureModelBindings: undefined,
+            workerMotion: undefined,
+          }),
       ...(decoded.inhibitorModels === undefined ||
       scene.inhibitorModelBindings === undefined
         ? {}

@@ -10,6 +10,7 @@ import { RecordedTerrainVisibilitySchema } from "./terrain-visibility-schema.ts"
 import { readDirectWorkerReply } from "./motion-worker-capture.ts";
 import { verifyDirectLaneWorker } from "./lane-worker-oracle.ts";
 import { verifyDirectNeutralWorker } from "./neutral-worker-oracle.ts";
+import { verifyDirectTurretWorker } from "./turret-worker-oracle.ts";
 
 const schemaTrack = z.number().int().positive();
 const statPoint = z.tuple([z.number(), z.number(), z.number()]);
@@ -97,6 +98,8 @@ const reply = z.object({
   neutralCampCoverage: z.unknown().optional(),
   neutralCampSkins: z.unknown().optional(),
   recordedPlayerState: z.unknown().optional(),
+  structureModels: z.unknown().optional(),
+  turretLosses: z.unknown().optional(),
   announcerCues: z
     .array(
       z
@@ -179,6 +182,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionAnimationModels: boolean;
     directChampionModels: boolean;
     directInhibitors: boolean;
+    directTurrets: boolean;
     directReplayObservations: boolean;
     championAnimationCueCount: number;
     announcerEvents?: unknown;
@@ -224,6 +228,7 @@ export async function verifyDirectChampionStatsWorker(
     championAnimationModelCatalog: directChampionAnimationModels,
     championModelCatalog: fixture.directChampionModels,
     inhibitorCatalog: fixture.directInhibitors,
+    turretCatalog: fixture.directTurrets,
     decodeChampionExperience: directChampionExperience,
     decodeChampionInventory: directChampionInventory,
     decodeChampionStats: directChampionStats,
@@ -248,6 +253,7 @@ export async function verifyDirectChampionStatsWorker(
       "waypointOrigin",
     ].sort(),
   );
+  await verifyDirectTurretWorker(oracleRoot, fixture, actual);
   expect(actual.neutralCampSkins).toEqual(fixture.directNeutralCampSkins);
   await verifyDirectPlayerState(
     actual.recordedPlayerState,

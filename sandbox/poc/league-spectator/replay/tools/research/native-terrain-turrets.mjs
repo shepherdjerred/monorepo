@@ -285,6 +285,20 @@ function findCurrentPresentationOmissions(packetReader, losses) {
   ).presentationOmissions(losses);
 }
 
+export function prepareNativeTerrainTurretOpening(
+  packetReader,
+  placementReceipt,
+  options,
+) {
+  if (!isExactTerrainReplay(packetReader, options))
+    throw Error("Expected exact-build Map11 replay turret observations");
+  const placements = readInstalledPlacements(
+    placementReceipt,
+    packetReader.build,
+  );
+  return readOpeningBindings(packetReader, placements);
+}
+
 /** Place only the corroborated turret losses and their seek-state cohort. */
 export function prepareNativeTerrainTurrets(
   prepared,
@@ -297,11 +311,9 @@ export function prepareNativeTerrainTurrets(
     !Array.isArray(observations.turrets)
   )
     throw Error("Expected exact-build Map11 replay turret observations");
-  const placements = readInstalledPlacements(
-    placementReceipt,
-    packetReader.build,
-  );
-  const bindings = readOpeningBindings(packetReader, placements);
+  const bindings =
+    options?.turretOpening ??
+    prepareNativeTerrainTurretOpening(packetReader, placementReceipt, options);
   const withPlacement = (row) => {
     const binding = bindings.get(row.context);
     if (!binding)

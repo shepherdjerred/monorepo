@@ -24,6 +24,11 @@ import {
   currentInhibitorArchiveModels,
   currentInhibitorRegistrationSha256,
 } from "./tools/research/native-terrain-inhibitor-assets.mjs";
+import {
+  currentTurretArchiveModels,
+  currentTurretPlaceablesSha256,
+  currentTurretPlacementJsonSha256,
+} from "./tools/research/native-terrain-turret-assets.mjs";
 import * as terrainRenderer from "./tools/research/native-terrain.mjs";
 
 const maxZoomStep = 8;
@@ -35,6 +40,10 @@ async function sha256Hex(bytes: BufferSource) {
     new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
     (byte) => byte.toString(16).padStart(2, "0"),
   ).join("");
+}
+
+function jsonSha256(value: unknown) {
+  return sha256Hex(new TextEncoder().encode(JSON.stringify(value)));
 }
 
 function recordedTimeline(
@@ -186,12 +195,47 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const modelCatalog = scene.workerMotion?.championModelCatalog;
   const animationCatalog = scene.workerMotion?.championAnimationModelCatalog;
   const files = new Map(localManifest.files.map((file) => [file.path, file]));
+  const turretCatalog = scene.workerMotion?.turretCatalog;
+  if (turretCatalog !== undefined) {
+    const [placeables, receipt] = await Promise.all([
+      jsonSha256(turretCatalog.placeables),
+      jsonSha256(turretCatalog.placementReceipt),
+    ]);
+    if (
+      placeables !== currentTurretPlaceablesSha256 ||
+      receipt !== currentTurretPlacementJsonSha256
+    )
+      throw new ReplayCapabilityError(
+        "invalid-package",
+        "The turret placements disagree with the reviewed build.",
+      );
+    for (const [selector, id] of turretCatalog.models) {
+      const model = currentTurretArchiveModels[selector];
+      const path = `structure-models/${model.sha256}.glb`;
+      const file = files.get(path);
+      const binding = scene.structureModelBindings?.find(
+        ({ participantId }) => participantId === id,
+      );
+      if (
+        file?.sha256 !== model.sha256 ||
+        file.bytes !== model.bytes ||
+        binding?.url !== `/${path}` ||
+        binding.skinScale !== model.skinScale ||
+        binding.hiddenRanges.length !== model.hiddenRanges.length ||
+        binding.hiddenRanges.some((range, i) => range !== model.hiddenRanges[i])
+      )
+        throw new ReplayCapabilityError(
+          "invalid-package",
+          "A turret model disagrees with its reviewed archive binding.",
+        );
+    }
+  }
   const inhibitorCatalog = scene.workerMotion?.inhibitorCatalog;
   if (inhibitorCatalog !== undefined) {
-    const registration = new TextEncoder().encode(
-      JSON.stringify(inhibitorCatalog.registration),
-    );
-    if ((await sha256Hex(registration)) !== currentInhibitorRegistrationSha256)
+    if (
+      (await jsonSha256(inhibitorCatalog.registration)) !==
+      currentInhibitorRegistrationSha256
+    )
       throw new ReplayCapabilityError(
         "invalid-package",
         "The inhibitor registration disagrees with the reviewed build.",

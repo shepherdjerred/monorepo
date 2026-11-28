@@ -440,6 +440,10 @@ then binds the authored placements and models to the replay's opening actors
 and verifies their losses and snapshots. The package omits actors with
 contradictory turret or unresolved inhibitor lifetimes. Verified inhibitor loss
 events remain in the jump menu.
+Add `--turrets-from-replay` to resolve opening turrets and validate their
+snapshots during the browser's existing motion scan. The package carries the
+authored placements and model bindings. The worker keeps the same loss and
+snapshot checks and excludes disputed contexts from rendering and team vision.
 For current-build inhibitors, use `--authored-inhibitor-catalog` and
 `--authored-inhibitor-catalog-sha256` in place of the prepared inhibitor
 manifest. The builder matches the authored registration order to the replay's
@@ -541,6 +545,11 @@ Copy `identity.replaySha256` to `replaySha256`, `inhibitorModels.instances` to
 `inhibitorModels.instances`, and `inhibitorLosses` to `inhibitorLosses`, in that
 order. Use UTF-8 JSON with two-space indentation and a trailing LF. The test
 checks the digest and compares the full worker response before checking draws.
+For `--turrets-from-replay`, include `scout-8428-v42-turret-oracle.json` from
+the prepared `.8428` scene with SHA-256
+`e8a01698de229fd4afbe41d2ded68569346cb00da45229de7b51d6f1ad45f585`.
+In the same JSON format, include `replaySha256`,
+`structureModels: { instances, omittedContexts }`, and `turretLosses` in that order.
 The harness also tests announcer playback when the package declares the
 announcer preview. It releases the local backend after the browser test and
 prints the evidence directory under `.cache`.

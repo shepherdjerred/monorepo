@@ -106,6 +106,9 @@ const SceneIdentitySchema = z.object({
     .length(2)
     .optional(),
   inhibitorLosses: z.array(z.unknown()).optional(),
+  structureModels: z.unknown().optional(),
+  structureModelBindings: z.array(z.unknown()).length(2).optional(),
+  turretLosses: z.array(z.unknown()).optional(),
   championAnimationCues: z.array(z.unknown()).optional(),
   championHealthTracks: z.array(z.unknown()).optional(),
   championResourceTracks: z.array(z.unknown()).optional(),
@@ -125,6 +128,7 @@ const SceneIdentitySchema = z.object({
         .optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
       inhibitorCatalog: z.object({}).optional(),
+      turretCatalog: z.object({}).optional(),
       championAnimationModelCatalog: z
         .strictObject({
           build: z.string(),
@@ -321,6 +325,7 @@ function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
   const directPlayerState = usesDirectPlayerState(scene);
   const directChampionModels = usesDirectChampionModels(scene);
   const directInhibitors = usesDirectInhibitors(scene);
+  const directTurrets = usesDirectTurrets(scene);
   const directTerrainVisibility =
     workerMotion?.terrainControllerGraph !== undefined;
   if (directTerrainVisibility && terrainVisibility !== undefined)
@@ -341,12 +346,14 @@ function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
     directPlayerState,
     directChampionModels,
     directInhibitors,
+    directTurrets,
     destroyedInhibitors:
       scene.inhibitorModelBindings?.every(
         ({ inactiveModelRange }) => inactiveModelRange === "Destroyed",
       ) === true,
     preparedChampionModels: scene.championModels,
     directWorldObservations: [
+      directTurrets,
       directInhibitors,
       directChampionModels,
       directPlayerState,
@@ -356,6 +363,21 @@ function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
       workerMotion?.neutralObjectiveModels !== undefined,
     ].includes(true),
   };
+}
+
+function usesDirectTurrets(scene: z.infer<typeof SceneIdentitySchema>) {
+  const direct = scene.workerMotion?.turretCatalog !== undefined;
+  if (
+    direct !== (scene.structureModelBindings !== undefined) ||
+    (direct &&
+      [scene.structureModels, scene.turretLosses].some(
+        (value) => value !== undefined,
+      ))
+  )
+    throw new Error(
+      "The recorded scene has inconsistent worker turret inputs.",
+    );
+  return direct;
 }
 
 function usesDirectInhibitors(scene: z.infer<typeof SceneIdentitySchema>) {

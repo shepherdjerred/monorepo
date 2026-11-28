@@ -89,6 +89,7 @@ const { positionals, values } = parseArgs({
     "structure-models": { type: "string" },
     "authored-turret-catalog": { type: "string" },
     "authored-turret-catalog-sha256": { type: "string" },
+    "turrets-from-replay": { type: "boolean" },
     "nexus-models": { type: "string" },
     "authored-nexus-catalog": { type: "string" },
     "authored-nexus-catalog-sha256": { type: "string" },
@@ -213,6 +214,7 @@ assert.ok(
 );
 const turretCatalogPath = values["authored-turret-catalog"];
 const turretCatalogDigest = values["authored-turret-catalog-sha256"];
+const decodeTurrets = values["turrets-from-replay"] === true;
 assert.equal(
   turretCatalogPath === undefined,
   turretCatalogDigest === undefined,
@@ -224,6 +226,14 @@ assert.ok(
       values["turret-placements"] !== undefined &&
       values["structure-models"] === undefined),
   "Authored turret catalogs require a private package and turret placements without prepared structure models",
+);
+assert.ok(
+  !decodeTurrets ||
+    (turretCatalogPath !== undefined &&
+      values["worker-decompressor"] !== undefined &&
+      values["position-decoder"] !== undefined &&
+      values["team-vision"] === undefined),
+  "Replay-derived turrets require a pinned authored catalog and motion worker without prepared team vision",
 );
 const announcerDirectory = values["announcer-preview"];
 const announcerCatalogDirectory = values["announcer-catalog"];
@@ -1103,7 +1113,7 @@ async function loadStructureRenderRoutes(manifestPath, exported, turrets) {
   );
   assert.ok([...losses.keys()].every((context) => seen.has(context)));
   assert.equal(usedAssets.size, bindings.length);
-  return { bindings, instances, routes, omissions };
+  return { bindings, instances, routes, omissions, assetIds };
 }
 
 async function loadInhibitorModelRoutes(
@@ -1768,6 +1778,9 @@ if (decodeChampionModels) {
 let structureModelRoutes;
 let inhibitorModelRoutes;
 let inhibitorCatalog;
+let turretCatalog;
+let verifiedTurretModels;
+let verifiedTurretLosses;
 let placementSha;
 let nexus;
 if (values["turret-placements"] !== undefined) {
@@ -1796,7 +1809,8 @@ if (values["turret-placements"] !== undefined) {
       "Verified turret lies outside the displayed world",
     );
   }
-  scene.turretLosses = losses;
+  if (decodeTurrets) verifiedTurretLosses = losses;
+  else scene.turretLosses = losses;
   let structures;
   if (turretCatalogPath !== undefined) {
     const { bindNativeTerrainTurretCatalog } =
@@ -1818,6 +1832,15 @@ if (values["turret-placements"] !== undefined) {
       { ...bound, assets: catalog.assets },
       turrets,
     );
+    if (decodeTurrets) {
+      const { projectCurrentTurretCatalog } =
+        await import("./research/native-terrain-turret-catalog-author.mjs");
+      turretCatalog = projectCurrentTurretCatalog(
+        catalog,
+        structures.assetIds,
+        placementReceipt,
+      );
+    }
   } else if (values["structure-models"] !== undefined)
     structures = await loadStructureModelRoutes(
       values["structure-models"],
@@ -1826,8 +1849,7 @@ if (values["turret-placements"] !== undefined) {
       turrets,
     );
   if (structures !== undefined) {
-    scene.structureModels = {
-      bindings: structures.bindings,
+    const structureModels = {
       instances: structures.instances,
       ...(structures.omissions.length === 0
         ? {}
@@ -1835,6 +1857,14 @@ if (values["turret-placements"] !== undefined) {
             omittedContexts: structures.omissions.map(({ context }) => context),
           }),
     };
+    if (decodeTurrets) {
+      verifiedTurretModels = structureModels;
+      scene.structureModelBindings = structures.bindings;
+    } else
+      scene.structureModels = {
+        bindings: structures.bindings,
+        ...structureModels,
+      };
     structureModelRoutes = structures.routes;
   }
   let inhibitors;
@@ -2011,6 +2041,7 @@ if (decoderBytes !== undefined) {
       ...(decodeChampionExperience ? { decodeChampionExperience: true } : {}),
       ...(championModelCatalog === undefined ? {} : { championModelCatalog }),
       ...(inhibitorCatalog === undefined ? {} : { inhibitorCatalog }),
+      ...(turretCatalog === undefined ? {} : { turretCatalog }),
     };
   } else {
     const [
@@ -2564,13 +2595,27 @@ if (terrainControllerMaterialsPath !== undefined) {
     missingReplacementMeshControllerIds,
   };
 }
-if (decodeTeamVision || inhibitorCatalog !== undefined) {
+if (
+  decodeTeamVision ||
+  inhibitorCatalog !== undefined ||
+  turretCatalog !== undefined
+) {
   assert.ok(currentBuild && scene.workerMotion && replayCodecs);
   let visionScene =
     replayWorldUnits === undefined
       ? scene
       : { ...scene, worldUnitModels: replayWorldUnits };
   let inhibitorValidator;
+  let turretValidator;
+  if (turretCatalog !== undefined) {
+    const { createCurrentReplayTurretCollector } =
+      await import("./research/native-terrain-turret-worker.mjs");
+    turretValidator = createCurrentReplayTurretCollector(
+      prepared,
+      turretCatalog,
+    );
+    visionScene = { ...visionScene, structureModels: verifiedTurretModels };
+  }
   if (inhibitorCatalog !== undefined) {
     const { createCurrentReplayInhibitorCollector } =
       await import("./research/native-terrain-inhibitor-worker.mjs");
@@ -2588,6 +2633,7 @@ if (decodeTeamVision || inhibitorCatalog !== undefined) {
       replayPacketEnvelopes(replay, decompress),
     )) {
       inhibitorValidator?.observe(packet);
+      turretValidator?.observe(packet);
       yield packet;
     }
   }
@@ -2607,6 +2653,19 @@ if (decodeTeamVision || inhibitorCatalog !== undefined) {
     }
   }
   inhibitorValidator?.finish();
+  if (turretValidator !== undefined) {
+    const { structureModels, turretLosses } = turretValidator.finish();
+    assert.deepEqual(
+      structureModels,
+      verifiedTurretModels,
+      "Worker turret placements differ from independent prepared evidence",
+    );
+    assert.deepEqual(
+      turretLosses,
+      verifiedTurretLosses,
+      "Worker turret losses differ from independent prepared evidence",
+    );
+  }
 }
 let championAnimationRoutes;
 const animationScene =
