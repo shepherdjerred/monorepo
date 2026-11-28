@@ -28,6 +28,8 @@ export type SweepSummary = sweep.SweepSummary;
 export type TestDatabasePrefix = sweep.TestDatabasePrefix;
 
 export type EnsureTemplateOptions = templates.EnsureTemplateOptions;
+export type DropOwnedDatabaseOptions = databases.DropOwnedDatabaseOptions;
+export type ExplicitDropDecision = databases.ExplicitDropDecision;
 export type OwnedTestDatabaseHandle = databases.OwnedTestDatabaseHandle;
 
 export const POSTGRES_MAJOR = binaries.POSTGRES_MAJOR;
@@ -106,5 +108,6 @@ export const assertOwnedEphemeralDatabaseName =
 export const cloneTemplateDatabaseSync = databases.cloneTemplateDatabaseSync;
 export const createEmptyTestDatabase = databases.createEmptyTestDatabase;
 export const createTemplateTestDatabase = databases.createTemplateTestDatabase;
+export const decideExplicitDrop = databases.decideExplicitDrop;
 export const dropOwnedTestDatabase = databases.dropOwnedTestDatabase;
 export const dropOwnedTestDatabaseSync = databases.dropOwnedTestDatabaseSync;

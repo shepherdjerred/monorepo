@@ -133,28 +133,23 @@ targets above remain available for local validation, and existing
 
 Rebuild both images whenever the Dockerfile's pins change (for example
 `DOTNET_SDK_VERSION` after `global.json` moves): `winui` builds from `base`.
-Build on the cluster's BuildKit, which is linux/amd64, through a port-forward.
-BuildKit pushes with the client's Docker credentials, which must have push
-scope: use the `ci-dockerhub-publisher-credentials` item from the homelab
-vault (`DOCKERHUB_USERNAME`, `DOCKERHUB_PUBLISH_TOKEN`) through
-`scripts/onepassword/with-service-account.sh op run`, served by a credential
-helper or a throwaway `DOCKER_CONFIG`. A read-only Docker Hub token fails the
-push with `401 Unauthorized: access token has insufficient scopes`.
-`CI_RELEASE_NUMBER` must exceed the pinned `buildNumber`; use the main pipeline
-number of the source commit.
+Run the manual release script from the repository root with the `main` pipeline
+number of the source commit (`--release-number` must exceed the pinned
+`buildNumber`):
 
 ```bash
-kubectl -n buildkitd port-forward svc/buildkitd-buildkitd-service 21234:1234 &
-docker buildx create --name ci --driver remote tcp://127.0.0.1:21234
-export CI_COMMIT_SHA=$(git rev-parse HEAD) CI_RELEASE_NUMBER=<main pipeline number>
-for image in windows-cross-compiler windows-cross-compiler-winui; do
-  bun ci/scripts/images/build-ci-image.ts --image "$image" --candidate-out "/tmp/$image.json"
-done
-bun ci/scripts/images/selftest-ci-image.ts
-docker buildx rm ci
-kill %1
+bun scripts/release/windows-cross-compiler.ts --release-number <main pipeline number>
 ```
 
-Each candidate file holds the `images/<image>/STATE.json` fields (with
-`schema` set to `ci-image-pin-state/v1`) and the digest for `DIGEST`. Update
-both files, and the digests on `packages/cross-compilers-site`, in one PR.
+The script opens an ephemeral `kubectl port-forward` to
+`svc/buildkitd-buildkitd-service` in namespace `buildkitd` (linux/amd64),
+creates an isolated temporary `DOCKER_CONFIG` and `buildx` builder backed by a
+`ci-dockerhub-publisher-credentials` 1Password credential helper via
+`scripts/onepassword/with-service-account.sh op run` (so no secret touches disk
+and read-only keychain tokens are bypassed), runs
+`ci/scripts/images/build-ci-image.ts` for both `windows-cross-compiler` and
+`windows-cross-compiler-winui`, runs `ci/scripts/images/selftest-ci-image.ts`,
+rewrites `images/*/DIGEST`, `images/*/STATE.json`, and the digest constants in
+`packages/cross-compilers-site/src/pages/{windows,index}.astro`, and cleans up
+the builder, port-forward, and temporary files on exit. Commit the resulting
+diff in one PR.

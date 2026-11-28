@@ -3,6 +3,7 @@ import {
   buildBaseline,
   compareToBaseline,
   countByPair,
+  evaluateBaseline,
   pairKey,
   parseReport,
   type Baseline,
@@ -91,7 +92,7 @@ describe("compareToBaseline", () => {
     ).toEqual([]);
   });
 
-  test("fails on a brand-new pair and names the file:line ranges", () => {
+  test("fails on a brand-new pair and names the file:line ranges and repo totals", () => {
     const clones = [
       clone("a.ts", "b.ts"),
       clone("c.ts", "d.ts", { firstRange: "3-9", secondRange: "7-13" }),
@@ -104,6 +105,9 @@ describe("compareToBaseline", () => {
     expect(failures[0]).toContain("new duplication between c.ts and d.ts");
     expect(failures[1]).toContain("c.ts:3-9");
     expect(failures[1]).toContain("d.ts:7-13");
+    expect(failures[2]).toContain(
+      "Repository totals: 2 clones (+1 vs baseline 1), 200 tokens (+100 vs baseline 100).",
+    );
   });
 
   test("fails when an existing pair gains clones", () => {
@@ -116,6 +120,9 @@ describe("compareToBaseline", () => {
     expect(failures[0]).toContain(
       "duplication increased for a.ts and b.ts (2 > 1 clones allowed)",
     );
+    expect(failures.at(-1)).toContain(
+      "Repository totals: 2 clones (+1 vs baseline 1)",
+    );
   });
 
   test("fails on a count decrease and demands a baseline --update", () => {
@@ -124,9 +131,12 @@ describe("compareToBaseline", () => {
       baseline({ "a.ts|b.ts": { clones: 2, tokens: 200 } }),
     );
 
-    expect(failures).toHaveLength(1);
-    expect(failures[0]).toContain("has 1 clone but 2 allowed");
+    expect(failures).toHaveLength(2);
+    expect(failures[0]).toContain("has 1 clone (100 tokens) but 2 allowed");
     expect(failures[0]).toContain("bun run jscpd --update");
+    expect(failures[1]).toContain(
+      "Repository totals: 1 clones (-1 vs baseline 2), 100 tokens (-100 vs baseline 200).",
+    );
   });
 
   test("fails when a baselined pair disappears entirely", () => {
@@ -135,9 +145,58 @@ describe("compareToBaseline", () => {
       baseline({ "a.ts|b.ts": { clones: 1, tokens: 100 } }),
     );
 
-    expect(failures).toHaveLength(1);
-    expect(failures[0]).toContain("has 0 clones but 1 allowed");
+    expect(failures).toHaveLength(2);
+    expect(failures[0]).toContain("has 0 clones (0 tokens) but 1 allowed");
     expect(failures[0]).toContain("bun run jscpd --update");
+  });
+
+  test("labels zero-net paired increase and decrease as likely clone re-attribution", () => {
+    const pinned = baseline({
+      "a.ts|a.ts": { clones: 2, tokens: 200 },
+      "a.ts|b.ts": { clones: 1, tokens: 100 },
+    });
+    const reattributed = [
+      clone("a.ts", "a.ts", { tokens: 100 }),
+      clone("a.ts", "b.ts", { tokens: 100 }),
+      clone("a.ts", "b.ts", { tokens: 100 }),
+    ];
+
+    const evaluation = evaluateBaseline(reattributed, pinned);
+    expect(evaluation.likelyReattribution).toBe(true);
+    expect(evaluation.baselineTotals).toEqual({ clones: 3, tokens: 300 });
+    expect(evaluation.currentTotals).toEqual({ clones: 3, tokens: 300 });
+
+    const text = evaluation.failures.join("\n");
+    expect(text).toContain(
+      "Repository totals: 3 clones (+0 vs baseline 3), 300 tokens (+0 vs baseline 300).",
+    );
+    expect(text).toContain("Likely clone re-attribution");
+    expect(text).toContain(
+      "update the drifted pair entries (`clones` and `tokens` together) in .jscpd-baseline.json",
+    );
+    expect(text).not.toContain("bun run jscpd --update");
+  });
+
+  test("does not label genuine net-new duplication as re-attribution even when another pair shrank", () => {
+    const pinned = baseline({
+      "a.ts|a.ts": { clones: 2, tokens: 200 },
+      "a.ts|b.ts": { clones: 1, tokens: 100 },
+    });
+    const netIncrease = [
+      clone("a.ts", "a.ts", { tokens: 100 }),
+      clone("a.ts", "b.ts", { tokens: 100 }),
+      clone("a.ts", "b.ts", { tokens: 100 }),
+      clone("c.ts", "d.ts", { tokens: 150 }),
+    ];
+
+    const evaluation = evaluateBaseline(netIncrease, pinned);
+    expect(evaluation.likelyReattribution).toBe(false);
+    expect(evaluation.failures.join("\n")).toContain(
+      "Repository totals: 4 clones (+1 vs baseline 3), 450 tokens (+150 vs baseline 300).",
+    );
+    expect(evaluation.failures.join("\n")).not.toContain(
+      "Likely clone re-attribution",
+    );
   });
 });
 
@@ -197,7 +256,7 @@ describe("duplicated size ratchet", () => {
       pinned,
     );
 
-    expect(failures).toHaveLength(1);
+    expect(failures).toHaveLength(2);
     expect(failures[0]).toContain("has 70 duplicated tokens but 700 allowed");
     expect(failures[0]).toContain("bun run jscpd --update");
   });

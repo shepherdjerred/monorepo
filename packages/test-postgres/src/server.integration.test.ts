@@ -267,3 +267,77 @@ describe("isolated cluster discovery, conflict diagnostics, and WAL recovery", (
     expect(await Bun.file(markerPath).text()).toBe("keep-durable-data\n");
   }, 60_000);
 });
+
+describe("UTC cluster timezone initialization and override", () => {
+  test("initializes and starts clusters in UTC even when host TZ is non-UTC or postgresql.conf has non-UTC timezone", async () => {
+    const scratchCache = await makeTempDir("test-pg-tz-");
+    const port = await allocateFreePort();
+    const dataRoot = path.join(scratchCache, "monorepo-test-pg", "18");
+    const dataDir = path.join(dataRoot, "pgdata");
+    activeClusters.push(dataDir);
+
+    const moduleUrl = new URL("index.ts", import.meta.url).href;
+    const child = Bun.spawnSync(
+      [
+        process.execPath,
+        "-e",
+        `const { ensureSharedPostgres } = await import(${JSON.stringify(moduleUrl)}); const res = ensureSharedPostgres(); process.stdout.write(res.superUrl);`,
+      ],
+      {
+        env: {
+          ...Bun.env,
+          TZ: "America/Los_Angeles",
+          XDG_CACHE_HOME: scratchCache,
+          ...(process.getuid?.() === 0
+            ? { TEST_POSTGRES_DATA_ROOT: dataRoot }
+            : {}),
+          LOCAL_TEST_PG_PORT: port.toString(),
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    if (child.exitCode !== 0) {
+      throw new Error(
+        `Non-UTC child cluster bootstrap failed: ${child.stderr.toString()}`,
+      );
+    }
+    const superUrl = child.stdout.toString().trim();
+
+    expect(
+      psqlMaintenance("SELECT current_setting('TimeZone')", {
+        adminUrl: superUrl,
+      }),
+    ).toBe("UTC");
+
+    const confPath = path.join(dataDir, "postgresql.conf");
+    const initialConf = await Bun.file(confPath).text();
+    expect(initialConf).toMatch(/^\s*timezone\s*=\s*'?UTC'?(?:\s|$|#)/mu);
+
+    // Simulate an already-initialized local cluster whose postgresql.conf had America/Los_Angeles
+    stopClusterIfRunning(dataDir, "fast");
+    await Bun.write(
+      confPath,
+      `${initialConf}\ntimezone = 'America/Los_Angeles'\n`,
+    );
+
+    const restarted = ensureSharedPostgres({
+      XDG_CACHE_HOME: scratchCache,
+      ...(process.getuid?.() === 0
+        ? { TEST_POSTGRES_DATA_ROOT: dataRoot }
+        : {}),
+      LOCAL_TEST_PG_PORT: port.toString(),
+    });
+    expect(
+      psqlMaintenance("SELECT current_setting('TimeZone')", {
+        adminUrl: restarted.superUrl,
+      }),
+    ).toBe("UTC");
+    expect(
+      psqlMaintenance("SELECT current_setting('TimeZone')", {
+        adminUrl: `${restarted.superUrl}?options=${encodeURIComponent("-c timezone=America/Los_Angeles")}`,
+      }),
+    ).toBe("America/Los_Angeles");
+    stopClusterIfRunning(dataDir, "fast");
+  }, 60_000);
+});

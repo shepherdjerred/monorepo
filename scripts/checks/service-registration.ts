@@ -37,6 +37,7 @@
  * environment renames, which are this checkout's modules.
  */
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { z } from "zod";
 import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
 import {
@@ -48,6 +49,7 @@ import {
   nextRevisionId as computeNextRevisionId,
   resolveImmutableRevisionBase as computeImmutableRevisionBase,
 } from "../lib/delivery/immutable-revisions.ts";
+import { privateImageProvisioningFindings } from "./service-registration-private-images.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..", "..");
 
@@ -63,6 +65,7 @@ export const EXEMPTIONS = "scripts/checks/service-registration-exemptions.json";
 
 const ExemptionsSchema = z.strictObject({
   imagesBuiltOutsideBake: z.record(z.string(), z.string()),
+  pendingPrivateImages: z.record(z.string(), z.string()),
   chartsWithoutRecipe: z.record(z.string(), z.string()),
   policyOnlyDelegations: z.record(z.string(), z.string()),
 });
@@ -89,7 +92,12 @@ const CatalogSchema = z.looseObject({
 });
 
 const ImageRegistrySchema = z.looseObject({
-  images: z.array(z.looseObject({ name: z.string() })),
+  images: z.array(
+    z.looseObject({
+      name: z.string(),
+      visibility: z.enum(["private", "public"]).optional(),
+    }),
+  ),
 });
 
 const RootPackageSchema = z.looseObject({ workspaces: z.array(z.string()) });
@@ -106,7 +114,7 @@ export function resolveImmutableRevisionBase(
   return computeImmutableRevisionBase(root, env);
 }
 
-export async function immutableRevisionFindings(
+export function immutableRevisionFindings(
   options: {
     root?: string;
     env?: Readonly<Record<string, string | undefined>>;
@@ -133,6 +141,7 @@ export type RegistrationInputs = {
   deliveryDelegations: Readonly<Record<string, string>>;
   catalogEnvironmentOf: (environmentId: string) => string;
   registryImages: ReadonlySet<string>;
+  privateRegistryImages?: ReadonlySet<string>;
   applicationTargets: ReadonlySet<string>;
   infrastructureTargets: ReadonlySet<string>;
   bakeTargets: ReadonlyMap<string, BakeTarget>;
@@ -144,6 +153,7 @@ export type RegistrationInputs = {
   workspaces: ReadonlySet<string>;
   exemptions: {
     imagesBuiltOutsideBake: Readonly<Record<string, string>>;
+    pendingPrivateImages: Readonly<Record<string, string>>;
     chartsWithoutRecipe: Readonly<Record<string, string>>;
     policyOnlyDelegations: Readonly<Record<string, string>>;
   };
@@ -240,6 +250,26 @@ function delegationFindings(inputs: RegistrationInputs): Finding[] {
   return findings;
 }
 
+function pendingPrivateStaleReason(
+  img: string,
+  inputs: RegistrationInputs,
+  catalogImages: ReadonlySet<string>,
+): string | undefined {
+  if (!inputs.registryImages.has(img)) return `not in ${IMAGE_REGISTRY}`;
+  if (
+    inputs.privateRegistryImages !== undefined &&
+    !inputs.privateRegistryImages.has(img)
+  )
+    return `not marked visibility "private" in ${IMAGE_REGISTRY}`;
+  const claimed =
+    catalogImages.has(img) ||
+    inputs.applicationTargets.has(img) ||
+    inputs.infrastructureTargets.has(img);
+  return claimed
+    ? "claimed by a catalog service or build target now"
+    : undefined;
+}
+
 /** An exemption that names nothing real hides the next gap; fail on it. */
 function staleExemptionFindings(inputs: RegistrationInputs): Finding[] {
   const findings: Finding[] = [];
@@ -257,6 +287,10 @@ function staleExemptionFindings(inputs: RegistrationInputs): Finding[] {
       stale("imagesBuiltOutsideBake", img, "not a first-party catalog image");
     else if (inputs.bakeTargets.has(img))
       stale("imagesBuiltOutsideBake", img, "it has a bake target now");
+  }
+  for (const img of Object.keys(exemptions.pendingPrivateImages)) {
+    const why = pendingPrivateStaleReason(img, inputs, images);
+    if (why !== undefined) stale("pendingPrivateImages", img, why);
   }
   for (const ch of Object.keys(exemptions.chartsWithoutRecipe)) {
     if (!charts.has(ch))
@@ -286,7 +320,15 @@ export function registrationFindings(inputs: RegistrationInputs): Finding[] {
   return [
     ...inputs.services.flatMap((service) => serviceFindings(service, inputs)),
     ...[...inputs.registryImages]
-      .filter((img) => !catalogImages.has(img))
+      .filter(
+        (img) =>
+          !catalogImages.has(img) &&
+          !(
+            img in inputs.exemptions.pendingPrivateImages &&
+            (inputs.privateRegistryImages === undefined ||
+              inputs.privateRegistryImages.has(img))
+          ),
+      )
       .map((img) => orphan(img, `in ${IMAGE_REGISTRY}`)),
     ...[...inputs.applicationTargets, ...inputs.infrastructureTargets]
       .filter((img) => !catalogImages.has(img))
@@ -381,9 +423,9 @@ export async function loadRegistrationInputs(
     readJson(root, IMAGE_REGISTRY),
     readJson(root, "package.json"),
     readJson(root, EXEMPTIONS),
-    import(path.join(root, IMAGE_TARGETS)).then((mod: unknown) =>
-      ImageTargetsSchema.parse(mod),
-    ),
+    import(
+      `${pathToFileURL(path.join(root, IMAGE_TARGETS)).href}?t=${String(Bun.nanoseconds())}`
+    ).then((mod: unknown) => ImageTargetsSchema.parse(mod)),
     readText(root, BAKE_FILE),
     readText(root, SMOKE_COMMANDS),
   ]);
@@ -427,6 +469,11 @@ export async function loadRegistrationInputs(
     deliveryDelegations: catalog.legacy.deliveryDelegations,
     catalogEnvironmentOf,
     registryImages: new Set(registry.images.map((i) => i.name)),
+    privateRegistryImages: new Set(
+      registry.images
+        .filter((i) => i.visibility === "private")
+        .map((i) => i.name),
+    ),
     applicationTargets: new Set(
       Object.keys(imageTargets.IMAGE_TARGET_REGISTRY),
     ),
@@ -451,11 +498,16 @@ export async function loadRegistrationInputs(
 }
 
 if (import.meta.main) {
-  const [inputs, revisionFindings] = await Promise.all([
-    loadRegistrationInputs(),
+  const inputs = await loadRegistrationInputs();
+  const [revisionFindings, privateImageFindings] = await Promise.all([
     immutableRevisionFindings(),
+    privateImageProvisioningFindings({ inputs }),
   ]);
-  const findings = [...registrationFindings(inputs), ...revisionFindings];
+  const findings = [
+    ...registrationFindings(inputs),
+    ...revisionFindings,
+    ...privateImageFindings,
+  ];
   if (findings.length > 0) {
     console.error(
       `Service registration is incomplete (${String(findings.length)} item(s)):\n\n${formatChecklist(findings)}`,

@@ -14,10 +14,8 @@ import {
   downloadChartArtifact,
   resolvePublishedChartArtifact,
 } from "../lib/artifacts/published-chart-artifact.ts";
-import {
-  createRetryingDeliveryFetch,
-  readPublicationHandoffs as readProducerHandoffs,
-} from "../lib/ci/delivery-publication-handoffs.ts";
+import { readPublicationHandoffs as readProducerHandoffs } from "../lib/ci/delivery-publication-handoffs.ts";
+import { createRetryingDeliveryFetch } from "../lib/delivery/retry-fetch.ts";
 import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
 

@@ -11,7 +11,8 @@
  * .jscpd-baseline.json. A brand-new pair, or more clones for an existing
  * pair, fails with the offending file:line ranges. Fewer clones than the
  * baseline also fails — run `bun run jscpd --update` to tighten the
- * baseline (unlike copies, ratchets only move one way on purpose).
+ * baseline (or hand-edit drifted pair entries when an edit re-attributes an
+ * existing clone across sibling pairs without increasing repo-wide totals).
  */
 
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -61,6 +62,20 @@ export type Clone = {
   secondRange: string;
 };
 
+export type DuplicationTotals = {
+  clones: number;
+  tokens: number;
+};
+
+export type BaselineEvaluation = {
+  failures: string[];
+  baselineTotals: DuplicationTotals;
+  currentTotals: DuplicationTotals;
+  increasedPairs: string[];
+  decreasedPairs: string[];
+  likelyReattribution: boolean;
+};
+
 /** Baseline key: the two repo-relative paths, sorted, joined with `|`. */
 export function pairKey(fileA: string, fileB: string): string {
   return [fileA, fileB].sort((a, b) => a.localeCompare(b)).join("|");
@@ -101,6 +116,17 @@ export function countByPair(clones: Clone[]): Map<string, PairBudget> {
   return counts;
 }
 
+/** Sum repository-wide clone and token totals across a pair budget map. */
+export function sumBudgets(budgets: Iterable<PairBudget>): DuplicationTotals {
+  let clones = 0;
+  let tokens = 0;
+  for (const budget of budgets) {
+    clones += budget.clones;
+    tokens += budget.tokens;
+  }
+  return { clones, tokens };
+}
+
 /** Rebuild the committed baseline object from the current scan. */
 export function buildBaseline(clones: Clone[]): Baseline {
   const counts = countByPair(clones);
@@ -124,22 +150,19 @@ function describeClones(clones: Clone[], pair: string): string[] {
     );
 }
 
-/**
- * Compare the current scan to the baseline. Mirrors quality-ratchet.ts: new
- * pairs, more clones, or more duplicated tokens fail with locations;
- * decreases fail with an instruction to tighten (`--update` rewrites the
- * baseline). Tokens are checked as well as counts so that growing an
- * existing clone — same pair, same count, far more duplicated code — cannot
- * pass silently.
- */
-export function compareToBaseline(
-  clones: Clone[],
-  baseline: Baseline,
-): string[] {
-  const failures: string[] = [];
-  const current = countByPair(clones);
+function formatSignedDelta(delta: number): string {
+  return delta >= 0 ? `+${String(delta)}` : String(delta);
+}
 
+function collectIncreasedPairFailures(
+  clones: Clone[],
+  current: Map<string, PairBudget>,
+  baseline: Baseline,
+): { failures: string[]; increasedPairs: string[] } {
+  const failures: string[] = [];
+  const increasedPairs: string[] = [];
   const sortedPairs = [...current.keys()].sort((a, b) => a.localeCompare(b));
+
   for (const pair of sortedPairs) {
     const budget = current.get(pair);
     if (budget === undefined) {
@@ -148,16 +171,19 @@ export function compareToBaseline(
     const allowed = baseline.pairs[pair];
     const names = pair.replaceAll("|", " and ");
     if (allowed === undefined) {
+      increasedPairs.push(pair);
       failures.push(
         `FAIL: new duplication between ${names} (${String(budget.clones)} clone${budget.clones === 1 ? "" : "s"}, ${String(budget.tokens)} tokens):`,
         ...describeClones(clones, pair),
       );
     } else if (budget.clones > allowed.clones) {
+      increasedPairs.push(pair);
       failures.push(
         `FAIL: duplication increased for ${names} (${String(budget.clones)} > ${String(allowed.clones)} clones allowed):`,
         ...describeClones(clones, pair),
       );
     } else if (budget.tokens > allowed.tokens) {
+      increasedPairs.push(pair);
       failures.push(
         `FAIL: duplicated size grew for ${names} (${String(budget.tokens)} > ${String(allowed.tokens)} tokens allowed):`,
         ...describeClones(clones, pair),
@@ -165,22 +191,118 @@ export function compareToBaseline(
     }
   }
 
+  return { failures, increasedPairs };
+}
+
+function findDecreasedPairs(
+  current: Map<string, PairBudget>,
+  baseline: Baseline,
+): string[] {
+  const decreasedPairs: string[] = [];
+  for (const [pair, allowed] of Object.entries(baseline.pairs)) {
+    const budget = current.get(pair);
+    const clones_ = budget?.clones ?? 0;
+    const tokens = budget?.tokens ?? 0;
+    if (clones_ < allowed.clones || tokens < allowed.tokens) {
+      decreasedPairs.push(pair);
+    }
+  }
+  return decreasedPairs;
+}
+
+function formatDecreasedPairFailures(
+  current: Map<string, PairBudget>,
+  baseline: Baseline,
+  likelyReattribution: boolean,
+): string[] {
+  const failures: string[] = [];
+  const action = likelyReattribution
+    ? `update the drifted pair's \`clones\` and \`tokens\` entries in ${BASELINE_FILE}`
+    : "run `bun run jscpd --update` to tighten the baseline";
+
   for (const [pair, allowed] of Object.entries(baseline.pairs)) {
     const budget = current.get(pair);
     const clones_ = budget?.clones ?? 0;
     const tokens = budget?.tokens ?? 0;
     if (clones_ < allowed.clones) {
       failures.push(
-        `FAIL: ${pair} has ${String(clones_)} clone${clones_ === 1 ? "" : "s"} but ${String(allowed.clones)} allowed — run \`bun run jscpd --update\` to tighten the baseline`,
+        `FAIL: ${pair} has ${String(clones_)} clone${clones_ === 1 ? "" : "s"} (${String(tokens)} tokens) but ${String(allowed.clones)} allowed (${String(allowed.tokens)} tokens) — ${action}`,
       );
     } else if (tokens < allowed.tokens) {
       failures.push(
-        `FAIL: ${pair} has ${String(tokens)} duplicated tokens but ${String(allowed.tokens)} allowed — run \`bun run jscpd --update\` to tighten the baseline`,
+        `FAIL: ${pair} has ${String(tokens)} duplicated tokens but ${String(allowed.tokens)} allowed — ${action}`,
       );
     }
   }
 
   return failures;
+}
+
+/**
+ * Evaluate the current scan against the baseline, computing repository-wide
+ * clone/token deltas and detecting zero-net clone re-attribution across pairs.
+ */
+export function evaluateBaseline(
+  clones: Clone[],
+  baseline: Baseline,
+): BaselineEvaluation {
+  const current = countByPair(clones);
+  const baselineTotals = sumBudgets(Object.values(baseline.pairs));
+  const currentTotals = sumBudgets(current.values());
+  const { failures: increasedFailures, increasedPairs } =
+    collectIncreasedPairFailures(clones, current, baseline);
+  const decreasedPairs = findDecreasedPairs(current, baseline);
+  const likelyReattribution =
+    increasedPairs.length > 0 &&
+    decreasedPairs.length > 0 &&
+    currentTotals.clones <= baselineTotals.clones &&
+    currentTotals.tokens <= baselineTotals.tokens;
+
+  const decreasedFailures = formatDecreasedPairFailures(
+    current,
+    baseline,
+    likelyReattribution,
+  );
+  const failures = [...increasedFailures, ...decreasedFailures];
+
+  if (failures.length > 0) {
+    const cloneDelta = formatSignedDelta(
+      currentTotals.clones - baselineTotals.clones,
+    );
+    const tokenDelta = formatSignedDelta(
+      currentTotals.tokens - baselineTotals.tokens,
+    );
+    failures.push(
+      `Repository totals: ${String(currentTotals.clones)} clones (${cloneDelta} vs baseline ${String(baselineTotals.clones)}), ${String(currentTotals.tokens)} tokens (${tokenDelta} vs baseline ${String(baselineTotals.tokens)}).`,
+    );
+    if (likelyReattribution) {
+      failures.push(
+        `Likely clone re-attribution (paired increases and decreases with no net duplication increase): update the drifted pair entries (\`clones\` and \`tokens\` together) in ${BASELINE_FILE} rather than extracting unrelated files or regenerating the entire baseline.`,
+      );
+    }
+  }
+
+  return {
+    failures,
+    baselineTotals,
+    currentTotals,
+    increasedPairs,
+    decreasedPairs,
+    likelyReattribution,
+  };
+}
+
+/**
+ * Compare the current scan to the baseline. Mirrors quality-ratchet.ts: new
+ * pairs, more clones, or more duplicated tokens fail with locations;
+ * decreases fail with an instruction to tighten (or hand-edit drifted pair
+ * entries when a clone was re-attributed without increasing repo-wide totals).
+ */
+export function compareToBaseline(
+  clones: Clone[],
+  baseline: Baseline,
+): string[] {
+  return evaluateBaseline(clones, baseline).failures;
 }
 
 async function scan(repoRoot: string): Promise<Clone[]> {
@@ -227,19 +349,20 @@ async function main(): Promise<void> {
 
   const baselineText = await readFile(baselinePath, "utf8");
   const baseline = BaselineSchema.parse(JSON.parse(baselineText));
-  const failures = compareToBaseline(clones, baseline);
+  const evaluation = evaluateBaseline(clones, baseline);
 
   console.log(
     `jscpd baseline: ${String(clones.length)} clones across ${String(countByPair(clones).size)} file pairs (${String(Object.keys(baseline.pairs).length)} allowed pairs)`,
   );
 
-  if (failures.length > 0) {
-    for (const line of failures) {
+  if (evaluation.failures.length > 0) {
+    for (const line of evaluation.failures) {
       console.error(line);
     }
     console.error(
-      "\njscpd baseline ratchet failed. Deduplicate the new clones, or — only\n" +
-        "for deliberate, reviewed duplication — run `bun run jscpd --update`.",
+      evaluation.likelyReattribution
+        ? `\njscpd baseline ratchet failed due to likely clone re-attribution (no net duplication added).\nUpdate only the drifted pair entries (\`clones\` and \`tokens\` together) in ${BASELINE_FILE} rather than extracting unrelated files or running \`bun run jscpd --update\`.`
+        : "\njscpd baseline ratchet failed. Deduplicate the new clones, or — only\nfor deliberate, reviewed duplication — run `bun run jscpd --update`.",
     );
     process.exit(1);
   }

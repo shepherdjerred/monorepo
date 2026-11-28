@@ -571,12 +571,7 @@ describe("CI reporting manifest", () => {
       runtime: "node",
       runtimeReason:
         "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
-      args: [
-        "src/workflows",
-        "--exclude",
-        "src/workflows/agent-task.test.ts",
-        "--no-file-parallelism",
-      ],
+      args: ["src/workflows", "--no-file-parallelism"],
     });
     expect(scoutTemporal?.steps.at(-1)).toEqual({
       runner: "vitest",
@@ -798,6 +793,28 @@ describe("test:ci runner inputs", () => {
             inputs.includes("ci-tests.json"),
           `${directory}#${task} must hash its own ci-tests.json`,
         ).toBe(true);
+      }
+    }
+  });
+
+  test("workspace test, typecheck, and lint scripts rely on Turbo task edges instead of chaining bun run build", async () => {
+    const rootPackage = RootPackageSchema.parse(
+      await Bun.file(path.join(repositoryRoot, "package.json")).json(),
+    );
+    const chainedBuildPattern = /(?:^|[;&|]\s*)bun\s+run\s+build\s*&&/u;
+    for (const directory of rootPackage.workspaces) {
+      const packageJson = WorkspacePackageSchema.parse(
+        await Bun.file(
+          path.join(repositoryRoot, directory, "package.json"),
+        ).json(),
+      );
+      for (const task of ["test", "test:ci", "typecheck", "lint"]) {
+        const command = packageJson.scripts?.[task];
+        if (command === undefined) continue;
+        expect(
+          chainedBuildPattern.test(command),
+          `${directory}#${task} must declare dependsOn: ["$TURBO_EXTENDS$", "build"] in turbo.json instead of racing concurrent builds via "${command}"`,
+        ).toBe(false);
       }
     }
   });
