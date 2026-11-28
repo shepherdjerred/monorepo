@@ -5,7 +5,7 @@ import {
   terrainPositionProtocol,
 } from "./native-terrain-byte-codecs.mjs";
 
-export const currentBasicAttackOpcodes = new Set([98, 992]);
+export const currentBasicAttackOpcodes = new Set([98, 195, 359, 992]);
 const implicitTimingBytes = [
   0x5c,
   undefined,
@@ -53,16 +53,35 @@ export function createCurrentBasicAttackReader(replay, substitution) {
     value = substitution[substitution[substitution[value]]];
     return substitution[swapAdjacentBits(value)];
   };
+  // Opcode 359's original two-float vector reader 0x13ed300 decodes
+  // each byte before reversing the assembled words. Keep the f32 bits.
+  const sourceByte = (byte) => {
+    const key = (rotateByteLeft((byte + 0x90) & 255, 2) + 0xc6) & 255;
+    return ((substitution[key] ^ 0xde) + 0x50) & 255;
+  };
+  function sourceWord(bytes, start) {
+    return (
+      (sourceByte(bytes[start]) |
+        (sourceByte(bytes[start + 1]) << 8) |
+        (sourceByte(bytes[start + 2]) << 16) |
+        (sourceByte(bytes[start + 3]) << 24)) >>>
+      0
+    );
+  }
 
   return (opcode, payload) => {
     if (!(payload instanceof Uint8Array) || payload.length < 4) return null;
     const [wrapper, first, second, third] = payload;
-    const suffixBytes = opcode === 992 && wrapper === 0xa5 ? 8 : 0;
-    if (suffixBytes === 0 && (opcode !== 98 || wrapper !== 0xc2)) return null;
+    const hasSource = opcode === 992 || opcode === 359;
+    if (
+      !currentBasicAttackOpcodes.has(opcode) ||
+      wrapper !== (hasSource ? 0xa5 : 0xc2)
+    )
+      return null;
     // The nested cast vector has its own reader and never appears on the
     // supported ordinary basic-attack packet cohort.
     if (second & 4) return null;
-    const end = payload.length - suffixBytes;
+    const end = payload.length - (hasSource ? 8 : 0);
     let cursor = 4;
     function readVarUint(decode) {
       let value = 0;
@@ -110,6 +129,13 @@ export function createCurrentBasicAttackReader(replay, substitution) {
     // its live clock and actor adjustment.
     const timingOffsetCentiseconds =
       ((0xa6 - rotateByteLeft(timingByte ^ 0xb5, 2)) & 255) - 128;
-    return { targetId, requestedSlot, timingOffsetCentiseconds };
+    return {
+      targetId,
+      requestedSlot,
+      timingOffsetCentiseconds,
+      ...(opcode === 359 && {
+        sourceXZBits: [sourceWord(payload, end), sourceWord(payload, end + 4)],
+      }),
+    };
   };
 }

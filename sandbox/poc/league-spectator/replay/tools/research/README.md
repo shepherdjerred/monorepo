@@ -775,7 +775,11 @@ the original packet receipt and timed cue artifact using
 ### Recorded basic attack inputs
 
 The `.8428` reader recovers the target, requested attack slot, and signed
-centisecond offset from the reviewed compact opcode 98 and 992 bodies. A
+centisecond offset from the reviewed compact champion opcode 98 and 992
+bodies and lane-minion opcode 359 bodies. Opcode 359 also supplies the raw
+binary32 X/Z source coordinates from its native movement wrapper. The native
+oracle covers the observed opcode 195 bodies and embedded casts. The portable
+reader leaves embedded casts out of the basic-attack stream. A
 requested slot can be overridden by the native actor. Animation timing also
 uses live state. The packet and asset proofs are separate prerequisites for
 rendering an attack.
@@ -790,6 +794,12 @@ bun "$attackTools/verify-recorded-basic-attacks.mjs" $originalRofl $replaySha256
 Get-Content -Raw $attackCorpus | uv run --offline --with unicorn python "$attackTools/probe-recorded-basic-attacks.py" $macArchive | Set-Content -Encoding utf8 $attackReceipt
 bun "$attackTools/verify-recorded-basic-attacks.mjs" $originalRofl $replaySha256 $positionCodecs $attackReceipt
 ```
+
+Append `--lanes $laneEvidence $laneEvidenceSha256` to both verifier calls to
+use independently bound Map11 lane identities and lifetimes. The native
+oracle command accepts both packet corpora. The source position is the input
+to native movement correction, with final actor placement owned by the movement
+controller and the actor update.
 
 The asset census reads the equipped skins from the recorded opening and
 checks each original character record, spell, graph, and rig. The optional

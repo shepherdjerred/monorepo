@@ -11,6 +11,8 @@ from unicorn import x86_const as register
 
 PACKETS = {
     98: (0x10118FF, 0x132F300, 0xFDEA0, 0xF449D),
+    195: (0x101C19B, 0x132F650, 0xFDEC0, 0xF462F),
+    359: (0x108ED20, 0x132F7C0, 0xFDED0, 0xF46F8),
     992: (0x10121DC, 0x132F470, 0xFDEB0, 0xF4566),
 }
 CONSUMER = 0x11CFF0
@@ -47,9 +49,13 @@ def observe(harness, reader, opcode, owner, payload):
     reader.heap = harness.HEAP
     reader.context = owner
     machine.mem_write(harness.STOP, harness.EMPTY)
-    machine.reg_write(register.UC_X86_REG_RBX, harness.OBJECT)
-    reader.call(constructor, end=base + 0x101C304)
-    packet = reader.read(harness.OBJECT, 8)
+    if opcode == 359:
+        packet = harness.OBJECT
+        reader.call(constructor, packet)
+    else:
+        machine.reg_write(register.UC_X86_REG_RBX, harness.OBJECT)
+        reader.call(constructor, end=base + 0x101C304)
+        packet = reader.read(harness.OBJECT, 8)
     vtable = reader.read(packet, 8)
     if reader.read(packet + 8, 2) != opcode or reader.read(vtable + 8, 8) != base + decoder:
         raise ValueError("Archived attack constructor or body reader differs")
@@ -75,11 +81,19 @@ def observe(harness, reader, opcode, owner, payload):
     machine.reg_write(register.UC_X86_REG_RBX, record)
     reader.call(0x11D2AD, end=base + 0x11D2C0)
     timing = machine.reg_read(register.UC_X86_REG_EAX)
-    return {
+    result = {
         "targetId": target,
         "requestedSlot": requested_slot,
         "timingOffsetCentiseconds": timing if timing < 0x80000000 else timing - 0x100000000,
     }
+    if opcode in (195, 359):
+        result["embeddedCastCount"] = reader.read(record + 0x20, 4)
+    if opcode == 359:
+        if reader.read(packet + 0x50, 4) != 2:
+            raise ValueError("Archived attack wrapper requires two source coordinates")
+        source = reader.read(packet + 0x48, 8)
+        result["sourceXZBits"] = [reader.read(source + axis * 4, 4) for axis in range(2)]
+    return result
 
 
 def main():

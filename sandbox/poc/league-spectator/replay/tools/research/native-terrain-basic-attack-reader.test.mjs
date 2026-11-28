@@ -32,7 +32,7 @@ test("requires exact replay provenance and an authenticated substitution map", (
 
 const maps = process.env.SCOUT_RESEARCH_8428_TERRAIN_DECODER;
 test(
-  "joins both recorded attack layouts to their native target, slot and timing",
+  "joins recorded layouts to native targets, slots, timing and lane coordinates",
   { skip: !maps },
   async () => {
     const codecs = await createPreparedTerrainByteCodecs(
@@ -52,6 +52,7 @@ test(
       targetId,
       requestedSlot,
       timingOffsetCentiseconds,
+      sourceXZBits,
     ] of [
       [
         992,
@@ -67,15 +68,34 @@ test(
         65,
         -2,
       ],
+      [
+        359,
+        "a5f7698f7f9773a80ef725fe15b3fca83c171bc172955b7c914cc3f2454c",
+        1073742591,
+        64,
+        0,
+        [1172854514, 1172934111],
+      ],
     ]) {
       const bytes = Buffer.from(hex, "hex");
       assert.deepEqual(read(opcode, bytes), {
         targetId,
         requestedSlot,
         timingOffsetCentiseconds,
+        ...(sourceXZBits !== undefined && { sourceXZBits }),
       });
       assert.equal(read(opcode, bytes.subarray(0, -1)), null);
       assert.equal(read(opcode, Uint8Array.of(...bytes, 0)), null);
     }
+    assert.equal(
+      read(
+        195,
+        Buffer.from(
+          "c264668f461aa98453f0a9a9c4fea906a9f0dfc9995097da8f3e2623c24e90089c7a64d11cfdf19a661debe588f5dd38c2968e491572733b3970efa4ef38efefa2f3ef63e838e3e39ce3dd0a6952cfc7fd54b5c650032c494d66625cd302409c49b871fae4035470101764213499c9c90c4181654eba0754f7e575d656593d3f6c44dfa3e403",
+          "hex",
+        ),
+      ),
+      null,
+    );
   },
 );
