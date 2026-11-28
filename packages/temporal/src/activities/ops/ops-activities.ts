@@ -63,6 +63,7 @@ import type {
 import { readTemporalScheduleHealth } from "./temporal-schedules-client.ts";
 import { collectTemporalSchedules } from "./temporal-schedules-collector.ts";
 import { collectCiMaintenanceBlockedSignals } from "./ci-maintenance/ci-maintenance-ops.ts";
+import { collectExperiments } from "./experiments/collector.ts";
 
 function requiredEnvironment(name: string): string {
   const value = Bun.env[name];
@@ -347,6 +348,12 @@ export const opsActivities = {
         context.now,
       ),
     );
+  },
+  async collectOpsExperiments(): Promise<OpsSourceResult | null> {
+    const baseUrl = optionalEnvironment("EXPERIMENTS_INTERNAL_URL");
+    return baseUrl === undefined
+      ? null
+      : await timed("experiments", () => collectExperiments(baseUrl));
   },
   /** Retained command name for histories recorded before ops-tracker-source. */
   async collectOpsLinear(): Promise<OpsSourceResult> {

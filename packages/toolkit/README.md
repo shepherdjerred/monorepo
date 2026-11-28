@@ -372,6 +372,48 @@ holds a live value that fails its variant value schema (each issue is printed).
 each `key path: message` when Flags refuses an undeclared key, a wrong type, or
 an invalid variant value; nothing is written.
 
+## Experiments
+
+`toolkit experiments` plans trials, records evidence, and reads or updates the
+review history for **Hub → Experiments**. Use `--json` for compact machine-readable
+output. Records include the current `revision` and a canonical Hub `url`.
+
+```bash
+toolkit experiments list --view due --json
+toolkit experiments list --view running --q 'CI cancellation' --json
+toolkit experiments show <ID> --json
+toolkit experiments create --file plan.json --json
+toolkit experiments edit <ID> --expected-revision <REV> --file changes.json
+toolkit experiments start <ID> --expected-revision <REV>
+toolkit experiments amend <ID> --expected-revision <REV> --file amendment.json
+toolkit experiments link <ID> --expected-revision <REV> --file link.json
+toolkit experiments evidence <ID> --expected-revision <REV> --file evidence.json
+toolkit experiments review <ID> --expected-revision <REV> --file review.json
+```
+
+Supply an action-specific JSON object through a file or `--file -` for stdin.
+`create` accepts a `title`, `owner`, optional `reviewDate` in `YYYY-MM-DD`
+format, and an optional `plan`. Supply `plan.change`, `plan.hypothesis`,
+`plan.scope`, `plan.successCriteria`, `plan.measurementMethod`, and a review
+date before starting. `plan.baseline` and `plan.guardrails` are optional.
+
+| Action     | JSON input                                                                                                                                                                                            |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `edit`     | The draft fields to change.                                                                                                                                                                           |
+| `amend`    | `rationale` and a `plan` containing the fields to amend.                                                                                                                                              |
+| `link`     | `link` with one of `{"kind":"tracker","issue":"AI-123"}`, `{"kind":"flag","deployment":"scout/prod","key":"dares_enabled"}`, or `{"kind":"url","label":"Measurements","url":"https://example.com/"}`. |
+| `evidence` | A `note` and optional `link` or `flagChange`. A flag receipt contains `deployment`, `key`, `before`, `after`, `revision`, and `changedAt`.                                                            |
+| `review`   | An `outcome` of `keep`, `revert`, `inconclusive`, or `extend`, and a `rationale`. Include a later `reviewDate` for `extend`.                                                                          |
+
+Use the latest revision from `show` for a new edit. If a write loses its
+response, retry with the same `--request-id <UUID>`, revision, and payload.
+Toolkit generates a request ID if you omit it. A review records the decision.
+Carry out any resulting flag change through `toolkit flags`.
+
+The default service uses the `EXPERIMENTS_MACHINE_TOKEN` credential broker.
+For local or alternate services, set `EXPERIMENTS_MACHINE_TOKEN` for that
+service and give its origin through `--url` or `EXPERIMENTS_URL`.
+
 ## Errors
 
 `toolkit errors` reads and triages issues, events, stacktraces, and releases in

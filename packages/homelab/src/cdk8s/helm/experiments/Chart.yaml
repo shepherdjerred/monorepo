@@ -1,0 +1,6 @@
+apiVersion: v2
+name: experiments
+description: Experiments
+type: application
+version: "$version"
+appVersion: "$appVersion"

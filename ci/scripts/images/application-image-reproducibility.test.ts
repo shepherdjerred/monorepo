@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest";
+import { fileURLToPath } from "node:url";
 
 // Rebuilding an application image from byte-identical inputs must reproduce
 // its layer diff_ids, so bake-images.ts classifies it content-unchanged and
 // Delivery retains the qualified artifact (packages/delivery/docs/model.md B2).
 // These invariants keep the inputs that reach each layer stable.
 
-const repoRoot = new URL("../../..", import.meta.url).pathname;
+const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
 type Stage = {
   readonly name: string;
@@ -81,7 +82,7 @@ describe("application image reproducibility", () => {
 
   test("every application install sees only its projected closure", async () => {
     const dockerfiles = await applicationDockerfiles();
-    expect(dockerfiles).toHaveLength(24);
+    expect(dockerfiles).toHaveLength(25);
     expect(dockerfiles).toContain("packages/feeds/Dockerfile");
     expect(dockerfiles).toContain("packages/charts/Dockerfile");
     expect(dockerfiles).toContain("packages/ci-cache/Dockerfile");

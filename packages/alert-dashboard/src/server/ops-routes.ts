@@ -3,6 +3,7 @@ import { bodyLimit } from "hono/body-limit";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { DigestKindSchema } from "@shepherdjerred/ops-model/digest.ts";
 import { FacetKeySchema } from "@shepherdjerred/ops-model/facets.ts";
+import { z } from "zod";
 
 import {
   DigestInProgressError,
@@ -34,6 +35,9 @@ type OpsRouteOptions = {
 };
 
 const INGEST_MAX_BYTES = 8 * 1024 * 1024;
+const SnapshotRequestSchema = SnapshotQuerySchema.extend({
+  includeExperiments: z.literal("1").optional(),
+});
 
 function unauthorized(context: Context): Response {
   return context.json({ error: "Unauthorized" }, 401);
@@ -129,8 +133,13 @@ export function registerOpsRoutes(app: Hono, options: OpsRouteOptions): void {
   });
 
   app.get("/api/v1/ops/snapshot", async (context) => {
-    const query = SnapshotQuerySchema.parse(context.req.query());
-    return context.json(await options.ops.snapshot(query.consumer));
+    const query = SnapshotRequestSchema.parse(context.req.query());
+    return context.json(
+      await options.ops.snapshot(
+        query.consumer,
+        query.includeExperiments === "1",
+      ),
+    );
   });
 
   app.get("/api/v1/ops/facets", async (context) =>

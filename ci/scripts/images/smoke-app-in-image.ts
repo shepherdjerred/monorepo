@@ -537,6 +537,10 @@ const commands: Record<
       FEATURE_FLAGS_MODE: "disabled",
     },
   },
+  experiments: {
+    command: "cd /app/packages/experiments && bun run smoke",
+    env: {},
+  },
 };
 
 /** The command and environment the in-image runner executes for `target`. */
@@ -558,21 +562,14 @@ if (import.meta.main) {
   }
   if (target === "scout-for-lol") {
     const expectedContractHash = Bun.env["EXPECTED_CONTRACT_HASH"];
-    if (
-      expectedContractHash !== undefined &&
-      expectedContractHash.length > 0 &&
-      Bun.env["CONTRACT_HASH"] !== expectedContractHash
-    ) {
+    const actualContractHash = Bun.env["CONTRACT_HASH"];
+    if (expectedContractHash && actualContractHash !== expectedContractHash) {
       throw new Error(
-        `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(Bun.env["CONTRACT_HASH"])}`,
+        `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(actualContractHash)}`,
       );
     }
   }
-  const command = imageSmokeCommand(target);
-
-  assertPassed(
-    await runShell(command.command, command.env),
-    `${target} in-image smoke`,
-  );
+  const { command, env } = imageSmokeCommand(target);
+  assertPassed(await runShell(command, env), `${target} in-image smoke`);
   console.log(`${target} in-image smoke passed`);
 }

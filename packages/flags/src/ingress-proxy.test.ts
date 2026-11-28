@@ -3,12 +3,16 @@ import { createFlagsApp } from "./app.ts";
 import { authFromEnv } from "./auth.ts";
 import {
   createFlagsTrustedProxyAddresses,
+  createTrustedTailscaleProxyAddresses,
   FLAGS_TAILSCALE_INGRESS,
   type FlagsKubernetesReader,
+  type TailscaleIngressIdentity,
 } from "./ingress-proxy.ts";
 import { FlagStore } from "./store.ts";
 
-function clusterFixture() {
+function clusterFixture(
+  identity: TailscaleIngressIdentity = FLAGS_TAILSCALE_INGRESS,
+) {
   const ingressUid = "ing-uid-flags-1";
   const controllerUid = "sts-uid-flags-1";
   const controllerName = "ts-flags-ingress";
@@ -19,8 +23,8 @@ function clusterFixture() {
   };
   const ingress = {
     metadata: {
-      name: FLAGS_TAILSCALE_INGRESS.name,
-      namespace: FLAGS_TAILSCALE_INGRESS.namespace,
+      name: identity.name,
+      namespace: identity.namespace,
       uid: ingressUid,
       resourceVersion: "10",
       annotations,
@@ -29,20 +33,20 @@ function clusterFixture() {
       ingressClassName: "tailscale",
       defaultBackend: {
         service: {
-          name: FLAGS_TAILSCALE_INGRESS.serviceName,
-          port: { number: FLAGS_TAILSCALE_INGRESS.port },
+          name: identity.serviceName,
+          port: { number: identity.port },
         },
       },
-      tls: [{ hosts: [FLAGS_TAILSCALE_INGRESS.host] }],
+      tls: [{ hosts: [identity.host] }],
     },
   };
   const controllerLabels: Record<string, string> = {
-    ...FLAGS_TAILSCALE_INGRESS.parentLabels,
+    ...identity.parentLabels,
   };
   const controller = {
     metadata: {
       name: controllerName,
-      namespace: FLAGS_TAILSCALE_INGRESS.proxyNamespace,
+      namespace: identity.proxyNamespace,
       uid: controllerUid,
       resourceVersion: "20",
       labels: controllerLabels,
@@ -53,7 +57,7 @@ function clusterFixture() {
         metadata: {
           labels: {
             app: ingressUid,
-            ...FLAGS_TAILSCALE_INGRESS.parentLabels,
+            ...identity.parentLabels,
           },
         },
       },
@@ -61,12 +65,12 @@ function clusterFixture() {
   };
   const proxyPodLabels: Record<string, string> = {
     app: ingressUid,
-    ...FLAGS_TAILSCALE_INGRESS.parentLabels,
+    ...identity.parentLabels,
   };
   const proxyPod = {
     metadata: {
       name: `${controllerName}-0`,
-      namespace: FLAGS_TAILSCALE_INGRESS.proxyNamespace,
+      namespace: identity.proxyNamespace,
       uid: "pod-uid-flags-1",
       resourceVersion: "30",
       labels: proxyPodLabels,
@@ -93,7 +97,7 @@ function clusterFixture() {
   const unrelatedProxyPod = {
     metadata: {
       name: "ts-other-ingress-0",
-      namespace: FLAGS_TAILSCALE_INGRESS.proxyNamespace,
+      namespace: identity.proxyNamespace,
       uid: "pod-uid-other-1",
       resourceVersion: "31",
       labels: {
@@ -119,19 +123,17 @@ function clusterFixture() {
   const read: FlagsKubernetesReader = (path) => {
     if (
       path ===
-      `/apis/networking.k8s.io/v1/namespaces/${FLAGS_TAILSCALE_INGRESS.namespace}/ingresses/${FLAGS_TAILSCALE_INGRESS.name}`
+      `/apis/networking.k8s.io/v1/namespaces/${identity.namespace}/ingresses/${identity.name}`
     ) {
       return Promise.resolve(structuredClone(ingress));
     }
     if (
-      path.startsWith(
-        `/api/v1/namespaces/${FLAGS_TAILSCALE_INGRESS.proxyNamespace}/pods?`,
-      )
+      path.startsWith(`/api/v1/namespaces/${identity.proxyNamespace}/pods?`)
     ) {
       return Promise.resolve({ items: structuredClone(pods) });
     }
     return path ===
-      `/apis/apps/v1/namespaces/${FLAGS_TAILSCALE_INGRESS.proxyNamespace}/statefulsets/${controllerName}`
+      `/apis/apps/v1/namespaces/${identity.proxyNamespace}/statefulsets/${controllerName}`
       ? Promise.resolve(structuredClone(controller))
       : Promise.reject(new Error(`Unexpected Kubernetes path: ${path}`));
   };
@@ -146,6 +148,32 @@ function clusterFixture() {
     read,
   };
 }
+
+test("fences a second service to its own ingress host and backend", async () => {
+  const identity = {
+    ...FLAGS_TAILSCALE_INGRESS,
+    namespace: "experiments",
+    name: "experiments-experiments-ingress-ingress",
+    serviceName: "experiments",
+    host: "experiments",
+    port: 7407,
+    parentLabels: {
+      ...FLAGS_TAILSCALE_INGRESS.parentLabels,
+      "tailscale.com/parent-resource-ns": "experiments",
+      "tailscale.com/parent-resource":
+        "experiments-experiments-ingress-ingress",
+    },
+  };
+  const fixture = clusterFixture(identity);
+  const trusted = createTrustedTailscaleProxyAddresses(identity, fixture.read);
+  await expect(trusted()).resolves.toEqual([fixture.proxyIp]);
+
+  fixture.ingress.spec.defaultBackend.service.port.number =
+    FLAGS_TAILSCALE_INGRESS.port;
+  await expect(trusted()).rejects.toThrow(
+    "private ingress identity verification unavailable",
+  );
+});
 
 test("accepts the verified Tailscale proxy pod IP and rejects prometheus or sibling proxy pod IPs", async () => {
   const fixture = clusterFixture();

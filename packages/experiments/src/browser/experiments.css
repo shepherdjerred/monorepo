@@ -1,0 +1,157 @@
+.experiments-page {
+  overflow-wrap: anywhere;
+}
+
+.experiments-page .ui-data th a,
+.experiments-page .ui-data th {
+  white-space: normal;
+}
+
+.experiments-page .ui-card-toolbar {
+  flex-wrap: wrap;
+}
+
+.experiments-empty,
+.experiments-section {
+  padding: 1.125rem;
+}
+
+.experiments-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+@container ui-page (max-width: 720px) {
+  .experiments-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.experiments-section h2 {
+  margin-block: 0 1rem;
+  font-size: 1.125rem;
+}
+
+.experiments-action-card {
+  margin-block-end: 1rem;
+}
+
+.experiments-form,
+.experiments-form-fields,
+.experiments-plan {
+  display: grid;
+  gap: 1rem;
+  min-inline-size: 0;
+}
+
+.experiments-form {
+  max-inline-size: 46rem;
+}
+
+.experiments-form-fields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.experiments-form-fields legend {
+  margin-block-end: 0.75rem;
+  font-weight: 600;
+}
+
+.experiments-form textarea {
+  resize: vertical;
+}
+
+.experiments-actions,
+.experiments-summary,
+.experiments-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  align-items: center;
+}
+
+.experiments-choices label,
+.experiments-choice,
+.experiments-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.experiments-choices input,
+.experiments-choice input {
+  accent-color: var(--ui-accent);
+}
+
+.experiments-back svg {
+  inline-size: 1em;
+  block-size: 1em;
+}
+
+.experiments-plan {
+  margin-block: 0.75rem;
+}
+
+.experiments-plan dt {
+  margin-block-end: 0.25rem;
+  color: var(--ui-muted);
+  font-weight: 600;
+}
+
+.experiments-plan dd {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.experiments-timeline {
+  display: grid;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.experiments-timeline > li {
+  border-inline-start: 2px solid var(--ui-border);
+  padding-inline-start: 0.875rem;
+}
+
+.experiments-timeline p {
+  margin-block: 0.25rem;
+  white-space: pre-wrap;
+}
+
+.experiments-meta {
+  margin-block-end: 0.25rem;
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+}
+
+.experiments-error {
+  color: var(--ui-sev-error-text);
+}
+
+.experiments-due {
+  color: var(--ui-sev-warning-text);
+}
+
+.experiments-section summary {
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .experiments-form .ui-field-control,
+  .experiments-form .ui-btn,
+  .experiments-form .experiments-choice,
+  .experiments-choices label {
+    min-block-size: 3rem;
+  }
+
+  .experiments-form .ui-field-control {
+    font-size: 1rem;
+  }
+}

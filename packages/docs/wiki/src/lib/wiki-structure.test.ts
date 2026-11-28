@@ -1,8 +1,9 @@
 import { readdir, readFile } from "node:fs/promises";
 import nodePath from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
-const DOCS_ROOT = new URL("../content/docs/", import.meta.url).pathname;
+const DOCS_ROOT = fileURLToPath(new URL("../content/docs/", import.meta.url));
 
 /** The four Diátaxis kinds. Every page belongs to exactly one. */
 const SECTIONS = ["tutorials", "how-to", "reference", "explanation"];
@@ -29,7 +30,9 @@ function routeForFile(relativePath: string): string {
 }
 
 const files = await markdownFiles(DOCS_ROOT);
-const relativePaths = files.map((file) => nodePath.relative(DOCS_ROOT, file));
+const relativePaths = files.map((file) =>
+  nodePath.relative(DOCS_ROOT, file).split(nodePath.sep).join("/"),
+);
 const routes = new Set(relativePaths.map((page) => routeForFile(page)));
 
 describe("wiki structure", () => {

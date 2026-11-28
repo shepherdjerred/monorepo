@@ -14,9 +14,12 @@ import type {
 import type { SourceInputId as SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
 import type { DigestKind as OpsDigestKind } from "@shepherdjerred/ops-model/digest.ts";
 
+type HistoricalActivities = Omit<OpsActivities, "collectOpsExperiments">;
 type CollectorName = {
-  [K in keyof OpsActivities]: K extends `collectOps${string}` ? K : never;
-}[keyof OpsActivities];
+  [K in keyof HistoricalActivities]: K extends `collectOps${string}`
+    ? K
+    : never;
+}[keyof HistoricalActivities];
 
 /**
  * One collector Activity per source, so each upstream fails on its own.

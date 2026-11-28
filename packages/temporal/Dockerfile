@@ -83,6 +83,7 @@ COPY --parents \
   packages/toolkit \
   packages/artifacts/src/shared \
   packages/errors/src/shared \
+  packages/experiments/src/contract.ts \
   packages/incidents/src/shared \
   packages/tracker/src/shared \
   packages/unix-socket-daemon/src \

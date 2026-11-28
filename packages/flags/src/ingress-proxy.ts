@@ -20,6 +20,17 @@ export const FLAGS_TAILSCALE_INGRESS = {
 
 export type FlagsKubernetesReader = (path: string) => Promise<unknown>;
 
+export type TailscaleIngressIdentity = {
+  readonly namespace: string;
+  readonly name: string;
+  readonly proxyNamespace: string;
+  readonly serviceName: string;
+  readonly port: number;
+  readonly host: string;
+  readonly directory: string;
+  readonly parentLabels: Readonly<Record<string, string>>;
+};
+
 export class FlagsIngressIdentityError extends Error {
   override readonly name = "FlagsIngressIdentityError";
 }
@@ -42,24 +53,24 @@ function kubeObjectHeader() {
   });
 }
 
-const FlagsIngressDocument = z.looseObject({
-  metadata: kubeObjectHeader().extend({ annotations: StringMap.default({}) }),
-  spec: z.looseObject({
-    ingressClassName: z.literal("tailscale"),
-    defaultBackend: z.looseObject({
-      service: z.looseObject({
-        name: z.literal(FLAGS_TAILSCALE_INGRESS.serviceName),
-        port: z.object({ number: z.literal(FLAGS_TAILSCALE_INGRESS.port) }),
+function ingressDocument(identity: TailscaleIngressIdentity) {
+  return z.looseObject({
+    metadata: kubeObjectHeader().extend({ annotations: StringMap.default({}) }),
+    spec: z.looseObject({
+      ingressClassName: z.literal("tailscale"),
+      defaultBackend: z.looseObject({
+        service: z.looseObject({
+          name: z.literal(identity.serviceName),
+          port: z.object({ number: z.literal(identity.port) }),
+        }),
       }),
+      tls: z.tuple([
+        z.looseObject({ hosts: z.tuple([z.literal(identity.host)]) }),
+      ]),
+      rules: z.array(z.unknown()).max(0).optional(),
     }),
-    tls: z.tuple([
-      z.looseObject({
-        hosts: z.tuple([z.literal(FLAGS_TAILSCALE_INGRESS.host)]),
-      }),
-    ]),
-    rules: z.array(z.unknown()).max(0).optional(),
-  }),
-});
+  });
+}
 
 const ProxyControllerOwner = z.looseObject({
   apiVersion: z.string(),
@@ -126,10 +137,11 @@ function isActiveResource(meta: {
   );
 }
 
-function hasParentLabels(labels: Readonly<Record<string, string>>): boolean {
-  for (const [key, expected] of Object.entries(
-    FLAGS_TAILSCALE_INGRESS.parentLabels,
-  )) {
+function hasParentLabels(
+  identity: TailscaleIngressIdentity,
+  labels: Readonly<Record<string, string>>,
+): boolean {
+  for (const [key, expected] of Object.entries(identity.parentLabels)) {
     if (labels[key] !== expected) return false;
   }
   return true;
@@ -170,6 +182,7 @@ async function readBoundedText(
 export function createProjectedFlagsKubernetesReader(
   directory: string = FLAGS_TAILSCALE_INGRESS.directory,
   bound: number = MAX_RESPONSE_BYTES,
+  service = "flags",
 ): FlagsKubernetesReader {
   return async (path) => {
     try {
@@ -195,8 +208,8 @@ export function createProjectedFlagsKubernetesReader(
       const coded = CodedFailure.safeParse(error);
       console.error(
         JSON.stringify({
-          message: "flags_kubernetes_read_failed",
-          service: "flags",
+          message: `${service}_kubernetes_read_failed`,
+          service,
           path: path.split("?", 1)[0] ?? path,
           errorType: error instanceof Error ? error.name : typeof error,
           ...(coded.success ? { code: coded.data.code } : {}),
@@ -210,9 +223,10 @@ export function createProjectedFlagsKubernetesReader(
 }
 
 async function collectProxyNamespacePods(
+  identity: TailscaleIngressIdentity,
   read: FlagsKubernetesReader,
 ): Promise<z.infer<typeof ProxyPodDocument>[]> {
-  const endpoint = `/api/v1/namespaces/${FLAGS_TAILSCALE_INGRESS.proxyNamespace}/pods`;
+  const endpoint = `/api/v1/namespaces/${identity.proxyNamespace}/pods`;
   const rawItems: Record<string, unknown>[] = [];
   let cursor: string | undefined;
   do {
@@ -234,8 +248,11 @@ async function collectProxyNamespacePods(
   return z.array(ProxyPodDocument).max(MAX_POD_ITEMS).parse(rawItems);
 }
 
-function isReadyProxyCandidate(pod: z.infer<typeof ProxyPodDocument>): boolean {
-  if (!hasParentLabels(pod.metadata.labels)) return false;
+function isReadyProxyCandidate(
+  identity: TailscaleIngressIdentity,
+  pod: z.infer<typeof ProxyPodDocument>,
+): boolean {
+  if (!hasParentLabels(identity, pod.metadata.labels)) return false;
   if (!isActiveResource(pod.metadata) || pod.status?.phase !== "Running") {
     return false;
   }
@@ -248,13 +265,12 @@ function isReadyProxyCandidate(pod: z.infer<typeof ProxyPodDocument>): boolean {
 }
 
 function assertUniqueNamespaceAddresses(
+  identity: TailscaleIngressIdentity,
   pods: readonly z.infer<typeof ProxyPodDocument>[],
 ): void {
   const seenIps = new Set<string>();
   for (const pod of pods) {
-    assertVerified(
-      pod.metadata.namespace === FLAGS_TAILSCALE_INGRESS.proxyNamespace,
-    );
+    assertVerified(pod.metadata.namespace === identity.proxyNamespace);
     const podAddresses = new Set<string>();
     if (pod.status?.podIP !== undefined) podAddresses.add(pod.status.podIP);
     for (const entry of pod.status?.podIPs ?? []) podAddresses.add(entry.ip);
@@ -266,6 +282,7 @@ function assertUniqueNamespaceAddresses(
 }
 
 async function verifyProxyPodController(
+  identity: TailscaleIngressIdentity,
   read: FlagsKubernetesReader,
   pod: z.infer<typeof ProxyPodDocument>,
   ingressUid: string,
@@ -289,21 +306,20 @@ async function verifyProxyPodController(
   }
   const statefulSet = ProxyStatefulSetDocument.parse(
     await read(
-      `/apis/apps/v1/namespaces/${FLAGS_TAILSCALE_INGRESS.proxyNamespace}/statefulsets/${encodeURIComponent(primaryOwner.name)}`,
+      `/apis/apps/v1/namespaces/${identity.proxyNamespace}/statefulsets/${encodeURIComponent(primaryOwner.name)}`,
     ),
   );
   const selectorLabels = statefulSet.spec.selector.matchLabels;
   const templateLabels = statefulSet.spec.template.metadata.labels;
   assertVerified(
     statefulSet.metadata.name === primaryOwner.name &&
-      statefulSet.metadata.namespace ===
-        FLAGS_TAILSCALE_INGRESS.proxyNamespace &&
+      statefulSet.metadata.namespace === identity.proxyNamespace &&
       statefulSet.metadata.uid === primaryOwner.uid &&
       isActiveResource(statefulSet.metadata) &&
-      hasParentLabels(statefulSet.metadata.labels) &&
+      hasParentLabels(identity, statefulSet.metadata.labels) &&
       selectorLabels["app"] === ingressUid &&
       templateLabels["app"] === ingressUid &&
-      hasParentLabels(templateLabels) &&
+      hasParentLabels(identity, templateLabels) &&
       Object.entries(selectorLabels).every(
         ([key, expected]) => pod.metadata.labels[key] === expected,
       ),
@@ -322,25 +338,29 @@ async function verifyProxyPodController(
   };
 }
 
-async function snapshotProxyState(read: FlagsKubernetesReader) {
-  const ingressPath = `/apis/networking.k8s.io/v1/namespaces/${FLAGS_TAILSCALE_INGRESS.namespace}/ingresses/${FLAGS_TAILSCALE_INGRESS.name}`;
+async function snapshotProxyState(
+  identity: TailscaleIngressIdentity,
+  schema: ReturnType<typeof ingressDocument>,
+  read: FlagsKubernetesReader,
+) {
+  const ingressPath = `/apis/networking.k8s.io/v1/namespaces/${identity.namespace}/ingresses/${identity.name}`;
   const [rawIngress, pods] = await Promise.all([
     read(ingressPath),
-    collectProxyNamespacePods(read),
+    collectProxyNamespacePods(identity, read),
   ]);
-  const ingress = FlagsIngressDocument.parse(rawIngress);
+  const ingress = schema.parse(rawIngress);
   assertVerified(
-    ingress.metadata.name === FLAGS_TAILSCALE_INGRESS.name &&
-      ingress.metadata.namespace === FLAGS_TAILSCALE_INGRESS.namespace &&
+    ingress.metadata.name === identity.name &&
+      ingress.metadata.namespace === identity.namespace &&
       isActiveResource(ingress.metadata) &&
       ingress.metadata.annotations["tailscale.com/funnel"] !== "true",
   );
-  assertUniqueNamespaceAddresses(pods);
-  const readyPods = pods.filter((pod) => isReadyProxyCandidate(pod));
+  assertUniqueNamespaceAddresses(identity, pods);
+  const readyPods = pods.filter((pod) => isReadyProxyCandidate(identity, pod));
   assertVerified(readyPods.length > 0);
   const verified = await Promise.all(
     readyPods.map((pod) =>
-      verifyProxyPodController(read, pod, ingress.metadata.uid),
+      verifyProxyPodController(identity, read, pod, ingress.metadata.uid),
     ),
   );
   const controllerUids = new Set(verified.map((item) => item.controllerUid));
@@ -353,13 +373,19 @@ async function snapshotProxyState(read: FlagsKubernetesReader) {
 }
 
 /** Fence the current Ingress UID, owner chain, and ready proxy Pod IP twice for each human request. */
-export function createFlagsTrustedProxyAddresses(
-  read: FlagsKubernetesReader = createProjectedFlagsKubernetesReader(),
+export function createTrustedTailscaleProxyAddresses(
+  identity: TailscaleIngressIdentity,
+  read: FlagsKubernetesReader = createProjectedFlagsKubernetesReader(
+    identity.directory,
+    MAX_RESPONSE_BYTES,
+    identity.serviceName,
+  ),
 ): () => Promise<readonly string[]> {
+  const schema = ingressDocument(identity);
   return async () => {
     try {
-      const first = await snapshotProxyState(read);
-      const second = await snapshotProxyState(read);
+      const first = await snapshotProxyState(identity, schema, read);
+      const second = await snapshotProxyState(identity, schema, read);
       assertVerified(Bun.deepEquals(first, second));
       return second.proxies.map((proxy) => proxy.address);
     } catch (error) {
@@ -369,4 +395,10 @@ export function createFlagsTrustedProxyAddresses(
       );
     }
   };
+}
+
+export function createFlagsTrustedProxyAddresses(
+  read?: FlagsKubernetesReader,
+): () => Promise<readonly string[]> {
+  return createTrustedTailscaleProxyAddresses(FLAGS_TAILSCALE_INGRESS, read);
 }

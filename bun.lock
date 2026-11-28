@@ -34,6 +34,7 @@
         "@prisma/client": "^7.10.1",
         "@prisma/client-runtime-utils": "7.10.1",
         "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/experiments": "workspace:*",
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/incidents": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
@@ -1089,6 +1090,41 @@
       "peerDependencies": {
         "eslint": "^10.4.0",
         "typescript": "^6.0.3",
+      },
+    },
+    "packages/experiments": {
+      "name": "@shepherdjerred/experiments",
+      "version": "0.1.0",
+      "dependencies": {
+        "@hono/bun": "^1.0.1",
+        "@prisma/adapter-pg": "7.10.1",
+        "@prisma/client": "^7.10.1",
+        "@prisma/client-runtime-utils": "7.10.1",
+        "@shepherdjerred/flags": "workspace:*",
+        "hono": "^4.12.18",
+        "prisma": "^7.10.1",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/console-ui": "workspace:*",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/ops-model": "workspace:*",
+        "@shepherdjerred/test-postgres": "workspace:*",
+        "@tanstack/react-query": "^5.101.2",
+        "@types/bun": "1.4.5",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitejs/plugin-react": "^6.0.1",
+        "@vitest/coverage-istanbul": "5.0.5",
+        "eslint": "^10.7.0",
+        "lucide-react": "^1.14.0",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+        "react-router": "8.4.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.0.11",
+        "vitest": "5.0.5",
       },
     },
     "packages/facet-protocol": {
@@ -2876,6 +2912,7 @@
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/delivery": "workspace:*",
         "@shepherdjerred/errors": "workspace:*",
+        "@shepherdjerred/experiments": "workspace:*",
         "@shepherdjerred/incidents": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/ops-model": "workspace:*",
@@ -4742,6 +4779,8 @@
     "@shepherdjerred/errors": ["@shepherdjerred/errors@workspace:packages/errors"],
 
     "@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@workspace:packages/eslint-config"],
+
+    "@shepherdjerred/experiments": ["@shepherdjerred/experiments@workspace:packages/experiments"],
 
     "@shepherdjerred/facet-protocol": ["@shepherdjerred/facet-protocol@workspace:packages/facet-protocol"],
 

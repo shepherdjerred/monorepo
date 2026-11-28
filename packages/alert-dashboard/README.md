@@ -605,6 +605,14 @@ A small module lives in `src/modules/<id>/`. To add one:
 A module is one layer to the architecture checker, which refuses nested
 layers, so a module cannot declare its own inner client and server layers.
 
+Experiments is an Ops module at `/experiments`, with list, draft and detail
+pages shared with the standalone Experiments service. Hub's `/api/experiments`
+adapter verifies the Tailscale operator and checks the origin of browser
+writes before forwarding an experiment operation with the operator's identity.
+The Experiments service owns its database and audit history. Its readiness
+appears at `/readyz/experiments`. Due reviews appear on Home through Ops Snapshot
+and link to the Experiments queue.
+
 A module that needs its own storage stays a separate workspace package that
 exports `./hub-server` and `./hub-client`. Its `src/modules/<id>/` adapter
 checks those exports with `satisfies` against the two module contracts, so
