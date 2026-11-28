@@ -1,4 +1,3 @@
-import type { DuckDBValue } from "@duckdb/node-api";
 import { z } from "zod";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
@@ -8,14 +7,11 @@ import {
   buildPrematchSource,
   withLakeQueryRetry,
   scalarParam,
-  type BoundParam,
   type LakeFiles,
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
-import {
-  withDuckDBConnection,
-  type DuckDBSession,
-} from "#src/reports/duckdb/instance.ts";
+import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { bindParams } from "#src/reports/duckdb/lake/statement.ts";
 import {
   MATCH_COLUMNS,
   PREMATCH_COLUMNS,
@@ -265,15 +261,6 @@ function normalizeValue(value: unknown): string | number | boolean | null {
     return new Date(Number(timestamp.data.micros / 1000n)).toISOString();
   }
   throw new Error(`Unsupported report explorer value type: ${typeof value}`);
-}
-
-function bindParams(
-  session: DuckDBSession,
-  params: BoundParam[],
-): DuckDBValue[] {
-  return params.map((param) =>
-    param.kind === "list" ? session.list(param.values) : param.value,
-  );
 }
 
 function requireTable(id: ExplorerTable["id"]): ExplorerTable {

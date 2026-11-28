@@ -6,7 +6,7 @@ import {
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { bindParams } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildIdentityDimensionSource,
   GAME_CREATED_AT_SQL,

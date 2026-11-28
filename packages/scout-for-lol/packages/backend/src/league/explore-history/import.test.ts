@@ -55,7 +55,7 @@ vi.doMock("#src/reports/duckdb/instance.ts", () => ({
     }) => Promise<unknown>,
   ) => work({ run: () => Promise.resolve(knownRows) }),
 }));
-vi.doMock("#src/reports/duckdb/lake-reads.ts", () => ({
+vi.doMock("#src/reports/duckdb/lake/statement.ts", () => ({
   bindParams: () => [],
 }));
 vi.doMock("#src/reports/duckdb/lake.ts", () => ({

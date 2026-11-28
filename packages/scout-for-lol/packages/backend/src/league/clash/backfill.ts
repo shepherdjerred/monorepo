@@ -8,7 +8,7 @@ import { prisma } from "#src/database/index.ts";
 import { clashSnapshotEnabledGuildIds } from "#src/league/clash/access.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { bindParams } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildMatchesSource,
   buildPrematchSource,

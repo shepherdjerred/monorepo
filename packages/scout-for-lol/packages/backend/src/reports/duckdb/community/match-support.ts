@@ -7,9 +7,11 @@ import {
   buildMatchIdsSource,
   withMatchIdsSource,
 } from "#src/reports/duckdb/community/match-source.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import type { LakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
+
+const matchSupportSql = (sourceSql: string): string =>
+  `SELECT DISTINCT match_id, queue_id, game_mode FROM (${sourceSql})`;
 
 const MatchSupportRowSchema = z.object({
   match_id: RiotMatchIdSchema,
@@ -30,11 +32,12 @@ export async function readMatchSupport(
 ): Promise<readonly MatchSupportRow[]> {
   const source = buildMatchIdsSource(page.files, options.matchIds);
   if (source === undefined) return [];
-  const rows = await page.session.run(
-    `SELECT DISTINCT match_id, queue_id, game_mode FROM (${source.sql})`,
-    bindParams(page.session, source.params),
-  );
-  return rows.map((row) => MatchSupportRowSchema.parse(row));
+  return await runSource({
+    session: page.session,
+    source,
+    sql: matchSupportSql(source.sql),
+    schema: MatchSupportRowSchema,
+  });
 }
 
 export async function fetchMatchSupport(options: {
@@ -47,18 +50,12 @@ export async function fetchMatchSupport(options: {
     options.lakeDir,
     async (source) => {
       if (source === undefined) return [];
-      return await withDuckDBConnection(
-        async (session) => {
-          const rows = await session.run(
-            `SELECT DISTINCT match_id, queue_id, game_mode FROM (${source.sql})`,
-            bindParams(session, source.params),
-          );
-          return rows.map((row) => MatchSupportRowSchema.parse(row));
-        },
-        options.abortSignal === undefined
-          ? {}
-          : { abortSignal: options.abortSignal },
-      );
+      return await runSource({
+        source,
+        sql: matchSupportSql(source.sql),
+        schema: MatchSupportRowSchema,
+        abortSignal: options.abortSignal,
+      });
     },
   );
 }
