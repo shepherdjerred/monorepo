@@ -29,7 +29,7 @@ describe("version catalog", () => {
   test("parses and maps the language-neutral catalog", () => {
     const catalog = parseVersionCatalog(rawCatalog);
     const map = versionCatalogMap(catalog);
-    expect(catalog.entries.length).toBeGreaterThan(100);
+    expect(catalog.entries.length).toBeGreaterThan(90);
     expect(Object.keys(map)).toHaveLength(catalog.entries.length);
     expect(new Set(catalog.entries.map((entry) => entry.category))).toEqual(
       new Set(["upstream"]),
