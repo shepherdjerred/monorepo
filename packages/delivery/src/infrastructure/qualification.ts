@@ -98,20 +98,7 @@ export function createQualifier(options: {
         "CI qualification credentials are not configured",
       );
     const ci = ciIdentity(build.ciUrl, options.origin, options.repositoryId);
-    const response = await (options.fetch ?? fetch)(
-      new URL(
-        `/api/repos/${String(ci.repositoryId)}/pipelines/${String(ci.pipelineNumber)}`,
-        options.origin,
-      ),
-      {
-        headers: {
-          Authorization: `Bearer ${options.token}`,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(30_000),
-        redirect: "error",
-      },
-    );
+    const response = await fetchPipelineResponse(options, ci);
     if (!response.ok)
       throw new DeliveryError(
         "PAUSED",
@@ -144,4 +131,38 @@ export function createQualifier(options: {
       ? "verified"
       : "failed";
   };
+}
+
+async function fetchPipelineResponse(
+  options: {
+    origin: string;
+    token: string | undefined;
+    fetch?: (
+      input: string | URL | Request,
+      init?: RequestInit,
+    ) => Promise<Response>;
+  },
+  ci: { repositoryId: number; pipelineNumber: number },
+): Promise<Response> {
+  try {
+    return await (options.fetch ?? fetch)(
+      new URL(
+        `/api/repos/${String(ci.repositoryId)}/pipelines/${String(ci.pipelineNumber)}`,
+        options.origin,
+      ),
+      {
+        headers: {
+          Authorization: `Bearer ${options.token ?? ""}`,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(30_000),
+        redirect: "error",
+      },
+    );
+  } catch (error) {
+    throw new DeliveryError(
+      "PAUSED",
+      `CI qualification unavailable (${error instanceof Error ? error.message : String(error)})`,
+    );
+  }
 }
