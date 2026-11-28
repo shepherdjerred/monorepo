@@ -28,6 +28,7 @@ import {
   QUALIFYING_GAMES,
 } from "#src/trpc/router/consumer/consumer-champion-index.ts";
 import { buildChampionMatchups } from "#src/trpc/router/consumer/consumer-champion-matchups.ts";
+import { getChampionMatchup } from "#src/trpc/router/consumer/champion-matchup/get-champion-matchup.ts";
 import { LANE_DELTA_CHECKPOINT_MS } from "#src/reports/lanes/role-matchups.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 import { enqueueChampionMasteryRefresh } from "#src/temporal/work-store.ts";
@@ -66,6 +67,13 @@ const PageScopeInput = z.object({
 const MatchupsInput = PageScopeInput.extend({
   championId: ChampionIdSchema,
   lane: LaneSchema,
+});
+
+const MatchupInput = z.object({
+  championId: ChampionIdSchema,
+  opponentChampionId: ChampionIdSchema,
+  lane: LaneSchema,
+  guildIds: GuildSelectionSchema.optional(),
 });
 
 type ComparisonRow = {
@@ -192,6 +200,9 @@ export const consumerChampionRouter = router({
         }),
       };
     }),
+  matchup: protectedProcedure
+    .input(MatchupInput)
+    .query(async ({ ctx, input }) => await getChampionMatchup(ctx.user, input)),
   masteryLeaderboard: protectedProcedure
     .input(
       z.object({

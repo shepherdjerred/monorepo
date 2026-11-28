@@ -30,6 +30,10 @@ import {
   readHistoryLakeContext,
   type PlayerProfileInput,
 } from "#src/lib/player-profile/queries.ts";
+import {
+  readProfileLane,
+  type ProfileLane,
+} from "#src/lib/player-profile/profile-lane.ts";
 import { readGuildMatchRows } from "#src/reports/duckdb/community/community-lake.ts";
 import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
 import {
@@ -167,12 +171,18 @@ async function readProfileLake(
       roleShare: calculatePreferredPositions(recentRows),
       ...queueFilters,
     });
+    // The same games as the recent form, from `lane_results`.
+    const lane = await readProfileLane(page, {
+      puuids: player.puuids,
+      matchIds: recentRows.map((row) => row.match_id),
+    });
     if (community === undefined) {
       return {
         recentRows,
         poolRows,
         context,
         behavior,
+        lane,
         championFormRows: [],
         sharedRows: [],
       };
@@ -195,6 +205,7 @@ async function readProfileLake(
       poolRows,
       context,
       behavior,
+      lane,
       championFormRows,
       sharedRows,
     };
@@ -224,6 +235,8 @@ async function profileSummaryForPlayer(
         highlights: buildHighlights({ recent: [], streak: null, pool: [] }),
         championForm: [],
         playsWith: { windowDays: PLAYS_WITH_WINDOW_DAYS, friends: [] },
+        // No accounts, so no games to be ahead in.
+        lane: { status: "available", games: 0, ahead: 0 } satisfies ProfileLane,
       },
     };
   }
@@ -286,6 +299,7 @@ async function profileSummaryForPlayer(
     minGamesForRate: MIN_GAMES_FOR_RATE,
   };
   const extras = {
+    lane: lake.lane,
     highlights: buildHighlights({
       recent,
       streak: lake.behavior.streak,
