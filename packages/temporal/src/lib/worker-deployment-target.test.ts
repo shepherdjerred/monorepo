@@ -752,6 +752,11 @@ describe("candidate checkout reuse", () => {
         calls.find(({ argv }) => argv.includes("test:workflows"))?.cwd,
       ).toBe(`${root}/packages/temporal`);
       expect(calls.filter(({ argv }) => argv[1] === "status")).toHaveLength(2);
+      // Git answers from the checkout's root, never from a subdirectory that
+      // could hold another repository.
+      expect(
+        calls.filter(({ argv }) => argv[0] === "git").map(({ cwd }) => cwd),
+      ).toEqual([root, root, root, root]);
       // The executor's own checkout survives its candidate proof, and the
       // candidate tree is never created.
       const kept = await stat(root);
@@ -822,6 +827,9 @@ describe("kept candidate tree", () => {
         ["git", "reset", "-q", "--hard"],
         ["git", "rev-parse", "HEAD"],
         ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+        // The candidate runner's own checks, also at the tree's root.
+        ["git", "rev-parse", "HEAD"],
+        ["git", "status", "--porcelain=v1", "--untracked-files=no"],
       ]);
       expect(
         await Bun.file(
@@ -846,7 +854,7 @@ describe("kept candidate tree", () => {
       ).rejects.toMatchObject({ code: "ENOENT" });
       expect(
         await Bun.file(
-          path.join(candidateRoot, "node_modules/.delivery-install-complete"),
+          path.join(candidateRoot, ".git/delivery-install-complete"),
         ).exists(),
       ).toBe(true);
     });

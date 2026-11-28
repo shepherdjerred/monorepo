@@ -2,6 +2,7 @@ import {
   copyFile,
   lstat,
   mkdir,
+  readdir,
   realpath,
   rm,
   writeFile,
@@ -209,6 +210,31 @@ async function canonical(target: string): Promise<string> {
   }
 }
 
+/**
+ * Remove every `.git` in `root`'s tree except its own and those inside
+ * `node_modules`. `git clean` never lists one under a tracked directory, and a
+ * Git command run below it would otherwise answer from that repository.
+ */
+async function removeNestedRepositories(root: string) {
+  const pending = [root];
+  for (
+    let directory = pending.pop();
+    directory !== undefined;
+    directory = pending.pop()
+  )
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const entryPath = path.join(directory, entry.name);
+      if (directory !== root && entry.name === ".git")
+        await rm(entryPath, { recursive: true, force: true });
+      else if (
+        entry.isDirectory() &&
+        entry.name !== ".git" &&
+        entry.name !== "node_modules"
+      )
+        pending.push(entryPath);
+    }
+}
+
 /** Whether `child` is `parent` or lies under it. */
 function within(child: string, parent: string) {
   return child === parent || child.startsWith(`${parent}${path.sep}`);
@@ -252,7 +278,8 @@ async function prepareCandidateRoot(
  * `update-index --refresh` hashes every tracked file's exact bytes
  * (DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES) against the candidate's tree.
  * Everything untracked except `node_modules`, nested repositories and a stray
- * `.gitattributes` included, is then removed, and `reset --hard` rewrites
+ * `.gitattributes` included, is then removed, as is any `.git` below the root
+ * outside `node_modules`, and `reset --hard` rewrites
  * exactly the files whose bytes differ, with the candidate's own attributes.
  * `node_modules` is kept only when the previous candidate's install
  * completed (DELIVERY_JOB_INSTALL_MARKER); otherwise every `node_modules` is
@@ -266,8 +293,12 @@ async function prepareCandidateCheckout(
   run: RolloutCommandRunner,
 ) {
   const git = path.join(directory, ".git");
+  const marker = path.join(directory, DELIVERY_JOB_INSTALL_MARKER);
+  const installed = await Bun.file(marker).exists();
   await rm(git, { recursive: true, force: true });
   await run(["git", "init", "--quiet"]);
+  // Nothing has touched node_modules yet; the install removes this again.
+  if (installed) await writeFile(marker, "");
   await mkdir(path.join(git, "objects/info"), { recursive: true });
   await writeFile(
     path.join(git, "objects/info/alternates"),
@@ -303,9 +334,6 @@ async function prepareCandidateCheckout(
   await writeFile(attributes, `${DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES}\n`);
   await run(["git", "update-index", "-q", "--refresh"]);
   await rm(attributes);
-  const installed = await Bun.file(
-    path.join(directory, DELIVERY_JOB_INSTALL_MARKER),
-  ).exists();
   if (!installed && (await present(path.join(directory, "node_modules"))))
     console.warn(
       JSON.stringify({
@@ -322,6 +350,7 @@ async function prepareCandidateCheckout(
     "-ffdxq",
     ...(installed ? ["-e", "node_modules"] : []),
   ]);
+  await removeNestedRepositories(directory);
   await run(["git", "reset", "-q", "--hard"]);
 }
 
@@ -364,7 +393,8 @@ export async function withWorkerCandidateCheckout<T>(
   const run: RolloutCommandRunner = (argv) => execute(argv, directory);
   const cwd = path.join(directory, "packages/temporal");
   const candidate: RolloutCommandRunner = async (argv) => {
-    if (argv[0] === "git") return await execute(argv, cwd);
+    // Git answers for the candidate tree's own repository, at its root.
+    if (argv[0] === "git") return await execute(argv, directory);
     const family = candidateCommandFamily(argv);
     const flag = argv.indexOf("--namespace");
     const namespace = flag === -1 ? undefined : argv[flag + 1];
@@ -395,7 +425,6 @@ export async function withWorkerCandidateCheckout<T>(
       await run(["mise", "trust", ".mise.toml"]);
       await run(["mise", "install", "--yes", "bun", "node"]);
       await run(["mise", "exec", "--", "bun", "install", "--frozen-lockfile"]);
-      await mkdir(path.dirname(marker), { recursive: true });
       await writeFile(marker, "");
       await run([
         "mise",

@@ -239,15 +239,17 @@ objects through alternates. Its index starts without stat data, so every
 tracked file's exact bytes are hashed against the revision (with attributes
 that disable end-of-line and filter conversion for that step only); everything
 untracked except `node_modules`, nested repositories and stray
-`.gitattributes` included, is removed, and `reset --hard` rewrites only the
-files whose bytes differ, with the revision's own attributes. The tracked
-tree must then report no change. The tree therefore equals the revision
-whatever an earlier Job left, and `bun install --frozen-lockfile` writes only
-what the lockfile changed. `node_modules` is kept only when the previous
-install wrote its completion marker
-(`node_modules/.delivery-install-complete`); an install cut short leaves none,
-so the next Job removes every `node_modules`, installs from scratch and writes
-an `install-reset` event. The store is repacked to one revision once it holds
+`.gitattributes` included, is removed, as is any `.git` below the root outside
+`node_modules` (which `git clean` never lists under a tracked directory), and
+`reset --hard` rewrites only the files whose bytes differ, with the revision's
+own attributes. The tracked tree must then report no change. The tree
+therefore equals the revision whatever an earlier Job left, and
+`bun install --frozen-lockfile` writes only what the lockfile changed.
+`node_modules` is kept only when the previous install wrote its completion
+marker, `.git/delivery-install-complete`. Every bootstrap, earlier ones
+included, deletes `.git`, so an install cut short or any run of an earlier
+bootstrap leaves no marker, and the next Job removes every `node_modules`,
+installs from scratch and writes an `install-reset` event. The store is repacked to one revision once it holds
 more than eight packs.
 Generated code, the `llm-models` runtime build and the toolkit binary are kept
 as hard links in `/workspace/prepared` with a sha256 manifest, keyed by the

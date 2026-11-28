@@ -137,9 +137,9 @@ const GENERATE = [
 
 /** The install, bracketed by its completion marker (DELIVERY_JOB_INSTALL_MARKER). */
 const INSTALL = (command: string) => [
-  "rm:-f node_modules/.delivery-install-complete",
+  "rm:-f .git/delivery-install-complete",
   command,
-  "touch:node_modules/.delivery-install-complete",
+  "touch:.git/delivery-install-complete",
 ];
 
 describe("prepared dependencies and outputs", () => {
@@ -606,8 +606,13 @@ describe("persistent stage workspace", () => {
       "  rm -rf /workspace/git",
       'git --git-dir=/workspace/git fetch --quiet --no-tags --no-auto-maintenance --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"',
       'git --git-dir=/workspace/git update-ref refs/heads/delivery-checkout "$DELIVERY_SOURCE_REVISION"',
+      // Whether node_modules is a completed install is read before .git,
+      // which holds that marker, is replaced.
+      "installed=",
+      "[ ! -f /workspace/source/.git/delivery-install-complete ] || installed=1",
       "rm -rf /workspace/source/.git",
       "git init -q /workspace/source",
+      '[ -z "$installed" ] || touch /workspace/source/.git/delivery-install-complete',
       "git -C /workspace/source config core.attributesFile /dev/null",
       "echo /workspace/git/objects >/workspace/source/.git/objects/info/alternates",
       // An index with no stat data: every tracked file's exact bytes are
@@ -619,9 +624,11 @@ describe("persistent stage workspace", () => {
       "echo '* -text -filter -ident -working-tree-encoding' >/workspace/source/.git/info/attributes",
       "git -C /workspace/source update-index -q --refresh",
       "rm /workspace/source/.git/info/attributes",
-      "if [ -f /workspace/source/node_modules/.delivery-install-complete ]; then",
+      'if [ -n "$installed" ]; then',
       "  git -C /workspace/source clean -ffdxq -e node_modules",
       "  git -C /workspace/source clean -ffdxq",
+      // git clean never lists a .git under a tracked directory.
+      String.raw`find /workspace/source -mindepth 1 \( -path /workspace/source/.git -o -name node_modules \) -prune -o -name .git -prune -exec rm -rf {} +`,
       "git -C /workspace/source reset -q --hard",
       'test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"',
       'test -z "$(git -C /workspace/source status --porcelain=v1 --untracked-files=no)"',
@@ -643,6 +650,9 @@ describe("persistent stage workspace", () => {
       at("cp -Rsf /opt/mise/. /workspace/mise/"),
     );
   });
+});
+
+describe("adopting Jobs of earlier stage workspace layouts", () => {
   it("adopts a Job with the retired emptyDir workspace layout and nothing else", () => {
     const expected = deliveryJobManifest(request);
     const retired = structuredClone(expected);

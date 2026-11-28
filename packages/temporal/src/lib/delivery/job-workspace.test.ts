@@ -11,6 +11,7 @@ import {
   mkdir,
   mkdtemp,
   readdir,
+  realpath,
   rm,
   stat,
   symlink,
@@ -20,6 +21,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DELIVERY_JOB_BOOTSTRAP } from "#shared/delivery-job.ts";
+import { PREVIOUS_DELIVERY_JOB_BOOTSTRAPS } from "#lib/delivery/previous-job-bootstraps.ts";
 import {
   withWorkerCandidateCheckout,
   workerCandidateEnvironment,
@@ -31,7 +33,7 @@ const SECTION_START =
 const MISE_START = "cp -Rsf /opt/mise/. /workspace/mise/\n";
 const STORE_START = "export GIT_CONFIG_GLOBAL=";
 const SECTION_END = "cd /workspace/source\n";
-const INSTALL_MARKER = "node_modules/.delivery-install-complete";
+const INSTALL_MARKER = ".git/delivery-install-complete";
 const STORE_RESET = '"event":"git-store-reset"';
 
 type Environment = Record<string, string | undefined>;
@@ -151,6 +153,27 @@ function sourceSection(root: string) {
   return `${DELIVERY_JOB_BOOTSTRAP.slice(start, mise)}${DELIVERY_JOB_BOOTSTRAP.slice(store, end)}`.replaceAll(
     "/workspace/",
     `${root}/`,
+  );
+}
+
+/**
+ * The source preparation of the bootstrap this release replaced (still
+ * adoptable): it replaces `.git`, force-checks out and keeps `node_modules`.
+ */
+function runPreviousBootstrapJob(root: string, revision: string) {
+  const previous = PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.at(-1) ?? "";
+  const start = previous.indexOf("rm -rf /workspace/source/.git\n");
+  const end = previous.indexOf(SECTION_END);
+  if (start === -1 || end === -1)
+    throw new Error("Previous bootstrap source preparation moved");
+  return spawn(
+    [
+      "bash",
+      "-c",
+      `set -euo pipefail\n${previous.slice(start, end).replaceAll("/workspace/", `${root}/`)}`,
+    ],
+    base,
+    { DELIVERY_SOURCE_REVISION: revision },
   );
 }
 
@@ -545,6 +568,71 @@ describe("stage workspace source preparation", () => {
   }, 60_000);
 });
 
+describe("stage workspace state other repositories and bootstraps leave", () => {
+  it("removes a repository planted below the checkout's root, so Git answers for the checkout", async () => {
+    const root = await claim("nested-repository");
+    expect(runJob(root, revisions.c1).exitCode).toBe(0);
+    const source = path.join(root, "source");
+    const temporal = path.join(source, "packages/temporal");
+    // A test's stray `git init` with its own HEAD, a gitfile elsewhere, and a
+    // package's own repository inside a completed node_modules.
+    git(["init", "-q", temporal]);
+    git(["commit", "-q", "--allow-empty", "-m", "stray"], temporal);
+    const stray = git(["rev-parse", "HEAD"], temporal);
+    expect(stray).not.toBe(revisions.c1);
+    await writeFile(path.join(source, "dir/.git"), "gitdir: /nonexistent\n");
+    await mkdir(path.join(source, "node_modules/pkg/.git"), {
+      recursive: true,
+    });
+    await writeFile(path.join(source, INSTALL_MARKER), "");
+    // git clean leaves both: neither is listed under a tracked directory.
+    git(["clean", "-ffdxq", "-e", "node_modules"], source);
+    expect(await present(path.join(temporal, ".git"))).toBe(true);
+
+    const result = runJob(root, revisions.c1);
+    expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+    for (const gone of ["packages/temporal/.git", "dir/.git"])
+      expect(await present(path.join(source, gone)), gone).toBe(false);
+    expect(await present(path.join(source, "node_modules/pkg/.git"))).toBe(
+      true,
+    );
+    // Run from the Temporal package, as run-delivery-job.ts is.
+    expect(git(["rev-parse", "HEAD"], temporal)).toBe(revisions.c1);
+    expect(git(["rev-parse", "--show-toplevel"], temporal)).toBe(
+      await realpath(source),
+    );
+    await expectExactTree(source, revisions.c1);
+  }, 60_000);
+
+  it("trusts no install marker across a run of the bootstrap it replaced", async () => {
+    const root = await claim("previous-bootstrap");
+    expect(runJob(root, revisions.c1).exitCode).toBe(0);
+    const file = (name: string) => path.join(root, "source", name);
+    // A completed install under this bootstrap.
+    await mkdir(file("node_modules/pkg"), { recursive: true });
+    await writeFile(file("node_modules/pkg/index.js"), "complete");
+    await writeFile(file(INSTALL_MARKER), "");
+    // A retained Job of the previous bootstrap checks out the next revision,
+    // then its install is cut short.
+    expect(runPreviousBootstrapJob(root, revisions.c2)).toMatchObject({
+      exitCode: 0,
+      stderr: "",
+    });
+    await mkdir(file("node_modules/half"), { recursive: true });
+    await writeFile(file("node_modules/half/index.js"), "partial");
+
+    const result = runJob(root, revisions.c2);
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stderr)).toMatchObject({
+      event: "install-reset",
+      checkout: "source",
+    });
+    expect(await present(file("node_modules"))).toBe(false);
+    expect(await present(file(INSTALL_MARKER))).toBe(false);
+    await expectExactTree(path.join(root, "source"), revisions.c2);
+  }, 60_000);
+});
+
 describe("kept Git object store", () => {
   it("rebuilds everything in the kept store but its objects, shallow boundary and ref", async () => {
     const root = await claim("tampered-store");
@@ -922,6 +1010,24 @@ describe("kept worker candidate checkout", () => {
       await expect(prepare(revisions.c2, candidate)).resolves.toBe("proved");
       await expectExactTree(candidateRoot, revisions.c2);
       expect(await present(ran)).toBe(false);
+    });
+  }, 60_000);
+
+  it("removes a repository planted below the candidate tree's root", async () => {
+    const { candidateRoot, prepare } = await candidateClaim(
+      "candidate-nested-repository",
+    );
+    await withLog(async () => {
+      await expect(prepare(revisions.c2)).resolves.toBe("proved");
+      const temporal = path.join(candidateRoot, "packages/temporal");
+      git(["init", "-q", temporal]);
+      git(["commit", "-q", "--allow-empty", "-m", "stray"], temporal);
+      expect(git(["rev-parse", "HEAD"], temporal)).not.toBe(revisions.c2);
+
+      await expect(prepare(revisions.c2)).resolves.toBe("proved");
+      expect(await present(path.join(temporal, ".git"))).toBe(false);
+      expect(git(["rev-parse", "HEAD"], temporal)).toBe(revisions.c2);
+      await expectExactTree(candidateRoot, revisions.c2);
     });
   }, 60_000);
 

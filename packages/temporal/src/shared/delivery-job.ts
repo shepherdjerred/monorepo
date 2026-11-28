@@ -120,13 +120,16 @@ export const DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES =
   "* -text -filter -ident -working-tree-encoding";
 
 /**
- * Written into a kept checkout's root `node_modules` after its install
- * completes, and removed before the next install starts. A Job that finds
- * `node_modules` without it (an install cut short by a deadline, a full disk
- * or an eviction) removes every `node_modules` and installs from scratch.
+ * Says a kept checkout's `node_modules` is a completed install. It lives in
+ * the checkout's `.git`, which every bootstrap, earlier ones included,
+ * deletes: a Job reads it before deleting `.git`, carries it into the fresh
+ * repository, removes it before its own install starts and writes it again
+ * once that install completes. A Job that finds `node_modules` without it (an
+ * install cut short by a deadline, a full disk or an eviction, or any run of
+ * an earlier bootstrap, which never writes it) removes every `node_modules`
+ * and installs from scratch.
  */
-export const DELIVERY_JOB_INSTALL_MARKER =
-  "node_modules/.delivery-install-complete";
+export const DELIVERY_JOB_INSTALL_MARKER = ".git/delivery-install-complete";
 
 /** Archive bytes are read from the artifact store and verified by digest before use. */
 export const DELIVERY_ARCHIVE_ENDPOINT =
@@ -177,7 +180,10 @@ export const DELIVERY_JOB_AWS_TOOLS = "awscli";
  * stderr and starts from an empty store. `/workspace/source/.git` is created
  * fresh for every Job and borrows the store's objects through alternates, so
  * nothing a Job does in its repository (a candidate's fetch or configuration)
- * outlives it. The checkout starts from an index with no stat data:
+ * outlives it, and a `.git` left anywhere else in the tree outside
+ * `node_modules`, which `git clean` never lists, is removed so no command run
+ * from a subdirectory finds another repository. The checkout starts from an
+ * index with no stat data:
  * `update-index --refresh` hashes every tracked file's exact bytes
  * (DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES) against the revision's tree, so only
  * files whose bytes differ lose their place in the index. Everything untracked
@@ -243,8 +249,11 @@ if [ -z "$previous" ]; then
 fi
 git --git-dir=/workspace/git fetch --quiet --no-tags --no-auto-maintenance --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
 git --git-dir=/workspace/git update-ref refs/heads/delivery-checkout "$DELIVERY_SOURCE_REVISION"
+installed=
+[ ! -f /workspace/source/${DELIVERY_JOB_INSTALL_MARKER} ] || installed=1
 rm -rf /workspace/source/.git
 git init -q /workspace/source
+[ -z "$installed" ] || touch /workspace/source/${DELIVERY_JOB_INSTALL_MARKER}
 git -C /workspace/source config core.attributesFile /dev/null
 echo /workspace/git/objects >/workspace/source/.git/objects/info/alternates
 [ ! -f /workspace/git/shallow ] || cp /workspace/git/shallow /workspace/source/.git/shallow
@@ -254,12 +263,13 @@ mkdir -p /workspace/source/.git/info
 echo '${DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES}' >/workspace/source/.git/info/attributes
 git -C /workspace/source update-index -q --refresh
 rm /workspace/source/.git/info/attributes
-if [ -f /workspace/source/${DELIVERY_JOB_INSTALL_MARKER} ]; then
+if [ -n "$installed" ]; then
   git -C /workspace/source clean -ffdxq -e node_modules
 else
   [ ! -e /workspace/source/node_modules ] || echo '{"kind":"delivery-stage-workspace","event":"install-reset","checkout":"source","detail":"node_modules has no completed install; this Job removes it and installs from scratch"}' >&2
   git -C /workspace/source clean -ffdxq
 fi
+find /workspace/source -mindepth 1 \( -path /workspace/source/.git -o -name node_modules \) -prune -o -name .git -prune -exec rm -rf {} +
 git -C /workspace/source reset -q --hard
 test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
 test -z "$(git -C /workspace/source status --porcelain=v1 --untracked-files=no)"
