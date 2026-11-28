@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ApplicationFailure } from "@temporalio/common";
 import type * as Client from "#lib/delivery/client.ts";
 import { MockActivityEnvironment } from "@temporalio/testing";
 import type {
@@ -30,7 +31,10 @@ vi.mock("#lib/delivery/client.ts", async (importOriginal) => ({
       body?: unknown,
     ) => {
       api.calls.push({ path, body });
-      return Promise.resolve(schema.parse(api.responses.get(path) ?? {}));
+      const configured = api.responses.get(path);
+      return configured instanceof Error
+        ? Promise.reject(configured)
+        : Promise.resolve(schema.parse(configured ?? {}));
     },
   ),
 }));
@@ -220,22 +224,7 @@ describe("model tofu steps (section 5, X8)", () => {
     api.responses.set(plansPath, saved);
     const recipe = requireModelRecipe(value);
     if (recipe.kind !== "tofu") throw new Error("Expected a tofu recipe");
-    const runner = job({
-      stack: "cloudflare",
-      planDeploymentId: "deployment/1",
-      planDigest: receipt.planDigest,
-      outcome: "applied-saved-plan",
-      state: { lineage: "lineage-1", serial: 5 },
-      marker: {
-        schema: "delivery-tofu-marker/v1",
-        deploymentId: "deployment/1",
-        stack: "cloudflare",
-        stateLineage: "lineage-1",
-        stateSerial: 5,
-        archiveDigest: archive.digest,
-        appliedAt: new Date(now).toISOString(),
-      },
-    });
+    const runner = appliedCloudflareRunner();
     await runDeliveryModelPlatformStep(
       "deployment/1",
       "step-apply",
@@ -244,6 +233,92 @@ describe("model tofu steps (section 5, X8)", () => {
     expect(runner.requests[0]?.input).toEqual(
       modelApplyInput(value, recipe, receipt),
     );
+    expect(stageWrites()).toContainEqual(
+      expect.objectContaining({ key: "step-apply", status: "succeeded" }),
+    );
+  });
+});
+
+function appliedCloudflareRunner() {
+  return job({
+    stack: "cloudflare",
+    planDeploymentId: "deployment/1",
+    planDigest: receipt.planDigest,
+    outcome: "applied-saved-plan",
+    state: { lineage: "lineage-1", serial: 5 },
+    marker: {
+      schema: "delivery-tofu-marker/v1",
+      deploymentId: "deployment/1",
+      stack: "cloudflare",
+      stateLineage: "lineage-1",
+      stateSerial: 5,
+      archiveDigest: archive.digest,
+      appliedAt: new Date(now).toISOString(),
+    },
+  });
+}
+
+describe("model tofu zero-change settlement and deferred lock (AI-907)", () => {
+  it("settles step-approve automatically with preflight evidence when an undecided saved plan has 0 changes (AI-907)", async () => {
+    current([{ key: "step-plan", status: "succeeded" }]);
+    const zeroChanges = {
+      ...saved,
+      receipt: {
+        ...saved.receipt,
+        changes: { create: 0, update: 0, delete: 0, replace: 0 },
+      },
+    };
+    api.responses.set(plansPath, zeroChanges);
+    expect(
+      await runDeliveryModelPlatformStep("deployment/1", "step-approve"),
+    ).toEqual({ waiting: false });
+    expect(stageWrites()).toEqual([
+      expect.objectContaining({
+        key: "step-approve",
+        status: "succeeded",
+        evidence: [
+          expect.objectContaining({
+            kind: "preflight",
+            operationId: saved.receipt.planDigest,
+            summary: expect.stringContaining('"autoApproved":true'),
+          }),
+        ],
+      }),
+    ]);
+  });
+
+  it("waits without spawning the apply Job while the shared platform lock is busy, then applies once free (AI-907)", async () => {
+    current([
+      { key: "step-plan", status: "succeeded" },
+      { key: "step-approve", status: "succeeded" },
+    ]);
+    api.responses.set(plansPath, saved);
+    api.responses.set(
+      "deployments/deployment%2F1/stages",
+      ApplicationFailure.nonRetryable(
+        "Delivery API deployments/deployment%2F1/stages returned HTTP 409 BUSY: Shared platform resources are owned by another state apply or shared-lock operation",
+        "DeliveryApi:BUSY",
+      ),
+    );
+    const runner = appliedCloudflareRunner();
+    expect(
+      await runDeliveryModelPlatformStep(
+        "deployment/1",
+        "step-apply",
+        runner.run,
+      ),
+    ).toEqual({ waiting: true });
+    expect(runner.requests).toHaveLength(0);
+
+    api.responses.delete("deployments/deployment%2F1/stages");
+    expect(
+      await runDeliveryModelPlatformStep(
+        "deployment/1",
+        "step-apply",
+        runner.run,
+      ),
+    ).toEqual({ waiting: false });
+    expect(runner.requests).toHaveLength(1);
     expect(stageWrites()).toContainEqual(
       expect.objectContaining({ key: "step-apply", status: "succeeded" }),
     );

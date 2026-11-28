@@ -81,7 +81,7 @@ export async function attestStage(
   if (!recipe.stages.includes(input.stage))
     throw new DeliveryError(
       "INVALID",
-      `Stage ${input.stage} is not one the recipe asks the operator to attest`,
+      `Stage ${input.stage} is not one the recipe asks the operator to attest (expected: ${recipe.stages.join(", ")})`,
     );
   // A replayed attestation carries the same evidence and the same identity.
   const operationId =

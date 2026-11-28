@@ -1,7 +1,7 @@
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
 import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
-import { lock, required, audit, wire } from "./delivery-records.ts";
+import { audit, lock, required, wire } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import {
   id,
@@ -11,6 +11,7 @@ import {
 } from "./delivery-data.ts";
 import { reconcilePlatform } from "./platform/selection.ts";
 import { legacyPipelineOf } from "./execution/legacy-recipe.ts";
+import { reconcileAutomaticRebind } from "./selection/automatic-rebind.ts";
 import {
   releaseStrandedOwnership,
   releaseTerminalOwnership,
@@ -74,7 +75,11 @@ async function reconcileEnvironment(
     target.id === row.acceptedVersionSetRevisionId ||
     target.revision <= row.automaticSuppressedThroughRevision
   )
-    return null;
+    return reconcileAutomaticRebind.call(
+      this,
+      { row, definition, last },
+      actor,
+    );
   return (await automaticSelectionBlocked.call(this, last, target.id, actor))
     ? null
     : requestAutomatic.call(
@@ -338,6 +343,35 @@ export async function supersedeQueuedAutomatic(
   });
 }
 
+export async function lastTerminalId(
+  database: Delivery["database"],
+  environmentId: string,
+) {
+  const row = await database.deployment.findFirst({
+    where: {
+      environmentId,
+      status: { in: ["succeeded", "failed", "canceled"] },
+    },
+    orderBy: [{ finishedAt: "desc" }, { createdAt: "desc" }],
+    select: { id: true },
+  });
+  return row?.id ?? "initial";
+}
+
+export async function submitAutomatic(
+  delivery: Delivery,
+  input: Parameters<Delivery["createDeployment"]>[0],
+  actor: Principal,
+) {
+  try {
+    return await delivery.createDeployment(input, actor, true);
+  } catch (error) {
+    if (error instanceof DeliveryError && error.code === "CONFLICT")
+      return null;
+    throw error;
+  }
+}
+
 export async function requestAutomatic(
   this: Delivery,
   row: {
@@ -348,41 +382,25 @@ export async function requestAutomatic(
   target: { id: string; kind: "deploy" | "channel-publish" },
   actor: Principal,
 ) {
-  const targetId = target.id;
-  // Automatic request identity keys on the environment's last terminal
-  // deployment, not on the binding generation (D3).
-  const lastTerminal = await this.database.deployment.findFirst({
-    where: {
-      environmentId: row.id,
-      status: { in: ["succeeded", "failed", "canceled"] },
-    },
-    orderBy: [{ finishedAt: "desc" }, { createdAt: "desc" }],
-    select: { id: true },
-  });
-  const requestId = `automatic/${row.id}/${targetId}/${lastTerminal?.id ?? "initial"}`;
-  try {
-    return await this.createDeployment(
-      row.promotionSourceEnvironmentId === null
-        ? {
-            requestId,
-            environmentId: row.id,
-            versionSetRevisionId: targetId,
-            expectedGeneration: row.generation,
-            kind: target.kind,
-          }
-        : {
-            requestId,
-            environmentId: row.id,
-            expectedGeneration: row.generation,
-            kind: "promote",
-            sourceEnvironmentId: row.promotionSourceEnvironmentId,
-          },
-      actor,
-      true,
-    );
-  } catch (error) {
-    if (error instanceof DeliveryError && error.code === "CONFLICT")
-      return null;
-    throw error;
-  }
+  const after = await lastTerminalId(this.database, row.id);
+  const requestId = `automatic/${row.id}/${target.id}/${after}`;
+  return submitAutomatic(
+    this,
+    row.promotionSourceEnvironmentId === null
+      ? {
+          requestId,
+          environmentId: row.id,
+          versionSetRevisionId: target.id,
+          expectedGeneration: row.generation,
+          kind: target.kind,
+        }
+      : {
+          requestId,
+          environmentId: row.id,
+          expectedGeneration: row.generation,
+          kind: "promote",
+          sourceEnvironmentId: row.promotionSourceEnvironmentId,
+        },
+    actor,
+  );
 }

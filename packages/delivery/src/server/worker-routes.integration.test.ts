@@ -315,3 +315,148 @@ test("host-only baseline intent requires admin authority and preserves source ar
     versions: accepted.versions,
   });
 });
+
+test("a queued scout-beta worker rollout waits while scout-prod's worker rollout is running, while retire-host stays unblocked (AI-857)", async () => {
+  const beta = await workerFixture(context.delivery, "scout-beta");
+  const prod = await workerFixture(context.delivery, "scout-prod");
+  const db = context.cluster.database;
+
+  // Accept two releases in scout-beta so workerA is eligible for retirement.
+  const { workerA, workerB, snapshotB } = await beta.acceptedPool();
+  await db.deployment.update({
+    where: { id: workerB.introducedByDeploymentId },
+    data: { monitorState: "settled", monitorSettledAt: new Date() },
+  });
+
+  // Start a promoted worker rollout in scout-prod (promotionSource = scout-beta).
+  await db.environment.update({
+    where: { id: prod.environmentId },
+    data: { promotionSourceEnvironmentId: beta.environmentId },
+  });
+  const prodEnv = await db.environment.findUniqueOrThrow({
+    where: { id: prod.environmentId },
+  });
+  const prodRollout = await context.delivery.createDeployment(
+    {
+      requestId: "scout-prod/rollout",
+      environmentId: prod.environmentId,
+      expectedGeneration: prodEnv.generation,
+      kind: "promote",
+      sourceEnvironmentId: beta.environmentId,
+    },
+    testOperator,
+  );
+  await context.delivery.approve(
+    prodRollout.id,
+    { decision: "approve", reason: "Approved scout-prod promotion" },
+    testOperator,
+  );
+  await db.deployment.update({
+    where: { id: prodRollout.id },
+    data: {
+      workerSnapshot: {
+        ...snapshotB,
+        environmentId: prod.environmentId,
+        target: "scout-prod",
+        versions: [
+          {
+            ...workerB,
+            id: "scout-prod/worker/2",
+            environmentId: prod.environmentId,
+            introducedByDeploymentId: prodRollout.id,
+            host: prod.host,
+          },
+        ],
+      },
+    },
+  });
+  await context.delivery.claim(prodRollout.id, testExecutor);
+
+  // 1. retire-host on scout-beta remains unblocked while scout-prod's rollout is running.
+  const betaPool = await context.delivery.workers(
+    beta.environmentId,
+    testOperator,
+  );
+  const retirement = await context.delivery.retireWorker(
+    workerA.id,
+    {
+      requestId: "scout-beta/retire-during-prod",
+      expectedEnvironmentGeneration: betaPool.generation,
+      expectedWorkerGeneration: workerA.generation,
+    },
+    testOperator,
+  );
+  const claimedRetire = await context.delivery.claim(
+    retirement.id,
+    testExecutor,
+    freshWorkerProof(workerA, workerB.buildId),
+  );
+  expect(claimedRetire.deployment.status).toBe("running");
+  await context.delivery.stage(
+    retirement.id,
+    {
+      key: "worker-retire",
+      status: "succeeded",
+      operationId: deliveryOperationId(`${retirement.id}:worker-retire`),
+      message: "Retired drained host",
+      evidence: [
+        { kind: "reconciliation", summary: "scaled down" },
+        { kind: "acceptance", summary: "drained" },
+      ],
+    },
+    testExecutor,
+  );
+  await context.delivery.finish(
+    retirement.id,
+    {
+      status: "succeeded",
+      message: "Retired workerA",
+      recoveryRequired: false,
+      observedRevisionId: retirement.versionSetRevisionId,
+      evidence: [
+        { kind: "reconciliation", summary: "scaled down" },
+        { kind: "acceptance", summary: "drained" },
+      ],
+    },
+    testExecutor,
+  );
+
+  // 2. Queued scout-beta worker rollout answers BUSY while scout-prod rollout is running.
+  const nextBeta = await beta.requestedFrozenRelease(3);
+  await expect(
+    context.delivery.claim(nextBeta.deployment.id, testExecutor),
+  ).rejects.toMatchObject({
+    code: "BUSY",
+    message: expect.stringMatching(/scout-for-lol\/prod/u),
+  });
+
+  // 3. Once scout-prod finishes, scout-beta claims immediately.
+  await context.delivery.finish(
+    prodRollout.id,
+    {
+      status: "failed",
+      message: "Finished prod rollout",
+      recoveryRequired: false,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const claimedBeta = await context.delivery.claim(
+    nextBeta.deployment.id,
+    testExecutor,
+  );
+  expect(claimedBeta.deployment.status).toBe("running");
+});
+
+test("workerFixture seeds revisioned pipeline and configuration IDs accepted by the selection route (AI-817)", async () => {
+  const scout = await workerFixture(context.delivery, "scout-prod");
+  await scout.acceptedPool();
+  await workers.requestedBaseline();
+  for (const environmentId of [workers.environmentId, scout.environmentId]) {
+    const response = await app.request(
+      `/api/v1/environments/${encodeURIComponent(environmentId)}/selection`,
+      { headers: { Authorization: "Bearer fixture-deployer" } },
+    );
+    expect(response.status, environmentId).toBe(200);
+  }
+});

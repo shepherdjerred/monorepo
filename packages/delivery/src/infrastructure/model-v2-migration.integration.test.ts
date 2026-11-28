@@ -379,6 +379,12 @@ describe("model_v2 migration", () => {
         }),
       ]),
     ]);
+    const droppedColumns = await cluster.database.$queryRawUnsafe<
+      { table_name: string; column_name: string }[]
+    >(
+      `SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND ((table_name = 'Artifact' AND column_name = 'replication') OR (table_name = 'Environment' AND column_name = 'restoreHold'))`,
+    );
+    expect(droppedColumns).toEqual([]);
   }, 120_000);
 
   test("refuses an accepted set revision without a succeeded deployment", async () => {

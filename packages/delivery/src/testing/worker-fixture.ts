@@ -16,7 +16,7 @@ export async function workerFixture(
   const host = workerHostSpecification(target);
   const serviceId = target === "central" ? "temporal" : "scout-for-lol";
   const environmentId = `${serviceId}/${target === "scout-beta" ? "beta" : "prod"}`;
-  const pipelineId = `${target}/persistence-fixture`;
+  const pipelineId = `${target}/persistence-fixture/1`;
   await delivery.registerPipeline(
     pipelineId,
     {
@@ -41,7 +41,7 @@ export async function workerFixture(
     testOperator,
   );
   const workerPipeline = LegacyPipelineRevisionSchema.parse({
-    id: `${target}/frozen-worker-fixture`,
+    id: `${target}/frozen-worker-fixture/1`,
     createdAt: new Date().toISOString(),
     definition: {
       kind: "argocd",
@@ -244,7 +244,7 @@ export async function workerFixture(
         name: target === "scout-beta" ? "beta" : "prod",
         application: host.application,
         pipelineRevisionId: workerPipeline.id,
-        configurationRevision: "worker-fixture/baseline",
+        configurationRevision: "worker-fixture/baseline/1",
         configuration: {},
         automatic: false,
       },

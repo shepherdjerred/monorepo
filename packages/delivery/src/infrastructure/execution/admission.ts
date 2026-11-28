@@ -1,5 +1,10 @@
+import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
-import type { Environment, StoredRecipeDefinition } from "#shared/contract.ts";
+import {
+  PipelineRevisionSchema,
+  type Environment,
+  type StoredRecipeDefinition,
+} from "#shared/contract.ts";
 import {
   type AdmissionSnapshot,
   AdmissionSnapshotSchema,
@@ -11,11 +16,14 @@ import {
 } from "#shared/model/recipe-bindings.ts";
 import {
   artifact,
+  environment as readEnvironment,
   orderKey,
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
 import { liveSet } from "#infrastructure/composition/automatic.ts";
-import { required } from "#infrastructure/delivery-records.ts";
+import { required, wire } from "#infrastructure/delivery-records.ts";
+import { staleSource } from "#infrastructure/selection/selection.ts";
+import { AWAITING_HUMAN_GATE } from "#infrastructure/selection/views.ts";
 import { targetInstances } from "./ownership.ts";
 import { legacyPipelineOf } from "./legacy-recipe.ts";
 
@@ -27,7 +35,18 @@ export function modelRecipeOf(definition: StoredRecipeDefinition) {
     : null;
 }
 
-/** Instances a deployment locks in canonical order and whether it takes the shared lock (T1). */
+/**
+ * Whether a model recipe defers acquiring the shared `platform` lock until its
+ * mutating `step-apply` stage starts, rather than holding it across read-only
+ * `step-plan` and human `step-approve` (AI-907).
+ */
+export function defersPlatformLockToApply(
+  definition: StoredRecipeDefinition,
+): boolean {
+  return modelRecipeOf(definition)?.kind === "tofu";
+}
+
+/** Instances a deployment locks in canonical order and whether claim takes the shared lock (T1). */
 export function admissionTargets(
   definition: StoredRecipeDefinition,
   application: string | null,
@@ -39,22 +58,29 @@ export function admissionTargets(
   }
   return {
     instances: recipeInstances(model).toSorted(),
-    shared: sharedLockOf(model),
+    shared: sharedLockAtClaim(model),
   };
 }
 
-function sharedLockOf(definition: ReturnType<typeof modelRecipeOf>): boolean {
+function sharedLockAtClaim(
+  definition: ReturnType<typeof modelRecipeOf>,
+): boolean {
   if (definition === null) return false;
   switch (definition.kind) {
     case "kubernetes-application":
-    case "tofu":
       return definition.sharedLock === "platform";
+    case "tofu":
+      return false;
     case "operator-run":
       return (
-        definition.wrapped.kind !== "host" && sharedLockOf(definition.wrapped)
+        definition.wrapped.kind !== "host" &&
+        (definition.wrapped.kind === "tofu" ||
+          sharedLockAtClaim(definition.wrapped))
       );
     case "compound":
-      return definition.subRecipes.some((sub) => sharedLockOf(sub.definition));
+      return definition.subRecipes.some((sub) =>
+        sharedLockAtClaim(sub.definition),
+      );
     case "static-site":
     case "channel":
       return false;
@@ -66,11 +92,47 @@ function keyAtLeast(candidate: string | null, floor: string | null) {
   return floor === null || (candidate !== null && candidate >= floor);
 }
 
+/**
+ * A brand-new service's RBAC grant lands in argocd/prod's declared
+ * configuration; wait for argocd/prod to accept its declared binding before
+ * the initial deployment calls ArgoCD (AI-906).
+ */
+function requireInitialArgoBinding(
+  dependent: { acceptedDeploymentId: string | null } | null,
+  prerequisiteId: string,
+  prerequisite: {
+    declaredConfigurationId: string;
+    pipelineRevisionId: string;
+  },
+  accepted: { configurationId: string; pipelineRevisionId: string },
+) {
+  if (
+    prerequisiteId !== "argocd/prod" ||
+    dependent?.acceptedDeploymentId !== null
+  )
+    return;
+  if (
+    accepted.configurationId !== prerequisite.declaredConfigurationId ||
+    accepted.pipelineRevisionId !== prerequisite.pipelineRevisionId
+  )
+    throw new DeliveryError(
+      "BUSY",
+      `Waiting for ${prerequisiteId} to accept its declared configuration ${prerequisite.declaredConfigurationId} and recipe ${prerequisite.pipelineRevisionId}`,
+    );
+}
+
 /** Every prerequisite edge holds now; the accepted selections it found (Z1). */
 async function prerequisites(
   tx: Transaction,
   row: { environmentId: string; versionSetRevisionId: string },
+  options: { initialClaim: boolean },
 ): Promise<AdmissionSnapshot["prerequisites"]> {
+  const dependent = options.initialClaim
+    ? await tx.environment.findUniqueOrThrow({
+        where: { id: row.environmentId },
+        select: { acceptedDeploymentId: true },
+      })
+    : null;
   const selected = await tx.versionSet.findUniqueOrThrow({
     where: { id: row.versionSetRevisionId },
   });
@@ -106,6 +168,12 @@ async function prerequisites(
         "BUSY",
         `Waiting for ${edge.prerequisiteId} to accept a qualifying selection (${edge.rule})`,
       );
+    requireInitialArgoBinding(
+      dependent,
+      edge.prerequisiteId,
+      prerequisite,
+      accepted,
+    );
     frozen.push({
       environmentId: edge.prerequisiteId,
       rule:
@@ -148,7 +216,7 @@ export async function freezeAdmission(
   definition: StoredRecipeDefinition,
 ): Promise<AdmissionSnapshot> {
   return AdmissionSnapshotSchema.parse({
-    prerequisites: await prerequisites(tx, row),
+    prerequisites: await prerequisites(tx, row, { initialClaim: true }),
     runners: await runners(tx, modelRecipeOf(definition)),
   });
 }
@@ -164,18 +232,54 @@ export async function recheckAdmission(
 ) {
   if (row.admissionSnapshot === null) return;
   AdmissionSnapshotSchema.parse(row.admissionSnapshot);
-  await prerequisites(tx, row);
+  await prerequisites(tx, row, { initialClaim: false });
 }
 
-/** The self-hosted dispatch barrier (D8): one self-hosted deployment owns the executor at a time. */
-export async function requireDispatchBarrier(
+/**
+ * Serializes a promotion-source worker rollout behind any running worker
+ * rollout in a dependent environment so the source's live routing stays on the
+ * promoted candidate through promote-time verification (AI-857). Host
+ * retirements remain unblocked to recover cluster capacity.
+ */
+export async function requireDependentWorkerRolloutsIdle(
   tx: Transaction,
-  row: { id: string; serviceId: string },
-  env: Pick<Environment, "id">,
+  row: {
+    id: string;
+    environmentId: string;
+    kind: string;
+    workerSnapshot: unknown;
+  },
+) {
+  if (row.workerSnapshot === null || row.kind === "retire-host") return;
+  const dependent = await tx.deployment.findFirst({
+    where: {
+      id: { not: row.id },
+      status: "running",
+      kind: { not: "retire-host" },
+      NOT: [
+        { workerSnapshot: { equals: Prisma.DbNull } },
+        { workerSnapshot: { equals: Prisma.JsonNull } },
+      ],
+      environment: { promotionSourceEnvironmentId: row.environmentId },
+    },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true, environmentId: true },
+  });
+  if (dependent !== null)
+    throw new DeliveryError(
+      "BUSY",
+      `Waiting for dependent worker rollout ${dependent.id} in ${dependent.environmentId} to finish before advancing ${row.environmentId}`,
+    );
+}
+
+/** Refuses when another self-hosted deployment is running or quarantined (D8). */
+export async function requireNoSelfHostedBarrierHolder(
+  tx: Transaction,
+  deploymentId: string,
 ) {
   const holder = await tx.deployment.findFirst({
     where: {
-      id: { not: row.id },
+      id: { not: deploymentId },
       service: { selfHosted: true },
       OR: [{ status: "running" }, { recoveryRequired: true }],
     },
@@ -186,20 +290,129 @@ export async function requireDispatchBarrier(
       "BUSY",
       `Self-hosted deployment ${holder.id} of ${holder.environmentId} holds the dispatch barrier`,
     );
+}
+
+async function isAdmissibleSelfHostedCandidate(
+  tx: Transaction,
+  candidate: {
+    id: string;
+    environmentId: string;
+    versionSetRevisionId: string;
+    pipelineRevisionId: string;
+    expectedGeneration: number;
+    kind: string;
+    sourceEnvironmentId: string | null;
+  },
+): Promise<boolean> {
+  const env = await readEnvironment(tx, candidate.environmentId);
+  if (
+    env.lifecycle !== "active" ||
+    env.activeDeploymentId !== null ||
+    env.generation !== candidate.expectedGeneration
+  )
+    return false;
+  try {
+    if ((await staleSource(tx, candidate, env)) !== null) return false;
+    const pipeline = PipelineRevisionSchema.parse(
+      wire(
+        required(
+          await tx.pipeline.findUnique({
+            where: { id: candidate.pipelineRevisionId },
+          }),
+          "Pipeline",
+        ),
+      ),
+    );
+    const { instances } = admissionTargets(
+      pipeline.definition,
+      env.application,
+    );
+    if (instances.length === 0) return false;
+    const quarantinedTarget = await tx.targetLock.findFirst({
+      where: {
+        instance: { in: instances },
+        deploymentId: { not: candidate.id },
+        deployment: { status: { not: "running" } },
+      },
+      select: { instance: true },
+    });
+    if (quarantinedTarget !== null) return false;
+    await freezeAdmission(tx, candidate, pipeline.definition);
+    return true;
+  } catch (error) {
+    if (error instanceof DeliveryError && error.code === "BUSY") return false;
+    throw error;
+  }
+}
+
+async function findAdmissibleQueuedSelfHosted(tx: Transaction) {
+  const candidates = await tx.deployment.findMany({
+    where: {
+      status: "queued",
+      cancelRequested: false,
+      service: { selfHosted: true },
+      environment: { lifecycle: "active", activeDeploymentId: null },
+    },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      environmentId: true,
+      versionSetRevisionId: true,
+      pipelineRevisionId: true,
+      expectedGeneration: true,
+      kind: true,
+      sourceEnvironmentId: true,
+    },
+  });
+  for (const candidate of candidates) {
+    if (await isAdmissibleSelfHostedCandidate(tx, candidate)) return candidate;
+  }
+  return null;
+}
+
+/** The self-hosted dispatch barrier (D8): one self-hosted deployment owns the executor at a time. */
+export async function requireDispatchBarrier(
+  tx: Transaction,
+  row: { id: string; serviceId: string; status: string },
+  env: Pick<Environment, "id">,
+) {
+  await requireNoSelfHostedBarrierHolder(tx, row.id);
   const service = await tx.service.findUniqueOrThrow({
     where: { id: row.serviceId },
   });
-  if (!service.selfHosted) return;
-  // Queues drain first: running work finishes before the executor is
-  // replaced. A terminal recovery-required deployment of another service is
-  // not executor work; its reader settles it independently, so it never holds
-  // a self-hosted release (another self-hosted one does, above).
-  const running = await tx.deployment.count({
-    where: { id: { not: row.id }, status: "running" },
+  if (!service.selfHosted) {
+    // Drain mode (AI-572): once a queued self-hosted release is otherwise
+    // admissible, pause new ordinary claims while in-flight runs finish.
+    if (row.status === "queued") {
+      const waiter = await findAdmissibleQueuedSelfHosted(tx);
+      if (waiter !== null)
+        throw new DeliveryError(
+          "BUSY",
+          `Self-hosted deployment ${waiter.id} of ${waiter.environmentId} is draining running work before taking the dispatch barrier (D8)`,
+        );
+    }
+    return;
+  }
+  // Queues drain first: active running work finishes before the executor is
+  // replaced. Deployments parked solely on a human saved-plan decision or an
+  // operator-run attestation gate have no active in-cluster step and do not
+  // starve self-hosted recovery releases (AI-572).
+  const blockers = await tx.deployment.findMany({
+    where: {
+      id: { not: row.id },
+      status: "running",
+      NOT: AWAITING_HUMAN_GATE,
+    },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true, environmentId: true },
   });
-  if (running > 0)
+  if (blockers.length > 0) {
+    const named = blockers
+      .map((blocker) => `${blocker.environmentId} (${blocker.id})`)
+      .join(", ");
     throw new DeliveryError(
       "BUSY",
-      `${env.id} is self-hosted; waiting for every running deployment to finish before taking the dispatch barrier (D8)`,
+      `${env.id} is self-hosted; waiting for every running deployment to finish before taking the dispatch barrier (D8): ${named}`,
     );
+  }
 }

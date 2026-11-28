@@ -25,6 +25,7 @@ const calls = vi.hoisted(() => {
   const argoResponses = new Map<string, unknown[]>();
   const hubReleases: unknown[] = [];
   const serviceProbesReleases: unknown[] = [];
+  const clusterObservabilityReleases: unknown[] = [];
   const credentialDecision: { credentialPrune: boolean | MediaIngressPruning } =
     { credentialPrune: false };
   return {
@@ -40,6 +41,8 @@ const calls = vi.hoisted(() => {
     hubReleases,
     serviceProbesPrune: false,
     serviceProbesReleases,
+    clusterObservabilityPrune: false,
+    clusterObservabilityReleases,
     lapsed: false,
     refuse: false,
     failSync: "",
@@ -170,6 +173,13 @@ vi.mock("#lib/delivery/service-probes/prune.ts", () => ({
   },
 }));
 
+vi.mock("#lib/delivery/cluster-observability/prune.ts", () => ({
+  clusterObservabilitySyncPrunes: (release: unknown) => {
+    calls.clusterObservabilityReleases.push(release);
+    return Promise.resolve(calls.clusterObservabilityPrune);
+  },
+}));
+
 const { applySafety, sync } = await import("./kubernetes.ts");
 
 /** The forum release, its chart in a store the sync reads by version. */
@@ -203,6 +213,8 @@ afterEach(() => {
   calls.hubReleases = [];
   calls.serviceProbesPrune = false;
   calls.serviceProbesReleases = [];
+  calls.clusterObservabilityPrune = false;
+  calls.clusterObservabilityReleases = [];
   calls.argoResponses.clear();
   calls.lapsed = false;
   calls.updates = [];
@@ -1105,5 +1117,226 @@ describe("Scout child sync timeout floor (AI-658)", () => {
         "Timeout: sync operation for scout-prod did not complete within 2700s",
     });
     expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
+  });
+});
+
+describe("cluster-observability prune guard (AI-908)", () => {
+  test("the cluster-observability guard authorizes pruning when earlier guards do not", async () => {
+    const { current, recipe } = fixture();
+    calls.clusterObservabilityPrune = true;
+    calls.reads = [application(false), application(true)];
+    await sync(current, recipe, "step-sync");
+    expect(
+      calls.events.find((event) => event.startsWith("sync-managed")),
+    ).toContain("--prune");
+    expect(calls.clusterObservabilityReleases).toEqual([
+      expect.objectContaining({
+        application: "storm-forum",
+        chart: "storm-forum",
+        namespace: "storm-forum",
+        environmentId: "storm-forum/prod",
+        revision: "1.0.1",
+      }),
+    ]);
+  });
+});
+
+describe("tracked worker compatibility (AI-833)", () => {
+  test("apply-safety refuses an incompatible chart:media and tracked worker before writeBody (AI-833)", async () => {
+    const { requireModelRecipe } =
+      await import("#lib/delivery/model/recipe.ts");
+    const { buildChartTgz } = await import("#lib/delivery/model/testing.ts");
+    const chartBytes = buildChartTgz([
+      {
+        path: "media/templates/media.k8s.yaml",
+        content: [
+          "apiVersion: apps/v1",
+          "kind: Deployment",
+          "metadata:",
+          "  name: media-files",
+          "spec:",
+          "  template:",
+          "    spec:",
+          "      containers:",
+          "        - name: media-files",
+          '          image: \'{{ required `Delivery requires image:temporal-worker` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "temporal-worker") }}\'',
+          "          env:",
+          "            - name: FEATURE_FLAGS_MODE",
+          "              value: flags",
+        ].join("\n"),
+      },
+    ]);
+    const chartDigest = `sha256:${createHash("sha256").update(chartBytes).digest("hex")}`;
+    const chartUrl =
+      "https://chartmuseum.tailnet-1a49.ts.net/charts/media-2.0.0-1018413.tgz";
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(
+        async () => new Response(new Uint8Array(chartBytes), { status: 200 }),
+      );
+    try {
+      const initial = fixture();
+      const mediaRecipe = {
+        ...initial.recipe,
+        application: {
+          ...initial.recipe.application,
+          name: "media",
+          destination: {
+            ...initial.recipe.application.destination,
+            namespace: "media",
+          },
+          source: {
+            repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+            chart: "media",
+          },
+        },
+        chartComponent: "chart:media",
+        artifactParameters: {
+          "delivery.dependencies.temporal-worker": {
+            component: "image:temporal-worker",
+            format: "reference" as const,
+          },
+        },
+        steps: initial.recipe.steps
+          .filter(({ kind }) => kind !== "forum-bundle")
+          .map((step) => ({ ...step, instance: "application:media" })),
+      };
+      const makeMediaDetail = (workerVersion: string, workerSha: string) =>
+        DeploymentDetailSchema.parse({
+          ...initial.current,
+          deployment: {
+            ...initial.current.deployment,
+            serviceId: "streambot",
+            environmentId: "streambot/prod",
+          },
+          pipeline: { ...initial.current.pipeline, definition: mediaRecipe },
+          versionSet: {
+            ...initial.current.versionSet,
+            serviceId: "streambot",
+            components: {
+              "chart:media": {
+                ...artifact({
+                  id: "ci/1/18413/chart/media",
+                  component: "chart:media",
+                  kind: "chart",
+                  uri: chartUrl,
+                  version: "2.0.0-1018413",
+                  character: "a",
+                }),
+                digest: chartDigest,
+                serviceId: "streambot",
+                sourceRevision: "f545a3b02ffcb3a2545ae038bc2dc58e499a0c6f",
+              },
+              "image:temporal-worker": {
+                ...artifact({
+                  id: "ci/1/18391/image/temporal-worker",
+                  component: "image:temporal-worker",
+                  kind: "image",
+                  uri: "docker.io/shepherdjerred/temporal-worker",
+                  version: workerVersion,
+                  character: "b",
+                }),
+                serviceId: "temporal",
+                sourceRevision: workerSha,
+              },
+            },
+          },
+        });
+      const incompatible = makeMediaDetail(
+        "2.0.0-1018391",
+        "63cf013a6ae11ac0e6fd544d7d5aa95945b54c61",
+      );
+      const parsedRecipe = requireModelRecipe(incompatible);
+      if (parsedRecipe.kind !== "kubernetes-application")
+        throw new Error("Expected kubernetes-application");
+      const error = await refusal(
+        applySafety(incompatible, parsedRecipe, "step-apply-safety"),
+      );
+      expect(error).toMatchObject({
+        type: "DeliveryApplySafetyRefused",
+        nonRetryable: true,
+      });
+      expect(calls.events).not.toContain("read");
+      expect(calls.events).not.toContain("write");
+      expect(calls.updates).toHaveLength(0);
+      expect(calls.stages.map(({ status }) => status)).toEqual([
+        "running",
+        "failed",
+      ]);
+
+      calls.events = [];
+      calls.stages = [];
+      calls.reads = [null];
+      const compatible = makeMediaDetail(
+        "2.0.0-1018436",
+        "a332ca9200000000000000000000000000000000",
+      );
+      await applySafety(compatible, parsedRecipe, "step-apply-safety");
+      expect(calls.stages.map(({ status }) => status)).toEqual([
+        "running",
+        "succeeded",
+      ]);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+});
+
+describe("dynamic readback window (AI-624)", () => {
+  test("waitForReadback scales attempts from childSyncTimeoutSeconds floor for temporal vs default 600s (AI-624)", async () => {
+    const { CHILD_SYNC_TIMEOUT_FLOORS } =
+      await import("homelab/scripts/argocd/argocd.ts");
+    const { childSyncTimeoutSeconds } =
+      await import("homelab/scripts/argocd/argocd-child-sync-timeout.ts");
+    const sleep = vi.spyOn(Bun, "sleep").mockResolvedValue();
+    try {
+      const initial = fixture();
+      const temporalCurrent = {
+        ...initial.current,
+        deployment: {
+          ...initial.current.deployment,
+          environmentId: "temporal/prod",
+        },
+      };
+      const temporalRecipe = {
+        ...initial.recipe,
+        application: {
+          ...initial.recipe.application,
+          name: "temporal",
+          destination: {
+            ...initial.recipe.application.destination,
+            namespace: "temporal",
+          },
+          source: { ...initial.recipe.application.source, chart: "temporal" },
+        },
+        steps: initial.recipe.steps
+          .filter(({ kind }) => kind !== "forum-bundle")
+          .map((step) => ({ ...step, instance: "application:temporal" })),
+      };
+      const pending = {
+        ...argoApplication(temporalCurrent, temporalRecipe, true),
+        status: {
+          ...argoApplication(temporalCurrent, temporalRecipe, true).status,
+          health: { status: "Progressing" },
+        },
+      };
+      calls.reads = [
+        argoApplication(temporalCurrent, temporalRecipe, false),
+        pending,
+      ];
+      await expect(
+        sync(temporalCurrent, temporalRecipe, "step-sync"),
+      ).rejects.toThrow("Timed out waiting for temporal to settle");
+      const expectedSeconds = childSyncTimeoutSeconds(
+        "temporal",
+        600,
+        CHILD_SYNC_TIMEOUT_FLOORS,
+      );
+      const expectedAttempts = Math.ceil((expectedSeconds * 1000) / 5000);
+      expect(expectedAttempts).toBeGreaterThan(120);
+      expect(sleep).toHaveBeenCalledTimes(expectedAttempts);
+    } finally {
+      sleep.mockRestore();
+    }
   });
 });

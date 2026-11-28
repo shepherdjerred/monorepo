@@ -95,6 +95,7 @@ export function extendedVerifySucceeded(receipt: ExtendedVerifyReceipt) {
 /** The failure text the Temporal failure watch forwards to Discord. */
 export function extendedVerifyFailureMessage(
   receipt: ExtendedVerifyReceipt,
+  source?: string | null,
 ): string {
   const failed = receipt.workflows
     .filter((workflow) => workflow.state !== "success")
@@ -107,5 +108,6 @@ export function extendedVerifyFailureMessage(
       ? "no workflow reported failure"
       : failed.join(", ")
     : `no ${CI_EXTENDED_VERIFY_WORKFLOW} workflow ran`;
-  return `Extended verify pipeline ${receipt.number.toString()} ended ${receipt.status} at ${receipt.commit.slice(0, 12)} (${detail}): ${receipt.url}`;
+  const commit = (source ?? receipt.commit).slice(0, 12);
+  return `Extended verify pipeline ${receipt.number.toString()} ended ${receipt.status} at ${commit} (${detail}): ${receipt.url}`;
 }

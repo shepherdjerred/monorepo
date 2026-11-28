@@ -5,6 +5,7 @@ import {
   flagValueSchema,
 } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod";
+import { DeliveryError } from "#domain/error.ts";
 import { PrincipalSchema } from "#shared/contract.ts";
 
 /** The only scopes an attestation credential holds besides `attest` (X13). */
@@ -103,8 +104,16 @@ export const BootstrapSchema = z
           "Forum archive reader credentials must be provisioned together",
       });
   });
+function operatorLoginsUnavailableError() {
+  return new DeliveryError(
+    "UNAVAILABLE",
+    "Operator authorization snapshot is temporarily unavailable",
+  );
+}
 export function behaviorConfig(stage: string) {
-  return defineConfig({
+  const unavailableFlags = new Set<string>();
+  let operatorSourceFailed = false;
+  const resolver = defineConfig({
     definition: {
       writesEnabled: {
         schema: z.boolean(),
@@ -150,6 +159,9 @@ export function behaviorConfig(stage: string) {
         targetingKey: "delivery",
         attributes: { stage },
         requireFreshSnapshot: true,
+        onUnavailable: (flag) => {
+          unavailableFlags.add(flag);
+        },
         kinds: {
           writesEnabled: "boolean",
           enabledEnvironments: flagValueKind("delivery-enabled-environments"),
@@ -162,6 +174,7 @@ export function behaviorConfig(stage: string) {
     },
     hooks: {
       onSourceError: (key, source) => {
+        if (key === "operatorLogins") operatorSourceFailed = true;
         console.warn(
           JSON.stringify({
             message: "delivery_config_source_error",
@@ -172,6 +185,41 @@ export function behaviorConfig(stage: string) {
       },
     },
   });
+  return {
+    ...resolver,
+    get: async <K extends (typeof resolver.keys)[number]>(
+      key: K,
+      context?: Parameters<typeof resolver.get>[1],
+    ) => {
+      if (key === "operatorLogins") {
+        unavailableFlags.delete("delivery-operator-logins");
+        operatorSourceFailed = false;
+      }
+      const resolved = await resolver.get(key, context);
+      if (key === "operatorLogins" && operatorSourceFailed) {
+        throw operatorLoginsUnavailableError();
+      }
+      return resolved;
+    },
+    value: async <K extends (typeof resolver.keys)[number]>(
+      key: K,
+      context?: Parameters<typeof resolver.value>[1],
+    ) => {
+      if (key === "operatorLogins") {
+        unavailableFlags.delete("delivery-operator-logins");
+        operatorSourceFailed = false;
+      }
+      const resolved = await resolver.value(key, context);
+      if (
+        key === "operatorLogins" &&
+        (operatorSourceFailed ||
+          unavailableFlags.has("delivery-operator-logins"))
+      ) {
+        throw operatorLoginsUnavailableError();
+      }
+      return resolved;
+    },
+  };
 }
 /** Operational bounds the record enforces at admission; typed configuration, never literals. */
 export type DeliveryPolicy = {

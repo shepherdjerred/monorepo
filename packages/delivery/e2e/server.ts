@@ -1,6 +1,7 @@
 import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery } from "#testing/seed.ts";
 import { workerFixture } from "#testing/worker-fixture.ts";
+import { environmentSelection } from "#infrastructure/selection/views.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { testPublisher } from "#testing/seed.ts";
 import { declareAcquisitions } from "#testing/services.ts";
@@ -10,7 +11,7 @@ import { seedBrowserForum } from "#testing/browser-forum.ts";
 import { seedContentRecovery } from "#testing/browser-content-recovery.ts";
 import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import { platformFixture } from "#testing/platform-fixture.ts";
-import { seedPlatformBrowser } from "./platform.ts";
+import { seedControlPlaneBrowser, seedPlatformBrowser } from "./platform.ts";
 import { serveHarness } from "./harness.ts";
 import { describeSeededCommits, seedCommitHistory } from "./commits.ts";
 import { seedOverviewGroup } from "./overview.ts";
@@ -48,8 +49,7 @@ async function startHarness() {
   await seedContentRecovery(delivery, forum.id);
   const scout = await workerFixture(delivery, "scout-prod");
   const scoutPool = await scout.acceptedPool();
-  const central = await workerFixture(delivery);
-  await central.requestedBaseline();
+  await environmentSelection(cluster.database, scout.environmentId);
   // The catalog document names the Minecraft chart's acquiring service.
   await declareAcquisitions(cluster.database, "minecraft", ["chart:minecraft"]);
   const chart = new TextEncoder().encode(
@@ -131,6 +131,13 @@ async function startHarness() {
     platform.delivery,
     platform.sourceBuildId,
   );
+  // Queue self-hosted temporal/prod and delivery-control-plane/prod after
+  // prior deployments have been claimed so AI-572 drain mode (D8) reflects
+  // chronological order while preserving monotonic temporal build numbers.
+  const central = await workerFixture(delivery);
+  await central.requestedBaseline();
+  await environmentSelection(cluster.database, central.environmentId);
+  await seedControlPlaneBrowser(cluster.database);
   await seedRunningPipeline(delivery);
   await describeSeededCommits(delivery);
   await serveHarness({

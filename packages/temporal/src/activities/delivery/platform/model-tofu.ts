@@ -112,15 +112,15 @@ async function plan(step: Step, runJob: typeof runDeliveryJob) {
 /**
  * A saved plan nobody decided before it expired can never be applied, so the
  * approve step settles failed instead of waiting while it holds the stack
- * and platform locks. Delivery expires the undecided approval when the
- * failed deployment finishes.
+ * lock. Delivery expires the undecided approval when the failed deployment
+ * finishes.
  */
 async function requireUnexpiredPlan(step: Step, operationId: string) {
   const stored = await deliveryRequest(
     `platform/plans/${encodeURIComponent(step.current.deployment.id)}`,
     RecordTofuPlanSchema,
   );
-  if (Date.parse(stored.receipt.expiresAt) > Date.now()) return;
+  if (Date.parse(stored.receipt.expiresAt) > Date.now()) return stored.receipt;
   const reason = `Saved plan ${stored.receipt.planDigest} expired at ${stored.receipt.expiresAt} before a decision; nothing was applied`;
   await recordStage(step.current, step.key, "failed", {
     operationId,
@@ -136,11 +136,26 @@ async function requireUnexpiredPlan(step: Step, operationId: string) {
   throw ApplicationFailure.nonRetryable(reason, "DeliveryPlanExpired");
 }
 
+function isZeroChangePlan(changes: {
+  create: number;
+  update: number;
+  delete: number;
+  replace: number;
+}): boolean {
+  return (
+    changes.create === 0 &&
+    changes.update === 0 &&
+    changes.delete === 0 &&
+    changes.replace === 0
+  );
+}
+
 /**
  * The approve step waits for a human's one decision on the exact saved plan
- * (4.13), but never past the plan's expiry. A rejection (H3) settles the
- * step failed, so no stage stays running and the failed deployment releases
- * its locks; the plan was discarded with the decision and is never applied.
+ * (4.13), unless the saved plan proposes zero changes (AI-907), and never past
+ * the plan's expiry. A rejection (H3) settles the step failed, so no stage
+ * stays running and the failed deployment releases its locks; the plan was
+ * discarded with the decision and is never applied.
  */
 async function approve(step: Step): Promise<{ waiting: boolean }> {
   const operationId = deliveryOperationId(step.current.deployment.id);
@@ -163,7 +178,29 @@ async function approve(step: Step): Promise<{ waiting: boolean }> {
     );
   }
   if (approval?.status !== "succeeded") {
-    await requireUnexpiredPlan(step, operationId);
+    const receipt = await requireUnexpiredPlan(step, operationId);
+    if (isZeroChangePlan(receipt.changes)) {
+      const message = `Saved plan ${receipt.planDigest} proposes 0 changes; settled without human approval`;
+      await recordStage(step.current, step.key, "succeeded", {
+        operationId,
+        message,
+        evidence: [
+          {
+            kind: "preflight",
+            operationId: receipt.planDigest,
+            summary: JSON.stringify({
+              adapter: "tofu",
+              step: "approve",
+              stack: step.recipe.stack,
+              planDigest: receipt.planDigest,
+              changes: receipt.changes,
+              autoApproved: true,
+            }),
+          },
+        ],
+      });
+      return { waiting: false };
+    }
     if (stageOf(step.current, step.key) === undefined)
       await recordStage(step.current, step.key, "running", { operationId });
     return { waiting: true };
@@ -181,7 +218,10 @@ async function approve(step: Step): Promise<{ waiting: boolean }> {
   return { waiting: false };
 }
 
-async function apply(step: Step, runJob: typeof runDeliveryJob) {
+async function apply(
+  step: Step,
+  runJob: typeof runDeliveryJob,
+): Promise<{ waiting: boolean }> {
   const id = step.current.deployment.id;
   const stored = await deliveryRequest(
     `platform/plans/${encodeURIComponent(id)}`,
@@ -191,12 +231,35 @@ async function apply(step: Step, runJob: typeof runDeliveryJob) {
     throw new Error(
       "Saved plan expired before apply; request a new deployment",
     );
+  const jobInput = modelApplyInput(step.current, step.recipe, stored.receipt);
+  const request = modelTofuJobRequest(step.current, {
+    recipe: step.recipe,
+    key: step.key,
+    kind: "tofu-apply",
+    jobInput,
+  });
+  const startingOperationId = z
+    .string()
+    .parse(deliveryJobManifest(request).metadata?.name);
+  // Acquire the deferred platform lock before spawning the mutating apply Job
+  // (AI-907). While another operation holds `platform`, wait and retry cleanly.
+  if (stageOf(step.current, step.key) === undefined) {
+    try {
+      await recordStage(step.current, step.key, "running", {
+        operationId: startingOperationId,
+      });
+    } catch (error) {
+      if (
+        error instanceof ApplicationFailure &&
+        error.type === "DeliveryApi:BUSY"
+      )
+        return { waiting: true };
+      throw error;
+    }
+  }
   const { result, receipt, operationId } = await runTofuJob(
     step,
-    {
-      recipe: "tofu-apply",
-      jobInput: modelApplyInput(step.current, step.recipe, stored.receipt),
-    },
+    { recipe: "tofu-apply", jobInput },
     runJob,
   );
   const applied = z
@@ -236,6 +299,7 @@ async function apply(step: Step, runJob: typeof runDeliveryJob) {
     message: JSON.stringify(receipt),
     evidence,
   });
+  return { waiting: false };
 }
 
 /**
@@ -264,8 +328,7 @@ export async function runDeliveryModelPlatformStep(
       case "approve":
         return await approve(frozen);
       case "apply":
-        await apply(frozen, runJob);
-        return { waiting: false };
+        return await apply(frozen, runJob);
     }
   });
 }
