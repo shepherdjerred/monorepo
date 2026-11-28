@@ -127,15 +127,19 @@ function trivyCommands(isolated: boolean): string[] {
 function semgrepCommands(): string[] {
   return [
     'echo "OPTIONAL SECURITY SCAN: findings do not block merge; merge-base, config, and runtime failures do."',
-    // Woodpecker clones the PR head at depth 1. Fetch both histories deeply
-    // enough for the normal case, then unshallow only for an older PR.
-    'git fetch --no-tags --filter=tree:0 --depth=100 origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
+    // The workspace is a golden clone checked out at the PR head, depth 1.
+    // Fetch both histories deeply enough for the normal case, then unshallow
+    // only for an older PR. No `--filter`: a filtered fetch makes the workspace
+    // a partial clone and Git rewrites every local object, the whole 0.65 GiB
+    // checkout, into a new pack on every run. Unfiltered, the fetch negotiates
+    // against the golden's objects and writes only what is newer.
+    'git fetch --no-tags --depth=100 origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
     "if ! base=$(git merge-base origin/main HEAD); then",
     '  if [ "$(git rev-parse --is-shallow-repository)" != "true" ]; then',
     '    echo "semgrep could not resolve the PR merge-base" >&2',
     "    exit 2",
     "  fi",
-    '  git fetch --no-tags --filter=tree:0 --unshallow origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
+    '  git fetch --no-tags --unshallow origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
     '  base=$(git merge-base origin/main HEAD) || { echo "semgrep could not resolve the PR merge-base" >&2; exit 2; }',
     "fi",
     "set +e",
