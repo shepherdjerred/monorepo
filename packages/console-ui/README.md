@@ -223,3 +223,30 @@ bunx turbo run generate build typecheck test lint --filter=@shepherdjerred/conso
 `src/tokens.test.ts` fails when `tokens.css` is stale, a class lacks the
 `ui-` prefix, a rule escapes its layer, or a colour literal appears in a
 component stylesheet.
+
+## Browser tests
+
+Browser tests run in real Chromium through Vitest browser mode
+(`@vitest/browser-playwright`, `vitest-browser-react`) and live in
+`src/**/*.browser.test.tsx`. The unit `test` task excludes them.
+`src/testing/browser.ts` provides the shared helpers: `expectNoAxeViolations`
+(WCAG 2.2 AA tags, the set the Playwright suites use), `setTheme` for light and
+dark, `setViewport` with `VIEWPORTS` (375 and 1280), and
+`expectNoHorizontalOverflow`. A package opts in with a
+`vitest.browser.config.ts` that default-exports
+`browserTestConfig(packageJson.name)` from `src/testing/browser-config.ts` and
+a `test:browser` script.
+
+```bash
+bunx playwright install chromium   # once per machine
+bunx turbo run test:browser --filter=@shepherdjerred/console-ui
+bun run e2e:affected               # every browser suite a branch affects, as CI selects them
+```
+
+The package is a target of the browser lane
+(`ci/scripts/selection/playwright-targets.ts`, `task: "test:browser"`). Pull
+requests do not run that lane; it runs on main pushes in the `ci-playwright`
+image, which holds the matching Chromium, and collects the JUnit report. Run
+`bun run e2e:affected` before marking a pull request ready. To add another
+package, give it the config and script, add the Playwright and axe dev
+dependencies, and list it as a target.

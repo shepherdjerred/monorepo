@@ -178,6 +178,16 @@
       "dependsOn": ["^build"],
       "cache": false
     },
+    // Vitest browser mode (`*.browser.test.*` in real Chromium). Runs in the
+    // Playwright image's `playwright-e2e` lane, never in the unit `test` chain.
+    "test:browser": {
+      "dependsOn": ["^build"],
+      "passThroughEnv": [
+        "CI_BROWSER_TEST_JUNIT_DIR",
+        "PLAYWRIGHT_BROWSERS_PATH"
+      ],
+      "cache": false
+    },
     // Container image build (docker buildx --load, tag <name>:dev). BuildKit's
     // layer cache is the cache layer here, not turbo — a turbo "hit" that skips
     // the docker invocation could mask a broken Dockerfile.

@@ -322,6 +322,16 @@ remain unchanged.
   Storybook preview serves the full catalog without Bun's HTTP stream failure.
   The design audit uses a deterministic local boot and fixture; see [Run the Scout
   design audit](/how-to/run-scout-design-audit/).
+- **Vitest browser mode** runs in the same lane, so it follows the lane's
+  placement: main pushes, not pull requests, with `bun run e2e:affected` before
+  a pull request is marked ready. A target in the list with
+  `task: "test:browser"` runs its package's `test:browser` script (Vitest in
+  real Chromium, with axe) in the `ci-playwright` image, which already holds
+  the matching browsers. The unit `test` task excludes `*.browser.test.*`
+  files because the `ci-base` image has no browsers, and for the same reason
+  these suites are not `test:extended` steps: the nightly `verify-extended`
+  workflow runs in `ci-base`. New browser tests for pages and components use
+  this runner; full-app flows stay in Playwright.
 - **llm-observability E2E** is the dedicated tracing-stack lane. It starts Tempo
   and MinIO as workflow services and runs only
   `@shepherdjerred/llm-observability`'s service-dependent tests. That live

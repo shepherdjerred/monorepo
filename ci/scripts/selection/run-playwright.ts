@@ -7,6 +7,7 @@ import {
   allPlaywrightTargets,
   PLAYWRIGHT_TARGETS,
   additionalPlaywrightInstallFilters,
+  playwrightTask,
   selectPlaywrightTargets,
   type PlaywrightSelection,
 } from "./playwright-targets.ts";
@@ -143,7 +144,7 @@ async function playwrightTurboSummary(): Promise<Record<string, unknown>> {
 }
 
 async function taskCacheStatuses(
-  selectedPackages: ReadonlySet<string>,
+  selectedTasks: ReadonlyMap<string, string>,
 ): Promise<TaskCache> {
   const summary = await playwrightTurboSummary();
   const tasks = summary["tasks"];
@@ -157,8 +158,7 @@ async function taskCacheStatuses(
     const packageName = task["package"];
     if (
       typeof packageName !== "string" ||
-      !selectedPackages.has(packageName) ||
-      task["task"] !== "test:e2e"
+      selectedTasks.get(packageName) !== task["task"]
     ) {
       continue;
     }
@@ -170,9 +170,9 @@ async function taskCacheStatuses(
     const status = cache["status"];
     statuses[packageName] = typeof status === "string" ? status : "UNKNOWN";
   }
-  for (const packageName of selectedPackages) {
+  for (const [packageName, taskName] of selectedTasks) {
     if (statuses[packageName] === undefined) {
-      throw new Error(`Turbo did not report ${packageName}#test:e2e`);
+      throw new Error(`Turbo did not report ${packageName}#${taskName}`);
     }
   }
   return statuses;
@@ -262,6 +262,15 @@ async function main(args: readonly string[]): Promise<number> {
   }
 
   await rm(".turbo/runs", { recursive: true, force: true });
+  // Vitest browser-mode suites write their JUnit report here themselves.
+  Bun.env["CI_BROWSER_TEST_JUNIT_DIR"] = path.resolve(".ci-reports", "junit");
+  const selectedTasks = new Map(
+    context.selection.targets.map((target) => [
+      target.package,
+      playwrightTask(target),
+    ]),
+  );
+  // One Turbo run covers both tasks: a package only defines the one it uses.
   const e2eStatus = await run([
     "bun",
     "x",
@@ -269,16 +278,16 @@ async function main(args: readonly string[]): Promise<number> {
     "turbo",
     "run",
     "test:e2e",
+    "test:browser",
     ...selectedPackages.map((name) => `--filter=${name}`),
     "--concurrency=2",
     "--summarize",
   ]);
   if (e2eStatus !== 0) return e2eStatus;
 
-  const selectedSet = new Set(selectedPackages);
-  const cache = await taskCacheStatuses(selectedSet);
+  const cache = await taskCacheStatuses(selectedTasks);
   for (const target of PLAYWRIGHT_TARGETS) {
-    if (!selectedSet.has(target.package) || cache[target.package] === "HIT") {
+    if (!selectedTasks.has(target.package) || cache[target.package] === "HIT") {
       continue;
     }
     const report = `.ci-reports/junit/${target.reportDirectory}/playwright.xml`;

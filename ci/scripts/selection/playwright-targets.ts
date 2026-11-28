@@ -5,10 +5,22 @@ import {
 } from "../selectors/select-image-targets-workspaces.ts";
 import { globalPaths } from "../migration-core.ts";
 
+/**
+ * `test:e2e` runs a Playwright project; `test:browser` runs Vitest browser-mode
+ * suites. Both need the Playwright image's browsers, so they share this lane.
+ */
+export type PlaywrightTask = "test:e2e" | "test:browser";
+
 export type PlaywrightTarget = {
   readonly package: string;
   readonly reportDirectory: string;
+  /** Defaults to `test:e2e`. */
+  readonly task?: PlaywrightTask;
 };
+
+export function playwrightTask(target: PlaywrightTarget): PlaywrightTask {
+  return target.task ?? "test:e2e";
+}
 
 export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
   {
@@ -47,6 +59,11 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
   {
     package: "@scout-for-lol/design-system",
     reportDirectory: "scout-for-lol__design-system",
+  },
+  {
+    package: "@shepherdjerred/console-ui",
+    reportDirectory: "shepherdjerred__console-ui",
+    task: "test:browser",
   },
 ] as const;
 

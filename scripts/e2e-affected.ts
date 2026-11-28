@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 
 /**
- * Runs the browser end-to-end suites that a change affects, the way CI does.
+ * Runs the browser suites that a change affects, the way CI does: Playwright
+ * end-to-end projects and Vitest browser-mode `test:browser` targets.
  *
  * Pull requests no longer run the Playwright lane (it runs on the default
  * branch, and on pull requests that change `ci/ci-playwright/**`), so the

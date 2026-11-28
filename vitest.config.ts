@@ -6,11 +6,14 @@ import path from "node:path";
 import { env } from "node:process";
 
 const defaultTestInclude = ["**/*.{test,spec}.?(c|m)[jt]s?(x)"];
+// Browser-mode files need Chromium; `test:browser` runs them through
+// vitest.browser.config.ts.
 const defaultTestExclude = [
   "**/node_modules/**",
   "**/.git/**",
   "**/.claude/worktrees/**",
   "**/.codex/**",
+  "**/*.browser.test.?(c|m)[jt]s?(x)",
 ];
 
 const defaultRepositoryRoot = __dirname;
