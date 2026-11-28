@@ -35,11 +35,19 @@ const receiptHashes = {
   pixel: "f603c39a5d8edb7c6d47b073e6a79cf3a6fc77f3228a7f27595070df6439b8f5",
   fight: "cbd5794411aaa4592763941c98a641cc33d14e73e2d291e52a632ad1989d3eb5",
   kaisa: "dfa2b3f7f1e2635adcf55b87ac76a6ba8b8b1ed6c990825c151522d0da1d96eb",
+  sennaPlacements:
+    "1ef1a99986c75e6c5540afca72b3ee29de38fdc89e089864096c7f585f714045",
+  sennaCurves:
+    "56661b64ccef26067526153b1101136b9ff1258a2e62779b166421618e7668f1",
+  sennaPixel:
+    "f299a791ca3bc5c6076071ef03abfdfbc3cd76e80f9bdcf10dd588e25ed325e0",
 };
 const kaisaTextureDigests = [
   "9467333104f5ce482014c220d593e89eaf3b609c860c2606932c999d67616e7a",
   "33fbb0aa732bf24befe556da253e9fefbac5f19fa1f3551924c4b1f85d63f10b",
 ];
+const sennaTextureDigest =
+  "53addee5bec42785b92353da116c1b7cacb58ef0c91e83b0846a7466c0327958";
 const textureSources = [
   {
     path: "ASSETS/Shared/Particles/color-firemissile.tex",
@@ -376,6 +384,72 @@ function shaderResource({ glsl }) {
   return { path: `${resourceDirectory}/${sha256(bytes)}.glsl`, bytes };
 }
 
+async function compileSennaFamily(values, opening) {
+  assert.equal(opening.replaySha256, originalReplaySha256);
+  assert.ok(opening.replay, "A full decoded replay receipt is required");
+  // Skin18 resolves 06896eea to Senna_Skin16_P_Soul_Death in the shared
+  // definition f69be19117da5bc8fb60acef2a4ec0b13453293547f6423cc67908b55898bf86.
+  // Emitter 6 uses Aura_Self.tex and the authentic default color-over-life
+  // texture. Explicit alphaRef=0 selects the archived all-vision program
+  // without alpha testing while preserving the common vertex program.
+  const owner = opening.openings.find(({ champion }) => champion === "Senna");
+  assert.equal(owner?.skinId, 18);
+  const [receipt, curve, base, color, pixel] = await Promise.all([
+    readReceipt(values["senna-placements"], "sennaPlacements"),
+    readReceipt(values["senna-curves"], "sennaCurves"),
+    Bun.file(values["senna-texture"]).bytes(),
+    Bun.file(values["senna-color-texture"]).bytes(),
+    readReceipt(values["senna-pixel"], "sennaPixel").then(shaderResource),
+  ]);
+  assert.equal(receipt.schema, 1);
+  assert.equal(receipt.build, build);
+  assert.equal(receipt.protocol, protocol);
+  assert.equal(receipt.replaySha256, opening.replaySha256);
+  assert.equal(receipt.executableSha256, executableSha256);
+  assert.equal(receipt.events.length, 8);
+  verifyPacketProvenance(opening.replay, receipt);
+  const textures = [
+    [base, sennaTextureDigest],
+    [color, kaisaTextureDigests[0]],
+  ].map(([bytes, digest]) => {
+    assert.equal(sha256(bytes), digest, "Unreviewed Senna texture");
+    return { path: `${resourceDirectory}/${digest}.png`, bytes };
+  });
+  const lifetime = Math.fround(0.4);
+  const effects = compileEffects(
+    receipt.events,
+    owner.context,
+    opening.replay.duration,
+    { key: 0x06896eea, lifetime, secondaryIsZero: true },
+  );
+  const component = compileComponent(
+    curve,
+    textures[0].path,
+    lifetime,
+    [0, 50, 0],
+    [250, 1, 1],
+  );
+  for (const { vertices } of component.samples) {
+    const bytes = Buffer.from(vertices, "hex");
+    for (let vertex = 0; vertex < 4; vertex++)
+      assert.equal(bytes.readFloatLE(vertex * 28 + 8), 0);
+  }
+  return {
+    effects,
+    textures,
+    pixel,
+    components: [
+      {
+        ...component,
+        palette: textures[1].path,
+        blend: "src-alpha-one",
+        centerY: 50,
+        alphaTest: false,
+      },
+    ],
+  };
+}
+
 const inputNames = [
   "placements",
   "flash",
@@ -395,6 +469,11 @@ const { values } = parseArgs({
       "fight-placements",
       "kaisa-curves",
       "kaisa-textures",
+      "senna-placements",
+      "senna-curves",
+      "senna-texture",
+      "senna-color-texture",
+      "senna-pixel",
     ].map((name) => [name, { type: "string" }]),
   ),
 });
@@ -422,6 +501,21 @@ if (familyOptions.some((name) => values[name] !== undefined)) {
   );
   kaisa = await compileKaisaFamily(values, placements);
 }
+const sennaOptions = [
+  "senna-placements",
+  "senna-curves",
+  "senna-texture",
+  "senna-color-texture",
+  "senna-pixel",
+];
+let senna;
+if (sennaOptions.some((name) => values[name] !== undefined)) {
+  assert.ok(
+    sennaOptions.every((name) => values[name]?.length),
+    "All Senna inputs are required",
+  );
+  senna = await compileSennaFamily(values, placements);
+}
 const shared = {
   kind: "recorded-native-terrain-particles",
   build,
@@ -429,15 +523,25 @@ const shared = {
   status: "verified-partial-effects",
   scope: "native-sampled-cold-remap",
 };
-const shaders = { vertex: vertex.path, fragment: pixel.path };
+const shaders = {
+  vertex: vertex.path,
+  fragment: pixel.path,
+  ...(senna ? { noAlphaTestFragment: senna.pixel.path } : {}),
+};
 const components = [
   compileComponent(flash, textures[1].path, Math.fround(0.2)),
   compileComponent(bubble, textures[2].path, Math.fround(0.3)),
 ];
-const allTextures = [...textures, ...(kaisa?.textures ?? [])];
+const allTextures = Array.from(
+  new Map(
+    [...textures, ...(kaisa?.textures ?? []), ...(senna?.textures ?? [])].map(
+      (texture) => [texture.path, texture],
+    ),
+  ).values(),
+);
 const textureFiles = allTextures.map(({ path }) => path);
 const manifest =
-  kaisa === undefined
+  kaisa === undefined && senna === undefined
     ? {
         schema: 1,
         ...shared,
@@ -447,16 +551,20 @@ const manifest =
         shaders,
       }
     : {
-        schema: 2,
+        schema: senna ? 3 : 2,
         ...shared,
         effects: [
           ...effects.map((event) => ({
             ...event,
             family: "heimerdinger-w-impact",
           })),
-          ...kaisa.effects.map((event) => ({
+          ...(kaisa?.effects ?? []).map((event) => ({
             ...event,
             family: "kaisa-e-activation",
+          })),
+          ...(senna?.effects ?? []).map((event) => ({
+            ...event,
+            family: "senna-soul-death",
           })),
         ].sort((a, b) => a.start - b.start || a.handle - b.handle),
         families: [
@@ -467,9 +575,25 @@ const manifest =
               palette: textures[0].path,
               blend: "one-one",
               centerY: 100,
+              ...(senna ? { alphaTest: true } : {}),
             })),
           },
-          { id: "kaisa-e-activation", components: kaisa.components },
+          ...(kaisa
+            ? [
+                {
+                  id: "kaisa-e-activation",
+                  components: senna
+                    ? kaisa.components.map((component) => ({
+                        ...component,
+                        alphaTest: true,
+                      }))
+                    : kaisa.components,
+                },
+              ]
+            : []),
+          ...(senna
+            ? [{ id: "senna-soul-death", components: senna.components }]
+            : []),
         ],
         textures: { files: textureFiles },
         shaders,
@@ -483,8 +607,9 @@ assert.equal(
 // do not establish the active match remap, whole factory, or other effects.
 const output = resolve(values.out);
 await Promise.all(
-  [...allTextures, vertex, pixel].map(({ path, bytes }) =>
-    Bun.write(join(output, path), bytes, { createPath: true }),
+  [...allTextures, vertex, pixel, ...(senna ? [senna.pixel] : [])].map(
+    ({ path, bytes }) =>
+      Bun.write(join(output, path), bytes, { createPath: true }),
   ),
 );
 await Bun.write(

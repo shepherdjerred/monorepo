@@ -27,6 +27,10 @@ const familyComponent = quadComponent.extend({
   centerY: z.number(),
 });
 const familyId = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
+const family = z.object({
+  id: familyId,
+  components: z.array(familyComponent).min(1),
+});
 const particleEffect = z.object({
   handle: z.number().int().positive().max(0xffff_ffff),
   start: z.number().nonnegative(),
@@ -49,20 +53,30 @@ const singleFamilyTrack = trackIdentity.extend({
 const familyTrack = trackIdentity.extend({
   schema: z.literal(2),
   effects: z.array(particleEffect.extend({ family: familyId })).min(1),
+  families: z.array(family).min(1),
+  textures: z.object({ files: z.array(png).min(1) }),
+});
+const multipleProgramsTrack = familyTrack.extend({
+  schema: z.literal(3),
   families: z
     .array(
-      z.object({ id: familyId, components: z.array(familyComponent).min(1) }),
+      family.extend({
+        components: z
+          .array(familyComponent.extend({ alphaTest: z.boolean() }))
+          .min(1),
+      }),
     )
     .min(1),
-  textures: z.object({ files: z.array(png).min(1) }),
+  shaders: trackIdentity.shape.shaders.extend({ noAlphaTestFragment: glsl }),
 });
 const particleTrack = z.discriminatedUnion("schema", [
   singleFamilyTrack,
   familyTrack,
+  multipleProgramsTrack,
 ]);
 
 function normalizeTrack(track: z.infer<typeof particleTrack>) {
-  if (track.schema === 2) return track;
+  if (track.schema !== 1) return track;
   const family = "heimerdinger-w-impact";
   return {
     ...track,
@@ -150,6 +164,18 @@ export async function loadRecordedTerrainParticles(
   )
     throw new Error("The recorded particle track disagrees with this replay.");
   const components = track.families.flatMap((family) => family.components);
+  const noAlphaTestFragment =
+    track.schema === 3 ? track.shaders.noAlphaTestFragment : undefined;
+  if (
+    track.schema === 3 &&
+    (track.shaders.fragment === noAlphaTestFragment ||
+      !track.families.some(({ components }) =>
+        components.some(({ alphaTest }) => !alphaTest),
+      ))
+  )
+    throw new Error(
+      "The recorded particle track lacks a distinct untested-alpha program.",
+    );
   const palettePaths = new Set(components.map(({ palette }) => palette));
   const basePaths = new Set(components.map(({ texture }) => texture));
   const expectedTextures = new Set([...palettePaths, ...basePaths]);
@@ -176,6 +202,7 @@ export async function loadRecordedTerrainParticles(
           throw new Error("The recorded particle component is invalid.");
         return {
           ...entry,
+          alphaTest: "alphaTest" in entry ? entry.alphaTest : true,
           indices: decodeHex(indices),
           samples: samples.map(({ age, vertices }) => ({
             age,
@@ -216,11 +243,15 @@ export async function loadRecordedTerrainParticles(
     return particles;
   }
 
-  const [vertexShader, fragmentShader] = await Promise.all(
-    [track.shaders.vertex, track.shaders.fragment].map(async (path) =>
-      decoder.decode(await read(`/${path}`)),
-    ),
-  );
+  const shader = async (path: string) => decoder.decode(await read(`/${path}`));
+  const [vertexShader, fragmentShader, noAlphaTestFragmentShader] =
+    await Promise.all([
+      shader(track.shaders.vertex),
+      shader(track.shaders.fragment),
+      noAlphaTestFragment === undefined
+        ? undefined
+        : shader(noAlphaTestFragment),
+    ]);
   const images = new Map<string, ImageBitmap>();
   const closeImages = () => {
     for (const image of images.values()) image.close();
@@ -242,6 +273,7 @@ export async function loadRecordedTerrainParticles(
       assets: {
         vertexShader,
         fragmentShader,
+        noAlphaTestFragmentShader,
         palettes: fromPaths(palettePaths),
         baseTextures: fromPaths(basePaths),
       },

@@ -809,6 +809,17 @@ $placementSha256 = (Get-FileHash -LiteralPath $placementReceipt -Algorithm SHA25
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-native-terrain-recorded-particles.mjs --replay $replayPath --position-codecs $positionCodecs --placements $placementReceipt --placements-sha256 $placementSha256 --flash $flashReceipt --bubble $bubbleReceipt --textures $textureReceipt --vertex $translatedVertex --pixel $translatedPixel --fight-placements $fightPlacements --kaisa-curves $kaisaCurves --kaisa-textures $kaisaTextures --out $newPrivateParticleDirectory
 ```
 
+To include Senna's recorded soul-death flash, append `@sennaInputs` to the same
+command with the reviewed placement, geometry, texture and fragment program.
+
+```powershell
+$sennaInputs = @('--senna-placements', $sennaPlacements, '--senna-curves', $sennaCurves, '--senna-texture', $sennaTexture, '--senna-color-texture', $sennaColorTexture, '--senna-pixel', $sennaPixel)
+```
+
+This produces a schema 3 track. The player selects the archived fragment
+program and matching uniform layout for each component. The soul-death flash
+uses the authored program without alpha testing.
+
 Pass the resulting `recorded-particles.json` to the private package builder with
 `--recorded-particles` and its SHA-256 with `--recorded-particles-sha256`. The
 player draws the measured particle samples during playback and after seeking in

@@ -93,10 +93,18 @@ function saveState(gl, uniformCount) {
  */
 export function createRecordedParticleRenderer(
   gl,
-  { vertexShader, fragmentShader, palettes, baseTextures },
+  {
+    vertexShader,
+    fragmentShader,
+    noAlphaTestFragmentShader,
+    palettes,
+    baseTextures,
+  },
 ) {
   const restore = saveState(gl, 5);
   const program = createProgram(gl, vertexShader, fragmentShader);
+  const programs = [program];
+  let noAlphaTestProgram;
   const vertexArray = gl.createVertexArray();
   const buffers = [];
   const textures = [];
@@ -104,7 +112,7 @@ export function createRecordedParticleRenderer(
     for (const buffer of buffers) gl.deleteBuffer(buffer);
     for (const texture of textures) gl.deleteTexture(texture);
     gl.deleteVertexArray(vertexArray);
-    gl.deleteProgram(program);
+    for (const linkedProgram of programs) gl.deleteProgram(linkedProgram);
   }
   function createBuffer(target) {
     const buffer = gl.createBuffer();
@@ -113,13 +121,15 @@ export function createRecordedParticleRenderer(
     gl.bindBuffer(target, buffer);
     return buffer;
   }
-  function createUniform(index, name, data) {
-    const location = gl.getUniformBlockIndex(program, name);
-    if (location === gl.INVALID_INDEX)
-      throw Error(`Missing recorded particle uniform block: ${name}`);
+  function createUniform(index, name, data, targets = programs) {
     const buffer = createBuffer(gl.UNIFORM_BUFFER);
     gl.bufferData(gl.UNIFORM_BUFFER, data, gl.DYNAMIC_DRAW);
-    gl.uniformBlockBinding(program, location, index);
+    for (const target of targets) {
+      const location = gl.getUniformBlockIndex(target, name);
+      if (location === gl.INVALID_INDEX)
+        throw Error(`Missing recorded particle uniform block: ${name}`);
+      gl.uniformBlockBinding(target, location, index);
+    }
     return buffer;
   }
   function createTexture(image, { repeat = false, integer = false } = {}) {
@@ -171,6 +181,14 @@ export function createRecordedParticleRenderer(
   try {
     if (!vertexArray)
       throw Error("Unable to allocate recorded particle vertex array");
+    if (noAlphaTestFragmentShader !== undefined) {
+      noAlphaTestProgram = createProgram(
+        gl,
+        vertexShader,
+        noAlphaTestFragmentShader,
+      );
+      programs.push(noAlphaTestProgram);
+    }
     gl.useProgram(program);
     gl.bindVertexArray(vertexArray);
     const vertexBuffer = createBuffer(gl.ARRAY_BUFFER);
@@ -205,19 +223,32 @@ export function createRecordedParticleRenderer(
         "VFXDynamicPerParticleInstanceCBVS_vs",
         new Uint32Array(16),
       ),
-      createUniform(3, "Globals_ps", new Float32Array([5 / 255, 0, 0, 0])),
+      createUniform(3, "Globals_ps", new Float32Array([5 / 255, 0, 0, 0]), [
+        program,
+      ]),
       createUniform(4, "PerFramePixelCB_ps", new Uint32Array(132)),
     ];
-    for (const [unit, name] of [
-      "ParticleQuadInstanceInfo_SharedDataBuffer",
-      "TEXTURE_TX",
-      "PARTICLE_COLOR_TEXTURE_TX",
-      "PIXEL_COLOR_REMAP_RAMP_SharedTexture",
-    ].entries()) {
-      const location = gl.getUniformLocation(program, name);
-      if (location === null)
-        throw Error(`Missing recorded particle sampler: ${name}`);
-      gl.uniform1i(location, unit);
+    // The program without alpha testing stores its sRGB debug flag at the
+    // offset occupied by the threshold in the other program.
+    const noAlphaTestGlobals =
+      noAlphaTestProgram === undefined
+        ? undefined
+        : createUniform(3, "Globals_ps", new Uint32Array(4), [
+            noAlphaTestProgram,
+          ]);
+    for (const linkedProgram of programs) {
+      gl.useProgram(linkedProgram);
+      for (const [unit, name] of [
+        "ParticleQuadInstanceInfo_SharedDataBuffer",
+        "TEXTURE_TX",
+        "PARTICLE_COLOR_TEXTURE_TX",
+        "PIXEL_COLOR_REMAP_RAMP_SharedTexture",
+      ].entries()) {
+        const location = gl.getUniformLocation(linkedProgram, name);
+        if (location === null)
+          throw Error(`Missing recorded particle sampler: ${name}`);
+        gl.uniform1i(location, unit);
+      }
     }
     gl.activeTexture(gl.TEXTURE0);
     const unusedInstance = createTexture(null, { integer: true });
@@ -274,15 +305,31 @@ export function createRecordedParticleRenderer(
         const basis = camera.matrixWorld.elements;
         let activePalette;
         let activeBlend;
+        let activeProgram = program;
         for (const {
           texture,
           palette,
           blend,
+          alphaTest,
           centerY,
           position,
           vertices,
           indices,
         } of particles) {
+          const particleProgram = alphaTest ? program : noAlphaTestProgram;
+          if (particleProgram === undefined)
+            throw Error(
+              "The recorded particle needs a program without alpha testing",
+            );
+          if (particleProgram !== activeProgram) {
+            gl.useProgram(particleProgram);
+            gl.bindBufferBase(
+              gl.UNIFORM_BUFFER,
+              3,
+              alphaTest ? uniformBuffers[3] : noAlphaTestGlobals,
+            );
+            activeProgram = particleProgram;
+          }
           const base = uploaded.get(texture);
           const paletteTexture = uploadedPalettes.get(palette);
           if (

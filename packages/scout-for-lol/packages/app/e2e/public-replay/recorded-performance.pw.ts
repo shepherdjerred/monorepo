@@ -3,6 +3,7 @@ import { recordedInhibitorReturnWitnesses } from "./recorded-inhibitor-assertion
 import { readRecordedReplay, replayPath } from "./recorded-replay-data.ts";
 import {
   observeRecordedReplayRequests,
+  readRecordedParticleTrack,
   seek,
 } from "./recorded-replay-fixture.ts";
 
@@ -17,6 +18,7 @@ type SamplingWindow = {
   timeSeconds: number;
   perspective?: "blue" | "red";
   follow?: number;
+  verifyParticleDraws?: true;
 };
 const reviewedScenes = [
   { label: "opening", timeSeconds: 15 },
@@ -51,12 +53,14 @@ type WorkerLifetime = { openedMs: number; closedMs: number | null };
 
 declare global {
   var recordedFrameStarts: number[];
+  var recordedPerformanceParticleDraws: number;
 }
 
 async function installFrameProbe(page: Page) {
   await page.addInitScript((label) => {
     const starts: number[] = [];
     globalThis.recordedFrameStarts = starts;
+    globalThis.recordedPerformanceParticleDraws = 0;
     const gl = WebGL2RenderingContext.prototype;
     const clear = Reflect.get(gl, "clear");
     gl.clear = function (mask) {
@@ -67,6 +71,36 @@ async function installFrameProbe(page: Page) {
       )
         starts.push(performance.now());
       clear.call(this, mask);
+    };
+    const particlePrograms = new WeakSet<WebGLProgram>();
+    const activePrograms = new WeakMap<WebGL2RenderingContext, boolean>();
+    const getUniformBlockIndex = Reflect.get(gl, "getUniformBlockIndex");
+    const useProgram = Reflect.get(gl, "useProgram");
+    const drawElements = Reflect.get(gl, "drawElements");
+    gl.getUniformBlockIndex = function (program, name) {
+      const index = getUniformBlockIndex.call(this, program, name);
+      if (
+        name === "VFXDynamicPerParticleInstanceCBVS_vs" &&
+        index !== this.INVALID_INDEX
+      )
+        particlePrograms.add(program);
+      return index;
+    };
+    gl.useProgram = function (program) {
+      activePrograms.set(
+        this,
+        program !== null && particlePrograms.has(program),
+      );
+      useProgram.call(this, program);
+    };
+    gl.drawElements = function (mode, count, type, offset) {
+      drawElements.call(this, mode, count, type, offset);
+      if (
+        count === 6 &&
+        mode === this.TRIANGLES &&
+        activePrograms.get(this) === true
+      )
+        globalThis.recordedPerformanceParticleDraws += 1;
     };
   }, sceneLabel);
 }
@@ -155,49 +189,67 @@ function reviewedInhibitorReturnWindows(
   }));
 }
 
-function reviewedSamplingWindows(
+async function currentRiftSamplingWindows(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
-): readonly SamplingWindow[] {
-  if (fixture.descriptor.sha256 === reviewedCurrentRift) {
-    return [
-      { label: "opening", timeSeconds: 15 },
-      { label: "first lane wave", timeSeconds: 36 },
-      {
-        label: "first champion elimination",
-        timeSeconds: 118,
-        ...(fixture.followCameraDefaults === undefined
-          ? {}
-          : { follow: 1_073_742_169 }),
-      },
-      ...(fixture.directTerrainVisibility || fixture.terrainVisibility
-        ? [{ label: "Mountain terrain transition", timeSeconds: 881 }]
-        : []),
-      { label: "first turret loss", timeSeconds: 854 },
-      ...((fixture.directNeutralModels?.length ?? 0) > 0
-        ? [{ label: "Rift Herald movement", timeSeconds: 954.5 }]
-        : []),
-      ...(fixture.directNeutralCamps
-        ? [{ label: "Scuttle movement and defeat", timeSeconds: 231 }]
-        : []),
-      { label: "siege wave", timeSeconds: 1200 },
-      ...(fixture.unitVisibility
-        ? [
-            {
-              label: "blue-team vision",
-              timeSeconds: 1200,
-              perspective: "blue" as const,
-            },
-            {
-              label: "red-team vision",
-              timeSeconds: 2076,
-              perspective: "red" as const,
-            },
-          ]
-        : []),
-      { label: "late super minions", timeSeconds: 2076 },
-      ...reviewedInhibitorReturnWindows(fixture),
-    ];
-  }
+): Promise<readonly SamplingWindow[]> {
+  const track = await readRecordedParticleTrack(fixture);
+  const hasFightParticles =
+    track?.effects.some(({ start }) => start >= 1714 && start < 1719) ?? false;
+  return [
+    { label: "opening", timeSeconds: 15 },
+    { label: "first lane wave", timeSeconds: 36 },
+    {
+      label: "first champion elimination",
+      timeSeconds: 118,
+      ...(fixture.followCameraDefaults === undefined
+        ? {}
+        : { follow: 1_073_742_169 }),
+    },
+    ...(fixture.directTerrainVisibility || fixture.terrainVisibility
+      ? [{ label: "Mountain terrain transition", timeSeconds: 881 }]
+      : []),
+    { label: "first turret loss", timeSeconds: 854 },
+    ...((fixture.directNeutralModels?.length ?? 0) > 0
+      ? [{ label: "Rift Herald movement", timeSeconds: 954.5 }]
+      : []),
+    ...(fixture.directNeutralCamps
+      ? [{ label: "Scuttle movement and defeat", timeSeconds: 231 }]
+      : []),
+    { label: "siege wave", timeSeconds: 1200 },
+    ...(hasFightParticles
+      ? [
+          {
+            label: "recorded particle fight",
+            timeSeconds: 1714,
+            follow: 1_073_742_170,
+            verifyParticleDraws: true as const,
+          },
+        ]
+      : []),
+    ...(fixture.unitVisibility
+      ? [
+          {
+            label: "blue-team vision",
+            timeSeconds: 1200,
+            perspective: "blue" as const,
+          },
+          {
+            label: "red-team vision",
+            timeSeconds: 2076,
+            perspective: "red" as const,
+          },
+        ]
+      : []),
+    { label: "late super minions", timeSeconds: 2076 },
+    ...reviewedInhibitorReturnWindows(fixture),
+  ];
+}
+
+async function reviewedSamplingWindows(
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+): Promise<readonly SamplingWindow[]> {
+  if (fixture.descriptor.sha256 === reviewedCurrentRift)
+    return currentRiftSamplingWindows(fixture);
   if (fixture.descriptor.sha256 !== reviewedLongReplay)
     return [
       {
@@ -224,7 +276,7 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
   const traffic = await observeRecordedReplayRequests(page, baseURL);
   const workers = observeWorkerLifetimes(page);
   const { play, surface } = await preparePlaybackSurface(page);
-  const scenes = reviewedSamplingWindows(fixture);
+  const scenes = await reviewedSamplingWindows(fixture);
   const clock = page.getByRole("slider", { name: "Replay time" });
   const camera = page.getByRole("combobox", { name: "Camera" });
   const samples = [];
@@ -234,6 +286,7 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
       timeSeconds: sceneTime,
       perspective = "all",
       follow = null,
+      verifyParticleDraws = false,
     } = scene;
     await camera.selectOption(
       follow === null ? "free" : `player:${String(follow)}`,
@@ -255,19 +308,28 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
       const workersAtStart = page.workers().length;
       // Sample draw starts after playback begins. The browser timer does not
       // block rendering, and no Playwright calls run while sampling.
-      const starts = await page.evaluate(async (duration) => {
-        const frames = globalThis.recordedFrameStarts;
-        const start = frames.length;
-        await new Promise<void>((resolve) =>
-          globalThis.setTimeout(resolve, duration),
-        );
-        return frames.slice(start);
-      }, sampleMilliseconds);
+      const { starts, particleDraws } = await page.evaluate(
+        async (duration) => {
+          const frames = globalThis.recordedFrameStarts;
+          const start = frames.length;
+          const initialParticles = globalThis.recordedPerformanceParticleDraws;
+          await new Promise<void>((resolve) =>
+            globalThis.setTimeout(resolve, duration),
+          );
+          return {
+            starts: frames.slice(start),
+            particleDraws:
+              globalThis.recordedPerformanceParticleDraws - initialParticles,
+          };
+        },
+        sampleMilliseconds,
+      );
       const finalTime = Number(await clock.inputValue());
       const workersAtEnd = page.workers().length;
       await page.getByRole("button", { name: "Pause", exact: true }).click();
       expect(starts.length).toBeGreaterThan(1);
       expect(finalTime).toBeGreaterThan(initialTime);
+      if (verifyParticleDraws) expect(particleDraws).toBeGreaterThan(0);
       samples.push({
         scene: label,
         requestedStartTime: sceneTime,
@@ -278,6 +340,7 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
         finalTime,
         workersAtStart,
         workersAtEnd,
+        particleDraws,
         ...summarizeFrameStarts(starts),
       });
     }

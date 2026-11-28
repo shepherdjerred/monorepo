@@ -46,34 +46,44 @@ export async function seek(page: Page, seconds: number) {
   await expect(slider).toHaveAttribute("aria-busy", "false");
 }
 
-export async function verifyRecordedParticlePreview(
-  page: Page,
+const ParticleComponents = z.array(
+  z.object({
+    lifetime: z.number(),
+    samples: z.array(z.object({ age: z.number() })),
+  }),
+);
+
+export async function readRecordedParticleTrack(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
 ) {
   if (fixture.particlePreview === undefined) return;
   const effect = z.object({ start: z.number() });
-  const components = z.array(
-    z.object({
-      lifetime: z.number(),
-      samples: z.array(z.object({ age: z.number() })),
-    }),
-  );
-  const track = z
+  return z
     .discriminatedUnion("schema", [
       z.object({
         schema: z.literal(1),
         effects: z.array(effect).min(1),
-        components,
+        components: ParticleComponents,
       }),
       z.object({
-        schema: z.literal(2),
+        schema: z.union([z.literal(2), z.literal(3)]),
         effects: z.array(effect.extend({ family: z.string() })).min(1),
-        families: z.array(z.object({ id: z.string(), components })),
+        families: z.array(
+          z.object({ id: z.string(), components: ParticleComponents }),
+        ),
       }),
     ])
     .parse(
       await Bun.file(path.join(fixture.root, "recorded-particles.json")).json(),
     );
+}
+
+export async function verifyRecordedParticlePreview(
+  page: Page,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+) {
+  const track = await readRecordedParticleTrack(fixture);
+  if (track === undefined) return;
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
   const count = async () => {
     const draw = await readRecordedDraw(page);
@@ -84,7 +94,10 @@ export async function verifyRecordedParticlePreview(
     await expect.poll(count).toBe(draws);
   };
   const expectedDraws = (time: number) => {
-    const expectedFor = (start: number, parts: z.infer<typeof components>) => {
+    const expectedFor = (
+      start: number,
+      parts: z.infer<typeof ParticleComponents>,
+    ) => {
       const age = time - start;
       return parts.filter(
         ({ lifetime, samples }) =>
@@ -115,12 +128,21 @@ export async function verifyRecordedParticlePreview(
     await expectAt(1715.7, 10);
   }
   if (
-    track.schema === 2 &&
+    track.schema !== 1 &&
     track.families.some(({ id }) => id === "kaisa-e-activation")
   ) {
     await expectAt(1719, 1);
     await expectAt(1719.2, 0);
     await expectAt(1719, 1);
+  }
+  if (
+    track.schema === 3 &&
+    track.families.some(({ id }) => id === "senna-soul-death")
+  ) {
+    await expectAt(254.7, 0);
+    await expectAt(255, 1);
+    await expectAt(255.3, 0);
+    await expectAt(255, 1);
   }
   const activeDraws = expectedDraws(2095.2);
   expect(activeDraws).toBeGreaterThan(0);
