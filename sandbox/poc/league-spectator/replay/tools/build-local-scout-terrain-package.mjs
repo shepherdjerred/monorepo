@@ -256,19 +256,26 @@ export async function writeLocalScoutTerrainPackage({
   if (buildScoped) {
     assert.deepEqual(map, { mapId: 11, gameMode: "CLASSIC" });
     assert.ok(
-      [
-        announcerFiles,
-        combatAudioFiles,
-        particleFiles,
-        impactComparisonFiles,
-      ].every((files) => files === undefined),
+      [combatAudioFiles, particleFiles, impactComparisonFiles].every(
+        (files) => files === undefined,
+      ),
       "Replay-bound resources are unavailable in build-scoped packages",
     );
     const { validateBuildScopedRiftScene } =
       await import("./research/build-scoped-rift-scene.mjs");
     const scene = routes.get("/scene.json")?.[0];
     assert.equal(typeof scene, "string");
-    validateBuildScopedRiftScene(JSON.parse(scene));
+    const staticScene = JSON.parse(scene);
+    validateBuildScopedRiftScene(staticScene);
+    assert.equal(
+      announcerFiles !== undefined,
+      staticScene.workerMotion.announcerEvents !== undefined,
+      "Build-scoped announcer audio requires the authored worker event catalog",
+    );
+    assert.ok(
+      !announcerFiles?.has("announcer-preview/cues.json"),
+      "Build-scoped announcer audio cannot include replay-bound cues",
+    );
   }
   const cache = join(await realpath(repoRoot), ".cache");
   const outputRoot = resolve(output);
@@ -342,6 +349,9 @@ export async function writeLocalScoutTerrainPackage({
           ...(riftStartupFiles === undefined
             ? {}
             : { mapModeSource: "original-startup" }),
+          ...(announcerFiles === undefined
+            ? {}
+            : { announcerPreview: "female1-en-us" }),
         }
       : {
           ...map,

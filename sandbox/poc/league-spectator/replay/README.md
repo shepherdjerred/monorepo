@@ -490,7 +490,10 @@ The preparer checks an exact-build Map11 CLASSIC seed in the offline native
 startup reader. The emitted scene contains build and protocol identities.
 Scout reads the replay identity and duration from the supplied ROFL, then
 the worker checks the opening Map11 structures and terminal Nexus evidence.
-Use the replay-bound package to include prepared combat effects or audio.
+Add `--announcer-catalog` with the verified untimed Map11 catalog to enable
+the Female1 English preview. The package contains four WAVs and their event
+IDs. The motion worker reads cue times from each supplied ROFL. Use the
+replay-bound package for prepared timing files or combat effects and audio.
 Set `SCOUT_REPLAY_E2E_WRONG_MAP_ROFL` to a same-build Map12 ROFL to exercise
 wrong-map rejection in the recorded browser test.
 

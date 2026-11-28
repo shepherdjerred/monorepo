@@ -36,6 +36,7 @@ const motionFields = new Set([
   "terrainControllerGraph",
   "decodeTeamVision",
   "championAnimationModelCatalog",
+  "announcerEvents",
 ]);
 
 function checkFields(value, allowed, label) {

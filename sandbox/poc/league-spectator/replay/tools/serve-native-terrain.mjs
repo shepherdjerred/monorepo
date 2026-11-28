@@ -169,7 +169,6 @@ assert.ok(
 if (buildScoped) {
   for (const option of [
     "announcer-preview",
-    "announcer-catalog",
     "combat-audio-comparison",
     "recorded-particles",
     "terrain-visibility",

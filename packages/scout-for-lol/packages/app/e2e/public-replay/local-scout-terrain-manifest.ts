@@ -18,6 +18,7 @@ export const LocalScoutTerrainManifestSchema =
         teamSizes: z.tuple([z.literal(5), z.literal(5)]),
         rosterCoverage: z.literal("build-scoped-archive"),
         mapModeSource: z.literal("original-startup").optional(),
+        announcerPreview: z.literal("female1-en-us").optional(),
       }),
       z.discriminatedUnion("mapId", [
         z.strictObject({

@@ -424,7 +424,8 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       }
     }
   }
-  const announcerProfile = recordedCapabilities?.announcerPreview;
+  const announcerProfile = capabilities.announcerPreview;
+  const announcerEvents = scene.workerMotion?.announcerEvents;
   const particlePreview = recordedCapabilities?.particlePreview;
   const combatAudioComparison =
     recordedCapabilities?.mapId === 11 &&
@@ -432,16 +433,27 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const mayhemImpactComparison =
     localManifest.capabilities.mapId === 12 &&
     localManifest.capabilities.mayhemImpactComparison !== undefined;
-  if (
-    announcerProfile === undefined &&
-    scene.workerMotion?.announcerEvents !== undefined
-  )
+  if (announcerProfile === undefined && announcerEvents !== undefined)
     throw new ReplayCapabilityError(
       "invalid-package",
       "Replay-derived announcements require the announcer preview capability.",
     );
   if (
-    announcerProfile !== undefined ||
+    buildScoped &&
+    (files.has("announcer-preview/cues.json") ||
+      (announcerProfile !== undefined &&
+        (announcerEvents === undefined ||
+          announcerEvents.some(
+            ([, mediaId]) =>
+              !files.has(`announcer-preview/${String(mediaId)}.wav`),
+          ))))
+  )
+    throw new ReplayCapabilityError(
+      "invalid-package",
+      "Build-scoped announcements require recorded event decoding and catalog media.",
+    );
+  if (
+    recordedCapabilities?.announcerPreview !== undefined ||
     particlePreview !== undefined ||
     mayhemImpactComparison ||
     combatAudioComparison
