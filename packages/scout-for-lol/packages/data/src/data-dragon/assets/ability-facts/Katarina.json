@@ -92,7 +92,86 @@
         ]
       },
       "resolvedDescription": "Katarina throws a Dagger, dealing 80/115/150/185/220 (+40% AP) magic damage to the target and 2 nearby enemies. The Dagger then ricochets onto the ground behind the primary target.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 100,
+        "lineWidth": 60,
+        "missileSpeed": 1600,
+        "missiles": [
+          {
+            "name": "katarinaqdaggerarc",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "katarinaqdaggerarc2",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "katarinaqdaggerarc3",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "katarinaqdaggerarc4",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "katarinaqmis",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Preparation",
@@ -136,7 +215,30 @@
         ]
       },
       "resolvedDescription": "Katarina tosses a Dagger into the air and gains 50/60/70/80/90% Move Speed decaying over 1.25 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": 60,
+        "missileSpeed": 2500,
+        "missiles": [
+          {
+            "name": "katarinawdaggerarc",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Shunpo",
@@ -196,7 +298,30 @@
       "resolvedDescription": "Katarina blinks in the wink of an eye to the target ally, enemy, or Dagger. If it is an enemy, Katarina strikes for 20/30/40/50/60 (+25% AP) (+40% AD) magic damage - otherwise she strikes the nearest enemy in range. Picking up a Dagger will reduce this Ability's Cooldown by {{ daggercooldownreduction }} seconds (78-96% (based on level)). Katarina can blink to any location near the target.",
       "unresolved": [
         "daggercooldownreduction"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 150,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "katarinaetrail",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Death Lotus",
@@ -259,7 +384,58 @@
         "addamagecalc",
         "totaldamagecalc",
         "totaladdamagecalc"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 550,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": [
+          {
+            "name": "katarinarmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "katarinartrigger",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "katarinartriggersound",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

@@ -23,21 +23,62 @@ Tiers 1–4 forward any request subpath and merge query parameters onto the dest
 
 ## HTTP Surface
 
+The server runs on the shared console kit (`@shepherdjerred/console-server`),
+which provides health, metrics, request logs, tracing, static files and the
+tRPC mount.
+
 | Route                  | Method   | Description                                                                    |
 | ---------------------- | -------- | ------------------------------------------------------------------------------ |
 | `/healthz`             | `GET`    | Liveness probe (`200 "ok"`).                                                   |
 | `/readyz`              | `GET`    | Readiness probe (`SELECT 1` on PostgreSQL; `200` or `503`).                    |
-| `/metrics`             | `GET`    | Prometheus metrics (`golink_redirects_total`, `golink_links_configured`).      |
+| `/metrics`             | `GET`    | Prometheus metrics (see [Metrics](#metrics)).                                  |
 | `/.export`             | `GET`    | Tailscale golink-compatible NDJSON export of manual links.                     |
 | `/api/links`           | `GET`    | Full directory catalog, shortcuts, flag states, and Tailscale viewer identity. |
 | `/api/links`           | `POST`   | Upsert a manual link (gated by `golink-writes-enabled`).                       |
 | `/api/links/:short`    | `DELETE` | Delete a manual link (gated by `golink-writes-enabled`).                       |
+| `/trpc/links.list`     | `GET`    | tRPC: the directory (same payload as `GET /api/links`).                        |
+| `/trpc/links.upsert`   | `POST`   | tRPC: upsert a manual link (gated by `golink-writes-enabled`).                 |
+| `/trpc/links.delete`   | `POST`   | tRPC: delete a manual link (gated by `golink-writes-enabled`).                 |
 | `/`                    | `GET`    | React directory & link management SPA (see [Web UI](#web-ui)).                 |
 | `/:short`, `/:short/*` | `GET`    | `302` redirect (`Cache-Control: no-store`), or `404` SPA/JSON on miss.         |
 
+### Identity
+
+The Tailscale sidecar in the Pod proxies tailnet requests from loopback, so
+`Tailscale-User-Login`/`-Name` are trusted only from `127.0.0.1`/`::1`
+(`tailscaleIdentity` with `LOOPBACK_PROXIES`). From any other peer, such as
+Prometheus or the Temporal worker, the headers are ignored: the viewer is
+anonymous and a created link is owned by `manual`.
+
+### REST callers
+
+The browser uses the `links` tRPC procedures. `/api/links` stays, unchanged,
+until its remaining callers move (serve both, move callers, then delete; the
+gate is `golink_http_request_duration_seconds_count{route="/api/links"}` at zero
+across a full release):
+
+- `GolinkClient` in `packages/ops-clients/src/golink.ts`, read by the Temporal
+  ops snapshot's Go link facet (`packages/temporal/src/activities/ops/facets/golink-facet.ts`)
+  for Hub.
+
+Typed callers use `createConsoleClient<AppRouter>` from
+`@shepherdjerred/console-server/caller` with `AppRouter` from
+`@shepherdjerred/golink/trpc-contract`.
+
+### Metrics
+
+- `golink_redirects_total{kind}` and `golink_links_configured{kind}`.
+- `golink_http_request_duration_seconds{method,route,status}` from the kit.
+- Process metrics prefixed `golink_`; every series carries `service="golink"`.
+
 ## Web UI
 
-The SPA is laid out as a Hub page with the `@shepherdjerred/console-ui` shell and page kit, and has no router: one page, one `GET /api/links` load.
+The SPA is laid out as a Hub page with the `@shepherdjerred/console-ui` shell
+and page kit. It has one TanStack Router route, `/`, whose `?missing=` search
+is validated with Zod, and reads and writes through tRPC with TanStack Query
+(`@shepherdjerred/console-client`). The server answers an unknown `go/<slug>`
+with the shell at `/<slug>`; the client rewrites that to `/?missing=<slug>`
+before the router starts.
 
 - **Sidebar.** The workspace button shows "Go links" and lists the other consoles and tools from `CONSOLE_LINKS` in `@shepherdjerred/ops-model`; the search button beside it focuses the search field. A Directory group links to the Links card and the Shortcuts reference, with counts. The theme row cycles system, light and dark (`golink-theme` in `localStorage`). Below 900px the shared `TopBar` replaces the sidebar with a menu drawer, search and theme buttons.
 - **Page.** A Hub page heading with the New link button, then summary cards (links, manual, tailnet, public sites, total clicks), then the Links card.
@@ -49,7 +90,7 @@ The SPA is laid out as a Hub page with the `@shepherdjerred/console-ui` shell an
 
 ```bash
 bun run generate        # Generate Prisma client into generated/prisma
-bun run dev             # Run local API server (in-memory or DATABASE_URL) + Vite
+bun run dev             # Run local API server (in-memory or DATABASE_URL) + Vite (proxies /api, /trpc)
 bun run typecheck       # Native TypeScript strict check
 bun run lint            # ESLint (--max-warnings=0) + check-architecture
 bun run test            # Domain, resolver, architecture, client render, and HTTP app unit tests

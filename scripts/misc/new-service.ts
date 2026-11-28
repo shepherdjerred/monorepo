@@ -34,6 +34,8 @@ import {
 import { registrationEdits } from "./new-service-registrations.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..", "..");
+export const DOCKERHUB_SYNTH_OUTPUT =
+  "packages/homelab/src/tofu/dockerhub/main.tf.json";
 /** The Dockerfile whose stages and base-image pins a new service starts from. */
 const DOCKERFILE_MODEL = "packages/tracker/Dockerfile";
 const FORMATTED = /\.(?:ts|json)$/u;
@@ -127,13 +129,32 @@ function nextSteps({ name }: ServiceOptions): string[] {
   ];
 }
 
+export function cliWrittenFiles(scaffolded: readonly string[]): string[] {
+  return [...new Set([...scaffolded, DOCKERHUB_SYNTH_OUTPUT])].toSorted();
+}
+
+export function postScaffoldCommands(
+  root: string = REPOSITORY_ROOT,
+): readonly { command: readonly string[]; cwd: string }[] {
+  return [
+    { command: ["bun", "install"], cwd: root },
+    {
+      command: ["bun", "run", "--cwd", "packages/homelab-cdktn", "synth"],
+      cwd: root,
+    },
+    {
+      command: ["bun", "run", "generate:catalog"],
+      cwd: path.join(root, "packages/homelab/src/cdk8s"),
+    },
+  ];
+}
+
 if (import.meta.main) {
   const options = parseServiceOptions(Bun.argv.slice(2));
   const files = await scaffoldService(REPOSITORY_ROOT, options);
-  await $`bun install`.cwd(REPOSITORY_ROOT);
-  await $`bun run generate:catalog`.cwd(
-    path.join(REPOSITORY_ROOT, "packages/homelab/src/cdk8s"),
-  );
+  for (const step of postScaffoldCommands(REPOSITORY_ROOT)) {
+    await $`${step.command}`.cwd(step.cwd);
+  }
   const findings = registrationFindings(
     await loadRegistrationInputs(REPOSITORY_ROOT),
   );
@@ -144,7 +165,7 @@ if (import.meta.main) {
   console.log(
     [
       `Prepared ${options.kind} service ${options.name}; its registration is complete:`,
-      ...files.map((file) => `  ${file}`),
+      ...cliWrittenFiles(files).map((file) => `  ${file}`),
       "",
       ...nextSteps(options),
     ].join("\n"),

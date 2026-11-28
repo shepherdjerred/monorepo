@@ -114,6 +114,15 @@ const HistoryPage = lazy(async () => {
   const module = await import("./history-page.tsx");
   return { default: module.HistoryPage };
 });
+// The console-ui gallery: reachable from the palette, not the sidebar.
+const KitPage = lazy(async () => {
+  const module = await import("./kit/kit-page.tsx");
+  return { default: module.KitPage };
+});
+const KitDetailPage = lazy(async () => {
+  const module = await import("./kit/kit-detail-page.tsx");
+  return { default: module.KitDetailPage };
+});
 const SystemPage = lazy(async () => {
   const module = await import("./system-page.tsx");
   return { default: module.SystemPage };
@@ -156,6 +165,8 @@ export const coreModule: ClientModule = {
     { path: "house", page: HousePage },
     { path: "history", page: HistoryPage },
     { path: "system", page: SystemPage },
+    { path: "kit", page: KitPage },
+    { path: "kit/detail", page: KitDetailPage },
   ],
   // Entries without a `group` sit under the module title, "Ops".
   nav: [

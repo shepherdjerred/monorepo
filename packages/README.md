@@ -9,12 +9,14 @@ hold only scoped invariants that agents must keep in context.
 | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [alert-dashboard](alert-dashboard/)                             | Hub — snapshot overview, alert ledger, digest email, Grafana previews                                     |
 | [arcade](arcade/)                                               | Multi-game Discord arcade with dedicated streaming accounts, browser controllers, and per-game statistics |
+| [artifacts](artifacts/)                                         | Agent artifact review service: two-host isolated content, boards, threaded feedback, and `wait` delivery  |
 | [tracker](tracker/)                                             | Issue tracker — teams, projects, board, session actors, votes, attachments and audit history              |
 | [delivery](delivery/)                                           | Deployment catalog, immutable version sets, approvals, and durable release execution                      |
 | [golink](golink/)                                               | Tailnet shortlink service with live cluster/platform dynamic aliases and manual overrides                 |
 | [feeds](feeds/)                                                 | Tailnet feed listing console and isolated NetNewsWire Reader API over SQLite + FTS5                       |
 | [flags](flags/)                                                 | Deployment flag documents, credentialless evaluation, and operator edits                                  |
 | [errors](errors/)                                               | First-party Sentry-envelope error tracker with Hub console UI, Bugsink import, and Tracker AI linking     |
+| [incidents](incidents/)                                         | Hub incident records — single commander claims, dispatch leases, and Alertmanager/main-ci auto-open       |
 | [mail](mail/)                                                   | Outbound mail broker — SQLite WAL outbox, REST submission API, cluster STARTTLS SMTP, and console UI      |
 | [charts](charts/)                                               | Helm chart registry (`index.yaml`, `/api/charts*`, SQLite WAL index) and read-only console UI             |
 | [ci-cache](ci-cache/)                                           | Streaming Rust remote cache for Turborepo (`/v8/*`), Gradle (`/cache/*`), and `sccache` WebDAV            |
@@ -84,6 +86,8 @@ hold only scoped invariants that agents must keep in context.
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
+| [console-client](console-client/)                 | Console kit, browser half: TanStack Query, tRPC bindings and router adapters   |
+| [console-server](console-server/)                 | Console kit, server half: Hono on Bun with health, metrics, identity and tRPC  |
 | [console-ui](console-ui/)                         | Shared console shell, components and colour tokens for the ops consoles        |
 | [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |

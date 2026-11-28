@@ -6,7 +6,13 @@ import {
 } from "#infrastructure/delivery-records.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { createTestApp } from "#testing/http-app.ts";
-import { requestOnProd } from "#testing/model-fixture.ts";
+import {
+  arcadePipeline,
+  publishCiRunner,
+  requestOnProd,
+} from "#testing/model-fixture.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import {
   requestStackDeployment,
@@ -177,10 +183,10 @@ test("a rejection is the deployment's one decision: it discards the plan, and th
   await expect(
     context.delivery.approveTofuPlan(deployment.id, rejection, testOperator),
   ).resolves.toMatchObject({ key: "approve/plan", status: "failed" });
-  // The executor settles its steps (none left running) and finishes failed.
+  // Deferred platform lock (AI-907): plan + approve never acquired platformLock.
   expect(
     await db.platformLock.count({ where: { deploymentId: deployment.id } }),
-  ).toBe(1);
+  ).toBe(0);
   for (const [key, status] of [
     ["step-plan", "succeeded"],
     ["step-approve", "failed"],
@@ -272,4 +278,131 @@ test("an application deployment takes no plan approval", async () => {
       testOperator,
     ),
   ).rejects.toThrow(/Only a model tofu recipe/u);
+});
+
+test("a model tofu deployment defers the shared platform lock from claim/approve until step-apply starts running (AI-907)", async () => {
+  const db = context.cluster.database;
+  const { deployment, buildId } = await runningStackDeployment();
+  const plan = savedStackPlan(deployment.id, buildId);
+  await context.delivery.recordTofuPlan(plan, testExecutor);
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key: "step-plan",
+      status: "succeeded",
+      operationId: stackPlanJob.name,
+      message: JSON.stringify({ ...stackPlanJob, requestId: deployment.id }),
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key: "step-approve",
+      status: "running",
+      operationId: deployment.id,
+      message: "step-approve: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
+  // While parked at step-approve, no shared platform lock is held.
+  expect(await db.platformLock.count()).toBe(0);
+
+  // Another sharedLock=platform workload can claim and run concurrently while tofu waits at step-approve.
+  await publishCiRunner(context.delivery);
+  await db.pipeline.create({
+    data: {
+      id: "arcade/shared-lock",
+      definition: RecipeDefinitionSchema.parse({
+        ...recipeFromPipeline(arcadePipeline),
+        sharedLock: "platform",
+      }),
+    },
+  });
+  await db.environment.update({
+    where: { id: "arcade/prod" },
+    data: { pipelineRevisionId: "arcade/shared-lock", automatic: false },
+  });
+  const sharedHolder = await requestOnProd(context, "deploy");
+  await context.delivery.claim(sharedHolder.id, testExecutor);
+  expect(
+    await db.platformLock.findUniqueOrThrow({ where: { id: "platform" } }),
+  ).toMatchObject({ deploymentId: sharedHolder.id });
+
+  // Human approves the saved plan; step-approve settles, and step-apply answers BUSY while sharedHolder holds platform.
+  await context.delivery.approveTofuPlan(
+    deployment.id,
+    {
+      decision: "approved",
+      planDigest: plan.receipt.planDigest,
+      reason: "reviewed",
+    },
+    testOperator,
+  );
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key: "step-approve",
+      status: "succeeded",
+      operationId: deployment.id,
+      message: "step-approve: succeeded",
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const applyOperationId = `delivery-${"a".repeat(40)}`;
+  await expect(
+    context.delivery.stage(
+      deployment.id,
+      {
+        key: "step-apply",
+        status: "running",
+        operationId: applyOperationId,
+        message: "step-apply: running",
+        evidence: [],
+      },
+      testExecutor,
+    ),
+  ).rejects.toMatchObject({ code: "BUSY" });
+  expect(
+    await db.stage.findUnique({
+      where: {
+        deploymentId_key: { deploymentId: deployment.id, key: "step-apply" },
+      },
+    }),
+  ).toBeNull();
+
+  // Once sharedHolder finishes and releases platform, step-apply acquires platformLock cleanly.
+  await context.delivery.finish(
+    sharedHolder.id,
+    {
+      status: "succeeded",
+      message: "Shared holder accepted",
+      observedRevisionId: sharedHolder.versionSetRevisionId,
+      recoveryRequired: false,
+      evidence: [
+        { kind: "reconciliation", summary: "synced" },
+        { kind: "acceptance", summary: "healthy" },
+      ],
+    },
+    testExecutor,
+  );
+  expect(await db.platformLock.count()).toBe(0);
+
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key: "step-apply",
+      status: "running",
+      operationId: applyOperationId,
+      message: "step-apply: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
+  expect(
+    await db.platformLock.findUniqueOrThrow({ where: { id: "platform" } }),
+  ).toMatchObject({ deploymentId: deployment.id });
 });

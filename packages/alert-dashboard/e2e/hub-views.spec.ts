@@ -69,6 +69,35 @@ test("/renovate renders KPIs, charts, tabs, and LLM version-delta drawers", asyn
   ).toContainText("#4805");
 });
 
+test("/renovate ranks tracked updates and filters by effective effort and execution", async ({
+  page,
+}) => {
+  await page.goto("/renovate");
+  const queue = page.getByRole("table", { name: "Ranked dependency updates" });
+  const rows = queue.locator("tbody tr");
+  await expect(rows).toHaveCount(5);
+  await expect(rows.first()).toContainText("Hono");
+  await expect(queue).toContainText("Baking");
+  await expect(queue.getByRole("link", { name: "PR #5165" })).toBeVisible();
+  await expect(page.getByText("Partial lookup", { exact: true })).toBeVisible();
+
+  await queue.getByRole("button", { name: "Expand details for Hono" }).click();
+  await expect(queue.getByText("packages/golink/package.json")).toBeVisible();
+  await expect(
+    queue.getByRole("link", { name: "github.com/honojs/hono/releases" }),
+  ).toBeVisible();
+
+  await page.getByLabel("Effort", { exact: true }).selectOption("l");
+  await expect(rows).toHaveCount(1);
+  await expect(queue).toContainText("Prisma");
+  await expect(queue).toContainText("Blocked");
+
+  await page.getByLabel("Effort", { exact: true }).selectOption("all");
+  await page.getByLabel("Status", { exact: true }).selectOption("published");
+  await expect(rows).toHaveCount(1);
+  await expect(queue.getByRole("link", { name: "PR #5007" })).toBeVisible();
+});
+
 test("/product renders the 14-site PostHog table with sparklines, funnels, and charts", async ({
   page,
 }) => {
@@ -233,14 +262,18 @@ test("deep /services/:id views render StatusMatrix, facet tables, and alias redi
     }),
   ).toHaveAttribute("href", "https://go.tailnet-1a49.ts.net");
 
-  await page.goto("/services/bugsink");
+  await page.goto("/services/errors");
   await expect(
     page.getByRole("table", { name: "Bugsink projects error summary" }),
   ).toContainText("Scout for LoL");
   await expect(
     page.getByRole("table", { name: "Top unresolved Bugsink issues" }),
   ).toContainText("RiotUpstreamTimeoutError");
-  await expect(page.getByRole("link", { name: /^Open in / })).toHaveCount(0);
+  await expect(
+    page.locator("main .page-head").getByRole("link", {
+      name: "Open in Errors",
+    }),
+  ).toHaveAttribute("href", "https://errors.tailnet-1a49.ts.net");
 
   await page.goto("/services/observability");
   await expect(
@@ -276,7 +309,7 @@ const HUB_PATHS = [
   "/the-storm",
   "/services/networking",
   "/services/flags",
-  "/services/bugsink",
+  "/services/errors",
   "/services/observability",
   "/services/temporal",
 ] as const;

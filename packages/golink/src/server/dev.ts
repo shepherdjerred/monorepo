@@ -7,7 +7,7 @@ import {
   createPrismaManualLinkRepository,
 } from "#infrastructure/db.ts";
 import { createGolinkMetrics } from "#infrastructure/telemetry.ts";
-import { createGolinkApp } from "./app.ts";
+import { createGolinkServer } from "./app.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const modelPath = path.resolve(
@@ -65,7 +65,7 @@ const port =
   portRaw === undefined || portRaw === "" ? 7352 : Number.parseInt(portRaw, 10);
 const host = Bun.env["HOST"]?.trim() ?? "127.0.0.1";
 
-const app = createGolinkApp({
+const server = createGolinkServer({
   repo,
   getIngressHosts: () => mockIngressHosts,
   platformSites,
@@ -73,18 +73,18 @@ const app = createGolinkApp({
   dynamicAliasesEnabled: () => Promise.resolve(true),
   writesEnabled: () => Promise.resolve(true),
   metrics: createGolinkMetrics(),
-});
-
-const server = Bun.serve({
   hostname: host,
   port,
-  fetch: app.fetch,
+  onShutdown: async () => {
+    await repo.close();
+  },
 });
+const listening = server.start({ handleSignals: false });
 
 console.warn(
   JSON.stringify({
     message: "golink_dev_api_started",
-    url: `http://${host}:${String(server.port)}`,
+    url: `http://${host}:${String(listening.port)}`,
     storage:
       databaseUrl === undefined || databaseUrl === "" ? "memory" : "postgres",
   }),
@@ -106,7 +106,6 @@ async function shutdown(): Promise<void> {
     await viteChild.exited;
   }
   await server.stop();
-  await repo.close();
 }
 
 process.once("SIGINT", () => {

@@ -1716,7 +1716,7 @@ and a tick the server missed by more than a minute is not replayed. Each poll
 detects live games, starts one `scoutPrematchGameWorkflow` per game, and
 then runs `runPrematchMaintenance`
 (`src/temporal/prematch/prematch-maintenance.ts`): Dare accept-window expiry
-and callout refresh. Discovery records one
+and callout refresh, and live roster retention. Discovery records one
 `prematch_detections_total{status}` sample per probed account (`game`,
 `idle`, `unreadable`). The maintenance tail's retired
 `scout-v2-prematch-maintenance` gate is deprecated.
@@ -1729,6 +1729,39 @@ The consumer live view reads `listLivePrematchGames`
 younger than `LIVE_GAME_TTL_MS` (three hours,
 `src/temporal/prematch/prematch-intents.ts`), minus games the report lake
 already holds, with each roster read from the archived spectator snapshot.
+
+### The live roster
+
+`archivePrematchSnapshot` also writes one `LiveGameRoster` row per captured
+game (`src/live-roster/`), after the notification intents so a roster fault
+(reported to Bugsink, never thrown) cannot hold back the announcement. It holds
+the ten participants as the spectator payload named them: Riot ID, champion,
+summoner spells, keystone and trees, an inferred lane (null when the lobby is
+not unambiguous), the Solo/Duo rank Scout already held (never fetched at
+detection; null when none), and `isTracked`. First capture wins; a replay
+changes nothing. Arena lobbies are not recorded.
+
+The game Workflow then runs `recordLiveRosterRecentForm` on the `background`
+queue behind the `scout-v2-prematch-live-roster` patch. For each untracked
+participant with an identity it reads their last five ranked games and their
+Solo/Duo rank at `backfill` priority, through a client with no payload capture,
+and stores a summary on the row (games and wins, current streak, games on the
+champion they are playing, rank). Matches themselves are never stored. A 429,
+a refused ledger admission (the pass is bounded to four minutes) or an
+upstream outage fails the Activity retryably after the finished players are
+saved, and the retry does only the rest. A failure after the retries leaves the
+capture standing.
+
+`consumerLive.list` and `consumerLive.game` read the table and nothing else: no
+Riot call, no S3 object, no lake query. A roster is visible when a tracked
+account in one of the viewer's servers is in it, and strangers' PUUIDs are not
+returned.
+
+Retention: `expiresAt` is set at detection to the three-hour live window plus
+one hour, and is a hard cap. A game whose match the post-match core recorded
+is removed an hour after that record. `prematchMaintenanceSteps` runs
+`purgeExpiredLiveRosters` on every `prematch-poll`, so a roster outlives its
+window by at most one poll.
 
 ### Games against bots
 
@@ -2277,17 +2310,20 @@ intent leaves it.
 
 ### Hall record breaks are intents
 
-`evaluateHallMatch` announces a guild's record breaks inside its own Hall
-transaction through `announceHallRecordBreak`
-(`src/progression/hall/break-announcement.ts`), which mints one `pending`
-`hall-record-break` intent per (guild, match) with a freshness deadline of
-creation plus 24 hours. A standing intent is left as it is; one whose records
-differ from this evaluation's throws instead of choosing.
+`evaluateHallMatch` scores the canonical match during progression with the same
+participant conversion as report-lake staging. It maintains the three highest
+distinct scores for each guild, queue family, and record. Baseline builds and
+roster recomputations calculate those standings from report-lake history.
+Existing Hall cells initialize their standings from eligible earlier matches
+and the stored record on first evaluation.
 
-The committed observation decides silence: a `silent-backfill` match updates
-its records and announces nothing, and a match with no observation throws,
-because an intent without an observed match could never enter the post-commit
-fan-out.
+A live match must beat an existing #1 to announce a break. First scores, ties,
+lower placements, and silent backfill update standings without an alert. The
+Hall transaction commits the updated cells and one pending
+`hall-record-break` intent per guild and match together. The intent captures
+each broken record's previous #1 and resulting standings so that every attempt
+renders the same values and holders. Its freshness deadline is 24 hours after
+creation.
 
 Progression runs before the match core's post-commit fan-out, and
 `planMatchFanOut` starts a notification child for every drivable non-prematch
@@ -2611,8 +2647,8 @@ Every Riot request goes through one in-process limiter
 (`src/league/api/client/rate-limiter.ts`, five slots). Each call site passes a
 `priority`: `realtime` (tracked players' spectator, match, timeline, match-list
 and rank reads), `interactive` (Explore, Riot ID lookups, teammate
-suggestions), `backfill` (initial history, recovery, mastery and Clash
-snapshots) or `crawl`. An untagged call is `realtime`, so nothing is demoted by
+suggestions), `backfill` (initial history, recovery, mastery, Clash
+snapshots and the daily rank refresh) or `crawl`. An untagged call is `realtime`, so nothing is demoted by
 omission. A freed slot goes to the highest class waiting, and one slot only
 ever serves `realtime`.
 
@@ -2655,11 +2691,9 @@ stored per UTC day.
   This differs from today's `fetchTimelineFramesAtTime`, which takes the latest
   frame at or before T. A segment written before the crawl kept checkpoints has
   none, and lane data cannot be backfilled from raw segments.
-- **Frontier.** `CrawlFrontier` is the work queue, not a record: the code
-  reads and writes only what scheduling needs (`puuid`, route, `depth`,
-  `nextEligibleAt`, `lastVisitedAt` and the bracket; `seedMatchId`,
-  `visitCount`, `createdAt` and `updatedAt` are retired and keep only their
-  defaults until a later migration drops them), claimed in `(depth, nextEligibleAt)` order
+- **Frontier.** `CrawlFrontier` is the work queue, not a record: it holds only
+  what scheduling reads (`puuid`, route, `depth`, `nextEligibleAt`,
+  `lastVisitedAt` and the bracket), claimed in `(depth, nextEligibleAt)` order
   from an index of that shape. The crawl adds about nine rows per stored match
   and visits a few hundred players a day, so nearly every row waits;
   `crawl-frontier-prune.ts` bounds the table. `scoutCrawlFrontierPruneWorkflow`
@@ -2794,6 +2828,19 @@ stored per UTC day.
     a build, rune, boots, keystone, spell, game-length or item entry 20, a
     matchup 30. A spell pair inside a matchup follows the matchup floor (30)
     and is listed only under a matchup that is itself listed.
+  - **Lane rates (partials v3).** `lane` and `lane_matchup` partials
+    (`report-lake/crawl/meta-partials-lane.ts`) count the games with a 15:00
+    checkpoint in `timeline_checkpoints_crawl` and, in `wins`, the games the
+    champion had strictly more gold than its same-role opponent: the rule of
+    the app's `buildRoleMatchups`. A game without a checkpoint (under 15
+    minutes, timeline not sampled, crawled before checkpoints existed) is a
+    game in every other figure and absent from the lane figure. A slice's
+    `lane` follows the entry floor (20) and a matchup opponent's `lane` the
+    matchup floor (30), and each carries its own game count, the ahead count,
+    the Wilson interval and its share of the slice's or matchup's games. Lane
+    data cannot be backfilled, so the manifest's `lane` names the first and
+    last ingest day that has any; the retained window is longer until it
+    rolls past the day checkpoints began.
     The `meta/v1` schemas gained optional, additive fields, so files written
     before them still parse: per slice `durations`, `boots`, `keystones`,
     `singleSpells` and `itemsAfterCore`, per matchup opponent `spells`. Each
@@ -2803,7 +2850,7 @@ stored per UTC day.
     and the boots; a slice with no build path above the floor serves none. Tier grades use the win-rate
     interval's lower bound, and every slice states its patch, queue, bracket
     and sample.
-  - **Serving.** `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:a/:b}`
+  - **Serving.** `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:id,matchups/:a/:b}`
     (`http/meta-routes.ts`) and the Explore tools `lookup_champion_meta` and
     `list_champion_tiers` read the serving JSON of `CURRENT` through
     `meta/meta-reader.ts`, never the lake. The API is public and read-only,
@@ -2835,6 +2882,36 @@ stored per UTC day.
 - **Metrics.** `scout_crawl_matches_crawled_total`, `scout_crawl_frontier_size`,
   `scout_crawl_budget_refusals_total{reason}`, `scout_crawl_riot_429_total` and
   `scout_crawl_ticks_total`.
+
+## Rank refresh
+
+`src/league/rank-refresh/` keeps `CurrentRankSnapshot` fresh for tracked
+players who have not played ranked lately, so the Players, Home and Server
+pages (which read ranks through `latestRanksByPuuid`) are not blank or stale.
+
+- **Who is due.** A tracked player is an `Account` row (a PUUID tracked by
+  several servers is one player). Rank evidence is a ranked game's `rankAfter`
+  captured in the last 7 days, or a snapshot fetched in the last 7 days. A
+  snapshot of an unranked player counts, so an unranked player is asked once a
+  window and a player refreshed today is never fetched again. Never-asked
+  players come first, then the longest unrefreshed.
+- **Schedule and queue.** `scoutRankRefreshWorkflow` (Schedule
+  `scout-{stage}-rank-refresh`, daily at 05:00 UTC, overlap SKIP, created
+  paused like the crawl until the worker bundle that exports it is live)
+  repeats the `refreshStaleRanks` Activity on the `background` queue, which
+  other backfills (initial history, silent post-match backfill) use, at most 20
+  times per run. Each call handles up to 50 players, heartbeats between them,
+  and a retried call re-selects only the players it did not reach.
+- **Riot.** The existing `fetchCurrentRanks` league-entry call at `backfill`
+  priority: below `realtime` and `interactive`, above `crawl`. A Riot 404 is
+  recorded as unranked. A transient failure (429, 408, 5xx, transport, a
+  deferred budget) fails the Activity at once and uses the background retry
+  policy. A permanent per-player rejection (any other 4xx, such as 400, 401 or 403) is reported and the batch continues; the Workflow excludes that player
+  for the rest of the run, so one bad player cannot block the others, and fails
+  the run at the end with one error naming the count and the first 8 characters
+  of each PUUID.
+- **Kill switch.** `scout-rank-refresh-enabled`, read per batch: on in beta,
+  off in production until an operator turns it on (AI-1093).
 
 ## Configuration
 

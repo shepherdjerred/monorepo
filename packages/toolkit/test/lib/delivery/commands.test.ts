@@ -203,6 +203,165 @@ describe("delivery CLI", () => {
   });
 });
 
+describe("deploy approvals, list and transient wait retries", () => {
+  test("wait retries transient 503 UNAVAILABLE, PAUSED, gateway and network errors within timeout", async () => {
+    let attempt = 0;
+    const client = createDeliveryClient({
+      baseUrl: "https://delivery.invalid",
+      fetch: () => {
+        attempt++;
+        if (attempt === 1) {
+          return Promise.resolve(
+            Response.json(
+              {
+                error: {
+                  code: "UNAVAILABLE",
+                  message:
+                    "Operator authorization snapshot is temporarily unavailable",
+                  requestId: "r:1",
+                },
+              },
+              { status: 503 },
+            ),
+          );
+        }
+        if (attempt === 2) {
+          return Promise.reject(new TypeError("fetch failed"));
+        }
+        if (attempt === 3) {
+          return Promise.resolve(new Response("Bad Gateway", { status: 502 }));
+        }
+        return Promise.resolve(
+          Response.json({
+            ...detail,
+            deployment: { ...detail.deployment, status: "succeeded" },
+          }),
+        );
+      },
+    });
+    let now = 0;
+    const result = await waitForDeployment(client, deployment.id, {
+      timeoutMs: 200,
+      intervalMs: 40,
+      now: () => now,
+      sleep: (duration) => {
+        now += duration;
+        return Promise.resolve();
+      },
+    });
+    expect(result.exitCode).toBe(0);
+    expect(result.result.deployment.status).toBe("succeeded");
+    expect(attempt).toBe(4);
+    expect(now).toBe(120);
+  });
+
+  test("wait fails immediately on genuine 403 FORBIDDEN without retrying", async () => {
+    let calls = 0;
+    const client = createDeliveryClient({
+      baseUrl: "https://delivery.invalid",
+      fetch: () => {
+        calls++;
+        return Promise.resolve(
+          Response.json(
+            {
+              error: {
+                code: "FORBIDDEN",
+                message: "Operator identity is not authorized",
+                requestId: "r:2",
+              },
+            },
+            { status: 403 },
+          ),
+        );
+      },
+    });
+    await expect(
+      waitForDeployment(client, deployment.id, {
+        timeoutMs: 200,
+        intervalMs: 40,
+      }),
+    ).rejects.toThrow("Operator identity is not authorized");
+    expect(calls).toBe(1);
+  });
+
+  test("approvals and list expose the approvals queue and filtered deployment pages", async () => {
+    const page = {
+      items: [{ ...deployment, versionSetRevision: 1 }],
+      nextCursor: "cursor:2",
+    };
+    const { client, requests } = recordingClient((url) =>
+      url.endsWith("/approvals") ? fixtures.approvalQueue : page,
+    );
+
+    const approvalsResult = await runDeployCommand(
+      client,
+      "approvals",
+      [],
+      parseDeployArgs([]).values,
+    );
+    expect(approvalsResult).toEqual({
+      result: fixtures.approvalQueue,
+      exitCode: 0,
+    });
+
+    const positionalArgs = parseDeployArgs([
+      "scout-for-lol/prod",
+      "--status",
+      "awaiting_approval",
+      "--cursor",
+      "cursor:1",
+    ]);
+    const listResult = await runDeployCommand(
+      client,
+      "list",
+      positionalArgs.positionals,
+      positionalArgs.values,
+    );
+    expect(listResult).toEqual({ result: page, exitCode: 0 });
+
+    const flagArgs = parseDeployArgs([
+      "--environment",
+      "arcade/prod",
+      "--service",
+      "arcade",
+    ]);
+    await runDeployCommand(
+      client,
+      "list",
+      flagArgs.positionals,
+      flagArgs.values,
+    );
+
+    expect(requests.map((entry) => entry.url)).toEqual([
+      "https://delivery.invalid/api/v1/approvals",
+      "https://delivery.invalid/api/v1/deployments?cursor=cursor%3A1&environmentId=scout-for-lol%2Fprod&status=awaiting_approval",
+      "https://delivery.invalid/api/v1/deployments?serviceId=arcade&environmentId=arcade%2Fprod",
+    ]);
+
+    expect(() =>
+      validateDeployCommand(
+        "list",
+        ["arcade/prod"],
+        parseDeployArgs(["--environment", "arcade/prod"]).values,
+      ),
+    ).toThrow("either a positional ENVIRONMENT or --environment");
+    expect(() =>
+      validateDeployCommand(
+        "status",
+        [],
+        parseDeployArgs(["--environment", "arcade/prod"]).values,
+      ),
+    ).toThrow("apply to deploy list");
+    expect(() =>
+      validateDeployCommand(
+        "list",
+        [],
+        parseDeployArgs(["--status", "invalid"]).values,
+      ),
+    ).toThrow();
+  });
+});
+
 describe("deploy recover (4.15)", () => {
   test("a recovery intent names the generation and reason before credential resolution", () => {
     expect(recover([])).toThrow("--machine");

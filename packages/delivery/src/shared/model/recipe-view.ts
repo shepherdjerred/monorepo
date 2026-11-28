@@ -89,12 +89,13 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
 
 /**
  * An Application step whose target outlives the Application's removal: a
- * site step's bucket stays live when the Application is deleted (4.10).
+ * site step's bucket or an archive step's external plugin settings stay live
+ * when the Application is deleted (4.10).
  */
 function stepWithoutRemoval(steps: readonly { kind: string }[]) {
-  return steps.some((step) => step.kind === "static-site")
-    ? "static-site step"
-    : null;
+  if (steps.some((step) => step.kind === "static-site"))
+    return "static-site step";
+  return steps.some((step) => step.kind === "archive") ? "archive step" : null;
 }
 
 /**
@@ -260,11 +261,30 @@ export function workerRolloutOf(
     : undefined;
 }
 
-/** The site an Application release also activates (v1 `scoutSite`). */
+function compoundSiteRelease(
+  definition: Extract<Stored, { kind: "compound" }>,
+): StaticSitePolicy | undefined {
+  for (const sub of definition.subRecipes) {
+    if (sub.definition.kind === "static-site") {
+      const { kind: _kind, ...policy } = sub.definition;
+      return policy;
+    }
+    const site = firstStep(sub.definition, "static-site");
+    if (site?.kind === "static-site") return site.policy;
+  }
+  return undefined;
+}
+
+/**
+ * The site an Application or compound release also activates (v1 `scoutSite`,
+ * an Application's `static-site` step, or a compound's `static-site`
+ * sub-recipe).
+ */
 export function siteReleaseOf(
   definition: Stored,
 ): StaticSitePolicy | undefined {
   if (definition.kind === "argocd") return definition.scoutSite;
+  if (definition.kind === "compound") return compoundSiteRelease(definition);
   const site = firstStep(definition, "static-site");
   return site?.kind === "static-site" ? site.policy : undefined;
 }
@@ -285,14 +305,16 @@ export function specializedStageKey(
     return step === "static-site" ? "scout-site" : "trmnl-plugins";
   const key = stepStageKey("step", step);
   if (definition.kind !== "compound") return key;
-  const position = definition.subRecipes.findIndex((sub) =>
-    kubernetesRecipes(sub.definition).some((recipe) =>
-      recipe.steps.some((candidate) => candidate.kind === step),
-    ),
+  const position = definition.subRecipes.findIndex(
+    (sub) =>
+      (step === "static-site" && sub.definition.kind === "static-site") ||
+      kubernetesRecipes(sub.definition).some((recipe) =>
+        recipe.steps.some((candidate) => candidate.kind === step),
+      ),
   );
   if (position === -1)
     throw new Error(`The compound recipe has no ${step} step`);
-  return `sub${String(position + 1)}-${key}`;
+  return subRecipeStageKey(position, key);
 }
 
 /** The Forum image and licensed bundle a release migrates to (v1 `forumRelease`). */

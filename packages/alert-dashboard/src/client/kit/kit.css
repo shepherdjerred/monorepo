@@ -1,0 +1,32 @@
+/*
+ * The gallery shows console-ui as designed, so Hub's padded page frame
+ * (removed from Hub in H2) does not apply here; the rest is layout for the
+ * specimens, built from shared tokens.
+ */
+.kit-page {
+  max-width: none;
+  padding: 0;
+}
+.kit-fields {
+  display: grid;
+  gap: var(--ui-space-3);
+  max-width: 360px;
+}
+.kit-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--ui-space-2) var(--ui-space-3);
+  padding-top: var(--ui-space-1);
+  list-style: none;
+}
+.kit-icons li {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  color: var(--ui-ink-2);
+}
+.kit-icons svg {
+  width: 15px;
+  height: 15px;
+  color: var(--ui-muted);
+}

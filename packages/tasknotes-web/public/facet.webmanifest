@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "Facet",
+  "short_name": "Facet",
+  "description": "Tasks, projects, and planning.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f7fa",
+  "theme_color": "#f8f7fa",
+  "icons": [
+    {
+      "src": "/facet-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/facet-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

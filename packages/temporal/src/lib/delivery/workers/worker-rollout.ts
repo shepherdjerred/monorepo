@@ -25,6 +25,7 @@ import {
   requireAcceptancePrerequisite,
   requireHealthyWorkflowPoller,
   requireReplayCheckout,
+  runReadOnlyRolloutCommand,
   runWorkerDeploymentPinnedCanary,
   runWorkerDeploymentReplayProofs,
   verifyCandidateImageBuildId,
@@ -96,7 +97,7 @@ function rolloutOptions(
 }
 
 async function routing(options: Options, run: RolloutCommandRunner) {
-  const response = await run(
+  const response = await runReadOnlyRolloutCommand(
     temporalCommand(options, [
       "worker",
       "deployment",
@@ -106,6 +107,7 @@ async function routing(options: Options, run: RolloutCommandRunner) {
       "--output",
       "json",
     ]),
+    run,
   );
   const deployment = DeploymentDescriptionSchema.parse(
     parseTemporalJson(response.stdout, "worker deployment routing"),
@@ -116,7 +118,7 @@ async function routing(options: Options, run: RolloutCommandRunner) {
 }
 
 async function requireCandidate(options: Options, run: RolloutCommandRunner) {
-  const response = await run(
+  const response = await runReadOnlyRolloutCommand(
     temporalCommand(options, [
       "worker",
       "deployment",
@@ -129,6 +131,7 @@ async function requireCandidate(options: Options, run: RolloutCommandRunner) {
       "--output",
       "json",
     ]),
+    run,
   );
   const version = VersionDescriptionSchema.parse(
     parseTemporalJson(response.stdout, "worker candidate version"),

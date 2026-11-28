@@ -24,7 +24,72 @@
         ]
       },
       "resolvedDescription": "Enter a movement command while winding up Kalista's basic attack or Pierce to lunge a short distance when she launches her attack.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "kalistaaltarout",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kalistapaltarbuff",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kalistapassivedashtargeter",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kalistapinvocation",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Pierce",
@@ -68,7 +133,45 @@
         ]
       },
       "resolvedDescription": "Kalista hurls a spear, dealing 10/75/140/205/270 (+105% AD) physical damage to the first target hit. If this kills the target, the spear continues onward, carrying any Rend stacks to the next target hit. Kalista can dash after using this Ability using Martial Poise.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 40,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "kalistamysticshotmissile",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "{72f86c81}"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kalistamysticshotmistrue",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Sentinel",
@@ -133,7 +236,30 @@
         ]
       },
       "resolvedDescription": "Passive: When Kalista and her Oathsworn both Attack the same target, she deals 10/12/14/16/18% max Health magic damage. This effect has a 10 second Cooldown per target and a cap of 100/125/150/175/200 to non-champions. Active: Kalista sends a ghost to patrol an area for three laps. Champions spotted are revealed for 4 seconds. This ability has 2 charges (90/80/70/60/50 second refresh).",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.5,
+        "radius": 160,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "kalistawallypassive",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 20,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Rend",
@@ -256,7 +382,30 @@
       "resolvedDescription": "Passive: Kalista's spears linger in their target for 4 seconds, stacking any number of times. Active: Kalista rips the spears from nearby enemies, dealing 5/15/25/35/45 (+70% AD) (+65% AP) plus 7/14/21/28/35 (+20/27.5/35/42.5/50% AD) (+50% AP) physical damage per spear beyond the first. Slows enemies hit by {{ totalslowamount }} for 2 seconds. If this Ability kills at least one target, its Cooldown is refreshed and it refunds 10/15/20/25/30 Mana.",
       "unresolved": [
         "totalslowamount"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "kalistaexpungeparticle",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Fate's Call",
@@ -285,7 +434,44 @@
         ]
       },
       "resolvedDescription": "Kalista puts her Oathsworn into Stasis and draws them to herself for up to 4 seconds. The Oathsworn can click to launch themselves, stopping at the first champion hit and Knocking Back all nearby enemies. If the Oathsworn hits a champion, they are placed at their maximum attack range from it.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 1100,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "kalistarally",
+            "width": 160,
+            "movement": "FixedSpeedMovement",
+            "speed": 700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kalistarmis",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

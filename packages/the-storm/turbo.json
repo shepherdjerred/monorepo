@@ -211,6 +211,23 @@
     "test:ci": {
       "dependsOn": ["test:ci:jvm", "test:ci:tools"]
     },
+    "test:extended:jvm": {
+      "dependsOn": ["lint:jvm"],
+      "cache": false,
+      "env": ["NODE_ENV"],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "JAVA_HOME",
+        "GRADLE_USER_HOME",
+        "GRADLE_OPTS",
+        "GRADLE_BUILD_CACHE_*",
+        "THE_STORM_NAV_CACHE"
+      ]
+    },
+    "test:extended": {
+      "dependsOn": ["test:extended:jvm"],
+      "cache": false
+    },
     // The full local suite: every Gradle and TypeScript test.
     "test": {
       "dependsOn": ["lint"],

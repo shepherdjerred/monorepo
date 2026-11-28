@@ -60,6 +60,13 @@ test("persists totals across runner processes and emits only bounded metrics", a
       kind: "turn_completed",
       usage: { input: 9, output: 7, cached_input: 3 },
     });
+    first.staleBaseRestack(state, {
+      mergeBaseSha: "1".repeat(40),
+      mainHeadSha: "2".repeat(40),
+      behindBy: 3,
+      restackedHeadSha: "3".repeat(40),
+      conflict: false,
+    });
     return Promise.resolve();
   });
   const passed: TaskState = {
@@ -97,10 +104,16 @@ test("persists totals across runner processes and emits only bounded metrics", a
     labels: { reason: "agent_pass" },
     cumulative: true,
   });
+  expect(final).toContainEqual({
+    name: "justin_stale_base_restacks_total",
+    value: 1,
+    cumulative: true,
+  });
   expect(JSON.stringify(exports)).not.toContain("AI-123");
   const eventLog = telemetryLogPath(paths);
   const logs = await Bun.file(eventLog).text();
   expect(logs).toContain('"issue":"AI-123"');
+  expect(logs).toContain('"event":"stale_base_restack"');
   expect(logs).not.toContain("Private");
   const logStat = await stat(eventLog);
   expect(logStat.mode & 0o777).toBe(0o600);

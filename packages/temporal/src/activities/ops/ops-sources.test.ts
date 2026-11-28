@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
 import { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
+import type { RenovateRankedQueue } from "@shepherdjerred/ops-model/renovate-ranking.ts";
 import { register } from "#observability/metrics.ts";
 import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
 import { MAINTENANCE_QUERIES } from "./maintenance.ts";
@@ -108,14 +109,26 @@ describe("ops source collectors", () => {
         return Promise.resolve(Response.json({ data }));
       },
     });
+    const ranking: RenovateRankedQueue = {
+      snapshot: {
+        scannedAt: "2026-11-26T19:00:00.000Z",
+        baseSha: "a".repeat(40),
+        coverage: "partial",
+        warnings: ["A registry did not respond."],
+        candidates: [],
+      },
+      dispositions: {},
+    };
     const result = await collectRenovate(github, {
       readDeltas: () => Promise.resolve({}),
+      readRanking: () => Promise.resolve(ranking),
     });
     expect(result.signals.map((signal) => signal.id)).toEqual([
       "renovate:awaiting-approval",
     ]);
     expect("counts" in result).toBe(false);
     expect(result.facets?.renovate?.counts["awaiting-approval"]).toBe(1);
+    expect(result.facets?.renovate?.ranking).toEqual(ranking);
     const text = await metricsText();
     expect(text).toContain(
       'renovate_updates_pending{state="awaiting-approval",component="temporal-worker"} 1',

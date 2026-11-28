@@ -1,0 +1,72 @@
+/*
+ * Sections inside the panel: a 14px heading row, full-bleed content, an
+ * optional muted footer. Sections and column groups are divided by
+ * hairlines only; nothing inside the panel is boxed.
+ */
+@layer ui.components {
+  :is(.ui-section, .ui-columns) + :is(.ui-section, .ui-columns) {
+    border-top: 1px solid var(--ui-line);
+  }
+  .ui-section {
+    min-width: 0;
+  }
+  .ui-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--ui-space-1) 10px;
+    padding: var(--ui-space-4) var(--ui-gutter) 9px;
+  }
+  .ui-section-title {
+    margin: 0;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-lg);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-section-head .ui-count {
+    font-size: var(--ui-text-md);
+  }
+  .ui-section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-self: center;
+    gap: var(--ui-space-2);
+    margin-left: auto;
+  }
+  .ui-section-body {
+    padding: 0 var(--ui-gutter) var(--ui-space-4);
+  }
+  .ui-section-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-3);
+    padding: 10px var(--ui-gutter) var(--ui-space-4);
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+  .ui-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-3) var(--ui-gutter);
+  }
+  .ui-toolbar-end {
+    margin-left: auto;
+  }
+
+  /* Side-by-side sections split by a hairline; they stack when narrow. */
+  .ui-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+    overflow: clip;
+  }
+  .ui-columns > * {
+    min-width: 0;
+    box-shadow:
+      -1px 0 0 var(--ui-line),
+      0 -1px 0 var(--ui-line);
+  }
+}

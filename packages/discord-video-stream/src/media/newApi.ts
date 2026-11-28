@@ -32,7 +32,12 @@ import { isBun, isDeno, isFiniteNonZero } from "../utils.js";
 import { AVCodecID } from "./LibavCodecId.js";
 import { createDecoder } from "./LibavDecoder.js";
 import { Encoders } from "./encoders/index.js";
-import { buildSoftwareVideoGraph } from "./videoGraph.js";
+import { buildSoftwareVideoGraph, formatFrameRate } from "./videoGraph.js";
+import {
+  buildAudioOutputStage,
+  isDialogDownmixLayout,
+  type AudioProcessing,
+} from "./audioGraph.js";
 
 import type { AudioFrameSink } from "./AudioSink.js";
 import type { Request } from "zeromq";
@@ -70,9 +75,30 @@ export type PrepareStreamOptions = {
   height: number;
 
   /**
-   * Video frame rate
+   * Output video frame rate (`-r`, and the GPU subtitle canvas rate). NTSC rates such as
+   * `24000 / 1001` are emitted as their exact `N/1001` rational. Omit to keep the input timing.
    */
   frameRate?: number;
+
+  /**
+   * Deinterlace before scaling (`bwdif` on the software path, `deinterlace_vaapi` on a GPU
+   * pipeline), one output frame per input frame, touching only frames flagged interlaced. Set it
+   * for an interlaced source; scaling the woven fields instead bakes combing into every frame.
+   * Throws with `audioOnly` or `noTranscoding`, which have no video graph to put it in. Default
+   * `false`.
+   */
+  deinterlace: boolean;
+
+  /**
+   * Convert an SDR picture to BT.709 limited range in the scale filter and tag the output
+   * (`-colorspace bt709 -color_range tv`). For sources tagged BT.601 or full range: a receiver
+   * that assumes BT.709 for HD otherwise decodes an upscaled SD BT.601 picture with the wrong
+   * coefficients and its hues shift. The scalers read the input matrix from the frame's tags, and
+   * read an untagged frame as BT.601, so set it only for a source whose tags are known. With
+   * `inputColor: "hdr"` only the output tags apply — the tonemap already produces BT.709. Throws
+   * with `audioOnly` or `noTranscoding`. Default `false`.
+   */
+  convertColorToBt709: boolean;
 
   /**
    * Video codec
@@ -127,6 +153,15 @@ export type PrepareStreamOptions = {
    * so a caller that knew its desired volume up front had no way to say so.
    */
   audioVolume: number;
+
+  /**
+   * Opt-in audio processing ahead of the `volume@internal_lib` gain: a dialogue-first surround
+   * downmix, realtime loudness normalisation, and timestamp resync for live input (see
+   * {@link AudioProcessing}). Omitted, or with every step off, the audio arguments are exactly the
+   * legacy `-ac 2 -lfe_mix_level 1` + `volume@internal_lib=<gain>` pair. The caller decides; this
+   * package never reads configuration or flags for it.
+   */
+  audioProcessing?: AudioProcessing;
 
   /**
    * Functions to get encoder settings
@@ -381,17 +416,12 @@ class FfmpegArgumentBuilder {
   }
 
   fpsOutput(frameRate: number): this {
-    this.outputOptions.push("-r", String(frameRate));
+    this.outputOptions.push("-r", formatFrameRate(frameRate));
     return this;
   }
 
   outputOptionsList(options: readonly string[]): this {
     this.outputOptions.push(...options);
-    return this;
-  }
-
-  audioChannels(channels: number): this {
-    this.outputOptions.push("-ac", String(channels));
     return this;
   }
 
@@ -674,20 +704,6 @@ function createFfmpegStderrHandler(
   };
 }
 
-/**
- * Render a linear gain for ffmpeg's `volume` filter.
- *
- * Unity renders as the literal `1.0` this filter has always carried, so a caller that leaves
- * `audioVolume` alone gets a byte-identical command line to the one before the option existed —
- * the rawvideo bots (`discord-plays-pokemon`, `discord-plays-mario-kart`) pin that vector. Every
- * other value renders as itself, and `0` stays `0`: silence is a volume, not a missing option, so
- * it must never be rounded or promoted back to unity. ffmpeg parses `1` and `1.0` identically; the
- * spelling is preserved for the diff, not for the filter.
- */
-function formatAudioGain(gain: number): string {
-  return gain === 1 ? "1.0" : String(gain);
-}
-
 export function prepareStream(
   input: string | Readable,
   options: Partial<PrepareStreamOptions> = {},
@@ -721,6 +737,8 @@ export function prepareStream(
     customInputOptions: [],
     customFfmpegFlags: [],
     inputColor: "sdr",
+    deinterlace: false,
+    convertColorToBt709: false,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(
@@ -824,6 +842,9 @@ export function prepareStream(
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
       inputColor: opts.inputColor ?? defaultOptions.inputColor,
+      deinterlace: opts.deinterlace ?? defaultOptions.deinterlace,
+      convertColorToBt709:
+        opts.convertColorToBt709 ?? defaultOptions.convertColorToBt709,
       ...(opts.subtitleBurn !== undefined
         ? { subtitleBurn: opts.subtitleBurn }
         : {}),
@@ -831,6 +852,9 @@ export function prepareStream(
       ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
       ...(opts.pad !== undefined ? { pad: opts.pad } : {}),
       ...(opts.audioInput !== undefined ? { audioInput: opts.audioInput } : {}),
+      ...(opts.audioProcessing !== undefined
+        ? { audioProcessing: opts.audioProcessing }
+        : {}),
       ...(opts.ffmpegPath !== undefined ? { ffmpegPath: opts.ffmpegPath } : {}),
     } satisfies PrepareStreamOptions;
   }
@@ -849,6 +873,12 @@ export function prepareStream(
       mergedOptions.audioStreamIndex < 0)
   ) {
     throw new Error("audioStreamIndex must be a non-negative integer");
+  }
+  const downmixLayout = mergedOptions.audioProcessing?.dialogDownmix;
+  if (downmixLayout !== undefined && !isDialogDownmixLayout(downmixLayout)) {
+    throw new Error(
+      `audioProcessing.dialogDownmix has no matrix for layout ${String(downmixLayout)}`,
+    );
   }
 
   // `audioOnly` does not modify the video path, it deletes it. Anything that is only meaningful in
@@ -886,6 +916,19 @@ export function prepareStream(
         "inputColor 'hdr' cannot be applied when audioOnly is set: there is no video stream to tonemap. Drop inputColor for audio-only output.",
       );
     }
+  }
+  // Same contract for the two picture corrections: each needs a video graph, which neither an
+  // audio-only nor a copied (noTranscoding) video stream has.
+  if (mergedOptions.audioOnly || mergedOptions.noTranscoding) {
+    const mode = mergedOptions.audioOnly ? "audioOnly" : "noTranscoding";
+    if (mergedOptions.deinterlace)
+      throw new Error(
+        `deinterlace cannot be applied when ${mode} is set: there is no video filter graph to deinterlace in.`,
+      );
+    if (mergedOptions.convertColorToBt709)
+      throw new Error(
+        `convertColorToBt709 cannot be applied when ${mode} is set: there is no video filter graph to convert colour in.`,
+      );
   }
 
   let isHttpUrl = false;
@@ -1118,6 +1161,8 @@ export function prepareStream(
         : { videoStreamIndex: mergedOptions.videoStreamIndex }),
       inputColor: mergedOptions.inputColor,
       ...(uploadMode ? { uploadInput: true } : {}),
+      ...(mergedOptions.deinterlace ? { deinterlace: true } : {}),
+      ...(mergedOptions.convertColorToBt709 ? { convertToBt709: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),
       ...(mergedOptions.subtitleBurn !== undefined
         ? {
@@ -1146,6 +1191,19 @@ export function prepareStream(
     }
 
     if (frameRate) commandBuilder.fpsOutput(frameRate);
+
+    // The scale filter converted the matrix and range (or the HDR tonemap did); pin the output to
+    // them too. ffmpeg 7.1 negotiates these two against the filter graph, so they also hold the
+    // software path to BT.709 limited if a later filter would otherwise renegotiate. Primaries
+    // and transfer are deliberately not forced: nothing converted them, and ffmpeg 7.1 takes both
+    // from the frames regardless (`-color_primaries`/`-color_trc` are inert on the output).
+    if (mergedOptions.convertColorToBt709)
+      commandBuilder.addOutputOption([
+        "-colorspace",
+        "bt709",
+        "-color_range",
+        "tv",
+      ]);
 
     commandBuilder.addOutputOption([
       "-b:v",
@@ -1195,19 +1253,19 @@ export function prepareStream(
           ? "0:a:0"
           : "0:a:0?"
         : `0:a:${String(mergedOptions.audioStreamIndex)}`;
+    // Without `audioProcessing` the stage is the legacy `-ac 2 -lfe_mix_level 1` downmix and a
+    // lone `volume@internal_lib`; see audioGraph.ts for each opt-in step and its order.
+    const audioStage = buildAudioOutputStage(
+      audioVolume,
+      mergedOptions.audioProcessing,
+    );
     commandBuilder
       .addOutputOption(["-map", audioMap])
-      .audioChannels(2)
-      /*
-       * I don't have much surround sound material to test this with,
-       * if you do and you have better settings for this, feel free to
-       * contribute!
-       */
-      .addOutputOption(["-lfe_mix_level", "1"])
+      .addOutputOption([...audioStage.channelOptions])
       .audioFrequency(48000)
       .audioCodec("libopus")
-      .audioBitrate(`${bitrateAudio}k`)
-      .audioFilters(`volume@internal_lib=${formatAudioGain(audioVolume)}`);
+      .audioBitrate(`${bitrateAudio}k`);
+    for (const filter of audioStage.filters) commandBuilder.audioFilters(filter);
     // Realtime Opus tuning (see PrepareStreamOptions.lowDelayAudio). libopus private options —
     // they bind to the (only) audio stream, after -c:a above.
     if (mergedOptions.lowDelayAudio)

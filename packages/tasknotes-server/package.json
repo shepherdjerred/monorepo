@@ -25,6 +25,7 @@
     "@prisma/client": "^7.10.1",
     "@sentry/bun": "^11.18.0",
     "@shepherdjerred/bugsink-config": "workspace:*",
+    "@shepherdjerred/facet-protocol": "workspace:*",
     "hono": "^4.12.18",
     "prisma": "^7.10.1",
     "prom-client": "^15.1.3",

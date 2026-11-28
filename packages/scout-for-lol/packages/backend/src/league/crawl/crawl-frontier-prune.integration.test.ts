@@ -241,30 +241,25 @@ describe("the schema", () => {
     );
   });
 
-  test("a row inserts and is visited without the retired columns", async () => {
-    const store = createPrismaCrawlStore(prisma);
-    await store.admit(
-      [
-        {
-          puuid: puuid("retired"),
-          platformRoute: "NA1",
-          depth: 1,
-          seedMatchId: RiotMatchIdSchema.parse("NA1_1"),
-        },
-      ],
-      NOW,
-    );
-    await store.commit({
-      now: NOW,
-      erasureMark: await store.erasureMark(),
-      segments: [],
-      visits: [{ puuid: puuid("retired"), rank: null }],
-      children: [],
-    });
-    expect(
-      await prisma.crawlFrontier.findUniqueOrThrow({
-        where: { puuid: puuid("retired") },
-      }),
-    ).toMatchObject({ seedMatchId: "", visitCount: 0, lastVisitedAt: NOW });
+  test("holds only what scheduling reads, with the old claim index gone", async () => {
+    expect(await indexesOf("CrawlFrontier")).toEqual([
+      "CrawlFrontier_depth_nextEligibleAt_idx",
+      "CrawlFrontier_pkey",
+    ]);
+    const columns = z
+      .array(z.object({ column_name: z.string() }))
+      .parse(
+        await prisma.$queryRaw`SELECT column_name FROM information_schema.columns WHERE table_name = 'CrawlFrontier' ORDER BY column_name`,
+      );
+    expect(columns.map((column) => column.column_name)).toEqual([
+      "depth",
+      "lastVisitedAt",
+      "nextEligibleAt",
+      "platformRoute",
+      "puuid",
+      "rankDivision",
+      "rankTier",
+      "rankedAt",
+    ]);
   });
 });

@@ -39,6 +39,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   WOODPECKER_GRPC_PORT,
   WOODPECKER_MAX_WORKFLOWS,
+  CI_AGENT_MAX_WORKFLOWS_LABEL,
   CI_ADMISSION_BUDGET,
   type CiAgentPool,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
@@ -110,7 +111,16 @@ export function createWoodpeckerAgent(chart: Chart) {
     CI_ADMISSION_BUDGET.legacyMaxWorkflows > 0
       ? createAgentDeployment(chart, serviceAccount, serverSecretRef)
       : undefined;
-  const pools: readonly CiAgentPool[] = ["pr", "main", "review", "completion"];
+  // `maintenance` takes only the Temporal-dispatched maintenance workflows.
+  // One slot of its own keeps the golden workspace refresh from waiting
+  // behind the PR backlog in the `pr` agent's first-in-first-out queue.
+  const pools: readonly CiAgentPool[] = [
+    "pr",
+    "main",
+    "maintenance",
+    "review",
+    "completion",
+  ];
   const poolDeployments = pools.map((pool) =>
     createAgentDeployment(chart, serviceAccount, serverSecretRef, pool),
   );
@@ -160,6 +170,14 @@ function createAgentDeployment(
       serviceAccount.name,
     ),
   });
+
+  // The agent's slot count, readable through kube-state-metrics so the
+  // disconnected-agent alert compares against the capacity the cluster runs.
+  // A Deployment label does not touch the selector or restart the pod.
+  deployment.metadata.addLabel(
+    CI_AGENT_MAX_WORKFLOWS_LABEL,
+    (config?.maxWorkflows ?? WOODPECKER_MAX_WORKFLOWS).toString(),
+  );
 
   // CI runs ONLY on the dedicated CI node: the toleration admits it past
   // liskov's ci=only:NoSchedule taint and the attraction keeps it off the

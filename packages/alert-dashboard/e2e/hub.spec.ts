@@ -17,7 +17,7 @@ test("the palette opens from the keyboard and the sidebar, and closes on Escape"
   await expect(input).toBeFocused();
   await expect(
     palette.getByRole("group", { name: "Pages" }).getByRole("option"),
-  ).toHaveCount(18);
+  ).toHaveCount(19);
   await expect(
     palette.getByRole("option", { name: "Open Tracker" }),
   ).toBeVisible();
@@ -38,7 +38,7 @@ test("the palette filters pages and navigates with the keyboard", async ({
   const palette = await openPalette(page);
   await palette.getByRole("combobox").fill("hist");
   const options = palette.getByRole("option");
-  await expect(options).toHaveText(["Go to History"]);
+  await expect(options).toHaveText(["Go to History", "Incident history"]);
   await expect(options.first()).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("Enter");
   await expect(palette).toBeHidden();
@@ -53,8 +53,10 @@ test("the palette filters pages and navigates with the keyboard", async ({
   ).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
+  // ArrowUp from the first option wraps to the last: commands follow module
+  // order, so that is the incidents module's last command.
   await expect(
-    reopened.getByRole("option", { name: "Use system theme" }),
+    reopened.getByRole("option", { name: "Declare incident" }),
   ).toHaveAttribute("aria-selected", "true");
 
   await reopened.getByRole("combobox").fill("chores");

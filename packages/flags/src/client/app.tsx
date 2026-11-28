@@ -19,6 +19,7 @@ import { useDeployments, useDocument } from "./api.ts";
 import { DeploymentHeading } from "./deployment-heading.tsx";
 import { Editor } from "./editor.tsx";
 import { FlagTable } from "./flag-table.tsx";
+import { useArchive, useFlagMetadata } from "./management-api.ts";
 import {
   deploymentPath,
   filterFlags,
@@ -32,9 +33,11 @@ import { viewOf, viewTitle } from "./nav.ts";
 import { FlagsPalette } from "./palette.tsx";
 import { DeploymentSidebar, FlagsTopBar } from "./sidebar.tsx";
 import { ThemeContext } from "./theme-context.ts";
+import { ArchivePage, archivedCount } from "./views/archive-page.tsx";
 import { ComparePage } from "./views/compare-page.tsx";
 import { itemCount, totalCounts } from "./views/drift-model.ts";
 import { DriftPage } from "./views/drift-page.tsx";
+import { descriptionsOf } from "./views/flag-meta.tsx";
 import { HomePage } from "./views/home-page.tsx";
 import { useDrift, useSummaryRefresh } from "./views/views-api.ts";
 
@@ -51,6 +54,7 @@ function Shell({ theme }: { theme: ThemeStore }) {
   const view = viewOf(useLocation().pathname);
   const deployments = useDeployments();
   const drift = useDrift();
+  const archive = useArchive();
   useSummaryRefresh();
   const ids = deployments.data?.map((deployment) => deployment.id);
   const counts = new Map(
@@ -71,6 +75,8 @@ function Shell({ theme }: { theme: ThemeStore }) {
       drift.data === undefined
         ? undefined
         : itemCount(totalCounts(drift.data.deployments)),
+    archivedCount:
+      archive.data === undefined ? undefined : archivedCount(archive.data),
     status: deployments.isPending ? "Loading deployments…" : undefined,
     failure: deployments.isError ? deployments.error.message : undefined,
     theme,
@@ -110,6 +116,9 @@ function Deployment({
   flagKey: string | undefined;
 }) {
   const document = useDocument(catalog, stage);
+  const descriptions = descriptionsOf(
+    useFlagMetadata(catalog, stage).data?.flags,
+  );
   const [params, setParams] = useSearchParams();
   const query = params.get("q") ?? "";
   const title = `${catalog} / ${stage}`;
@@ -140,7 +149,7 @@ function Deployment({
     ? splitDeploymentId(document.data.id)
     : { catalog, stage };
   const flags = document.data.flags;
-  const shown = filterFlags(flags, query);
+  const shown = filterFlags(flags, query, (flag) => descriptions.get(flag.key));
 
   function search(next: string) {
     setParams((current) => withQuery(current, next), { replace: true });
@@ -166,7 +175,7 @@ function Deployment({
               <SearchField
                 label="Search"
                 value={query}
-                placeholder="Filter flags by key"
+                placeholder="Filter flags by key or description"
                 autoComplete="off"
                 spellCheck={false}
                 onChange={(event) => {
@@ -184,6 +193,7 @@ function Deployment({
                 catalog={listed.catalog}
                 stage={listed.stage}
                 flags={shown}
+                descriptions={descriptions}
                 selectedKey={loading ? undefined : flagKey}
                 query={query}
               />
@@ -217,6 +227,7 @@ const PAGES: RouteObject[] = [
   { index: true, element: <HomePage /> },
   { path: "compare", element: <ComparePage /> },
   { path: "drift", element: <DriftPage /> },
+  { path: "archive", element: <ArchivePage /> },
   { path: ":catalog/:stage", element: <DeploymentPage /> },
   { path: ":catalog/:stage/:key", element: <DeploymentPage /> },
   { path: "*", element: <HomePage /> },

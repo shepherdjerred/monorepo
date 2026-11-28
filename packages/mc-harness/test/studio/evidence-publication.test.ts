@@ -25,6 +25,7 @@ import { appendLog, readLog } from "#build/build-log.ts";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
+import { useCompactRenderTiles } from "#test/fixtures/compact-render-tiles.ts";
 import { writeProgramFixture } from "#test/fixtures/program-evidence.ts";
 import { rubricAxisIds } from "#build/judge.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
@@ -561,6 +562,8 @@ describe("candidate selection publication", () => {
 });
 
 describe("render evidence publication", () => {
+  useCompactRenderTiles();
+
   it.each(["plain", "regional"])(
     "preserves reused %s render evidence when journal staging fails",
     async (kind) => {

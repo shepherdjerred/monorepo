@@ -27,9 +27,9 @@ COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/golink'
 
 FROM deps AS build
-# console-ui and ops-model export TypeScript source the client build bundles;
-# they are devDependencies, so the runtime image never needs them.
-COPY --parents tsconfig.base.json packages/golink packages/console-ui packages/ops-model packages/config packages/feature-flags packages/bugsink-config packages/eslint-config packages/homelab/src/platform-model.json ./
+# console-ui, console-client and ops-model export TypeScript source the client
+# build bundles; they are devDependencies, so the runtime image never needs them.
+COPY --parents tsconfig.base.json packages/golink packages/console-ui packages/console-client packages/console-server packages/ops-model packages/config packages/feature-flags packages/bugsink-config packages/eslint-config packages/homelab/src/platform-model.json ./
 RUN cd packages/golink && bun run generate && bun run build
 
 FROM base AS prod-deps
@@ -44,7 +44,7 @@ RUN bun /tools/complete-bin-links.ts node_modules/.bun
 FROM base AS runtime
 COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/golink /app/packages/golink
-COPY --parents packages/config packages/feature-flags packages/bugsink-config packages/homelab/src/platform-model.json ./
+COPY --parents packages/config packages/console-server packages/feature-flags packages/bugsink-config packages/homelab/src/platform-model.json ./
 # Prisma's CLI records per-run state under $HOME; keep it out of the layer.
 RUN cd packages/golink && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
  && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"

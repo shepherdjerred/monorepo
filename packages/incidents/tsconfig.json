@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["bun", "vite/client"],
+    "jsx": "react-jsx",
+    "noEmit": true
+  },
+  "include": ["src", "*.ts"],
+  "exclude": ["architecture-fixtures", "generated", "dist", "node_modules"]
+}

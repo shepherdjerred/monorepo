@@ -1,4 +1,42 @@
+import { gzipSync } from "node:zlib";
 import { DeploymentDetailSchema } from "@shepherdjerred/delivery/contract";
+
+/** Build a minimal POSIX ustar `.tgz` archive in memory for chart template tests. */
+export function buildChartTgz(
+  entries: readonly { path: string; content: string }[],
+): Uint8Array {
+  const blocks: Uint8Array[] = [];
+  const encoder = new TextEncoder();
+  for (const entry of entries) {
+    const payload = encoder.encode(entry.content);
+    const header = new Uint8Array(512);
+    header.set(encoder.encode(entry.path).subarray(0, 100), 0);
+    header.set(encoder.encode("0000644\0"), 100);
+    header.set(encoder.encode("0001000\0"), 108);
+    header.set(encoder.encode("0001000\0"), 116);
+    header.set(
+      encoder.encode(`${payload.length.toString(8).padStart(11, "0")}\0`),
+      124,
+    );
+    header.set(encoder.encode("14700000000\0"), 136);
+    header.fill(32, 148, 156);
+    header[156] = 48;
+    header.set(encoder.encode("ustar\0"), 257);
+    header.set(encoder.encode("00"), 263);
+    let checksum = 0;
+    for (const byte of header) checksum += byte;
+    header.set(
+      encoder.encode(`${checksum.toString(8).padStart(6, "0")}\0 `),
+      148,
+    );
+    blocks.push(header);
+    const padded = new Uint8Array(Math.ceil(payload.length / 512) * 512);
+    padded.set(payload, 0);
+    blocks.push(padded);
+  }
+  blocks.push(new Uint8Array(1024));
+  return new Uint8Array(gzipSync(Buffer.concat(blocks)));
+}
 
 /** Test fixtures for the model executor: a running arcade/prod deployment. */
 export const timestamp = "2026-10-21T00:00:00.000Z";

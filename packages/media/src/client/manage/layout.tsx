@@ -18,30 +18,70 @@ const SECTIONS = [
   { to: "/manage/migration", label: "Migration" },
 ] as const;
 
+type MeasuredBox = Pick<DOMRectReadOnly, "left" | "right">;
+
+export type ScrollableSectionRow = {
+  scrollLeft: number;
+  getBoundingClientRect: () => MeasuredBox;
+  querySelector: (
+    selector: string,
+  ) => { getBoundingClientRect: () => MeasuredBox } | null;
+};
+
+/**
+ * Scrolls the current Manage section into view and re-runs once web fonts
+ * settle, so mobile strip positions do not vary with fallback font widths.
+ */
+export function revealCurrentSection(
+  row: ScrollableSectionRow | null,
+  pathname: string,
+  fontsReady: Promise<unknown> = document.fonts.ready,
+): (() => void) | undefined {
+  if (row === null) return;
+  const section = SECTIONS.find(
+    ({ to }) => pathname === to || pathname.startsWith(`${to}/`),
+  );
+  if (section === undefined) return;
+  const baseScrollLeft = row.scrollLeft;
+  let appliedScrollLeft = baseScrollLeft;
+  const reveal = () => {
+    if (row.scrollLeft !== appliedScrollLeft) return;
+    const current = row.querySelector(`a[href="${section.to}"]`);
+    if (current === null) return;
+    const rowBox = row.getBoundingClientRect();
+    const box = current.getBoundingClientRect();
+    const contentLeft = row.scrollLeft + box.left - rowBox.left;
+    const contentRight = row.scrollLeft + box.right - rowBox.left;
+    const rowWidth = rowBox.right - rowBox.left;
+    const next =
+      contentLeft < baseScrollLeft || contentRight > baseScrollLeft + rowWidth
+        ? Math.max(0, contentLeft - 16)
+        : baseScrollLeft;
+    if (row.scrollLeft !== next) {
+      row.scrollLeft = next;
+    }
+    appliedScrollLeft = row.scrollLeft;
+  };
+  reveal();
+  let cancelled = false;
+  const revealAfterFonts = async () => {
+    await fontsReady;
+    if (!cancelled) reveal();
+  };
+  void revealAfterFonts();
+  return () => {
+    cancelled = true;
+  };
+}
+
 /**
  * The Manage area: a list of its pages beside the page itself. The list is a
  * rail when there is room and a scrolling row when there is not.
  */
 export function ManageLayout() {
   const { pathname } = useLocation();
-  // In the scrolling row the current page can start out of view. React runs
-  // this ref again whenever the page changes.
   const revealCurrent = useCallback(
-    (row: HTMLUListElement | null) => {
-      const section = SECTIONS.find(
-        ({ to }) => pathname === to || pathname.startsWith(`${to}/`),
-      );
-      const current =
-        section === undefined
-          ? null
-          : row?.querySelector(`a[href="${section.to}"]`);
-      if (row == null || current == null) return;
-      const rowBox = row.getBoundingClientRect();
-      const box = current.getBoundingClientRect();
-      if (box.left < rowBox.left || box.right > rowBox.right) {
-        row.scrollLeft += box.left - rowBox.left - 16;
-      }
-    },
+    (row: HTMLUListElement | null) => revealCurrentSection(row, pathname),
     [pathname],
   );
   return (

@@ -46,6 +46,9 @@ describe("toolkit config", () => {
     await expect(config.value("trackerUrl")).resolves.toBe(
       "https://tracker.tailnet-1a49.ts.net",
     );
+    await expect(config.value("artifactsUrl")).resolves.toBe(
+      "https://artifacts.tailnet-1a49.ts.net",
+    );
     await expect(config.value("flagsUrl")).resolves.toBe(
       "https://flags.tailnet-1a49.ts.net",
     );

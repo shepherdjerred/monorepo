@@ -1,5 +1,14 @@
 import { describe, expect, expectTypeOf, test } from "vitest";
+import { z } from "zod";
 import { flagDeployments } from "./deployments.ts";
+import generatedJsonSchemas from "./flag-value-schemas.generated.json" with { type: "json" };
+import {
+  MODEL_ROUTE_KEYWORD,
+  ModelIdSchema,
+  modelIdFor,
+  ModelRouteSchema,
+  type ModelRoute,
+} from "./flag-value-spec.ts";
 import {
   decodeVariantValue,
   encodeVariantValue,
@@ -290,5 +299,83 @@ describe("flagValueKind and encodings", () => {
       new URL("flag-value-schemas.generated.json", import.meta.url),
     ).text();
     expect(onDisk).toBe(await generateFlagValueSchemasJson());
+  });
+});
+
+describe("model-id routes", () => {
+  const TOOLS_LANGUAGE: ModelRoute = {
+    kind: "native",
+    endpoint: "language",
+    requires: ["tools"],
+  };
+  const STRUCTURED_LANGUAGE: ModelRoute = {
+    kind: "native",
+    endpoint: "language",
+    requires: ["structuredOutputs"],
+  };
+  const DECISIONS: ModelRoute = { kind: "native", endpoint: "decisions" };
+  const expectedRoutes: Record<string, ModelRoute> = {
+    "birmel-llm-model": TOOLS_LANGUAGE,
+    "birmel-llm-classifier-model": STRUCTURED_LANGUAGE,
+    "birmel-llm-decisions-model": DECISIONS,
+    "birmel-llm-embedding-model": { kind: "native", endpoint: "embedding" },
+    "birmel-llm-image-model": { kind: "native", endpoint: "image" },
+    "birmel-llm-memory-model": STRUCTURED_LANGUAGE,
+    "birmel-persona-style-model": { kind: "native", endpoint: "language" },
+    "scout-explore-model": {
+      kind: "native",
+      endpoint: "language",
+      requires: ["tools", "imageInput"],
+    },
+    "scout-report-ai-model": TOOLS_LANGUAGE,
+    "storm-brain-model": STRUCTURED_LANGUAGE,
+    "storm-brain-decisions-model": DECISIONS,
+    "temporal-agent-chat-discord-claude-default-model": {
+      kind: "claudeAgentSdk",
+    },
+    "temporal-agent-chat-imessage-claude-model": { kind: "claudeAgentSdk" },
+    "temporal-agent-chat-discord-codex-default-model": { kind: "codexSdk" },
+    "temporal-agent-chat-imessage-codex-model": { kind: "codexSdk" },
+  };
+
+  test("each model-id key carries its consumer's route in the generated JSON Schema", () => {
+    const generated = z
+      .record(
+        z.string(),
+        z.object({ schema: z.record(z.string(), z.unknown()) }),
+      )
+      .parse(generatedJsonSchemas);
+    const tagged = Object.fromEntries(
+      Object.entries(generated).flatMap(([key, entry]) =>
+        MODEL_ROUTE_KEYWORD in entry.schema
+          ? [[key, entry.schema[MODEL_ROUTE_KEYWORD]]]
+          : [],
+      ),
+    );
+    expect(tagged).toEqual(expectedRoutes);
+    for (const key of Object.keys(expectedRoutes)) {
+      expect(generated[key]?.schema).toMatchObject({
+        type: "string",
+        minLength: 1,
+        maxLength: 200,
+      });
+    }
+  });
+
+  test("the route tag does not change what parses", () => {
+    const tagged = modelIdFor({ kind: "codexSdk" });
+    for (const value of ["gpt-6.1-sol", "not-in-any-catalog", "", "a b"]) {
+      expect(tagged.safeParse(value).success).toBe(
+        ModelIdSchema.safeParse(value).success,
+      );
+    }
+    expect(validateVariantValue("storm-brain-model", "custom-model").ok).toBe(
+      true,
+    );
+  });
+
+  test("rejects a malformed route", () => {
+    const malformed: unknown = { kind: "native", endpoint: "speech" };
+    expect(ModelRouteSchema.safeParse(malformed).success).toBe(false);
   });
 });

@@ -242,6 +242,9 @@ export function IssueContextMenu({
   const pressed = useRef<string>(undefined);
   const touchedAt = useRef<{ x: number; y: number }>(undefined);
   const pressedAt = useRef<{ x: number; y: number }>(undefined);
+  const beginMenuInput = () => {
+    touchedAt.current = undefined;
+  };
   const selection = useSelection(scope);
   const issues = items.filter(({ identifier }) => targets.includes(identifier));
   const [only] = issues;
@@ -290,19 +293,14 @@ export function IssueContextMenu({
       >
         {children}
       </ContextMenu.Trigger>
-      <ReleaseContext
-        value={(event) => {
-          const release = isRelease(event, touchedAt.current);
-          // Only the one click that ends the press.
-          touchedAt.current = undefined;
-          return release;
-        }}
-      >
+      <ReleaseContext value={(event) => isRelease(event, touchedAt.current)}>
         <ContextMenu.Portal>
           <ContextMenu.Positioner className="picker-positioner">
             <ContextMenu.Popup
               render={leavingPopup}
               className="menu-popup"
+              onPointerDownCapture={beginMenuInput}
+              onKeyDownCapture={beginMenuInput}
               aria-label={
                 issues.length === 1
                   ? `Actions for ${only?.identifier ?? ""}`

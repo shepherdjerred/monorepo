@@ -19,6 +19,14 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
     package: "@shepherdjerred/tracker",
     reportDirectory: "shepherdjerred__tracker",
   },
+  {
+    package: "@shepherdjerred/tasknotes-web",
+    reportDirectory: "shepherdjerred__tasknotes-web",
+  },
+  {
+    package: "@shepherdjerred/artifacts",
+    reportDirectory: "shepherdjerred__artifacts",
+  },
   { package: "sjer.red", reportDirectory: "sjer.red" },
   {
     package: "@shepherdjerred/docs-wiki",
@@ -95,13 +103,13 @@ const SITE_ARTIFACT_TARGETS = new Set([
   "@shepherdjerred/docs-wiki",
 ]);
 
-// Turbo has a synthetic edge from Scout backend generation to Birmel's Prisma
-// generation. It serializes the shared Prisma engine cache, but is not a
-// package dependency and therefore cannot be discovered from package.json.
+// Browser acceptance can start a service that the shipped client does not
+// import. Scout generation also has an edge to Birmel's Prisma setup.
 const SYNTHETIC_WORKSPACE_DEPENDENCIES: Readonly<
   Record<string, readonly string[]>
 > = {
   "@scout-for-lol/app": ["@shepherdjerred/birmel"],
+  "@shepherdjerred/tasknotes-web": ["tasknotes-server"],
 };
 
 export type PlaywrightSelection = {

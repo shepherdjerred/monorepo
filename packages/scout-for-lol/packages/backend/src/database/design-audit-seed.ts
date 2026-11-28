@@ -12,7 +12,12 @@ import {
   ReportIdSchema,
 } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import {
+  designAuditChampionGames,
+  seedDesignAuditChampionFriends,
+} from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
+import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import {
   designAuditMatchFixtures,
@@ -231,6 +236,26 @@ export async function seedDesignAuditDatabase(
       now,
     });
     await seedDesignAuditClashHistory({ prisma, puuid, region });
+    const friends = await seedDesignAuditChampionFriends({
+      prisma,
+      guildId,
+      creatorDiscordId: discordId,
+      region,
+      now,
+    });
+    const champions = designAuditChampionGames({
+      viewer: { playerId: player.id, alias: playerAlias, puuid, discordId },
+      friends,
+    });
+    // Dated from the seed run, not `now` above: plays-with counts 90 days.
+    const playerFriends = await seedDesignAuditFriends({
+      prisma,
+      guildId,
+      discordId,
+      region,
+      main: { playerId: player.id, playerAlias, puuid },
+      now: new Date(),
+    });
 
     await prisma.subscription.create({
       data: {
@@ -302,11 +327,13 @@ export async function seedDesignAuditDatabase(
     const review = designAuditMatchFixtures(player.id);
     await writeTestLake(lakeDir, {
       serverId: guildId,
-      timelineFrames: review.timelineFrames,
+      timelineFrames: [...review.timelineFrames, ...champions.timelineFrames],
       timelineEvents: review.timelineEvents,
       timelineCoverage: review.timelineCoverage,
       timelineEventParticipants: review.timelineEventParticipants,
       matchFacts: [
+        ...champions.tracked,
+        ...playerFriends.matchFacts,
         ...designAuditHistoryFixtures({
           playerId: player.id,
           playerAlias,
@@ -380,6 +407,8 @@ export async function seedDesignAuditDatabase(
         },
       ],
       untrackedMatchFacts: [
+        ...champions.untracked,
+        ...playerFriends.untrackedMatchFacts,
         ...review.extra,
         {
           playerId: 901,

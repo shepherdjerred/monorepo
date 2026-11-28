@@ -2,11 +2,16 @@ import { describe, expect, it } from "vitest";
 import { App, Chart } from "cdk8s";
 import { parse } from "yaml";
 import { z } from "zod";
+import { CI_AGENT_MAX_WORKFLOWS_LABEL } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import { createWoodpeckerAgent } from "./agent.ts";
+import { CI_ADMISSION_BUDGET } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 
 const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
-  metadata: z.object({ name: z.string() }),
+  metadata: z.object({
+    name: z.string(),
+    labels: z.record(z.string(), z.string()).optional(),
+  }),
   spec: z.object({
     replicas: z.number(),
     strategy: z.object({ type: z.string() }),
@@ -55,12 +60,19 @@ function environment(
 }
 
 describe("dedicated CI agent pools", () => {
-  it("uses only the four mandatory-label pools after the legacy drain", () => {
+  it("uses only the mandatory-label pools after the legacy drain", () => {
     const deployments = agents();
-    expect(deployments).toHaveLength(4);
+    expect(deployments.map((entry) => entry.metadata.name).toSorted()).toEqual(
+      Object.keys(CI_ADMISSION_BUDGET.pools)
+        .map((pool) => `woodpecker-woodpecker-agent-${pool}`)
+        .toSorted(),
+    );
     for (const [pool, cap, queue, volume] of [
-      ["pr", "8", "default", "32Gi"],
+      ["pr", "12", "default", "32Gi"],
       ["main", "10", "default", "32Gi"],
+      // Maintenance workspaces clone the golden snapshot, so they keep the
+      // compute workspace size rather than the gate's.
+      ["maintenance", "1", "default", "32Gi"],
       ["review", "3", "ci-gates", "1G"],
       ["completion", "1", "ci-gates", "1G"],
     ] as const) {
@@ -71,6 +83,9 @@ describe("dedicated CI agent pools", () => {
       if (agent === undefined) throw new Error(`missing ${pool} agent`);
       const env = environment(agent);
       expect(env.get("WOODPECKER_MAX_WORKFLOWS")).toBe(cap);
+      // The label kube-state-metrics exports for the disconnected-agent alert
+      // must carry the same slot count the agent runs with.
+      expect(agent.metadata.labels?.[CI_AGENT_MAX_WORKFLOWS_LABEL]).toBe(cap);
       expect(env.get("WOODPECKER_AGENT_LABELS")).toBe(
         `!ci-pool=${pool},kueue.x-k8s.io/priority-class=*`,
       );

@@ -49,8 +49,7 @@ const REQUIRED_AUDIT_BINARIES = [
 const REQUIRED_ENV_GROUPS: readonly RequiredEnvGroup[] = [
   { label: "OPENAI_API_KEY", names: ["OPENAI_API_KEY"] },
   { label: "ALERT_DASHBOARD_URL", names: ["ALERT_DASHBOARD_URL"] },
-  { label: "BUGSINK_URL", names: ["BUGSINK_URL"] },
-  { label: "BUGSINK_TOKEN", names: ["BUGSINK_TOKEN"] },
+  { label: "ERRORS_URL", names: ["ERRORS_URL"] },
   { label: "GRAFANA_URL", names: ["GRAFANA_URL"] },
   { label: "GRAFANA_API_KEY", names: ["GRAFANA_API_KEY"] },
   { label: "ARGOCD_SERVER", names: ["ARGOCD_SERVER"] },
@@ -214,7 +213,7 @@ async function collectRemoteWarnings(): Promise<string[]> {
       name: "Temporal",
       args: ["toolkit", "temporal", "operator", "cluster", "health"],
     },
-    { name: "Bugsink", args: ["toolkit", "bugsink", "projects", "--json"] },
+    { name: "Errors", args: ["toolkit", "errors", "projects", "--json"] },
     ...(gcxReady
       ? [
           {

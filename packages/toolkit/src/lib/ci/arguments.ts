@@ -21,3 +21,13 @@ export function parseTimeout(value: string, option = "--timeout"): number {
   }
   return ms;
 }
+
+/** Print `usage` and return true when the arguments ask for help. */
+export function printHelpIfRequested(
+  args: readonly string[],
+  usage: string,
+): boolean {
+  if (!args.includes("--help") && !args.includes("-h")) return false;
+  console.log(usage);
+  return true;
+}

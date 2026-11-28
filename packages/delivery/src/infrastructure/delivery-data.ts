@@ -298,7 +298,7 @@ export async function evidence(
  * highest order key), or what its promotion source accepted.
  */
 export async function automaticTarget(
-  database: Database,
+  database: Transaction | Database,
   env: { serviceId: string; promotionSourceEnvironmentId: string | null },
 ) {
   if (env.promotionSourceEnvironmentId === null) {

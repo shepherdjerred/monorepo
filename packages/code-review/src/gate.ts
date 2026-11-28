@@ -204,6 +204,8 @@ export function evaluateGate(input: {
   skipReason?: string | null;
   /** Provider-side block slug (e.g. "usage-limited"), or null. */
   blockedReason?: string | null;
+  /** True when passing via an earlier round's receipt while `head` itself is not yet reviewed. */
+  priorRoundPass?: boolean;
 }): GateDecision {
   const { head, provider, reviewState, threads, policy } = input;
   const skipReason = input.skipReason ?? null;
@@ -247,10 +249,12 @@ export function evaluateGate(input: {
   );
 
   if (blocking.length === 0) {
-    const prefix =
-      skipReason === null
-        ? `${name} reviewed ${head}`
-        : `${name} skipped review for ${head} (${skipReason})`;
+    let prefix = `${name} reviewed ${head}`;
+    if (skipReason !== null) {
+      prefix = `${name} skipped review for ${head} (${skipReason})`;
+    } else if (input.priorRoundPass === true) {
+      prefix = `${name} completed a prior review round (${head} not yet reviewed at head)`;
+    }
     return {
       state: "passed",
       message:
@@ -395,8 +399,11 @@ export function evaluateMultiGate(input: {
   }
   const evaluated = providers.map((snapshot) => {
     const judged = judgedSnapshot(snapshot, policy);
+    const priorRoundPass =
+      snapshot.priorRound === true && snapshot.reviewState !== "reviewed";
     return {
       snapshot,
+      priorRoundPass,
       decision: evaluateGate({
         head,
         provider: snapshot.provider,
@@ -405,6 +412,7 @@ export function evaluateMultiGate(input: {
         policy: judged.policy,
         skipReason: snapshot.skipReason ?? null,
         blockedReason: judged.blockedReason,
+        priorRoundPass,
       }),
     };
   });
@@ -421,13 +429,30 @@ export function evaluateMultiGate(input: {
       decision.state === "passed" && (snapshot.skipReason ?? null) === null,
   );
   if (genuinelyPassed.length > 0 && vetoes.length === 0) {
-    const names = genuinelyPassed
+    const exactHeadNames = genuinelyPassed
+      .filter(({ priorRoundPass }) => !priorRoundPass)
       .map(({ snapshot }) => snapshot.provider.displayName)
       .join(", ");
+    const priorRoundNames = genuinelyPassed
+      .filter(({ priorRoundPass }) => priorRoundPass)
+      .map(({ snapshot }) => snapshot.provider.displayName)
+      .join(", ");
+    if (exactHeadNames === "") {
+      return {
+        state: "passed",
+        message:
+          `Prior review round completed by ${priorRoundNames} (${head} not yet reviewed at head); ` +
+          `no unresolved P0 from any provider remains.`,
+      };
+    }
+    const priorNote =
+      priorRoundNames === ""
+        ? ""
+        : ` (prior review round completed by ${priorRoundNames}; ${head} not yet reviewed at head by ${priorRoundNames})`;
     return {
       state: "passed",
       message:
-        `${names} reviewed ${head} with no blocking findings; ` +
+        `${exactHeadNames} reviewed ${head} with no blocking findings${priorNote}; ` +
         `no unresolved P0 from any provider remains.`,
     };
   }

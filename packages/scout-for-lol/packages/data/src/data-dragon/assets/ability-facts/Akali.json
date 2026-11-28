@@ -24,7 +24,72 @@
         ]
       },
       "resolvedDescription": "Dealing spell damage to a champion creates a ring of energy around them. Exiting that ring empowers Akali's next Attack with bonus range and damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "akalipvfxmis",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akalipvfxmis1",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 4000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akalipvfxmis2",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akalipvfxmisenemy1",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 4000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Five Point Strike",
@@ -96,7 +161,114 @@
         ]
       },
       "resolvedDescription": "Akali slings kunai in an arc, dealing 45/70/95/120/145 (+65% AD) (+60% AP) magic damage and Slowing enemies at the tip by 50% for 0.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "akaliqmis",
+            "width": 10,
+            "movement": "FixedSpeedMovement",
+            "speed": 99999,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliqmis0",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliqmis1",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliqmis2",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliqmis3",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliqmis4",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliqmis5",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Twilight Shroud",
@@ -175,7 +347,64 @@
         ]
       },
       "resolvedDescription": "Akali drops a smoke bomb, unleashing a spreading cover of smoke lasting 5/5.5/6/6.5/7 seconds and granting herself 30/35/40/45/50% Move Speed decaying over 2 seconds. Akali increases her max Energy by 100 while the shroud is active. While inside the smoke, Akali is Invisible.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "akaliwsmokemissile",
+            "width": 205,
+            "movement": "PhysicsMovement",
+            "speed": 150,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliwsmokemissileriver",
+            "width": 205,
+            "movement": "PhysicsMovement",
+            "speed": 150,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliwsmokeparent",
+            "width": 10,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akaliwsmokeparentriver",
+            "width": 10,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Shuriken Flip",
@@ -247,7 +476,30 @@
         ]
       },
       "resolvedDescription": "Akali flips backwards as she throws a shuriken, dealing 21/42/63/84/105 (+30% AD) (+33% AP) magic damage and marking the first enemy or smoke cloud hit. Akali can Recast this once to dash to the marked target, dealing 49/98/147/196/245 (+70% AD) (+77% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "akaliemis",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1900,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Perfect Execution",
@@ -311,7 +563,15 @@
         ]
       },
       "resolvedDescription": "Akali vaults over an enemy champion, dealing 110/220/330 (+50% bonus AD) (+30% AP) magic damage to all enemies in her path. Akali can Recast after 2.5 seconds to execute a piercing thrust, dashing and dealing 70/140/210 (+30% AP) to 210/420/630 (+90% AP) magic damage based on missing Health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 400,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

@@ -414,7 +414,7 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
     cacheSourceSteps(steps, {
       enabled: true,
       credentialless: true,
-      main: false,
+      trustDomain: "pull-request",
       image,
     }),
   ).toEqual(steps);
@@ -422,15 +422,18 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
     cacheSourceSteps(steps, {
       enabled: false,
       credentialless: false,
-      main: false,
+      trustDomain: "pull-request",
       image,
     }),
   ).toEqual(steps);
-  for (const main of [true, false]) {
+  for (const [trustDomain, claim] of [
+    ["trusted", "main"],
+    ["pull-request", "pr"],
+  ] as const) {
     const cached = cacheSourceSteps(steps, {
       enabled: true,
       credentialless: false,
-      main,
+      trustDomain,
       image,
     });
     const verify = cached.find((step) => step.key === "verify");
@@ -479,7 +482,7 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
       allowPrivilegeEscalation: false,
     });
     expect(clone?.volumes).toContain(
-      `woodpecker-source-${main ? "main" : "pr"}:/woodpecker/source-cache`,
+      `woodpecker-source-${claim}:/woodpecker/source-cache`,
     );
     expect(prepare?.volumes).toEqual(clone?.volumes);
     expect(finalize.name).toBe("finalize-clone");

@@ -64,7 +64,8 @@
     "@shepherdjerred/llm-observability": "workspace:*",
     "uplot": "^1.6.32",
     "@shepherdjerred/config": "workspace:*",
-    "@shepherdjerred/feature-flags": "workspace:*"
+    "@shepherdjerred/feature-flags": "workspace:*",
+    "@shepherdjerred/incidents": "workspace:*"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",

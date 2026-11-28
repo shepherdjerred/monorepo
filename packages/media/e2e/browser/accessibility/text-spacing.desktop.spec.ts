@@ -2,6 +2,8 @@ import { expect } from "@playwright/test";
 import { ROUTES } from "#e2e/browser/routes.ts";
 import { open, test } from "#e2e/browser/support.ts";
 
+test.describe.configure({ mode: "parallel" });
+
 /**
  * WCAG 1.4.12 text spacing: with the reader's own line height, letter, word
  * and paragraph spacing applied, no box cuts its text off. The override is a

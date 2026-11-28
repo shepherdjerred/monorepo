@@ -138,9 +138,20 @@ test("a running operator-run platform holder canceled and then settled releases 
     platformLock: null,
     active: null,
   });
-  // A platform deployment that waited on the lock now claims it.
+  // A platform deployment that waited on the lock now acquires it at step-apply.
   const { deployment: stack } = await requestStackDeployment(context);
   await context.delivery.claim(stack.id, testExecutor);
+  await context.delivery.stage(
+    stack.id,
+    {
+      key: "step-apply",
+      status: "running",
+      operationId: `delivery-${"5".repeat(40)}`,
+      message: "step-apply: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
   expect(
     await context.cluster.database.platformLock.findUniqueOrThrow({
       where: { id: "platform" },
@@ -201,6 +212,17 @@ test("the dispatch sweep releases ownership a settled deployment kept, audits an
   );
   const { deployment: stack } = await requestStackDeployment(context);
   await context.delivery.claim(stack.id, testExecutor);
+  await context.delivery.stage(
+    stack.id,
+    {
+      key: "step-apply",
+      status: "running",
+      operationId: `delivery-${"6".repeat(40)}`,
+      message: "step-apply: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
   const held = async () => {
     const [targetLocks, platformLock, environments] = await Promise.all([
       db.targetLock.findMany({

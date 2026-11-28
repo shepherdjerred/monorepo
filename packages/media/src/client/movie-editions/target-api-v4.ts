@@ -27,7 +27,7 @@ export function useMovieTargetV4(
 
 export function readMovieTargetV4(mediaId: string, edition: string) {
   return readApi(
-    `/media/${encodeURIComponent(mediaId)}/movie-editions/${encodeURIComponent(edition)}`,
+    `/media/${encodeURIComponent(mediaId)}/movie-editions/${encodeURIComponent(edition)}?discovery=1`,
     MovieTargetContextV4Schema.refine(
       (context) =>
         context.scope.mediaId === mediaId && context.scope.edition === edition,

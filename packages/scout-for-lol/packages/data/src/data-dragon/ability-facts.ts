@@ -19,6 +19,40 @@ import {
 export const AbilitySlotSchema = z.enum(["passive", "Q", "W", "E", "R"]);
 export type AbilitySlot = z.infer<typeof AbilitySlotSchema>;
 
+/**
+ * How a missile travels, from the CommunityDragon bin: its width, speed and
+ * whether it ends on the first unit it hits or passes through.
+ */
+export const MissileMechanicsSchema = z.object({
+  /** The missile spell's name in the bin, for example `AhriQMissile`. */
+  name: z.string().min(1),
+  width: z.number().nullable(),
+  /** The bin's movement type, for example `FixedSpeedMovement` or `AcceleratingMovement`. */
+  movement: z.string().nullable(),
+  /** Fixed speed, or the initial speed of an accelerating missile. */
+  speed: z.number().nullable(),
+  minSpeed: z.number().nullable(),
+  maxSpeed: z.number().nullable(),
+  tracksTarget: z.boolean(),
+  /** The bin's missile behaviors, for example `CastOnHit`, `DestroyOnHit`. */
+  behaviors: z.array(z.string()),
+  /** True when `DestroyOnHit` is among the behaviors: the missile ends at the first unit it hits. */
+  stopsOnFirstHit: z.boolean(),
+});
+
+/** Aiming and missile mechanics Data Dragon's tooltips omit. */
+export const AbilityMechanicsSchema = z.object({
+  /** The bin's targeting type: `Location`, `Direction`, `Target`, `Self`, ... */
+  targeting: z.string().nullable(),
+  castTime: z.number().nullable(),
+  /** Cast radius (the area of an area effect). */
+  radius: z.number().nullable(),
+  lineWidth: z.number().nullable(),
+  missileSpeed: z.number().nullable(),
+  missiles: z.array(MissileMechanicsSchema),
+});
+export type AbilityMechanics = z.infer<typeof AbilityMechanicsSchema>;
+
 export const AbilityFactsSchema = z.object({
   /** Display name of the ability (e.g. "Feast"). */
   name: z.string().min(1),
@@ -46,6 +80,8 @@ export const AbilityFactsSchema = z.object({
   resolvedDescription: z.string(),
   /** Placeholder tokens left unresolved in `resolvedDescription`. */
   unresolved: z.array(z.string()),
+  /** Aiming and missile mechanics from the CommunityDragon bin; absent when it states none. */
+  mechanics: AbilityMechanicsSchema.optional(),
 });
 export type AbilityFacts = z.infer<typeof AbilityFactsSchema>;
 

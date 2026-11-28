@@ -27,6 +27,7 @@ import {
   type CDragonGameCalculation,
   type CDragonSpellRecord,
 } from "./update-data-dragon-schemas.ts";
+import { buildAbilityMechanics } from "./ability-mechanics.ts";
 import {
   ChampionAbilityFactsSchema,
   type AbilityFacts,
@@ -856,7 +857,7 @@ function findSlotSpell(
   binSpells: BinSpells,
   spellName: string | undefined,
   ddragonSpellId: string,
-): CDragonSpellRecord | undefined {
+): { key: string; record: CDragonSpellRecord } | undefined {
   const prefix = `characters/${championKey.toLowerCase()}/spells/`;
   if (spellName !== undefined) {
     const candidate = spellName.toLowerCase().includes("characters/")
@@ -864,7 +865,7 @@ function findSlotSpell(
       : `${prefix}${spellName.toLowerCase()}`;
     const found = binSpells.byKey.get(candidate);
     if (found !== undefined) {
-      return found;
+      return { key: candidate, record: found };
     }
   }
   // Fall back to the Data Dragon spell id, accepted only when unambiguous.
@@ -874,7 +875,8 @@ function findSlotSpell(
     bySegment.length === 1 &&
     bySegment[0] !== undefined
   ) {
-    return binSpells.byKey.get(bySegment[0]);
+    const record = binSpells.byKey.get(bySegment[0]);
+    return record === undefined ? undefined : { key: bySegment[0], record };
   }
   return undefined;
 }
@@ -931,15 +933,18 @@ export function buildChampionAbilityFacts(input: {
   }
 
   const slotRecords: (CDragonSpellRecord | undefined)[] = [];
+  const slotKeys: (string | undefined)[] = [];
   for (const [index, ddragonSpell] of champion.spells.entries()) {
     const spellName = binSpells.characterRecord.spellNames?.[index];
-    const record = findSlotSpell(
+    const found = findSlotSpell(
       championKey,
       binSpells,
       spellName,
       ddragonSpell.id,
     );
+    const record = found?.record;
     slotRecords.push(record);
+    slotKeys.push(found?.key);
     if (record !== undefined) {
       const context = spellContextFrom(
         record,
@@ -993,6 +998,11 @@ export function buildChampionAbilityFacts(input: {
       }
     }
 
+    const slotKey = slotKeys[index];
+    const mechanics =
+      slotKey === undefined
+        ? undefined
+        : buildAbilityMechanics(binSpells.byKey, slotKey, cleanNumber);
     abilities[slot] = {
       name: ddragonSpell.name,
       maxRank: ddragonSpell.maxrank,
@@ -1006,6 +1016,7 @@ export function buildChampionAbilityFacts(input: {
         ...resolvedTooltip.unresolved,
         ...resolvedCostType.unresolved,
       ],
+      ...(mechanics === undefined ? {} : { mechanics }),
     };
   }
 
@@ -1031,6 +1042,14 @@ export function buildChampionAbilityFacts(input: {
       passiveDataValues[dataValue.name] = values.map(cleanNumber);
     }
   }
+  const passiveMechanics =
+    passiveKey === undefined
+      ? undefined
+      : buildAbilityMechanics(
+          binSpells.byKey,
+          passiveKey.toLowerCase(),
+          cleanNumber,
+        );
   abilities.passive = {
     name: champion.passive.name,
     maxRank: 1,
@@ -1041,6 +1060,7 @@ export function buildChampionAbilityFacts(input: {
     dataValues: passiveDataValues,
     resolvedDescription: resolvedPassive.text,
     unresolved: resolvedPassive.unresolved,
+    ...(passiveMechanics === undefined ? {} : { mechanics: passiveMechanics }),
   };
 
   const facts = ChampionAbilityFactsSchema.parse({

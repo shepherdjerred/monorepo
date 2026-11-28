@@ -43,6 +43,7 @@ import {
   createScoutPrematchStore,
   GAME_REF,
   scoutPrematchActivityStubs,
+  scoutPrematchBackgroundStubs,
 } from "./prematch.test-fixtures.ts";
 
 /**
@@ -328,8 +329,10 @@ test("a prematch poll records its retired gates and replays as the gated release
 }, 120_000);
 
 test("a prematch game records its retired gates and replays as the gated release", async () => {
+  const store = createScoutPrematchStore();
   await harness.startWorkers(
-    scoutPrematchActivityStubs(createScoutPrematchStore()),
+    scoutPrematchActivityStubs(store),
+    scoutPrematchBackgroundStubs(store),
   );
   const handle = await harness
     .client()

@@ -7,8 +7,8 @@ import {
   publicHostnames,
   tunnelCnameTarget,
 } from "homelab/src/platform-model.ts";
-import { synthesize } from "#scripts/synth.ts";
 import { TUNNEL } from "#src/stacks/cloudflare/records.ts";
+import { useSynthesizedApp } from "#src/testing.ts";
 
 const STACK_DIRECTORY = path.resolve(
   import.meta.dir,
@@ -38,12 +38,8 @@ const ConfigurationSchema = z.looseObject({
   output: z.record(z.string(), BlockSchema),
 });
 
-async function cloudflare() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("cloudflare") ?? ""),
-  );
-}
+const readStack = useSynthesizedApp();
+const cloudflare = () => readStack("cloudflare", ConfigurationSchema);
 
 const DOMAINS = Object.keys(domainRegistry.domains);
 /** `sjer.red` is `sjer_red`, the resource name of its zone. */
@@ -52,8 +48,8 @@ const zoneId = (domain: string) =>
   `\${cloudflare_zone.${zoneResource(domain)}.id}`;
 
 describe("cloudflare stack", () => {
-  test("keeps every resource address, provider constraint and plaintext state", async () => {
-    const { resource, terraform, provider, variable } = await cloudflare();
+  test("keeps every resource address, provider constraint and plaintext state", () => {
+    const { resource, terraform, provider, variable } = cloudflare();
     expect(
       Object.fromEntries(
         Object.entries(resource).map(([type, byName]) => [
@@ -128,7 +124,7 @@ describe("cloudflare stack", () => {
   });
 
   test("every managed zone has its registry entry's baseline, rendered at synthesis", async () => {
-    const { data, output, resource } = await cloudflare();
+    const { data, output, resource } = cloudflare();
     const records = resource["cloudflare_dns_record"] ?? {};
     for (const [domain, entry] of Object.entries(domainRegistry.domains)) {
       const zone = zoneResource(domain);
@@ -190,8 +186,8 @@ describe("cloudflare stack", () => {
     });
   });
 
-  test("static-asset caching follows the platform model's immutable prefixes", async () => {
-    const { resource } = await cloudflare();
+  test("static-asset caching follows the platform model's immutable prefixes", () => {
+    const { resource } = cloudflare();
     const model = immutablePathPrefixesByZone();
     // Zones whose sites have immutable prefixes and no cache rule yet.
     const uncached = new Set(["glitter-boys.com", "ts-mc.net"]);
@@ -230,8 +226,8 @@ describe("cloudflare stack", () => {
 });
 
 describe("cloudflare records and redirects", () => {
-  test("every public hostname of the platform model is a proxied tunnel CNAME", async () => {
-    const { resource } = await cloudflare();
+  test("every public hostname of the platform model is a proxied tunnel CNAME", () => {
+    const { resource } = cloudflare();
     const zones = Object.entries(resource["cloudflare_zone"] ?? {});
     const fqdns = Object.values(resource["cloudflare_dns_record"] ?? {})
       .filter(
@@ -270,8 +266,8 @@ describe("cloudflare records and redirects", () => {
     );
   });
 
-  test("a tunnel hostname is a proxied CNAME, and no record but the DMARC reports iterates", async () => {
-    const { resource } = await cloudflare();
+  test("a tunnel hostname is a proxied CNAME, and no record but the DMARC reports iterates", () => {
+    const { resource } = cloudflare();
     const records = resource["cloudflare_dns_record"];
     const tunnel = Object.entries(records ?? {}).filter(
       ([, record]) => record["content"] === TUNNEL,
@@ -319,8 +315,8 @@ describe("cloudflare records and redirects", () => {
     });
   });
 
-  test("an edge redirect is in place before the placeholder records that rely on it", async () => {
-    const { resource } = await cloudflare();
+  test("an edge redirect is in place before the placeholder records that rely on it", () => {
+    const { resource } = cloudflare();
     const records = resource["cloudflare_dns_record"];
     const rulesets = resource["cloudflare_ruleset"];
     expect(rulesets?.["clauderon_com_redirect"]).toEqual({
@@ -364,8 +360,8 @@ describe("cloudflare records and redirects", () => {
     });
   });
 
-  test("join.ts-mc.net is a tunnel hostname, not a redirect", async () => {
-    const { moved, resource } = await cloudflare();
+  test("join.ts-mc.net is a tunnel hostname, not a redirect", () => {
+    const { moved, resource } = cloudflare();
     const records = resource["cloudflare_dns_record"];
     expect(records?.["ts_mc_net_cname_join"]).toEqual({
       zone_id: zoneId("ts-mc.net"),
@@ -390,8 +386,8 @@ describe("cloudflare records and redirects", () => {
     });
   });
 
-  test("the bulk redirect ruleset keeps its rule ids and order and is never destroyed", async () => {
-    const { resource } = await cloudflare();
+  test("the bulk redirect ruleset keeps its rule ids and order and is never destroyed", () => {
+    const { resource } = cloudflare();
     expect(resource["cloudflare_ruleset"]?.["bulk_redirects"]).toEqual({
       account_id: "${var.cloudflare_account_id}",
       name: "default",
@@ -428,8 +424,8 @@ describe("cloudflare records and redirects", () => {
 });
 
 describe("cloudflare buckets, settings and widgets", () => {
-  test("an R2 bucket is never destroyed, keeps r2.dev off and only aborts abandoned uploads", async () => {
-    const { resource } = await cloudflare();
+  test("an R2 bucket is never destroyed, keeps r2.dev off and only aborts abandoned uploads", () => {
+    const { resource } = cloudflare();
     for (const [name, bucket, maxAge, ruleId] of [
       [
         "jerred_archives",
@@ -495,8 +491,8 @@ describe("cloudflare buckets, settings and widgets", () => {
     });
   });
 
-  test("zone settings and the Turnstile widget keep their values and sensitive outputs", async () => {
-    const { resource, output } = await cloudflare();
+  test("zone settings and the Turnstile widget keep their values and sensitive outputs", () => {
+    const { resource, output } = cloudflare();
     // The settings outside the shared baseline.
     expect(
       Object.fromEntries(

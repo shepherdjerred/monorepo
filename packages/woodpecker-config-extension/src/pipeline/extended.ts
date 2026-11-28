@@ -20,6 +20,7 @@ import {
   grantSccacheWebdav,
 } from "#src/pipeline/sccache-webdav.ts";
 import { GITHUB_DOWNLOAD, HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
+import { stormE2eSteps } from "#src/pipeline/lanes/storm-e2e.ts";
 import { requestedSourcePipeline } from "#src/pipeline/maintenance.ts";
 import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import {
@@ -33,7 +34,9 @@ import {
  * server, ffmpeg or a game server, or exceed a three-minute p50. They left
  * pull-request verification as a policy; a Temporal schedule runs them once a
  * night on the newest verified main commit through this manual lane, and the
- * workflow that dispatched the request reads the result.
+ * workflow that dispatched the request reads the result. The Paper smoke
+ * (`lanes/storm-e2e.ts`) is the second workflow of the same request: it also
+ * left pull requests, and the pipeline is green only when both pass.
  */
 
 /** Dispatcher-chosen identity of one request; echoed into the step's environment. */
@@ -120,6 +123,10 @@ export function extendedSupersededStep(image: string): CiStep {
  * release or publication identity. The group serializes nightly runs; the
  * caller routes it at the lowest admission priority so it never delays a main
  * push or a ready pull request.
+ *
+ * The Paper smoke is a separate workflow with its own services and
+ * concurrency group, so a game-server failure names itself in the receipt
+ * (`paper-smoke-nightly=failure`) without waiting on the 90-minute tier.
  */
 export function extendedSteps(
   images: CiImages,
@@ -153,7 +160,7 @@ export function extendedSteps(
     volumes: [BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE],
     concurrency: { limit: 1, group: EXTENDED_STEP_KEY },
   };
-  return grantSccacheWebdav(
+  const verify = grantSccacheWebdav(
     grantGradleBuildCache(
       signRemoteCacheSteps(
         [withSharedToolCaches(withSharedBunCache(step))],
@@ -163,4 +170,8 @@ export function extendedSteps(
     ),
     "trusted",
   );
+  const paper = stormE2eSteps(images).map((smoke) =>
+    withSharedToolCaches(withSharedBunCache({ ...smoke, dependsOn: [] })),
+  );
+  return [...verify, ...paper];
 }

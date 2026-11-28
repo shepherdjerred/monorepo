@@ -315,3 +315,18 @@ test("skill markdown references resolve to local resources", async () => {
     }
   }
 });
+
+test("pinchtab-helper skill documents env -u PINCHTAB_SESSION cleanup and exit-0 403 hazard (AI-740)", async () => {
+  const pinchtabSkill = await Bun.file(
+    path.join(skillsRoot, "pinchtab-helper/SKILL.md"),
+  ).text();
+  expect(pinchtabSkill).toContain(
+    "env -u PINCHTAB_SESSION pinchtab session list",
+  );
+  expect(pinchtabSkill).toContain(
+    "env -u PINCHTAB_SESSION pinchtab session revoke",
+  );
+  expect(pinchtabSkill).toContain("session_scope_forbidden");
+  expect(pinchtabSkill).toContain('.status == "active"');
+  expect(pinchtabSkill).toMatch(/never[^.\n]*`tail -1`/iu);
+});

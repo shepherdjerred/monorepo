@@ -79,10 +79,23 @@ WITH src AS (
 SELECT kind, patch, queue_id, bracket, role, champion_id, key1, key2, games, wins, kind_total
 FROM totalled
 WHERE kind IN ('matches', 'champion', 'ban', 'trait_base')
-  OR (kind IN ('matchup', 'matchup_spell') AND games >= ${matchup})
-  OR (kind NOT IN ('matches', 'champion', 'ban', 'trait_base', 'matchup', 'matchup_spell') AND games >= ${entry})
+  OR (kind IN ('matchup', 'matchup_spell', 'lane_matchup') AND games >= ${matchup})
+  OR (kind NOT IN ('matches', 'champion', 'ban', 'trait_base', 'matchup', 'matchup_spell', 'lane_matchup') AND games >= ${entry})
 ORDER BY kind, patch, queue_id, bracket, role, champion_id, key1, key2`;
 }
+
+const LaneDaySchema = z.object({ day: z.string() });
+
+/**
+ * The ingest days whose partials hold lane rows, read from the `ingest_day=`
+ * directory each file sits in. Days crawled before the crawl kept timeline
+ * checkpoints have none, so this is the real window of every lane figure.
+ */
+const LANE_DAYS_SQL = `
+SELECT DISTINCT CAST(ingest_day AS VARCHAR) AS day
+FROM read_parquet($1, hive_partitioning = true)
+WHERE kind = 'lane'
+ORDER BY day`;
 
 export type MetaRollupSummary = {
   written: boolean;
@@ -144,12 +157,16 @@ export async function rollUpMeta(input: {
     await rm(metaRoot, { recursive: true, force: true });
     return { written: false, days: 0, champions: 0, tierFiles: 0, slices: 0 };
   }
-  const rows = await withMaintenanceDuckDBConnection(
+  const { rows, laneDays } = await withMaintenanceDuckDBConnection(
     async (session) => {
       const raw = await session.run(rollupSql(thresholds), [
         session.list(files),
       ]);
-      return raw.map((row) => RollupRowSchema.parse(row));
+      const lane = await session.run(LANE_DAYS_SQL, [session.list(files)]);
+      return {
+        rows: raw.map((row) => RollupRowSchema.parse(row)),
+        laneDays: lane.map((row) => LaneDaySchema.parse(row).day),
+      };
     },
     {
       timeoutMs: ROLLUP_TIMEOUT_MS,
@@ -162,6 +179,7 @@ export async function rollUpMeta(input: {
   const serving = assembleMetaServing({
     rows,
     days,
+    laneDays,
     buildId: input.buildId,
     now: input.now,
     thresholds,

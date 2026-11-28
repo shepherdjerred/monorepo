@@ -81,45 +81,65 @@ test("board also supports desktop keyboard and mobile long-press touch", async (
       touchPoints: [point],
     });
     await expect(card).toHaveClass(/dragging/u);
+    const viewportWidth = page.viewportSize()?.width ?? 390;
+    // Stay well inside `.board`'s 5% horizontal autoscroll bands (`x <= 19.5`
+    // and `x >= 370.5` on 390px) whenever aiming at Todo, so aiming cannot
+    // trigger reverse right-edge autoscroll back over In progress before drop.
+    const safeMinX = 40;
+    const safeMaxX = viewportWidth - 40;
+    const touchY = origin.y + origin.height / 2;
+    const safeTodoRange = async () => {
+      const rect = await target.boundingBox();
+      if (rect === null) return null;
+      const left = Math.max(safeMinX, rect.x + 20);
+      const right = Math.min(safeMaxX, rect.x + rect.width - 20);
+      return right >= left ? { left, right, rect } : null;
+    };
+    const waitForBoardStill = async () => {
+      await page.locator(".board").evaluate(
+        (board) =>
+          new Promise<void>((resolve) => {
+            let last = board.scrollLeft;
+            let still = 0;
+            const frame = () => {
+              still = board.scrollLeft === last ? still + 1 : 0;
+              last = board.scrollLeft;
+              if (still === 2) resolve();
+              else requestAnimationFrame(frame);
+            };
+            requestAnimationFrame(frame);
+          }),
+      );
+    };
     await cdp.send("Input.dispatchTouchEvent", {
       type: "touchMove",
-      touchPoints: [{ x: 5, y: origin.y + origin.height / 2 }],
+      touchPoints: [{ x: 5, y: touchY }],
     });
     await expect
-      .poll(async () => {
-        const rect = await target.boundingBox();
-        return rect !== null && rect.x >= 0;
-      })
+      .poll(async () => (await safeTodoRange()) !== null, { intervals: [16] })
       .toBe(true);
     const touchTarget = async () => {
-      const destination = await target.boundingBox();
-      if (destination === null)
-        throw new Error("Touch destination is not visible");
+      const range = await safeTodoRange();
+      if (range === null) {
+        throw new Error("Touch destination is outside the safe viewport band");
+      }
       await cdp.send("Input.dispatchTouchEvent", {
         type: "touchMove",
         touchPoints: [
-          { x: destination.x + 140, y: Math.max(70, destination.y + 80) },
+          {
+            x: (range.left + range.right) / 2,
+            y: Math.max(80, range.rect.y + 80),
+          },
         ],
       });
     };
-    // Edge autoscroll keeps moving the board until the touch leaves the edge,
-    // so the first aim can land short. Re-aim once the board is still.
+    // Leave the autoscroll edge, let `.board` come to a full stop, then re-aim
+    // inside the clamped non-autoscroll band and wait two still frames before
+    // releasing so `over` stays on Todo through `touchEnd`.
     await touchTarget();
-    await page.locator(".board").evaluate(
-      (board) =>
-        new Promise<void>((resolve) => {
-          let last = board.scrollLeft;
-          let still = 0;
-          const frame = () => {
-            still = board.scrollLeft === last ? still + 1 : 0;
-            last = board.scrollLeft;
-            if (still === 2) resolve();
-            else requestAnimationFrame(frame);
-          };
-          requestAnimationFrame(frame);
-        }),
-    );
+    await waitForBoardStill();
     await touchTarget();
+    await waitForBoardStill();
     await expect(page.locator('[id^="DndLiveRegion"]')).toContainText(
       "over Todo",
     );

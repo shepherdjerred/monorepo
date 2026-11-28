@@ -51,6 +51,7 @@ export const V1_CATALOG_MIGRATION: CatalogMigration = {
     "gradle-build-cache/prod",
     "freshrss/prod",
     "phoenix/prod",
+    "bugsink/prod",
   ],
 };
 type Lifecycle = "active" | "retired" | "removed";

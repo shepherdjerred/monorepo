@@ -5,6 +5,8 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import {
   createEmptyTestDatabase,
   createTemplateTestDatabase,
+  dropOwnedTestDatabase,
+  dropOwnedTestDatabaseSync,
   ensureSharedPostgres,
   hostProcessProbe,
   listManagedDatabases,
@@ -235,5 +237,89 @@ describe("shared PostgreSQL template & empty database harness", () => {
         `SELECT 1 FROM pg_database WHERE datname = '${freshTemplate}'`,
       ),
     ).toBe("1");
+  });
+});
+
+describe("explicit drop ownership guard", () => {
+  test("refuses explicit force-drop on untagged or live-foreign-PID databases and drops once owner exits", async () => {
+    const sleeper = Bun.spawn(
+      [process.execPath, "-e", "setTimeout(() => {}, 120_000)"],
+      {
+        stdout: "ignore",
+        stderr: "ignore",
+      },
+    );
+    const sleeperStart = hostProcessProbe.startTime(sleeper.pid);
+    if (sleeperStart === undefined) {
+      sleeper.kill();
+      throw new Error("Could not read sleeper processStart");
+    }
+
+    const suffix = crypto.randomUUID().replaceAll("-", "").slice(0, 12);
+    const missingDb = `tracker_test_missing_${suffix}`;
+    const untaggedDb = `tracker_test_untagged_${suffix}`;
+    const foreignPidDb = `tracker_test_livepid_${suffix}`;
+
+    try {
+      // Absent database is a safe no-op
+      await expect(dropOwnedTestDatabase(missingDb)).resolves.toBeUndefined();
+      expect(() => {
+        dropOwnedTestDatabaseSync(missingDb);
+      }).not.toThrow();
+
+      psqlMaintenance(`CREATE DATABASE "${untaggedDb}"`);
+      psqlMaintenance(`CREATE DATABASE "${foreignPidDb}"`);
+      psqlMaintenance(
+        ownerCommentSql(foreignPidDb, {
+          host: hostProcessProbe.host,
+          pid: sleeper.pid,
+          processStart: sleeperStart,
+          createdAt: Date.now(),
+        }),
+      );
+
+      await expect(dropOwnedTestDatabase(untaggedDb)).rejects.toThrow(
+        `Refusing to drop test database ${untaggedDb}: database has no monorepo-test-owner record`,
+      );
+      expect(() => {
+        dropOwnedTestDatabaseSync(untaggedDb);
+      }).toThrow(
+        `Refusing to drop test database ${untaggedDb}: database has no monorepo-test-owner record`,
+      );
+      expect(
+        psqlMaintenance(
+          `SELECT 1 FROM pg_database WHERE datname = '${untaggedDb}'`,
+        ),
+      ).toBe("1");
+
+      await expect(dropOwnedTestDatabase(foreignPidDb)).rejects.toThrow(
+        `Refusing to drop test database ${foreignPidDb}: owned by another live process`,
+      );
+      expect(() => {
+        dropOwnedTestDatabaseSync(foreignPidDb);
+      }).toThrow(
+        `Refusing to drop test database ${foreignPidDb}: owned by another live process`,
+      );
+      expect(
+        psqlMaintenance(
+          `SELECT 1 FROM pg_database WHERE datname = '${foreignPidDb}'`,
+        ),
+      ).toBe("1");
+
+      sleeper.kill();
+      await sleeper.exited;
+
+      await dropOwnedTestDatabase(foreignPidDb);
+      expect(
+        psqlMaintenance(
+          `SELECT 1 FROM pg_database WHERE datname = '${foreignPidDb}'`,
+        ),
+      ).toBe("");
+    } finally {
+      sleeper.kill();
+      await sleeper.exited;
+      psqlMaintenance(`DROP DATABASE IF EXISTS "${untaggedDb}" WITH (FORCE)`);
+      psqlMaintenance(`DROP DATABASE IF EXISTS "${foreignPidDb}" WITH (FORCE)`);
+    }
   });
 });

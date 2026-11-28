@@ -450,6 +450,51 @@ describe("root script test inputs", () => {
   });
 });
 
+const HOMELAB_VITEST_ARGS = [
+  "scripts/argocd/argocd-delivery.test.ts",
+  "scripts/argocd/argocd-manifest-overrides.test.ts",
+  "scripts/argocd/argocd-ignored-differences.test.ts",
+  "scripts/scripts-typecheck.test.ts",
+  "scripts/helm/helm-release-core.test.ts",
+  "scripts/helm/helm-set-version.test.ts",
+  "scripts/helm/lint-helm.test.ts",
+  "scripts/migration-smoke.test.ts",
+  "scripts/zfs-nvme-lz4.test.ts",
+  "scripts/argocd/argocd-apply-safety.test.ts",
+  "scripts/argocd/argocd-comparison.test.ts",
+  "scripts/argocd/argocd-field-managers.test.ts",
+  "scripts/argocd/argocd-rendered-targets.test.ts",
+  "scripts/argocd/argocd-auto-sync-policy.test.ts",
+  "scripts/argocd/argocd-child-sync-timeout.test.ts",
+  "scripts/argocd/argocd-release-result.test.ts",
+  "scripts/argocd/argocd-verified-receipt.test.ts",
+  "scripts/tofu/tofu-stack.test.ts",
+  "scripts/tofu/asuswrt-provider.test.ts",
+  "scripts/tofu/tofu-external-files.test.ts",
+  "scripts/tofu/delivery-stack.test.ts",
+  "scripts/helm/helm-delivery-publication.test.ts",
+  "scripts/ci/bootstrap-selection.test.ts",
+  "scripts/ci/bootstrap-maintenance.test.ts",
+  "scripts/ci/bootstrap-control-plane.test.ts",
+  "scripts/ci/delivery-handover.test.ts",
+  "scripts/ci/delivery-handover-root.test.ts",
+  "scripts/tofu/credential-handoff.test.ts",
+  "scripts/tofu/adopt-application-secrets.test.ts",
+  "src/talos/catalog-pins.test.ts",
+  "src/talos/machine-config.test.ts",
+  "src/talos/promotion-sandbox.test.ts",
+  "scripts/homelab-build-inputs.test.ts",
+  "scripts/minecraft/capture-resources.test.ts",
+  "scripts/tofu/application-secrets.integration.test.ts",
+  "scripts/network-policy/policies.test.ts",
+  "scripts/network-policy/break-glass.test.ts",
+  "scripts/network-policy/namespace-urls.test.ts",
+  "scripts/network-policy/namespace-checks.test.ts",
+  "scripts/network-policy/check-namespace.test.ts",
+  "scripts/network-policy/open-namespace.test.ts",
+  "scripts/network-policy/restart-plan.test.ts",
+] as const;
+
 describe("CI reporting manifest", () => {
   test("covers every declared test script without placeholder passes", async () => {
     const manifest = await loadTestManifest(repositoryRoot);
@@ -514,48 +559,7 @@ describe("CI reporting manifest", () => {
     expect(homelab?.steps).toEqual([
       {
         runner: "vitest",
-        args: [
-          "scripts/argocd/argocd-delivery.test.ts",
-          "scripts/argocd/argocd-manifest-overrides.test.ts",
-          "scripts/argocd/argocd-ignored-differences.test.ts",
-          "scripts/scripts-typecheck.test.ts",
-          "scripts/helm/helm-release-core.test.ts",
-          "scripts/helm/helm-set-version.test.ts",
-          "scripts/helm/lint-helm.test.ts",
-          "scripts/migration-smoke.test.ts",
-          "scripts/zfs-nvme-lz4.test.ts",
-          "scripts/argocd/argocd-apply-safety.test.ts",
-          "scripts/argocd/argocd-rendered-targets.test.ts",
-          "scripts/argocd/argocd-auto-sync-policy.test.ts",
-          "scripts/argocd/argocd-child-sync-timeout.test.ts",
-          "scripts/argocd/argocd-release-result.test.ts",
-          "scripts/argocd/argocd-verified-receipt.test.ts",
-          "scripts/tofu/tofu-stack.test.ts",
-          "scripts/tofu/asuswrt-provider.test.ts",
-          "scripts/tofu/tofu-external-files.test.ts",
-          "scripts/tofu/delivery-stack.test.ts",
-          "scripts/helm/helm-delivery-publication.test.ts",
-          "scripts/ci/bootstrap-selection.test.ts",
-          "scripts/ci/bootstrap-maintenance.test.ts",
-          "scripts/ci/bootstrap-control-plane.test.ts",
-          "scripts/ci/delivery-handover.test.ts",
-          "scripts/ci/delivery-handover-root.test.ts",
-          "scripts/tofu/credential-handoff.test.ts",
-          "scripts/tofu/adopt-application-secrets.test.ts",
-          "src/talos/catalog-pins.test.ts",
-          "src/talos/machine-config.test.ts",
-          "src/talos/promotion-sandbox.test.ts",
-          "scripts/homelab-build-inputs.test.ts",
-          "scripts/minecraft/capture-resources.test.ts",
-          "scripts/tofu/application-secrets.integration.test.ts",
-          "scripts/network-policy/policies.test.ts",
-          "scripts/network-policy/break-glass.test.ts",
-          "scripts/network-policy/namespace-urls.test.ts",
-          "scripts/network-policy/namespace-checks.test.ts",
-          "scripts/network-policy/check-namespace.test.ts",
-          "scripts/network-policy/open-namespace.test.ts",
-          "scripts/network-policy/restart-plan.test.ts",
-        ],
+        args: [...HOMELAB_VITEST_ARGS],
       },
     ]);
     // The Temporal SDK workflow suites start the time-skipping test server, so
@@ -567,12 +571,7 @@ describe("CI reporting manifest", () => {
       runtime: "node",
       runtimeReason:
         "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
-      args: [
-        "src/workflows",
-        "--exclude",
-        "src/workflows/agent-task.test.ts",
-        "--no-file-parallelism",
-      ],
+      args: ["src/workflows", "--no-file-parallelism"],
     });
     expect(scoutTemporal?.steps.at(-1)).toEqual({
       runner: "vitest",
@@ -794,6 +793,28 @@ describe("test:ci runner inputs", () => {
             inputs.includes("ci-tests.json"),
           `${directory}#${task} must hash its own ci-tests.json`,
         ).toBe(true);
+      }
+    }
+  });
+
+  test("workspace test, typecheck, and lint scripts rely on Turbo task edges instead of chaining bun run build", async () => {
+    const rootPackage = RootPackageSchema.parse(
+      await Bun.file(path.join(repositoryRoot, "package.json")).json(),
+    );
+    const chainedBuildPattern = /(?:^|[;&|]\s*)bun\s+run\s+build\s*&&/u;
+    for (const directory of rootPackage.workspaces) {
+      const packageJson = WorkspacePackageSchema.parse(
+        await Bun.file(
+          path.join(repositoryRoot, directory, "package.json"),
+        ).json(),
+      );
+      for (const task of ["test", "test:ci", "typecheck", "lint"]) {
+        const command = packageJson.scripts?.[task];
+        if (command === undefined) continue;
+        expect(
+          chainedBuildPattern.test(command),
+          `${directory}#${task} must declare dependsOn: ["$TURBO_EXTENDS$", "build"] in turbo.json instead of racing concurrent builds via "${command}"`,
+        ).toBe(false);
       }
     }
   });

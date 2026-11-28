@@ -146,6 +146,9 @@ async function fixture() {
     repair: async () => {
       events.push("repair");
     },
+    inspectPrior: async () => {
+      throw new Error("Prior Forum inspection must not run for a static site");
+    },
     inspect: async () => {
       events.push("independent-readback");
       if (badReadback) throw new Error("actual public bytes differ");

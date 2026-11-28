@@ -82,7 +82,15 @@ import type {
   ContentBarrierRestoration,
 } from "./contract.ts";
 import { modelRoutes } from "./model/routes-client.ts";
-import { DeploymentDetailV2Schema } from "./model/route-contract.ts";
+import {
+  ApprovalQueueItemSchema,
+  DeploymentDetailV2Schema,
+} from "./model/route-contract.ts";
+import {
+  DeploymentListQuerySchema,
+  DeploymentPageSchema,
+  type DeploymentListQuery,
+} from "./hub/hub-contract.ts";
 
 export function createDeliveryClient(options: RequestOptions) {
   const request = createRequester(options);
@@ -92,6 +100,12 @@ export function createDeliveryClient(options: RequestOptions) {
     ...modelRoutes(request),
     identity: () => request("/identity", PrincipalSchema),
     overview: () => request("/overview", OverviewSchema),
+    approvals: () => request("/approvals", z.array(ApprovalQueueItemSchema)),
+    deployments: (input: DeploymentListQuery = {}) =>
+      request(
+        `/deployments${query(DeploymentListQuerySchema.parse(input))}`,
+        DeploymentPageSchema,
+      ),
     latestQualifiedArtifact: (input: LatestQualifiedArtifactQuery) =>
       request(
         `/artifacts/latest-qualified?${new URLSearchParams(LatestQualifiedArtifactQuerySchema.parse(input)).toString()}`,

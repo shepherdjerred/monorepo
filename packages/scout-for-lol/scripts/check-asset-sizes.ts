@@ -1,5 +1,10 @@
 #!/usr/bin/env bun
 
+import {
+  SNAPSHOT_V2_BUDGET,
+  SNAPSHOT_V2_DIRECTORY,
+} from "@scout-for-lol/data/meta/snapshot-v2-budget.ts";
+
 type AssetCheck = {
   label: string;
   maxBytes: number;
@@ -17,6 +22,7 @@ type AssetViolation = {
 
 const BYTES_PER_MIB = 1024 * 1024;
 const scoutRoot = `${import.meta.dir}/..`;
+const snapshot = `packages/frontend/${SNAPSHOT_V2_DIRECTORY}`;
 
 const checks: readonly AssetCheck[] = [
   {
@@ -44,6 +50,25 @@ const checks: readonly AssetCheck[] = [
     maxBytes: 8 * 1024,
     totalMaxBytes: 3 * BYTES_PER_MIB,
     patterns: ["packages/data/src/data-dragon/assets/facts/**/*.json"],
+  },
+  // The champion meta snapshot v2: one file per page's data, so each stays
+  // small whatever the total (see snapshot-v2-budget.ts).
+  {
+    label: "Champion meta snapshot index",
+    maxBytes: SNAPSHOT_V2_BUDGET.index.maxBytes,
+    patterns: [`${snapshot}/index.json`],
+  },
+  {
+    label: "Champion meta snapshot champion file",
+    maxBytes: SNAPSHOT_V2_BUDGET.champion.maxBytes,
+    totalMaxBytes: SNAPSHOT_V2_BUDGET.champion.totalMaxBytes,
+    patterns: [`${snapshot}/champions/*.json`],
+  },
+  {
+    label: "Champion meta snapshot matchup file",
+    maxBytes: SNAPSHOT_V2_BUDGET.matchup.maxBytes,
+    totalMaxBytes: SNAPSHOT_V2_BUDGET.matchup.totalMaxBytes,
+    patterns: [`${snapshot}/matchups/**/*.json`],
   },
   {
     label: "Scout top-level image asset",

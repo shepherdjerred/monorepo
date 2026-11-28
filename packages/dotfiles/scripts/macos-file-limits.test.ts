@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
 import { chmod, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -12,14 +12,15 @@ const installerSource = path.resolve(
   import.meta.dir,
   "../macos-file-limits/install.sh",
 );
+const plistSource = path.resolve(
+  import.meta.dir,
+  "../macos-file-limits/com.jerred.maxfiles.plist",
+);
 
-afterEach(async () => {
-  await Promise.all(
-    temporaryDirectories
-      .splice(0)
-      .map((directory) => rm(directory, { recursive: true, force: true })),
-  );
-});
+let sharedMockBinDir = "";
+let helperTemplate = "";
+let installerTemplate = "";
+let plistTemplate = "";
 
 const mockLaunchctl = String.raw`#!/bin/bash
 set -eu
@@ -55,6 +56,108 @@ if [[ "$MAXFILES_TEST_MODE" != restore-noop ]]; then
 fi
 `;
 
+const mockInstallerLaunchctl = String.raw`#!/bin/bash
+set -eu
+printf '%s\n' "$*" >> "$MAXFILES_TEST_DIR/calls"
+case "$1" in
+    print)
+        [[ -f "$MAXFILES_TEST_DIR/loaded" ]] || exit 1
+        count="$(cat "$MAXFILES_TEST_DIR/polls")"
+        count=$((count + 1))
+        printf '%s\n' "$count" > "$MAXFILES_TEST_DIR/polls"
+        if ((count == 1)) || [[ "$MAXFILES_TEST_MODE" == pending ]]; then
+            printf 'state = running\nlast exit code = (never exited)\n'
+        else
+            printf 'state = not running\nlast exit code = %s\n' "$MAXFILES_TEST_MODE"
+        fi
+        ;;
+    bootstrap)
+        touch "$MAXFILES_TEST_DIR/loaded"
+        printf '0\n' > "$MAXFILES_TEST_DIR/polls"
+        ;;
+    limit) printf 'maxfiles 8192 unlimited\n' ;;
+    *) exit 1 ;;
+esac
+`;
+
+const mockInstall = `#!/bin/bash
+set -eu
+directory=0
+while [[ "$1" == -* ]]; do
+    case "$1" in
+        -d) directory=1; shift ;;
+        -m|-o|-g) shift 2 ;;
+        *) exit 1 ;;
+    esac
+done
+if ((directory)); then
+    /bin/mkdir -p "$1"
+else
+    /bin/cp "$1" "$2"
+fi
+`;
+
+const mockPlutil = String.raw`#!/bin/bash
+set -eu
+[[ $# -eq 2 && "$1" == -lint && -f "$2" ]]
+printf 'plutil %s\n' "$*" >> "$MAXFILES_TEST_DIR/calls"
+exit "$MAXFILES_TEST_PLUTIL_EXIT_CODE"
+`;
+
+const mockStat = String.raw`#!/bin/bash
+if [[ "$3" == *.plist ]]; then
+    printf '0:0:644\n'
+else
+    printf '0:0:755\n'
+fi
+`;
+
+// Build all static mock binaries once per suite so macOS syspolicyd/XProtect
+// does not scan ~115 newly created executables across per-test temp dirs.
+beforeAll(async () => {
+  [sharedMockBinDir, helperTemplate, installerTemplate, plistTemplate] =
+    await Promise.all([
+      mkdtemp(path.join(tmpdir(), "maxfiles-mock-bin-")),
+      Bun.file(helperSource).text(),
+      Bun.file(installerSource).text(),
+      Bun.file(plistSource).text(),
+    ]);
+
+  const staticExecutables: Readonly<Record<string, string>> = {
+    "helper-launchctl": mockLaunchctl,
+    "installer-launchctl": mockInstallerLaunchctl,
+    sysctl: mockSysctl,
+    install: mockInstall,
+    plutil: mockPlutil,
+    stat: mockStat,
+    uname: "#!/bin/bash\nprintf 'Darwin\\n'\n",
+    id: "#!/bin/bash\nprintf '%s\\n' \"${MAXFILES_TEST_UID:-0}\"\n",
+    sleep: "#!/bin/bash\nexit 0\n",
+  };
+
+  await Promise.all(
+    Object.entries(staticExecutables).map(async ([name, contents]) => {
+      const destination = path.join(sharedMockBinDir, name);
+      await Bun.write(destination, contents);
+      await chmod(destination, 0o700);
+    }),
+  );
+});
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories
+      .splice(0)
+      .map((directory) => rm(directory, { recursive: true, force: true })),
+  );
+});
+
+afterAll(async () => {
+  if (sharedMockBinDir !== "") {
+    await rm(sharedMockBinDir, { recursive: true, force: true });
+  }
+});
+
 type Scenario = {
   limits?: string;
   kernelMaximum?: string;
@@ -63,51 +166,50 @@ type Scenario = {
   uid?: string;
 };
 
-async function writeFixtures(
+async function writeDataFiles(
   directory: string,
-  fixtures: Readonly<Record<string, string>>,
+  files: Readonly<Record<string, string>>,
 ) {
   await Promise.all(
-    Object.entries(fixtures).map(async ([name, contents]) => {
-      const destination = path.join(directory, name);
-      await Bun.write(destination, contents);
-      await chmod(destination, 0o700);
-    }),
+    Object.entries(files).map(([name, contents]) =>
+      Bun.write(path.join(directory, name), contents),
+    ),
   );
 }
 
 async function runHelper(scenario: Scenario = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), "maxfiles-test-"));
   temporaryDirectories.push(directory);
-  const fixtures = {
-    limits: scenario.limits ?? "maxfiles 256 unlimited\n",
-    "kern.maxfiles": scenario.kernelMaximum ?? "491520\n",
-    "kern.maxfilesperproc": scenario.kernelPerProcess ?? "245760\n",
-    calls: "",
-    launchctl: mockLaunchctl,
-    sysctl: mockSysctl,
-    uname: "#!/bin/bash\nprintf 'Darwin\\n'\n",
-    id: `#!/bin/bash\nprintf '%s\\n' '${scenario.uid ?? "0"}'\n`,
-  };
-  await writeFixtures(directory, fixtures);
 
-  // The test copy redirects every OS command; production uses fixed system paths.
-  let source = await Bun.file(helperSource).text();
+  // The test copy redirects every OS command to static mocks; state stays per-test.
+  let source = helperTemplate;
   for (const [systemPath, mockName] of Object.entries({
-    "/bin/launchctl": "launchctl",
+    "/bin/launchctl": "helper-launchctl",
     "/usr/sbin/sysctl": "sysctl",
     "/usr/bin/uname": "uname",
     "/usr/bin/id": "id",
   })) {
-    source = source.replaceAll(systemPath, path.join(directory, mockName));
+    source = source.replaceAll(
+      systemPath,
+      path.join(sharedMockBinDir, mockName),
+    );
   }
+
+  await writeDataFiles(directory, {
+    limits: scenario.limits ?? "maxfiles 256 unlimited\n",
+    "kern.maxfiles": scenario.kernelMaximum ?? "491520\n",
+    "kern.maxfilesperproc": scenario.kernelPerProcess ?? "245760\n",
+    calls: "",
+    "apply.sh": source,
+  });
+
   const helper = path.join(directory, "apply.sh");
-  await Bun.write(helper, source);
   const result = Bun.spawnSync(["/bin/bash", helper], {
     env: {
       ...Bun.env,
       MAXFILES_TEST_DIR: directory,
       MAXFILES_TEST_MODE: scenario.mode ?? "success",
+      MAXFILES_TEST_UID: scenario.uid ?? "0",
     },
     stdout: "pipe",
     stderr: "pipe",
@@ -235,102 +337,49 @@ test("requires admin access before issuing any system commands that change limit
   expect(result.calls).toBe("");
 });
 
-const mockInstallerLaunchctl = String.raw`#!/bin/bash
-set -eu
-printf '%s\n' "$*" >> "$MAXFILES_TEST_DIR/calls"
-case "$1" in
-    print)
-        [[ -f "$MAXFILES_TEST_DIR/loaded" ]] || exit 1
-        count="$(cat "$MAXFILES_TEST_DIR/polls")"
-        count=$((count + 1))
-        printf '%s\n' "$count" > "$MAXFILES_TEST_DIR/polls"
-        if ((count == 1)) || [[ "$MAXFILES_TEST_MODE" == pending ]]; then
-            printf 'state = running\nlast exit code = (never exited)\n'
-        else
-            printf 'state = not running\nlast exit code = %s\n' "$MAXFILES_TEST_MODE"
-        fi
-        ;;
-    bootstrap)
-        touch "$MAXFILES_TEST_DIR/loaded"
-        printf '0\n' > "$MAXFILES_TEST_DIR/polls"
-        ;;
-    limit) printf 'maxfiles 8192 unlimited\n' ;;
-    *) exit 1 ;;
-esac
-`;
-
-const mockInstall = `#!/bin/bash
-set -eu
-directory=0
-while [[ "$1" == -* ]]; do
-    case "$1" in
-        -d) directory=1; shift ;;
-        -m|-o|-g) shift 2 ;;
-        *) exit 1 ;;
-    esac
-done
-if ((directory)); then
-    /bin/mkdir -p "$1"
-else
-    /bin/cp "$1" "$2"
-fi
-`;
-
 async function runInstaller(exitCode = "0", validationExitCode = "0") {
   const directory = await mkdtemp(
     path.join(tmpdir(), "maxfiles-installer-test-"),
   );
   temporaryDirectories.push(directory);
-  const fixtures = {
-    calls: "",
-    launchctl: mockInstallerLaunchctl,
-    install: mockInstall,
-    plutil: String.raw`#!/bin/bash
-set -eu
-[[ $# -eq 2 && "$1" == -lint && -f "$2" ]]
-printf 'plutil %s\n' "$*" >> "$MAXFILES_TEST_DIR/calls"
-exit "$MAXFILES_TEST_PLUTIL_EXIT_CODE"
-`,
-    stat: String.raw`#!/bin/bash
-if [[ "$3" == *.plist ]]; then
-    printf '0:0:644\n'
-else
-    printf '0:0:755\n'
-fi
-`,
-    uname: "#!/bin/bash\nprintf 'Darwin\\n'\n",
-    id: "#!/bin/bash\nprintf '0\\n'\n",
-    sleep: "#!/bin/bash\nexit 0\n",
-    "apply.sh": await Bun.file(helperSource).text(),
-    "com.jerred.maxfiles.plist": await Bun.file(
-      path.resolve(path.dirname(helperSource), "com.jerred.maxfiles.plist"),
-    ).text(),
-  };
-  await writeFixtures(directory, fixtures);
 
-  // All privileged actions are redirected to fixtures inside this temporary directory.
-  let source = await Bun.file(installerSource).text();
-  for (const [systemPath, fixturePath] of Object.entries({
-    "/bin/launchctl": "launchctl",
+  let source = installerTemplate;
+  for (const [systemPath, mockName] of Object.entries({
+    "/bin/launchctl": "installer-launchctl",
     "/usr/bin/install": "install",
     "/usr/bin/stat": "stat",
     "/usr/bin/plutil": "plutil",
     "/usr/bin/uname": "uname",
     "/usr/bin/id": "id",
     "/bin/sleep": "sleep",
+  })) {
+    source = source.replaceAll(
+      systemPath,
+      path.join(sharedMockBinDir, mockName),
+    );
+  }
+  for (const [systemPath, fixturePath] of Object.entries({
     "/usr/local": "usr/local",
     "/Library/LaunchDaemons": "Library/LaunchDaemons",
   })) {
     source = source.replaceAll(systemPath, path.join(directory, fixturePath));
   }
+
+  await writeDataFiles(directory, {
+    calls: "",
+    "apply.sh": helperTemplate,
+    "com.jerred.maxfiles.plist": plistTemplate,
+    "install.sh": source,
+  });
+
   const installer = path.join(directory, "install.sh");
-  await Bun.write(installer, source);
   const result = Bun.spawnSync(["/bin/bash", installer], {
     env: {
       ...Bun.env,
       MAXFILES_TEST_DIR: directory,
       MAXFILES_TEST_MODE: exitCode,
       MAXFILES_TEST_PLUTIL_EXIT_CODE: validationExitCode,
+      MAXFILES_TEST_UID: "0",
     },
     stdout: "pipe",
     stderr: "pipe",
@@ -343,23 +392,32 @@ fi
   };
 }
 
-test("waits for the boot helper's first exit before reporting installation success", async () => {
-  const result = await runInstaller();
-  expect(result.exitCode).toBe(0);
-  expect(result.stdout).toContain("Installed and loaded: launchd soft=8192");
-  expect(result.calls).toContain("plutil -lint ");
-});
+test(
+  "waits for the boot helper's first exit before reporting installation success",
+  { timeout: 15_000 },
+  async () => {
+    const result = await runInstaller();
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("Installed and loaded: launchd soft=8192");
+    expect(result.calls).toContain("plutil -lint ");
+  },
+);
 
-test("stops before loading the boot helper when plist validation fails", async () => {
-  const result = await runInstaller("0", "1");
-  expect(result.exitCode).toBe(1);
-  expect(result.calls).toContain("plutil -lint ");
-  expect(result.calls).not.toContain("bootstrap");
-  expect(result.stdout).not.toContain("Installed and loaded");
-});
+test(
+  "stops before loading the boot helper when plist validation fails",
+  { timeout: 15_000 },
+  async () => {
+    const result = await runInstaller("0", "1");
+    expect(result.exitCode).toBe(1);
+    expect(result.calls).toContain("plutil -lint ");
+    expect(result.calls).not.toContain("bootstrap");
+    expect(result.stdout).not.toContain("Installed and loaded");
+  },
+);
 
 test.each(["1", "78: EX_CONFIG"])(
   "reports a completed boot helper failure with exit status %s",
+  { timeout: 15_000 },
   async (exitCode) => {
     const result = await runInstaller(exitCode);
     expect(result.exitCode).toBe(1);
@@ -368,10 +426,14 @@ test.each(["1", "78: EX_CONFIG"])(
   },
 );
 
-test("times out when the boot helper never exits", async () => {
-  const result = await runInstaller("pending");
-  expect(result.exitCode).toBe(1);
-  expect(result.stderr).toContain(
-    "boot helper did not finish within 15 seconds",
-  );
-});
+test(
+  "times out when the boot helper never exits",
+  { timeout: 15_000 },
+  async () => {
+    const result = await runInstaller("pending");
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain(
+      "boot helper did not finish within 15 seconds",
+    );
+  },
+);

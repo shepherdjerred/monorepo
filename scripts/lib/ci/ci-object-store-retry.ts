@@ -1,6 +1,6 @@
 import { isTransientError } from "../transient.ts";
 
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = 5;
 
 export class CiObjectStoreHttpError extends Error {
   constructor(

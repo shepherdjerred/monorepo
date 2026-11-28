@@ -50,7 +50,6 @@ import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-c
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/s3-static-sites.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
-import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/bugsink.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tasknotes.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
 import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/service-probes.ts";
@@ -83,6 +82,8 @@ import { createErrorsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 import { createChartsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/charts.ts";
 
 import { createCiCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/ci-cache.ts";
+
+import { createArtifactsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/artifacts.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -159,7 +160,6 @@ export async function createAppsChart(app: App) {
     createDeliveryDataApp(chart);
     createTemporalDataApp(chart);
   }
-  createBugsinkApp(chart);
   createTasknotesApp(chart);
   createTemporalApp(chart);
   if (deliveryExecutorActivation() !== undefined)
@@ -184,6 +184,8 @@ export async function createAppsChart(app: App) {
   createChartsApp(chart);
 
   createCiCacheApp(chart);
+
+  createArtifactsApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

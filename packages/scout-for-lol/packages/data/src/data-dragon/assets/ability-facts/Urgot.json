@@ -94,7 +94,58 @@
         ]
       },
       "resolvedDescription": "Urgot fires an explosive charge, dealing 25/70/115/160/205 (+70% AD) physical damage and Slowing by 45/50/55/60/65% for 1.25 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "urgotqmissile",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "urgotqmissileextraskin03",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "urgotqmissileskin03",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Purge",
@@ -187,7 +238,72 @@
         ]
       },
       "resolvedDescription": "Passive: Urgot's other Abilities mark the last champion hit for 5 seconds. Active: Urgot begins firing his chain gun at the closest enemy, prioritizing marked enemies. He Attacks them 3 times a second dealing 12 (+20/23.5/27/30.5/34% AD) physical damage per shot. Urgot can move while firing and has 40% Slow resistance, but loses 125 Move Speed. At max rank, this Ability lasts indefinitely and can be Toggled on and off.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 325,
+        "lineWidth": 40,
+        "missileSpeed": 1600,
+        "missiles": [
+          {
+            "name": "urgotwmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "urgotwmissile2skin03",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "urgotwmissileextra",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "urgotwmissileextra2skin03",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Disdain",
@@ -287,7 +403,15 @@
         ]
       },
       "resolvedDescription": "Urgot charges forward, gaining 55/75/95/115/135 (+135% bonus AD) (+13.5% bonus Health) Shield for 4 seconds. The first champion hit is Stunned for 1.5 seconds and thrown behind Urgot. All enemies Urgot collides with take 90/120/150/180/210 (+100% bonus AD) physical damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.45,
+        "radius": 300,
+        "lineWidth": 100,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Fear Beyond Death",
@@ -356,7 +480,15 @@
         ]
       },
       "resolvedDescription": "Urgot fires a chem-drill, impaling the first champion hit, dealing 100/225/350 (+50% bonus AD) physical damage and Slowing for 4 seconds by 1% per 1% missing Health, up to 75%. If the impaled victim falls below 25% Health, Urgot can Recast this Ability, Suppressing the victim and dragging them to himself. On reaching Urgot, they are killed and nearby enemies are Feared for 1.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.5,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 3200,
+        "missiles": []
+      }
     }
   }
 }

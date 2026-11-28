@@ -75,10 +75,152 @@ names the whole value.
 value schema). Invalid live data is reported and never fails the request, so a
 value stored before validation existed stays visible until an operator fixes it.
 
+Three read-only management routes serve the [audit trail](#audit). They are
+separate from the document, snapshot and evaluate routes, whose shapes runtime
+consumers parse strictly and which these routes leave unchanged. They are not
+mounted on the evaluation listener. Their response schemas are
+`FlagsHistoryResponseSchema`, `FlagsMetadataResponseSchema` and
+`FlagsArchiveResponseSchema` in `@shepherdjerred/feature-flags/flags-wire.ts`,
+which imports only Zod, so the browser UI can parse them too.
+
+- `GET /v1/deployments/:catalog/:stage/flags/:key/history?before=<id>&limit=<1-100>`
+  returns `{ entries, nextBefore, auditStartedAt }`. `entries` are newest
+  first, each `{ id, at, action, actor: { kind, id }, revisionAfter, before,
+after }`. `before` and `after` are the stored bodies as written and are not
+  re-validated, because an old body may not match today's schema. Pass
+  `nextBefore` as `before` for the next page; it is `null` on the last page.
+  `limit` defaults to 50. History is kept for retired keys, so it works for a
+  key that is no longer live.
+- `GET /v1/deployments/:catalog/:stage/metadata` returns `{ deployment,
+auditStartedAt, flags }` with one entry for each live key: the inventory's
+  `purpose`, `owner`, `namespace` and `source` when the key is in the inventory,
+  `declared` (whether this deployment's inventory projection declares it),
+  `createdAt` with its `createdAtBasis`, and `lastChangedAt` / `lastChangedBy`
+  from the latest audit row (`null` when nothing was recorded). The
+  `createdAtBasis` values are:
+  - `recorded`: the latest `create` row, so a re-created key shows its new
+    time.
+  - `first-declared`: the [legacy date](#legacy-added-dates).
+  - `on-or-before`: a legacy date for a key that was already in the
+    inventory's first commit.
+  - `unknown`: there is no date (`createdAt: null`).
+- `GET /v1/archive` returns `{ deployments: [{ id, flags: [{ key, retiredAt,
+retiredBy, final, revision, basis }] }] }`. `recorded` entries are keys whose
+  latest audit row is a `retire` and that are not live. `final` is the body
+  that was deleted, and `revision` is the document revision the retire
+  produced. `declared-retired` entries are keys that `retired-flag-declarations.ts`
+  retires from a stored deployment, that are not live, and that have no retire
+  row: they were deleted before the audit trail, so `retiredAt`, `retiredBy`,
+  `final` and `revision` are `null`.
+
+`GET /v1/usage` is a management route (same auth, not on the evaluation
+listener) that says where each flag is read and whether consumers are reading
+their deployments. Its schema is `FlagsUsageResponseSchema` in
+`@shepherdjerred/feature-flags/flags-wire.ts`:
+
+```json
+{
+  "since": "2026-11-26T10:00:00.000Z",
+  "deployments": [
+    {
+      "id": "delivery/prod",
+      "lastFetchedAt": "2026-11-26T11:55:00.000Z",
+      "fetches200": 2,
+      "fetches304": 40
+    }
+  ],
+  "evaluations": [
+    {
+      "deployment": "minecraft/tsmc",
+      "key": "the-storm-crier-enabled",
+      "lastEvaluatedAt": "2026-11-26T11:00:00.000Z",
+      "count": 3
+    }
+  ],
+  "static": { "version": 1, "flags": { "…": [] }, "unreferenced": [] }
+}
+```
+
+- `deployments` lists every stored deployment. `lastFetchedAt` is the latest
+  snapshot read on the evaluation listener, counted as `fetches200` (a full
+  body) or `fetches304` (`If-None-Match` matched; most polls). `null` means no
+  consumer fetched it since `since`. Snapshot reads on the primary port are
+  tooling (`check-flag-inventory`, operators), so they are not counted.
+- `evaluations` has one entry per deployment and key answered by
+  `POST /v1/evaluate` on the evaluation listener (the Java Storm client). Only a
+  stored deployment's live key is recorded, and the tracker is capped, so
+  unauthenticated requests cannot grow it.
+- Liveness is in memory: `since` is when the process started, and every
+  Recreate release or restart resets the counters. "No consumer fetch since"
+  after a fresh start means only that none has fetched yet.
+- `static` is `src/flag-usage.generated.json`, the committed syntactic index of
+  read sites per key (`{ package, file, kind, count }`, with `kind` one of
+  `config-flag-name`, `config-derived`, `call-argument`, `array-element`,
+  `constant` or `java`) and the keys with none. Refresh it with
+  `bun run generate-flag-usage`; CI fails on a stale index through
+  `bun run check-flag-usage`. The server parses it strictly at startup.
+
 Startup seeds missing deployments from the managed inventory once. Any document
 already stored in SQLite is left alone across restarts. Namespace and
 environment pairs that no deployment reads, including unused beta copies, are
 reported and not seeded.
+
+## Audit
+
+Every write that changes a flag appends a `flag_audit` row inside the write's
+own SQLite transaction. If the write is refused, conflicts or fails, no row is
+recorded. Each row holds the time, deployment, key, action, actor, the document
+revision after the write, and the before and after bodies.
+
+- `apply` records `create` (no stored body) or `update` for each flag that
+  differs from the stored body, compared with `isDeepStrictEqual`. A flag that
+  is identical to the stored body gets no row, though the revision still
+  advances as before.
+- `create-missing` and seeding record one `create` for each key actually
+  inserted. The steady state (the startup seed and the two-minute
+  `flag-inventory-sync` with nothing missing) writes nothing.
+- `retire` records a `retire` row with the deleted body as `before`, before
+  the delete. Retire stays a hard delete: the flag row is gone, so the
+  inventory sync's re-read and `create-missing` behave as before. The audit
+  table has no foreign key to `flag`, so history survives the delete.
+
+Every store writer requires an actor, so an unattributed write does not
+typecheck:
+
+- `human`: the verified tailnet login. An `X-Flags-Actor` header is ignored.
+- `machine`: the `X-Flags-Actor` header, when it matches
+  `^[a-z0-9][a-z0-9._@-]{0,63}$` (for example `check-flag-inventory`).
+  Every token holder shares one credential, so the label is advisory: it names
+  the caller and does not authenticate it. A missing or malformed label never
+  fails the write. The write is recorded as `unknown` and logs a structured
+  warning that does not include the header value.
+- `system`: `seed`, for the startup inventory seed.
+
+### Migrations
+
+`src/migrations.ts` holds numbered, additive steps gated by
+`PRAGMA user_version`. On open, after the WAL pragma and the original
+`CREATE TABLE IF NOT EXISTS` statements, each pending step runs in one
+`BEGIN IMMEDIATE` transaction together with its `user_version` bump, so a
+failed step leaves the schema and version unchanged and the process fails to
+start. A database whose version is newer than the image knows is refused.
+Version 1 adds `flag_audit`, its `(deployment_id, key, id)` index, and
+`store_meta` with `audit_started_at`, the time the step ran. Existing
+`deployment` and `flag` rows are untouched, so the production database at
+`/var/lib/flags/flags.sqlite` upgrades in place on the next start. Changes made
+before `audit_started_at` have no history.
+
+### Legacy added dates
+
+Keys created before the audit trail have no `create` row.
+`src/legacy-flag-dates.json` gives each inventory key the first-parent
+committer date of the first `main` commit whose `managed-flag-inventory.json`
+declares it. Keys that were already in that file's first commit (`0f6a972c1c`,
+2026-08-25) are marked `onOrBefore`, because they were declared earlier
+elsewhere. The file is frozen evidence: it was generated once with
+`bun run generate-legacy-flag-dates` in `packages/flags` and is never
+regenerated in CI. Keys added later get a recorded `create` row instead. It is
+Zod-validated when it is imported.
 
 ## Operator
 
@@ -86,8 +228,9 @@ The browser UI is served by this process and uses the shared console look from
 `@shepherdjerred/console-ui`. The workspace button at the top of the sidebar is
 the app switcher: it lists the other consoles and tools from `ops-model`'s
 `CONSOLE_LINKS` and opens them in the same tab; the search button beside it
-opens the ⌘K palette. Below them a Views group links Overview, Compare and Drift
-(with the total drifted-item count), then the sidebar lists real deployments
+opens the ⌘K palette. Below them a Views group links Overview, Compare, Drift
+(with the total drifted-item count) and Archived (with the retired-flag count),
+then the sidebar lists real deployments
 with their flag counts: prod-only catalogs are one row, and Scout and Karma are
 grouped with Beta and Prod rows. Below 900px the sidebar is replaced by the
 shared top bar: the app switcher, a search button and a menu whose drawer lists
@@ -95,11 +238,13 @@ the same views and deployments.
 
 Every page is built from the console-ui page kit, the way Hub's and Go link's
 pages are: a `PageBody` with a `PageHeading`, then `SummaryGrid` and `Card`s. A
-deployment's heading names the catalog and stage and shows its revision, a drift
-badge linking to its section of the drift page, and "Compare with Beta/Prod"
-when the catalog has both stages. The flag table lists each flag's key, its
-state (an On, Off or Targeted `SeverityBadge`, or the variant string) and its
-type. The search field filters flags by key and keeps the filter in the `?q=`
+deployment's heading names the catalog and stage, says when a consumer last
+fetched it (see [Where a flag is read](#where-a-flag-is-read)), and shows its
+revision, a drift badge linking to its section of the drift page, and "Compare with Beta/Prod"
+when the catalog has both stages. The flag table lists each flag's key with its
+inventory description as a muted, truncated second line, its state (an On, Off
+or Targeted `SeverityBadge`, or the variant string) and its type. The search
+field filters flags by key or description and keeps the filter in the `?q=`
 query, so it survives choosing a flag. Choosing a flag opens its editor beside
 the table.
 
@@ -112,7 +257,7 @@ the open flag and deployment, e.g. `dares_enabled · scout/prod · Flags`.
 The views:
 
 - **Overview** (`/`): totals and one card per catalog with each stage's flag
-  count, revision and drift.
+  count, revision, drift and when a consumer last fetched it.
 - **Compare** (`/compare?left=<catalog/stage>&right=<catalog/stage>`): two
   deployments' documents, every key classified as differs, only-left,
   only-right or identical (`sameFlag`). The Show toggle adds identical rows
@@ -126,6 +271,16 @@ The views:
   documented remediation command. `/drift#<catalog/stage>` scrolls to one
   deployment. A deployment missing from the report fails the request, so the
   page shows the error rather than a partial result.
+- **Archived** (`/archive`): `GET /v1/archive` as one card per deployment
+  listing each retired key with when and by whom it was retired, its revision
+  and its final value (a variant's value, or the boolean flag as JSON). A key
+  with basis `declared-retired` was deleted before the audit trail and reads
+  "Retired before audit; final value not recorded". Each row's History button
+  opens the key's timeline inline, because the history endpoint still serves a
+  key that is no longer live. The page is read-only: to restore a key,
+  re-declare it in `managed-flag-inventory.json` and remove it from
+  `retired-flag-declarations.ts`; the inventory sync re-creates it, then
+  restore an old value from its history in the editor.
 - **⌘K palette** (console-ui's `CommandPalette`): views, deployments, and flags
   across every deployment. It loads each document under `useDocument`'s query
   key, so documents are shared with the pages.
@@ -147,6 +302,17 @@ so text that does not parse yet is still there when you switch back.
   its decoded value, pretty-printed (an array, not a one-line string), and
   saved compactly with object defaults filled in. `number` and `string`
   variants are edited as a JSON number or string literal.
+
+Categorical variants are picked rather than typed. A key whose registry schema
+is an `enum` or `const` gets a closed select. A model-id key (tagged
+`x-model-route` by `modelIdFor` in the registry) gets a select of the
+`@shepherdjerred/llm-models` catalog models its consumer can route — current,
+then preview, then deprecated, never `pricingOnly` — plus "Custom…", which
+reveals a text field for a model the catalog does not list yet. A stored value
+outside the list opens on Custom. A warning shows when the value is not in the
+catalog, lacks the route the consumer needs, or is deprecated; the registry
+still accepts any well-formed model id, so the warning never blocks a save.
+JSON mode offers the same catalog models as completions.
 
 `json`-encoded variants open in JSON mode; everything else opens in Form mode.
 A variant whose key is not in the value registry is shown as plain text with a
@@ -175,6 +341,57 @@ changes.
 against the draft: side by side when there is room, inline when narrow.
 `json`-encoded variants are diffed as their decoded values. Save writes that
 revision. A conflicting write is left unchanged: a warning above the form diffs
-their flag against the draft, with a button to load theirs.
+their flag against the draft, with a button to load theirs. A save or a
+conflict refetches the flag's history and the deployment's metadata.
+
+### Description, dates and history
+
+The editor reads `GET /v1/deployments/:catalog/:stage/metadata` (parsed with
+`FlagsMetadataResponseSchema`). The description is the inventory's `purpose`,
+with `owner`, `namespace` and `source` as chips; it is read-only and is changed
+in `managed-flag-inventory.json`. A key the deployment's inventory projection
+does not declare says "Not declared in the inventory". Under it:
+
+- **Added**: a recorded `create` shows its exact time; a legacy date reads
+  "first declared ⟨date⟩" or "on or before ⟨date⟩" (see Legacy added dates); a
+  key with neither reads "Added before audit (⟨audit start⟩)".
+- **Last changed** ⟨relative time⟩ **by** ⟨actor⟩, when a change is recorded.
+  An actor is shown by its id: a human's login, a machine's advisory label
+  (`toolkit`, `temporal-flag-inventory-sync`, `unknown`) or `seed`.
+
+Times are UTC. The History section lists
+`GET /v1/deployments/:catalog/:stage/flags/:key/history` newest first, 20 at a
+time, with "Load older" following `nextBefore`. Each entry shows its action,
+actor, time and revision and expands to a side-by-side diff of its before and
+after bodies. With no rows it reads "No recorded changes since ⟨audit start⟩".
+
+"Restore this version" on a create or update loads its `after` body into the
+editor's draft; nothing is written until you review and save it as usual. The
+save sends the editor's current `expectedRevision`, never the entry's, so a
+concurrent write still conflicts and a value the server refuses still shows
+its issues. Restore is disabled, with the reason beside it, when the body does
+not parse as a flag today, has another key or type than the stored flag, fails
+the value registry, or equals the stored value. A retire has no restore.
+
+### Where a flag is read
+
+The editor's Read by section and every liveness line read `GET /v1/usage`
+(parsed with `FlagsUsageResponseSchema`), re-read every minute while a page is
+open.
+
+- **Read by** lists the key's read sites from the static index, grouped by
+  package, each file linked to `main` on GitHub with its kind
+  (`call-argument`, `config-flag-name`, … and `×n` for repeats). A key with no
+  entry reads "No static reference found": the index is syntactic and line-free,
+  so a key read through an accessor or a computed name can be missing from it,
+  and absence is never shown as "unused". After adding or moving a read, run
+  `bun run generate-flag-usage`.
+- A key the Java Storm client reads (`java` kind) also shows "Last evaluated by
+  the Java client ⟨relative time⟩", or "No Java client evaluation since ⟨server
+  start⟩".
+- A deployment heading and its overview row say "Last fetched ⟨relative time⟩"
+  (hover for the time and 200/304 counts) or "No consumer fetch since ⟨server
+  start⟩". Only evaluation-listener snapshot reads count, and the counters reset
+  on every restart, so read "none since" shortly after a release as "not yet".
 
 `toolkit flags` is the command surface. See `packages/toolkit/README.md`.

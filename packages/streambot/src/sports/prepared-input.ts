@@ -1,3 +1,9 @@
+import type {
+  ProbedAudio,
+  ProbedVideo,
+  RankedTracks,
+} from "@shepherdjerred/streambot/sources/probed-media.ts";
+
 /** Stable, non-sensitive identity retained across queueing and process recovery. */
 export type SportsPlaybackRecipe = {
   readonly sourceUrl: string;
@@ -16,6 +22,9 @@ export type PreparedSportsInput = {
   readonly videoStreamIndex?: number;
   readonly audioStreamIndex?: number;
   readonly hdr?: boolean;
+  readonly probedVideo?: ProbedVideo;
+  readonly probedAudio?: ProbedAudio;
+  readonly rankedTracks?: RankedTracks;
   /** Provider-side failure, independent of the ffmpeg subprocess consuming the relay. */
   readonly failure?: Promise<never>;
   readonly close: () => Promise<void>;

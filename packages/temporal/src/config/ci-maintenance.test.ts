@@ -4,7 +4,12 @@ import { useMockedFlagSource } from "./flag-source.test-support.ts";
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
   createFlagConfigSource: vi.fn(),
 }));
-import { ciWorkspaceSeedRefreshEnabled } from "./ci-maintenance.ts";
+import {
+  ciMaintenanceDispatchState,
+  ciMaintenanceEnabled,
+  ciWorkspaceGoldenRefreshState,
+  ciWorkspaceSeedRefreshEnabled,
+} from "./ci-maintenance.ts";
 
 const source = useMockedFlagSource();
 
@@ -48,3 +53,22 @@ test.each([0, "true", null])(
     await expect(ciWorkspaceSeedRefreshEnabled()).rejects.toThrow();
   },
 );
+
+test.each([
+  [true, "on"],
+  [false, "off"],
+])("an answered golden flag %s reads %s for monitors", async (value, state) => {
+  source.get.mockResolvedValue({ value });
+  expect(await ciWorkspaceGoldenRefreshState()).toBe(state);
+  expect(source.get.mock.calls[0]?.[0].flag).toBe(
+    "ci-workspace-golden-refresh-enabled",
+  );
+});
+
+test("an absent flag is off, but an unavailable source is unknown, not off", async () => {
+  expect(await ciMaintenanceDispatchState()).toBe("off");
+  source.get.mockRejectedValue(new Error("source unavailable"));
+  expect(await ciMaintenanceDispatchState()).toBe("unknown");
+  // Dispatch itself still fails closed.
+  expect(await ciMaintenanceEnabled()).toBe(false);
+});

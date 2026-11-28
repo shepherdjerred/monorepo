@@ -34,6 +34,7 @@ import {
   redditOutreachPostsFixture,
 } from "#test-fixtures/promotion";
 import { seedReportFixtures } from "#test-fixtures/reports-fixture";
+import { createFixtureIncidentsServerModule } from "../src/modules/incidents/server.ts";
 import { createFixtureTracesServerModule } from "../src/modules/traces/fixtures.ts";
 
 const alert = AlertDetailSchema.parse({
@@ -414,7 +415,7 @@ const app = createApp({
   digests: opsFixture.digests,
   reports: opsFixture.reports,
   opsIngestToken: "fixture-ops-ingest-token-with-32-characters",
-  modules: [tracesFixture.module],
+  modules: [await createFixtureIncidentsServerModule(), tracesFixture.module],
 });
 const port = Number(
   Bun.argv[2] ?? Bun.env["ALERT_DASHBOARD_E2E_PORT"] ?? "17341",

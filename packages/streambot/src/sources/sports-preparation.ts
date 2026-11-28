@@ -5,6 +5,11 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { MediaInfo } from "@shepherdjerred/streambot/sources/probe.ts";
+import type {
+  ProbedAudio,
+  ProbedVideo,
+  RankedTracks,
+} from "@shepherdjerred/streambot/sources/probed-media.ts";
 import { probePlaybackSource } from "@shepherdjerred/streambot/sources/source-probe.ts";
 import type {
   PrepareSportsInput,
@@ -54,6 +59,19 @@ export function assertSportsHasAudioAndVideo(info: MediaInfo | null): void {
   }
 }
 
+/** Display properties a live rendition was probed with, re-probed on each playback attempt. */
+function probedSportsProperties(info: MediaInfo | null): {
+  probedVideo?: ProbedVideo;
+  probedAudio?: ProbedAudio;
+  rankedTracks?: RankedTracks;
+} {
+  return {
+    ...(info?.video === undefined ? {} : { probedVideo: info.video }),
+    ...(info?.audio === undefined ? {} : { probedAudio: info.audio }),
+    ...(info === null ? {} : { rankedTracks: info.ranked }),
+  };
+}
+
 function concreteSportsInput(
   prepared: PreparedSportsInput,
 ): ConcreteResolvedSource {
@@ -83,6 +101,7 @@ export async function validatePreparedSportsInput(
   return {
     ...prepared,
     hdr: info?.hdr ?? false,
+    ...probedSportsProperties(info),
     ...(info?.videoStreamIndex === undefined
       ? {}
       : { videoStreamIndex: info.videoStreamIndex }),
@@ -105,7 +124,11 @@ export async function resolvePreparedSportsSource(
     const info = await probePlaybackSource(config, concrete, signal, true);
     signal.throwIfAborted();
     assertSportsHasAudioAndVideo(info);
-    const finalized = { ...concrete, hdr: info?.hdr ?? false };
+    const finalized = {
+      ...concrete,
+      hdr: info?.hdr ?? false,
+      ...probedSportsProperties(info),
+    };
     const {
       ffmpegInput: _input,
       ffmpegInputHeaders: _headers,

@@ -27,7 +27,15 @@
         ]
       },
       "resolvedDescription": "Renekton's attacks generate Fury, increased when he is low on life. This Fury can empower his abilities with bonus effects.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Cull the Meek",
@@ -169,7 +177,15 @@
         ]
       },
       "resolvedDescription": "Renekton swings his blade, dealing 60/90/120/150/180 (+100% bonus AD) physical damage and restoring 2/3/4/5/6 (+2% bonus AD) Health per non-champion and 12/20/28/36/44 (+17% bonus AD) per champion hit. He also generates 2.5 Fury per non-champion and 10 Fury per champion. Fury Bonus: Damage is increased to 90/135/180/225/270 (+140% bonus AD) physical damage and healing is increased to 6/9/12/15/18 (+6% bonus AD) Health against non-champions and 36/60/84/108/132 (+51% bonus AD) Health against champions. Does not generate any Fury.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 325,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Ruthless Predator",
@@ -241,7 +257,15 @@
         ]
       },
       "resolvedDescription": "Renekton's next Attack strikes twice, Stunning for 0.75 seconds and dealing a total of 10/40/70/100/130 (+150% AD) physical damage. Hitting a champion generates an additional 10 Fury. Fury Bonus: Renekton Attacks 3 times instead, destroying Shields before dealing 15/60/105/150/195 (+225% AD) physical damage and Stunning for 1.5 seconds. Does not generate any Fury.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Slice and Dice",
@@ -348,7 +372,15 @@
         ]
       },
       "resolvedDescription": "Renekton dashes, dealing 40/70/100/130/160 (+90% bonus AD) physical damage. He generates 2 Fury per non-champion and 10 Fury per champion hit. Hitting at least one enemy allows Renekton to Recast this Ability once for 4 seconds. Fury Bonus: The Recast dash deals 70/115/160/205/250 (+135% bonus AD) physical damage instead and removes 25/27.5/30/32.5/35% Armor for 4 seconds. Does not generate Fury.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 50,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Dominus",
@@ -402,7 +434,15 @@
         ]
       },
       "resolvedDescription": "Renekton surrounds himself with dark energies for 15 seconds, gaining 300/500/700 max Health and 20 Fury. While active, he deals 60/150/240 (+10% AP) (+10% bonus AD) magic damage and gains 5 Fury per second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 779.9,
+        "missiles": []
+      }
     }
   }
 }

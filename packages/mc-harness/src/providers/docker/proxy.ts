@@ -1,10 +1,16 @@
 import { createServer, createConnection, type Socket } from "node:net";
 
+export type CaptureProxy = {
+  readonly backend: { host: string; port: number };
+  readonly endpoint: { host: string; port: number };
+  readonly close: () => void;
+};
+
 /** Loopback-only admission proxy for isolated, offline real-map demonstrations. */
 export async function startCaptureProxy(backend: {
   host: string;
   port: number;
-}) {
+}): Promise<CaptureProxy> {
   const sockets = new Set<Socket>();
   const server = createServer((client) => {
     client.pause();
@@ -42,6 +48,7 @@ export async function startCaptureProxy(backend: {
   if (address === null || typeof address === "string")
     throw new Error("Local proxy has no TCP address");
   return {
+    backend: { host: backend.host, port: backend.port },
     endpoint: { host: "127.0.0.1", port: address.port },
     close: () => {
       for (const socket of sockets) socket.destroy();

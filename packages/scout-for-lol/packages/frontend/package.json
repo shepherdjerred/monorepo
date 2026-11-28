@@ -27,7 +27,7 @@
   "scripts": {
     "astro": "astro",
     "build": "bun run scripts/optimize-showcase-images.ts && astro build && bun run scripts/emit-shared-assets.ts",
-    "dev": "bun run scripts/optimize-showcase-images.ts && astro dev",
+    "dev": "bun scripts/dev.ts",
     "format": "prettier --check .",
     "lint": "astro check && eslint src --max-warnings=0 && check-architecture",
     "preview": "astro preview",
@@ -72,6 +72,7 @@
   "imports": {
     "#architecture": "./architecture.config.ts",
     "#champion-meta-snapshot": "./src/data/generated/champion-meta.snapshot.json",
+    "#scripts/*": "./scripts/*",
     "#src/*": "./src/*"
   }
 }

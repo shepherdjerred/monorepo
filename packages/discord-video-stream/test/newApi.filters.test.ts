@@ -8,6 +8,7 @@ import {
   type FfmpegProcessHandle,
   prepareStream,
 } from "../src/media/newApi.ts";
+import { LOUDNESS_NORMALIZER } from "../src/media/audioGraph.ts";
 
 // Graph construction itself (scale/tonemap/subtitle ordering, GPU overlay branches, PTS
 // compensation) is covered exhaustively in videoGraph.test.ts against the pure builders. These
@@ -892,5 +893,179 @@ describe("prepareStream hardwarePipelineMode", () => {
       killQuietly(command);
       output.destroy();
     }
+  });
+});
+
+describe("prepareStream picture corrections", () => {
+  function argsFor(
+    options: Parameters<typeof prepareStream>[1],
+  ): readonly string[] {
+    const { command, output, promise } = prepareStream("video.mkv", options);
+    promise.catch(() => {});
+    try {
+      return [...ffmpegArgs(command)];
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  }
+
+  function valueAfter(
+    args: readonly string[],
+    flag: string,
+  ): string | undefined {
+    const index = args.indexOf(flag);
+    return index === -1 ? undefined : args[index + 1];
+  }
+
+  test("an NTSC output rate reaches -r as its exact rational, an integer rate as before", () => {
+    expect(valueAfter(argsFor({ frameRate: 24_000 / 1001 }), "-r")).toBe(
+      "24000/1001",
+    );
+    expect(valueAfter(argsFor({ frameRate: 30 }), "-r")).toBe("30");
+  });
+
+  test("software: deinterlace and BT.709 conversion land in -filter:v, with output colour tags", () => {
+    const args = argsFor({
+      width: 1440,
+      height: 1080,
+      deinterlace: true,
+      convertColorToBt709: true,
+    });
+    expect(valueAfter(args, "-filter:v")).toBe(
+      "bwdif=mode=send_frame:deint=interlaced,scale=1440:1080:out_color_matrix=bt709:out_range=tv",
+    );
+    expect(valueAfter(args, "-colorspace")).toBe("bt709");
+    expect(valueAfter(args, "-color_range")).toBe("tv");
+    // Inert in ffmpeg 7.1 (the encoder takes both from the frames), and nothing converted them.
+    expect(args).not.toContain("-color_primaries");
+    expect(args).not.toContain("-color_trc");
+  });
+
+  test("neither correction emits anything unless asked for", () => {
+    const args = argsFor({ width: 1920, height: 1080, frameRate: 30 });
+    expect(valueAfter(args, "-filter:v")).toBe("scale=1920:1080");
+    expect(args).not.toContain("-colorspace");
+    expect(args).not.toContain("-color_range");
+  });
+
+  test("VAAPI: deinterlace_vaapi and the BT.709 scale_vaapi options in the GPU graph", async () => {
+    const { Encoders } = await import("../src/media/encoders/index.ts");
+    const args = argsFor({
+      hardwareAcceleratedDecoding: true,
+      encoder: Encoders.vaapi({ device: "/dev/dri/renderD128" }),
+      width: 1440,
+      height: 1080,
+      deinterlace: true,
+      convertColorToBt709: true,
+    });
+    expect(valueAfter(args, "-filter:v")).toBe(
+      "deinterlace_vaapi=rate=frame:auto=1,scale_vaapi=w=1440:h=1080:format=nv12:out_color_matrix=bt709:out_range=tv",
+    );
+    expect(valueAfter(args, "-colorspace")).toBe("bt709");
+  });
+
+  test("throws rather than dropping a correction there is no video graph for", () => {
+    expect(() =>
+      prepareStream("input.mkv", { audioOnly: true, deinterlace: true }),
+    ).toThrow(/deinterlace cannot be applied when audioOnly/);
+    expect(() =>
+      prepareStream("input.mkv", {
+        noTranscoding: true,
+        convertColorToBt709: true,
+      }),
+    ).toThrow(/convertColorToBt709 cannot be applied when noTranscoding/);
+  });
+});
+
+describe("prepareStream audioProcessing", () => {
+  function audioArgs(options: Parameters<typeof prepareStream>[1]): string[] {
+    const { command, output, promise } = prepareStream("video.mkv", options);
+    promise.catch(() => {});
+    try {
+      return [...ffmpegArgs(command)];
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  }
+
+  function audioFilter(args: readonly string[]): string | undefined {
+    return args[args.indexOf("-filter:a") + 1];
+  }
+
+  test("every step off is byte-identical to the option being absent", () => {
+    for (const base of [{}, { audioOnly: true }, { audioVolume: 0.5 }]) {
+      const legacy = audioArgs(base);
+      expect(legacy).toContain("-lfe_mix_level");
+      expect(audioArgs({ ...base, audioProcessing: {} })).toEqual(legacy);
+      expect(
+        audioArgs({
+          ...base,
+          audioProcessing: {
+            loudnessNormalization: false,
+            resyncTimestamps: false,
+          },
+        }),
+      ).toEqual(legacy);
+    }
+  });
+
+  test("a dialogue downmix replaces the generic channel downmix and is limited", () => {
+    const args = audioArgs({
+      audioVolume: 0.5,
+      audioProcessing: { dialogDownmix: "5.1(side)" },
+    });
+    expect(args).not.toContain("-ac");
+    expect(args).not.toContain("-lfe_mix_level");
+    expect(args).toContain("0:a:0?");
+    expect(audioFilter(args)).toBe(
+      "pan=stereo|FL=FC+0.707*FL+0.5*SL|FR=FC+0.707*FR+0.5*SR," +
+        "alimiter=limit=0.891:level=disabled,volume@internal_lib=0.5",
+    );
+  });
+
+  test("orders resync, downmix, normaliser, limiter, then the live volume filter", () => {
+    const args = audioArgs({
+      audioOnly: true,
+      audioProcessing: {
+        dialogDownmix: "7.1",
+        loudnessNormalization: true,
+        resyncTimestamps: true,
+      },
+    });
+    expect(audioFilter(args)?.split(",")).toEqual([
+      "aresample=async=1:first_pts=0",
+      "pan=stereo|FL=FC+0.707*FL+0.5*SL+0.5*BL|FR=FC+0.707*FR+0.5*SR+0.5*BR",
+      ...LOUDNESS_NORMALIZER.split(","),
+      "alimiter=limit=0.891:level=disabled",
+      "volume@internal_lib=1.0",
+    ]);
+  });
+
+  test("normalisation or resync alone keeps the legacy channel downmix", () => {
+    const normalized = audioArgs({
+      audioProcessing: { loudnessNormalization: true },
+    });
+    expect(normalized).toContain("-lfe_mix_level");
+    expect(audioFilter(normalized)).toBe(
+      `${LOUDNESS_NORMALIZER},volume@internal_lib=1.0`,
+    );
+    const resynced = audioArgs({ audioProcessing: { resyncTimestamps: true } });
+    expect(resynced).toContain("-lfe_mix_level");
+    expect(audioFilter(resynced)).toBe(
+      "aresample=async=1:first_pts=0,volume@internal_lib=1.0",
+    );
+  });
+
+  test("rejects a layout it has no matrix for instead of guessing one", () => {
+    expect(() =>
+      prepareStream("video.mkv", {
+        audioProcessing: {
+          // @ts-expect-error -- an untyped caller passing a layout with no matrix
+          dialogDownmix: "quad",
+        },
+      }),
+    ).toThrow("no matrix for layout quad");
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   ChampionMetaFileSchema,
   MatchupFileSchema,
+  MetaManifestSchema,
 } from "@scout-for-lol/data/meta/meta-serving.ts";
 import {
   assembleMetaServing,
@@ -9,6 +10,7 @@ import {
   gradeForLowerBound,
 } from "#src/meta/meta-assemble.ts";
 import {
+  FIXTURE_LANE_DAYS,
   FIXTURE_NOW,
   FIXTURE_ROWS,
   fixtureMetaReader,
@@ -19,6 +21,7 @@ import { wilsonInterval } from "#src/meta/wilson.ts";
 const serving = assembleMetaServing({
   rows: FIXTURE_ROWS,
   days: ["2026-11-12", "2026-11-13"],
+  laneDays: FIXTURE_LANE_DAYS,
   buildId: "b1",
   now: FIXTURE_NOW,
   thresholds: DEFAULT_META_THRESHOLDS,
@@ -159,6 +162,7 @@ describe("assembleMetaServing slice detail and matchups", () => {
     const slice = assembleMetaServing({
       rows,
       days: ["2026-11-13"],
+      laneDays: [],
       buildId: "b2",
       now: FIXTURE_NOW,
       thresholds: DEFAULT_META_THRESHOLDS,
@@ -179,6 +183,7 @@ describe("assembleMetaServing slice detail and matchups", () => {
     const files = assembleMetaServing({
       rows: FIXTURE_ROWS.filter((row) => !withheld.has(row.kind)),
       days: ["2026-11-13"],
+      laneDays: [],
       buildId: "b3",
       now: FIXTURE_NOW,
       thresholds: DEFAULT_META_THRESHOLDS,
@@ -299,6 +304,65 @@ describe("assembleMetaServing slice detail and matchups", () => {
     );
     const manifest = await reader.manifest();
     expect(manifest?.defaults).toBeNull();
+  });
+});
+
+describe("assembleMetaServing lane figures", () => {
+  test("serves lane figures with their game counts, intervals and the lane window", () => {
+    const slice = serving.champions
+      .get(2)
+      ?.slices.find((one) => one.context.patch === "16.3");
+    expect(slice?.lane).toEqual({
+      games: 120,
+      ahead: 66,
+      aheadRate: wilsonInterval(66, 120),
+      share: wilsonInterval(120, 500),
+      denominator: "slice_games",
+    });
+    expect(serving.matchups.get(2)?.slices[0]?.opponents[0]?.lane).toEqual({
+      games: 36,
+      ahead: 24,
+      aheadRate: wilsonInterval(24, 36),
+      share: wilsonInterval(36, 80),
+      denominator: "matchup_games",
+    });
+    // The 16.2 slice and Annie's side of the matchup have no lane rows.
+    expect(
+      serving.champions
+        .get(2)
+        ?.slices.find((one) => one.context.patch === "16.2")?.lane,
+    ).toBeUndefined();
+    expect(
+      serving.matchups.get(3)?.slices[0]?.opponents[0]?.lane,
+    ).toBeUndefined();
+    expect(serving.manifest.lane).toEqual({
+      firstDay: "2026-11-13",
+      lastDay: "2026-11-13",
+      days: 1,
+    });
+  });
+
+  test("a lane matchup row under an unlisted matchup is not served", () => {
+    const rows = FIXTURE_ROWS.filter(
+      (row) => !(row.kind === "matchup" && row.champion_id === 2),
+    );
+    const files = assembleMetaServing({
+      rows,
+      days: ["2026-11-13"],
+      laneDays: FIXTURE_LANE_DAYS,
+      buildId: "b4",
+      now: FIXTURE_NOW,
+      thresholds: DEFAULT_META_THRESHOLDS,
+    });
+    expect(files.matchups.get(2)).toBeUndefined();
+  });
+
+  test("a v1 file written before lane figures still parses", () => {
+    const champion = serving.champions.get(1);
+    expect(champion?.slices[0]?.lane).toBeUndefined();
+    expect(ChampionMetaFileSchema.parse(champion)).toEqual(champion);
+    const manifest = { ...serving.manifest, lane: undefined };
+    expect(MetaManifestSchema.parse(manifest).lane).toBeUndefined();
   });
 });
 

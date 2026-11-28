@@ -1,0 +1,99 @@
+/*
+ * Form fields and the search field: 28px controls on the field look (1px
+ * button-edge border, radius 6, panel fill). Focus uses the one ring.
+ */
+@layer ui.components {
+  .ui-field {
+    display: grid;
+    gap: var(--ui-space-1);
+  }
+  .ui-field-box {
+    display: grid;
+    gap: var(--ui-space-1);
+  }
+  .ui-field-label {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+  .ui-field-control,
+  .ui-search-input {
+    min-width: 0;
+    height: var(--ui-control);
+    padding: 0 9px;
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+  }
+  textarea.ui-field-control {
+    height: auto;
+    min-height: 72px;
+    padding: 6px 9px;
+  }
+  .ui-field-control::placeholder,
+  .ui-search-input::placeholder {
+    color: var(--ui-faint);
+  }
+  .ui-field[data-layout="inline"] .ui-field-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--ui-control);
+    padding: 0 0 0 9px;
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+  }
+  .ui-field[data-layout="inline"] .ui-field-box:has(:focus-visible) {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+  .ui-field[data-layout="inline"] .ui-field-control {
+    height: calc(var(--ui-control) - 2px);
+    padding: 0 9px 0 0;
+    border: 0;
+    background: none;
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-field[data-layout="inline"] .ui-field-control:focus-visible {
+    outline: none;
+  }
+  .ui-field[data-invalid] .ui-field-control,
+  .ui-field[data-invalid] .ui-field-box {
+    border-color: var(--ui-sev-error);
+  }
+  .ui-field-hint {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-field-error {
+    color: var(--ui-sev-error-text);
+    font-size: var(--ui-text-sm);
+  }
+
+  /* Search: the field look with a leading icon and a hidden label. */
+  .ui-search {
+    position: relative;
+    display: inline-flex;
+    flex: 0 1 280px;
+    min-width: 0;
+  }
+  .ui-search > svg {
+    position: absolute;
+    top: 50%;
+    left: 9px;
+    width: 14px;
+    height: 14px;
+    color: var(--ui-muted);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .ui-search-input {
+    width: 100%;
+    padding-left: 29px;
+  }
+  .ui-search-input::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+}

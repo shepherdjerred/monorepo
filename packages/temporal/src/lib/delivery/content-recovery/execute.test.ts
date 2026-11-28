@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
   ContentRecoveryContextSchema,
@@ -9,7 +10,10 @@ import {
   recipe,
   timestamp,
 } from "#lib/delivery/model/testing.ts";
-import { executeContentRecovery } from "./execute.ts";
+import {
+  executeContentRecovery,
+  type ContentOperatorEffects,
+} from "./execute.ts";
 
 const chart = artifact({
   id: "chart/1",
@@ -152,6 +156,9 @@ describe("executeContentRecovery (AI-845)", () => {
         }),
         repair: () => Promise.resolve(),
         inspect: async () => ({ observedAt: new Date().toISOString() }),
+        inspectPrior: async () => {
+          throw new Error("Desired inspection must not inspect prior");
+        },
         restore,
       },
       async (route, schema) => {
@@ -199,6 +206,9 @@ describe("executeContentRecovery (AI-845)", () => {
         inspect: async () => {
           throw new Error("Settled intent only restores");
         },
+        inspectPrior: async () => {
+          throw new Error("Settled intent only restores");
+        },
         restore,
       },
       async (_route, schema) => schema.parse(settled),
@@ -209,5 +219,205 @@ describe("executeContentRecovery (AI-845)", () => {
     });
     expect(paused).toHaveBeenCalledOnce();
     expect(restore).toHaveBeenCalledOnce();
+  });
+});
+
+const priorFingerprint = "b".repeat(64);
+const stoppedTemplate = { spec: {} };
+const recordedBarrier = {
+  ...barrier,
+  templateFingerprint: createHash("sha256")
+    .update(JSON.stringify(stoppedTemplate))
+    .digest("hex"),
+};
+
+function makeForumContext(): ContentRecoveryContext {
+  const initial = makeContext({});
+  const definition = {
+    ...appRecipe,
+    steps: [
+      ...appRecipe.steps,
+      {
+        kind: "forum-bundle",
+        instance: "application:arcade",
+        imageComponent: "image:arcade",
+        bundleComponent: "archive:forum",
+      },
+    ],
+  };
+  const current = detail(definition, chart);
+  const prior = detail(definition, chart);
+  prior.deployment.id = "deployment/prior";
+  prior.deployment.status = "succeeded";
+  current.deployment.status = "failed";
+  current.deployment.recoveryRequired = true;
+  current.deployment.previousAcceptedDeploymentId = prior.deployment.id;
+  current.environment.acceptedDeploymentId = prior.deployment.id;
+  return ContentRecoveryContextSchema.parse({
+    ...initial,
+    intent: {
+      ...initial.intent,
+      targetKind: "forum",
+      dispatchBarrier: recordedBarrier,
+    },
+    deployment: current,
+    priorDeployment: prior,
+    expectedSettlements: {
+      desired: initial.expectedSettlements.desired,
+      prior: priorFingerprint,
+    },
+  });
+}
+
+function priorEffects() {
+  const observedAt = new Date().toISOString();
+  return {
+    paused: vi.fn(() => Promise.resolve()),
+    original: vi.fn(() => Promise.resolve()),
+    fence: vi.fn(() => Promise.resolve()),
+    barrier: vi.fn<ContentOperatorEffects["barrier"]>(
+      (_context, checkpoint, fence) => ({
+        read: async () => ({
+          metadata: {
+            name: "temporal-delivery-worker",
+            namespace: "temporal",
+            uid: recordedBarrier.deploymentUID,
+            resourceVersion: "1",
+          },
+          spec: { replicas: 0, template: stoppedTemplate },
+        }),
+        pods: async () => [],
+        replicaSet: () => Promise.reject(new Error("Host already stopped")),
+        patch: () => Promise.reject(new Error("Host already stopped")),
+        checkpoint,
+        fence,
+        wait: () => Promise.resolve(),
+      }),
+    ),
+    ownership: vi.fn<ContentOperatorEffects["ownership"]>(async (context) => ({
+      expectedEnvironmentGeneration:
+        context.intent.expectedEnvironmentGeneration,
+      snapshotFingerprint: context.intent.snapshotFingerprint,
+      observedAt,
+      sourceWorkflow: {
+        workflowId: `delivery/${context.deployment.deployment.id}`,
+        status: "FAILED",
+      },
+      quiescence: {
+        deploymentUID: recordedBarrier.deploymentUID,
+        templateFingerprint: recordedBarrier.templateFingerprint,
+        replicas: 0,
+        remainingPodUIDs: [],
+        journalFingerprint: "e".repeat(64),
+      },
+      nativeJobs: [],
+    })),
+    repair: vi.fn(() =>
+      Promise.reject(new Error("Prior inspection cannot repair")),
+    ),
+    inspect: vi.fn(() =>
+      Promise.reject(new Error("Prior inspection cannot inspect desired")),
+    ),
+    inspectPrior: vi.fn<ContentOperatorEffects["inspectPrior"]>(async () => ({
+      observedAt,
+    })),
+    restore: vi.fn(() => Promise.resolve()),
+  } satisfies ContentOperatorEffects;
+}
+
+describe("inspect-prior", () => {
+  it("settles only the verified frozen prior and restores the original barrier", async () => {
+    const pending = makeForumContext();
+    const effects = priorEffects();
+    let current = pending;
+    let completed: unknown;
+
+    await executeContentRecovery(
+      "intent/1",
+      "inspect-prior",
+      effects,
+      async (route, schema, input) => {
+        if (route.endsWith("/complete")) {
+          completed = input;
+          current = {
+            ...pending,
+            intent: {
+              ...pending.intent,
+              status: "succeeded",
+              finishedAt: timestamp,
+            },
+          };
+        }
+        return schema.parse(current);
+      },
+    );
+
+    expect(effects.original).toHaveBeenCalledOnce();
+    expect(effects.fence).toHaveBeenCalled();
+    expect(effects.inspectPrior).toHaveBeenCalledExactlyOnceWith(
+      pending,
+      pending.priorDeployment,
+    );
+    expect(effects.ownership).toHaveBeenCalledExactlyOnceWith(pending);
+    expect(completed).toMatchObject({
+      snapshotFingerprint: pending.intent.snapshotFingerprint,
+      settlement: { state: "prior", fingerprint: priorFingerprint },
+    });
+    expect(effects.repair).not.toHaveBeenCalled();
+    expect(effects.inspect).not.toHaveBeenCalled();
+    expect(effects.restore).toHaveBeenCalledExactlyOnceWith(current);
+  });
+
+  it.each([
+    "other target",
+    "missing prior",
+    "missing fingerprint",
+    "different accepted deployment",
+    "different environment generation",
+  ])("refuses %s before operator effects", async (reason) => {
+    const context = makeForumContext();
+    if (reason === "other target") context.intent.targetKind = "static-site";
+    if (reason === "missing prior") context.priorDeployment = null;
+    if (reason === "missing fingerprint")
+      delete context.expectedSettlements.prior;
+    if (reason === "different accepted deployment")
+      context.deployment.environment.acceptedDeploymentId =
+        "deployment/another";
+    if (reason === "different environment generation")
+      context.deployment.environment.generation += 1;
+    const effects = priorEffects();
+
+    await expect(
+      executeContentRecovery(
+        "intent/1",
+        "inspect-prior",
+        effects,
+        async (_route, schema) => schema.parse(context),
+      ),
+    ).rejects.toThrow(/requires/);
+    expect(effects.paused).not.toHaveBeenCalled();
+    expect(effects.original).not.toHaveBeenCalled();
+    expect(effects.barrier).not.toHaveBeenCalled();
+  });
+
+  it("refuses a prior fingerprint change during readback before settling or restoring", async () => {
+    const context = makeForumContext();
+    const effects = priorEffects();
+    effects.inspectPrior.mockImplementationOnce(async () => {
+      context.expectedSettlements.prior = "f".repeat(64);
+      return { observedAt: new Date().toISOString() };
+    });
+    const api: NonNullable<
+      Parameters<typeof executeContentRecovery>[3]
+    > = async (route, schema) => {
+      expect(route).toBe("content-recovery/intent%2F1");
+      return schema.parse(context);
+    };
+    await expect(
+      executeContentRecovery("intent/1", "inspect-prior", effects, api),
+    ).rejects.toThrow(
+      /frozen prior Forum release or content quarantine changed/,
+    );
+    expect(effects.restore).not.toHaveBeenCalled();
   });
 });

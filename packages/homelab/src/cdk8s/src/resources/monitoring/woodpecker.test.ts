@@ -182,11 +182,13 @@ describe("Woodpecker monitoring manifests", () => {
     expect(prometheusRule.spec.groups.map((group) => group.name)).toEqual([
       "woodpecker-ci-io-recording",
       "woodpecker-ci-io-rollups",
+      "woodpecker-agent-slots-recording",
       "woodpecker-ci-io-alerts",
     ]);
     expect(prometheusRule.spec.groups.map((group) => group.interval)).toEqual([
       "10s",
       "5m",
+      "1m",
       "30s",
     ]);
 

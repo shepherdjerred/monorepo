@@ -24,6 +24,15 @@ const config = {
 };
 const options: LandOptions = { json: true, allowRedMain: false };
 const noQuota = async () => null;
+const upToDateStaleBase = async (headSha: string) => ({
+  stale: false as const,
+  headSha,
+  mergeBaseSha: headSha,
+  mainHeadSha: headSha,
+  behindBy: 0,
+  verdict: "up_to_date" as const,
+  reasons: [],
+});
 const observer = () => new CiObserver(new GitHubClient("test"), config);
 
 function ready(): WaitResult {
@@ -284,29 +293,36 @@ test("diverged local branch reports exact ahead/behind counts and sync command",
 });
 
 test("merge_failed reasons include trimmed git-spice stderr", async () => {
-  stubPrRead({});
-  const { result } = await landPr(
-    {
-      number: 99,
-      observer: observer(),
-      signal: new AbortController().signal,
-    },
-    options,
-    {
-      wait: async () => ready(),
-      merge: async () => ({
-        code: 8,
-        stderr:
-          '  FTL git-spice: branch "feature" requires selected base "parent"  \n',
-      }),
-      quota: noQuota,
-    },
-  );
-  expect(result.verdict.outcome).toBe("merge_failed");
-  expect(result.verdict.reasons).toContain(
-    'FTL git-spice: branch "feature" requires selected base "parent"',
-  );
-  expect(formatMergeStderr("   \n  ")).toBeNull();
+  const dir = await mkdtemp(path.join(tmpdir(), "land-stderr-"));
+  try {
+    stubPrRead({});
+    const { result } = await landPr(
+      {
+        number: 99,
+        observer: observer(),
+        signal: new AbortController().signal,
+      },
+      options,
+      {
+        wait: async () => ready(),
+        merge: async () => ({
+          code: 8,
+          stderr:
+            '  FTL git-spice: branch "feature" requires selected base "parent"  \n',
+        }),
+        quota: noQuota,
+        staleBase: upToDateStaleBase,
+        stateDir: dir,
+      },
+    );
+    expect(result.verdict.outcome).toBe("merge_failed");
+    expect(result.verdict.reasons).toContain(
+      'FTL git-spice: branch "feature" requires selected base "parent"',
+    );
+    expect(formatMergeStderr("   \n  ")).toBeNull();
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 async function commitFile(
@@ -403,6 +419,8 @@ test("retargets stale merged parent baseName onto trunk before spawning git-spic
           return 0;
         },
         quota: noQuota,
+        staleBase: upToDateStaleBase,
+        stateDir: dir,
       },
     );
 

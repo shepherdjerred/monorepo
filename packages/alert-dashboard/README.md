@@ -123,14 +123,15 @@ Beyond the snapshot section pages, Hub serves dedicated deep-dive explorers
 backed by latest-only `OpsFacets` (`@shepherdjerred/ops-model/facets.ts`) and
 shared visual primitives:
 
-| Route        | Client entry                              | Facets & data                                                                                                                                                                                                             |
-| ------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/cluster`   | `src/client/ops/pages/cluster-page.tsx`   | `cluster` facet + Prometheus presets across URL-synced `?tab=` views (`nodes`, `workloads` with `?retained=1` pool toggle and degraded-first sort, `databases`, and `storage` for ZFS pools, NVMe, SeaweedFS)             |
-| `/monorepo`  | `src/client/ops/pages/monorepo-page.tsx`  | `monorepo` facet + CI/Turborepo presets: 7d remote cache hit ratio and saved hours, audit strip, PR code-review provider pool (`#code-review`), expensive/cache-missing tasks, and filterable workspace package directory |
-| `/renovate`  | `src/client/ops/pages/renovate-page.tsx`  | `renovate` facet + velocity presets: open PR concurrency and LLM delta coverage meters, `?tab=` queue buckets (`prs`, `approval`, `held`, `hygiene`, `merged`), and `?expand=` version-delta drawers                      |
-| `/product`   | `src/client/ops/pages/product-page.tsx`   | `product` snapshot section + `posthog` facet: 24h/7d traffic KPIs, conversion funnels with step retention, site traffic & Core Web Vitals (`p75` LCP/INP, exceptions, rageclicks), and top pages/referrers                |
-| `/the-storm` | `src/client/ops/pages/the-storm-page.tsx` | `minecraft`, `storm-brain`, and `storm-forum` service health, `ts-mc.net` slice of the `posthog` facet, player/companion and `target="minecraft"` namespace presets, filtered signals/changes, `/promotion` link          |
-| `/reports`   | `src/client/reports/reports-page.tsx`     | `ReportRun` + archived `DigestRun` + incident `EmailOutbox` ledger: 14-stream 30d Pacific schedule matrix, URL-synced unified feed, and `/reports/{runs/:id,digests/:kind/:periodKey,mail/:id}` inspectors                |
+| Route          | Client entry                              | Facets & data                                                                                                                                                                                                             |
+| -------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/cluster`     | `src/client/ops/pages/cluster-page.tsx`   | `cluster` facet + Prometheus presets across URL-synced `?tab=` views (`nodes`, `workloads` with `?retained=1` pool toggle and degraded-first sort, `databases`, and `storage` for ZFS pools, NVMe, SeaweedFS)             |
+| `/monorepo`    | `src/client/ops/pages/monorepo-page.tsx`  | `monorepo` facet + CI/Turborepo presets: 7d remote cache hit ratio and saved hours, audit strip, PR code-review provider pool (`#code-review`), expensive/cache-missing tasks, and filterable workspace package directory |
+| `/services/ci` | CI service view                           | Woodpecker queue counts, Kueue admission counts, monorepo workflows and recent runs, and finish estimates for running workflows and required PR CI                                                                        |
+| `/renovate`    | `src/client/ops/pages/renovate-page.tsx`  | `renovate` facet + velocity presets: ranked backlog with urgency, effort, bake date, evidence, and bundle PR status, plus tracker `?tab=` queues and `?expand=` version-delta drawers                                     |
+| `/product`     | `src/client/ops/pages/product-page.tsx`   | `product` snapshot section + `posthog` facet: 24h/7d traffic KPIs, conversion funnels with step retention, site traffic & Core Web Vitals (`p75` LCP/INP, exceptions, rageclicks), and top pages/referrers                |
+| `/the-storm`   | `src/client/ops/pages/the-storm-page.tsx` | `minecraft`, `storm-brain`, and `storm-forum` service health, `ts-mc.net` slice of the `posthog` facet, player/companion and `target="minecraft"` namespace presets, filtered signals/changes, `/promotion` link          |
+| `/reports`     | `src/client/reports/reports-page.tsx`     | `ReportRun` + archived `DigestRun` + incident `EmailOutbox` ledger: 14-stream 30d Pacific schedule matrix, URL-synced unified feed, and `/reports/{runs/:id,digests/:kind/:periodKey,mail/:id}` inspectors                |
 
 These pages share the **Visuals Kit** (`src/client/visuals/`), drawn on the
 shared console look:
@@ -289,7 +290,9 @@ Required configuration is validated at startup: `DATABASE_URL` (a SQLite
 `file:` URL), `ALERTMANAGER_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN`,
 `GRAFANA_URL`, `GRAFANA_API_KEY`, `OPS_INGEST_TOKEN` (at least 32 characters;
 the bearer token the Temporal workflow presents), and `PROMETHEUS_URL` (the
-in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Outbound
+in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`), and
+`INCIDENTS_DATABASE_URL` (a `postgres://` URL for the incidents module's own
+database; Hub refuses to start without it). Outbound
 mail uses the credential `MAIL_API_TOKEN` and bootstrap connection setting
 `MAIL_API_URL`. The `traces` module uses
 `TRACES_INDEX_DB_PATH` (default `/data/llm-traces-index.db`) plus optional
@@ -369,6 +372,8 @@ data.
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /internal/v1/alertmanager/events`         | Alertmanager v4 webhook (bearer `ALERT_DASHBOARD_WEBHOOK_TOKEN`)                                                                                                     |
 | `POST /internal/v1/ops/snapshots`               | Collector ingest `{snapshot, changes, facets?}` (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); validates with `parseOpsIngest`, upserts `OpsFacet` rows & changes, prunes |
+| `POST /internal/v1/ops/ci`                      | Latest one-minute Woodpecker and Kueue sample (`OPS_INGEST_TOKEN`). Duplicate and older samples return `stored: false`.                                              |
+| `GET` and `POST /internal/v1/ops/ci/timings`    | Read and update the bounded timing history (`OPS_INGEST_TOKEN`).                                                                                                     |
 | `POST /internal/v1/digests/:kind`               | `daily` or `weekly` digest (bearer `OPS_INGEST_TOKEN`); idempotent per Los Angeles date or ISO week                                                                  |
 | `POST /internal/v1/reports/runs`                | `ReportRunIngestBatch` upsert (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); persists `ReportRun` envelopes/mail and emits `changes` (`"reports"`)                        |
 | `GET /api/v1/reports/overview`                  | `/reports` KPIs and 14 recurring report/digest schedules with freshness and 30-day Pacific activity cells                                                            |
@@ -379,6 +384,7 @@ data.
 | `GET /api/v1/ops/snapshot?consumer=`            | Latest snapshot with freshness applied; `503 snapshot_unavailable` before the first ingest; `consumer=web` annotates `newSignalIds`                                  |
 | `GET /api/v1/ops/facets`                        | All stored latest-only facets `{generatedAt, receivedAt, stale, facets}` with the snapshot staleness budget applied                                                  |
 | `GET /api/v1/ops/facets/:key`                   | Single facet `{key, generatedAt, receivedAt, stale, data}` for a validated `FacetKey` (`data: null` before first ingest; `400` on invalid key)                       |
+| `GET /api/v1/ops/ci`                            | Latest CI sample with source availability, freshness, and estimated finish ranges. `alert-dashboard-ci-jobs-enabled` controls dashboard visibility.                  |
 | `GET /api/v1/ops/changes`                       | Change timeline (`service`, `since`, `limit`), stored events merged with alert openings and resolutions                                                              |
 | `GET /api/v1/ops/services/:id`                  | Catalog entry, its signals, recent changes, and Grafana Explore, dashboard, and Argo CD links                                                                        |
 | `GET /api/v1/ops/series?preset=&range=&target=` | Named Prometheus preset (`src/domain/ops-series.ts`) over `24h`, `7d`, `30d`, or `90d`, optionally scoped by a validated `target` regex (`SeriesTargetSchema`)       |
@@ -603,6 +609,27 @@ A module that needs its own storage stays a separate workspace package that
 exports `./hub-server` and `./hub-client`. Its `src/modules/<id>/` adapter
 checks those exports with `satisfies` against the two module contracts, so
 the storage never enters this package.
+
+`src/modules/incidents/` is the first storage-backed module, and the first
+that takes writes from the browser. Its package,
+[`@shepherdjerred/incidents`](../incidents/README.md), owns its PostgreSQL
+database, schema, migrations, domain rules, and pages; this package never sees
+them.
+
+| Piece                 | Where                                                                                                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server half           | `server.ts` calls `createIncidentsHubServer` with `INCIDENTS_DATABASE_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN` (Alertmanager receiver), `OPS_INGEST_TOKEN`, and `APP_HOSTS.hub` |
+| Flags                 | The module's default reader, which is Hub's process-wide flag client (`alert-dashboard/prod`)                                                                                |
+| Client half           | `client.tsx` checks `incidentsHubClient`: routes under `/incidents`, one **Incidents** row in the Alerts group, a Home card, and palette search and commands                 |
+| Readiness             | `/readyz/incidents` pings the incidents database; `/readyz` does not                                                                                                         |
+| `dev:fixture` and e2e | `createFixtureIncidentsServerModule()` wraps `createIncidentsFixtureHubServer()`, an in-memory module with seeded incidents                                                  |
+| Image                 | The `Dockerfile` copies `packages/incidents`, generates its Prisma client in the build and runtime stages, and the smoke stage runs its `prisma --version`                   |
+| Migrations            | Applied by an init container with `prisma migrate deploy` from `packages/incidents`                                                                                          |
+
+The incident pages import only the package's shared contract, speak tRPC's
+HTTP format over `fetch`, and style themselves with console-ui tokens plus
+Hub's page-frame classes (`page-heading`, `eyebrow`, `back-link`,
+`block-heading`, and the loading, empty, and error states).
 
 `src/modules/traces/` (`id: "traces"`, mounted at `/traces`, `/api/traces`, and
 `/readyz/traces`) is Hub's LLM trace viewer: it queries Tempo (`<=30d` OTLP

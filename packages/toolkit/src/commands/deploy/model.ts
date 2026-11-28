@@ -9,8 +9,11 @@ import {
   RecoveryIntentRequestSchema,
   catalogRevision,
 } from "@shepherdjerred/delivery/model-contract";
-import type { DeliveryClient } from "@shepherdjerred/delivery/client";
-import { generation, required, type DeployOptions } from "./common.ts";
+import {
+  DeliveryClientError,
+  type DeliveryClient,
+} from "@shepherdjerred/delivery/client";
+import { generation, required, seconds, type DeployOptions } from "./common.ts";
 import {
   readJson,
   reconcileDocument,
@@ -275,6 +278,55 @@ async function rebind(
   return { result, exitCode: 0 };
 }
 
+export async function attestWhenOwned(
+  client: DeliveryClient,
+  deploymentId: string,
+  input: z.infer<typeof AttestationRequestSchema>,
+  options: {
+    timeoutMs: number;
+    intervalMs: number;
+    now?: () => number;
+    sleep?: (duration: number) => Promise<void>;
+  },
+) {
+  try {
+    return await client.attest(deploymentId, input);
+  } catch (error) {
+    if (!(
+      error instanceof DeliveryClientError &&
+      error.status === 409 &&
+      error.message.includes("Deployment must own the target")
+    )) {
+      throw error;
+    }
+  }
+  const now = options.now ?? Date.now;
+  const sleep =
+    options.sleep ??
+    ((duration: number) =>
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, duration);
+      }));
+  const deadline = now() + options.timeoutMs;
+  for (;;) {
+    const detail = await client.deployment(deploymentId);
+    const { status } = detail.deployment;
+    if (status === "running") return client.attest(deploymentId, input);
+    if (status !== "queued") {
+      throw new Error(
+        `Deployment ${deploymentId} cannot record stage attestations while status is "${status}" (expected "running")`,
+      );
+    }
+    const remaining = deadline - now();
+    if (remaining <= 0) {
+      throw new Error(
+        `Timed out waiting for deployment ${deploymentId} to claim its target (still status "queued"); check active barrier deployments with toolkit deploy status --json`,
+      );
+    }
+    await sleep(Math.min(options.intervalMs, remaining));
+  }
+}
+
 async function administer(
   client: DeliveryClient,
   command: string,
@@ -319,7 +371,11 @@ async function administer(
         stage: options.stage,
         evidence,
       });
-      return { result: await client.attest(target, input), exitCode: 0 };
+      const result = await attestWhenOwned(client, target, input, {
+        timeoutMs: seconds(options.timeout ?? "120") * 1000,
+        intervalMs: seconds(options.interval ?? "2") * 1000,
+      });
+      return { result, exitCode: 0 };
     }
   }
 }

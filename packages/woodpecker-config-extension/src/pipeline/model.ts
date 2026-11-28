@@ -143,6 +143,12 @@ export type CiStep = {
    */
   readonly defaultBranchOnly?: boolean;
   /**
+   * With `defaultBranchOnly`, also run on a pull request whose changed files
+   * match one of these globs. An unknown (empty) changed-file list never
+   * matches here, so the exception cannot bring the step back by failing open.
+   */
+  readonly pullRequestInclude?: readonly string[];
+  /**
    * Treat a non-zero exit as advisory rather than failing the build.
    *
    * Reserved for optional scanners whose FINDINGS must not block a merge.

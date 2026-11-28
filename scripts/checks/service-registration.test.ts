@@ -1,3 +1,5 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import { createTempGitRepo, type TempGitRepo } from "../lib/test-git.ts";
@@ -11,6 +13,7 @@ import {
   registrationFindings,
   type RegistrationInputs,
 } from "./service-registration.ts";
+import { privateImageProvisioningFindings } from "./service-registration-private-images.ts";
 
 /** One fully registered web service with an application image and a chart. */
 function complete(): RegistrationInputs {
@@ -22,6 +25,7 @@ function complete(): RegistrationInputs {
     deliveryDelegations: { notes: "notes/prod" },
     catalogEnvironmentOf: (environment) => environment,
     registryImages: new Set(["notes"]),
+    privateRegistryImages: new Set(["notes"]),
     applicationTargets: new Set(["notes"]),
     infrastructureTargets: new Set(),
     bakeTargets: new Map([
@@ -38,6 +42,7 @@ function complete(): RegistrationInputs {
     workspaces: new Set(["packages/notes"]),
     exemptions: {
       imagesBuiltOutsideBake: {},
+      pendingPrivateImages: {},
       chartsWithoutRecipe: {},
       policyOnlyDelegations: {},
     },
@@ -198,8 +203,25 @@ describe("registrationFindings", () => {
           deliveryDelegations: {},
           exemptions: {
             imagesBuiltOutsideBake: {},
+            pendingPrivateImages: {},
             chartsWithoutRecipe: { notes: "inactive" },
             policyOnlyDelegations: { notes: "inactive" },
+          },
+        }),
+      ).toEqual([]);
+    });
+
+    test("a pre-provisioned private image in pendingPrivateImages passes before its service lands", () => {
+      expect(
+        registrationFindings({
+          ...complete(),
+          registryImages: new Set(["notes", "preprov"]),
+          privateRegistryImages: new Set(["notes", "preprov"]),
+          exemptions: {
+            ...complete().exemptions,
+            pendingPrivateImages: {
+              preprov: "pre-provisioning Docker Hub repo ahead of bake target",
+            },
           },
         }),
       ).toEqual([]);
@@ -209,15 +231,22 @@ describe("registrationFindings", () => {
       expect(
         items({
           ...complete(),
+          registryImages: new Set(["notes", "pub"]),
+          privateRegistryImages: new Set(["notes"]),
           exemptions: {
             imagesBuiltOutsideBake: { notes: "x", gone: "x" },
+            pendingPrivateImages: { notes: "x", pub: "x", gone: "x" },
             chartsWithoutRecipe: { notes: "x", gone: "x" },
             policyOnlyDelegations: { notes: "x", gone: "x" },
           },
         }),
       ).toEqual([
+        "catalog: image pub is in packages/version-catalog/src/image-registry.json but no catalog service has a first-party image:pub component",
         'exemptions: imagesBuiltOutsideBake["notes"]: it has a bake target now; delete the exemption from scripts/checks/service-registration-exemptions.json',
         'exemptions: imagesBuiltOutsideBake["gone"]: not a first-party catalog image; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: pendingPrivateImages["notes"]: claimed by a catalog service or build target now; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: pendingPrivateImages["pub"]: not marked visibility "private" in packages/version-catalog/src/image-registry.json; delete the exemption from scripts/checks/service-registration-exemptions.json',
+        'exemptions: pendingPrivateImages["gone"]: not in packages/version-catalog/src/image-registry.json; delete the exemption from scripts/checks/service-registration-exemptions.json',
         'exemptions: chartsWithoutRecipe["notes"]: a recipe deploys it now; delete the exemption from scripts/checks/service-registration-exemptions.json',
         'exemptions: chartsWithoutRecipe["gone"]: not a first-party catalog chart; delete the exemption from scripts/checks/service-registration-exemptions.json',
         'exemptions: policyOnlyDelegations["notes"]: the catalog delegates it now; delete the exemption from scripts/checks/service-registration-exemptions.json',
@@ -536,5 +565,106 @@ describe("this repository", () => {
     expect(inputs.recipeCharts.size).toBeGreaterThan(50);
     expect(formatChecklist(registrationFindings(inputs))).toBe("");
     expect(await immutableRevisionFindings()).toEqual([]);
+    expect(await privateImageProvisioningFindings({ inputs })).toEqual([]);
+  });
+});
+
+describe("privateImageProvisioningFindings", () => {
+  test("rejects adding a new private image and build target in one PR and checks dockerhub synth", async () => {
+    const repo = await mkdtemp(path.join(tmpdir(), "private-image-prov-"));
+    try {
+      const git = (...args: string[]) => {
+        const res = Bun.spawnSync(["git", ...args], { cwd: repo });
+        expect(res.exitCode, res.stderr.toString()).toBe(0);
+        return res.stdout.toString().trim();
+      };
+      git("init", "--quiet");
+      await Bun.write(
+        path.join(repo, "packages/version-catalog/src/image-registry.json"),
+        JSON.stringify({
+          images: [{ name: "existing", visibility: "private" }],
+        }),
+        { createPath: true },
+      );
+      await Bun.write(
+        path.join(repo, "packages/homelab/src/tofu/dockerhub/main.tf.json"),
+        JSON.stringify({
+          locals: {
+            registry: { images: [{ name: "existing", visibility: "private" }] },
+          },
+        }),
+        { createPath: true },
+      );
+      git("add", ".");
+      git(
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "--quiet",
+        "-m",
+        "base",
+      );
+      const base = git("rev-parse", "HEAD");
+
+      const onePrFindings = await privateImageProvisioningFindings({
+        root: repo,
+        env: { CI_CHANGED_BASE: base },
+        inputs: {
+          privateRegistryImages: new Set(["existing", "brand-new"]),
+          applicationTargets: new Set(["brand-new"]),
+          infrastructureTargets: new Set(),
+          exemptions: {
+            imagesBuiltOutsideBake: {},
+            pendingPrivateImages: {},
+            chartsWithoutRecipe: {},
+            policyOnlyDelegations: {},
+          },
+        },
+      });
+      expect(onePrFindings).toHaveLength(1);
+      expect(onePrFindings[0]?.item).toContain("pre-provisioning PR first");
+
+      const checkPendingProvisioning = () =>
+        privateImageProvisioningFindings({
+          root: repo,
+          env: { CI_CHANGED_BASE: base },
+          inputs: {
+            privateRegistryImages: new Set(["existing", "brand-new"]),
+            applicationTargets: new Set(),
+            infrastructureTargets: new Set(),
+            exemptions: {
+              imagesBuiltOutsideBake: {},
+              pendingPrivateImages: { "brand-new": "pre-provisioning" },
+              chartsWithoutRecipe: {},
+              policyOnlyDelegations: {},
+            },
+          },
+        });
+
+      const unsynthedFindings = await checkPendingProvisioning();
+      expect(unsynthedFindings).toHaveLength(1);
+      expect(unsynthedFindings[0]?.item).toContain(
+        "packages/homelab-cdktn synth",
+      );
+
+      await Bun.write(
+        path.join(repo, "packages/homelab/src/tofu/dockerhub/main.tf.json"),
+        JSON.stringify({
+          locals: {
+            registry: {
+              images: [
+                { name: "existing", visibility: "private" },
+                { name: "brand-new", visibility: "private" },
+              ],
+            },
+          },
+        }),
+      );
+      expect(await checkPendingProvisioning()).toEqual([]);
+    } finally {
+      await rm(repo, { recursive: true, force: true });
+    }
   });
 });

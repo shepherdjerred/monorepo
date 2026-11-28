@@ -5,6 +5,7 @@ import type {
   UpdateUserFeedBody,
 } from "@shepherdjerred/feeds/shared/contract.ts";
 import {
+  applyRetroactiveAutoReadForFeedInDb,
   bumpSubscriptionsEtagInDb,
   ensureCategoryInDb,
   getFeedByIdFromDb,
@@ -141,6 +142,12 @@ export function updateUserFeedInDb(
       nextAuto === null ? null : JSON.stringify(nextAuto),
       id,
     );
+    if (
+      body.autoRead !== undefined &&
+      JSON.stringify(body.autoRead) !== JSON.stringify(existing.autoRead)
+    ) {
+      applyRetroactiveAutoReadForFeedInDb(db, id, nextAuto);
+    }
     bumpSubscriptionsEtagInDb(db);
   })();
   const updated = getFeedByIdFromDb(db, id);
@@ -253,7 +260,7 @@ export function deleteUserCategoryInDb(
     return existing;
   }
   db.transaction(() => {
-    const uncat = ensureCategoryInDb(db, "Uncategorized", 0, 30);
+    const uncat = ensureCategoryInDb(db, "Uncategorized", 0, 40);
     db.query("UPDATE feeds SET category_id = ? WHERE category_id = ?").run(
       uncat.id,
       existing.id,

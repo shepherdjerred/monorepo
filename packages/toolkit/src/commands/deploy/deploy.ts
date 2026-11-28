@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { generation, required, seconds, type DeployOptions } from "./common.ts";
 import { runWorkerCommand, validateWorkerCommand } from "./workers.ts";
 import { runMinecraftCommand, validateMinecraftCommand } from "./minecraft.ts";
@@ -15,8 +16,12 @@ import {
   runContentRecovery,
   validateContentRecovery,
 } from "./content-recovery.ts";
-import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import {
+  DeliveryClientError,
+  type DeliveryClient,
+} from "@shepherdjerred/delivery/client";
+import {
+  DeploymentStatusSchema,
   IdentifierSchema,
   PipelineDefinitionSchema,
   RegisterEnvironmentSchema,
@@ -62,6 +67,9 @@ monitor <ENVIRONMENT>                  Inspect the accepted deployment's monitor
 retire <SERVICE> --reason <TEXT> --machine [--force-while-on-main]  Retire a service after its main removal completes helm-push
 catalog reconcile [--file <PATH>] --machine  Make the record agree with a catalog document (default: the committed catalog)
 attest <DEPLOYMENT_ID> --stage <NAME> --evidence <PATH> --machine  Record operator-attested stage evidence
+selected <ENVIRONMENT>                 Inspect the environment's selected release and component revisions
+approvals                              List pending and recent deployment and saved-plan approvals
+list [ENVIRONMENT]                     List deployments (filter with --environment, --service, --status, --cursor)
 status [DEPLOYMENT_ID]                 Inspect one deployment or all environments
 wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required, --override for an override approval
@@ -84,8 +92,7 @@ Options:
   --reason <TEXT>                      Approval, rejection, or recovery reason
   --abandon                            recovery: close a stale pending intent (admin)
   --pending                            recovery: list pending intents instead of reading one
-  --override                           start: ask for an override approval of a non-eligible deploy;
-                                       approve/reject: decide that override approval
+  --override                           Ask for or decide an override approval (start, approve, reject)
   --force-while-on-main                retire: bypass the origin/main catalog and helm-push guard
   --step <NAME>                        Sub-step a recovery intent names
   --operation-id <UUID>                recover: the exact Argo operation inspected; settles the intent by readback
@@ -93,8 +100,11 @@ Options:
   --configuration <ID>                 Configuration revision a rebind moves to
   --stage <NAME>                       Operator-run stage an attestation settles
   --evidence <PATH>                    attest: JSON array of evidence
-  --file <PATH>                        Catalog document for catalog reconcile instead of the committed
-                                       catalog
+  --file <PATH>                        Catalog document for catalog reconcile (default: committed catalog)
+  --environment <ID>                   list: filter deployments by environment
+  --service <ID>                       list: filter deployments by service
+  --status <STATUS>                    list: filter deployments by status
+  --cursor <CURSOR>                    list: pagination cursor from previous page
   --timeout <SECONDS>                  Wait deadline (default 900)
   --interval <SECONDS>                 Poll interval (default 5)
 
@@ -145,6 +155,9 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   "reject-plan": 1,
   // One intent, or none with --pending.
   recovery: [0, 1],
+  selected: 1,
+  approvals: 0,
+  list: [0, 1],
   status: [0, 1],
   wait: 1,
   approve: 1,
@@ -188,6 +201,7 @@ export function validateDeployCommand(
     generation(options["expected-generation"]);
   if (options.timeout !== undefined) seconds(options.timeout);
   if (options.interval !== undefined) seconds(options.interval);
+  validateListFlags(command, positionals, options);
   validateRegistration(command, positionals, options);
   if (["artifact", "qualify"].includes(command))
     validateCatalogCommand(command, positionals, options);
@@ -226,6 +240,96 @@ function validateApproval(options: DeployOptions) {
     throw new Error("--reason is required");
 }
 
+function validateListFlags(
+  command: string,
+  positionals: string[],
+  options: DeployOptions,
+) {
+  const hasListOption = [
+    options.environment,
+    options.service,
+    options.status,
+    options.cursor,
+  ].some((value) => value !== undefined);
+  if (command !== "list") {
+    if (hasListOption)
+      throw new Error(
+        "--environment, --service, --status and --cursor apply to deploy list",
+      );
+    return;
+  }
+  if (positionals[0] !== undefined && options.environment !== undefined)
+    throw new Error(
+      "Pass either a positional ENVIRONMENT or --environment, not both",
+    );
+  const environmentId = positionals[0] ?? options.environment;
+  if (environmentId !== undefined) IdentifierSchema.parse(environmentId);
+  if (options.service !== undefined) IdentifierSchema.parse(options.service);
+  if (options.status !== undefined)
+    DeploymentStatusSchema.parse(options.status);
+  if (options.cursor === "") throw new Error("--cursor must be non-empty");
+}
+
+const TRANSIENT_CODES = new Set(
+  "ConnectionRefused ConnectionClosed ECONNREFUSED ECONNRESET EPIPE ETIMEDOUT".split(
+    " ",
+  ),
+);
+function listQuery(target: string | undefined, options: DeployOptions) {
+  const environmentId = target ?? options.environment;
+  return {
+    ...(environmentId === undefined ? {} : { environmentId }),
+    ...(options.service === undefined ? {} : { serviceId: options.service }),
+    ...(options.status === undefined
+      ? {}
+      : { status: DeploymentStatusSchema.parse(options.status) }),
+    ...(options.cursor === undefined ? {} : { cursor: options.cursor }),
+  };
+}
+const READ_COMMANDS = new Set(
+  "whoami versions diff selected approvals list status inventory handover-context".split(
+    " ",
+  ),
+);
+
+const CodedErrorSchema = z.object({ code: z.string() });
+function isTransientWaitError(error: unknown): boolean {
+  if (error instanceof DeliveryClientError)
+    return (
+      [429, 502, 503, 504].includes(error.status) ||
+      error.code === "PAUSED" ||
+      error.code === "UNAVAILABLE"
+    );
+  if (error instanceof TypeError || error instanceof SyntaxError) return true;
+  if (error instanceof DOMException && error.name === "TimeoutError")
+    return true;
+  const coded = CodedErrorSchema.safeParse(error);
+  return coded.success && TRANSIENT_CODES.has(coded.data.code);
+}
+
+type DeploymentView = Awaited<ReturnType<DeliveryClient["deployment"]>>;
+type PollOutcome =
+  | { kind: "settled"; result: DeploymentView; exitCode: number }
+  | { kind: "pending"; result: DeploymentView }
+  | { kind: "transient"; error: unknown };
+
+async function pollDeployment(
+  client: DeliveryClient,
+  id: string,
+): Promise<PollOutcome> {
+  try {
+    const result = await client.deployment(id);
+    const { status } = result.deployment;
+    if (status === "succeeded") return { kind: "settled", result, exitCode: 0 };
+    return status === "failed" || status === "canceled"
+      ? { kind: "settled", result, exitCode: 1 }
+      : { kind: "pending", result };
+  } catch (error) {
+    if (!isTransientWaitError(error)) throw error;
+    return { kind: "transient", error };
+  }
+}
+
 export async function waitForDeployment(
   client: DeliveryClient,
   id: string,
@@ -235,26 +339,23 @@ export async function waitForDeployment(
     now?: () => number;
     sleep?: (duration: number) => Promise<void>;
   },
-): Promise<{
-  result: Awaited<ReturnType<DeliveryClient["deployment"]>>;
-  exitCode: number;
-}> {
+): Promise<{ result: DeploymentView; exitCode: number }> {
   const now = options.now ?? Date.now;
   const sleep =
     options.sleep ??
-    ((duration: number) =>
-      new Promise<void>((resolve) => {
-        setTimeout(resolve, duration);
-      }));
+    ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const deadline = now() + options.timeoutMs;
+  let lastResult: DeploymentView | undefined;
   for (;;) {
-    const result = await client.deployment(id);
-    if (result.deployment.status === "succeeded")
-      return { result, exitCode: 0 };
-    if (["failed", "canceled"].includes(result.deployment.status))
-      return { result, exitCode: 1 };
+    const polled = await pollDeployment(client, id);
+    if (polled.kind === "settled")
+      return { result: polled.result, exitCode: polled.exitCode };
+    if (polled.kind === "pending") lastResult = polled.result;
     const remaining = deadline - now();
-    if (remaining <= 0) return { result, exitCode: 2 };
+    if (remaining <= 0) {
+      if (lastResult !== undefined) return { result: lastResult, exitCode: 2 };
+      if (polled.kind === "transient") throw polled.error;
+    }
     await sleep(Math.min(options.intervalMs, remaining));
   }
 }
@@ -271,17 +372,8 @@ export async function runDeployCommand(
     return specialized(client, positionals, options);
   if (command === "platform")
     return runPlatformCommand(client, positionals, options);
-  if (
-    [
-      "whoami",
-      "versions",
-      "diff",
-      "status",
-      "inventory",
-      "handover-context",
-    ].includes(command)
-  )
-    return readCommand(client, command, positionals);
+  if (READ_COMMANDS.has(command))
+    return readCommand(client, command, positionals, options);
   const target = positionals[0];
   const requestId = () => {
     const id = options["request-id"] ?? crypto.randomUUID();
@@ -331,6 +423,7 @@ async function readCommand(
   client: DeliveryClient,
   command: string,
   positionals: string[],
+  options: DeployOptions,
 ) {
   const target = positionals[0];
   let result: unknown;
@@ -346,6 +439,22 @@ async function readCommand(
         target === "none" ? null : required(target),
         required(positionals[1]),
       );
+      break;
+    case "selected": {
+      const environmentId = required(target);
+      const selection = await client.selection(environmentId);
+      const versionSet =
+        selection.accepted === null
+          ? null
+          : await client.version(selection.accepted.versionSetRevisionId);
+      result = { environmentId, selection, versionSet };
+      break;
+    }
+    case "approvals":
+      result = await client.approvals();
+      break;
+    case "list":
+      result = await client.deployments(listQuery(target, options));
       break;
     case "status":
       result =

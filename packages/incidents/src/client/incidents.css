@@ -1,0 +1,776 @@
+/*
+ * Hub's incident pages. Colours are console-ui tokens (`--ui-*`); page frame
+ * classes (`page-heading`, `eyebrow`, `back-link`, `block-heading`, the
+ * loading/empty/error states) are Hub's own, so these pages read like the
+ * rest of Hub. Layout adapts to Hub's `content` container, not the viewport.
+ */
+
+.inc-page {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.inc-page .page-heading {
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+
+/* Incident titles are sentences, longer than a page name. */
+.inc-heading[data-compact] h1 {
+  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.inc-page .back-link {
+  justify-self: start;
+  margin-bottom: 0;
+}
+
+.inc-acting {
+  margin: -6px 0 0;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+
+.inc-acting strong {
+  color: var(--ui-ink);
+  font-weight: 600;
+}
+
+/* ---- View links (Open, Maintenance, History) ---- */
+.inc-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.inc-view {
+  margin-bottom: -1px;
+  padding: 6px 0 9px;
+  border-bottom: 2px solid transparent;
+  color: var(--ui-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.inc-view:hover {
+  color: var(--ui-ink);
+}
+
+.inc-view[aria-current="page"] {
+  border-bottom-color: var(--ui-accent);
+  color: var(--ui-ink);
+}
+
+/* ---- Live indicator ---- */
+.inc-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+
+.inc-live svg {
+  flex: none;
+  color: var(--ui-faint);
+}
+
+.inc-live[data-connected] svg {
+  color: var(--ui-sev-ok);
+}
+
+.inc-live-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Panels ---- */
+.inc-panel {
+  min-width: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  overflow: clip;
+}
+
+.inc-panel-title {
+  margin: 0;
+  padding: 16px 20px 9px;
+}
+
+.inc-empty {
+  margin: 0;
+  padding: 0 20px 16px;
+  color: var(--ui-muted);
+}
+
+.inc-calm {
+  color: var(--ui-sev-ok-text);
+}
+
+.inc-notice {
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--ui-sev) 40%, var(--ui-panel));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ui-sev) 10%, var(--ui-panel));
+  color: var(--ui-sev-ink);
+  font-weight: 500;
+}
+
+/* ---- Badges ---- */
+.inc-sev {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--ui-sev) 45%, var(--ui-panel));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ui-sev) 12%, var(--ui-panel));
+  color: var(--ui-sev-ink);
+  font-family: var(--ui-font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.inc-systems {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.inc-system,
+.inc-kind,
+.inc-link-kind {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  color: var(--ui-ink-2);
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.inc-kind {
+  margin-top: 4px;
+  color: var(--ui-muted);
+}
+
+.inc-command {
+  display: inline-grid;
+  gap: 2px;
+  min-width: 0;
+  white-space: normal;
+}
+
+.inc-command-detail {
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+
+/* ---- Filters and tables ---- */
+.inc-filters {
+  align-items: end;
+  border-top: 1px solid var(--ui-line-soft);
+}
+
+.inc-filter {
+  display: grid;
+  gap: 4px;
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+
+.inc-filter select {
+  min-width: 9rem;
+}
+
+/* The wrapper is the size container, so a table stacks by its own width:
+   the list stacks on a phone, the signals table in the narrow side column. */
+.inc-table-wrap {
+  container: inc-table / inline-size;
+  overflow-x: auto;
+  max-inline-size: 100%;
+}
+
+.inc-table-wrap:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: -2px;
+}
+
+/* Hub's global table rules set mono, 0.77rem, and uppercase row headers;
+   the incident tables read as prose with mono only for ids and numbers. */
+.inc-table {
+  font-family: var(--ui-font-sans);
+  font-size: 13px;
+}
+
+.inc-table tbody th {
+  color: var(--ui-ink);
+  font-size: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  background: none;
+}
+
+.inc-table .ui-num {
+  font-family: var(--ui-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.inc-table td {
+  height: auto;
+  padding-block: 8px;
+  vertical-align: top;
+}
+
+.inc-table th.inc-lead {
+  min-width: 18rem;
+  padding-block: 8px;
+  border-bottom: 1px solid var(--ui-line-soft);
+  white-space: normal;
+  vertical-align: top;
+}
+
+.inc-table tr[data-open="false"] .inc-title {
+  color: var(--ui-muted);
+}
+
+.inc-row-link {
+  display: grid;
+  gap: 1px;
+  color: var(--ui-ink);
+  text-decoration: none;
+}
+
+.inc-row-link:hover .inc-title {
+  color: var(--ui-accent);
+  text-decoration: underline;
+}
+
+.inc-id {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+}
+
+.inc-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.inc-key {
+  display: block;
+  color: var(--ui-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Narrow table: each row becomes a card whose cells carry their label. */
+@container inc-table (max-width: 720px) {
+  .inc-table,
+  .inc-table tbody,
+  .inc-table tr,
+  .inc-table th,
+  .inc-table td {
+    display: block;
+  }
+
+  .inc-table thead {
+    display: none;
+  }
+
+  .inc-table tr {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--ui-line);
+  }
+
+  .inc-table :is(th, td),
+  .inc-table :is(th, td):first-child,
+  .inc-table :is(th, td):last-child {
+    height: auto;
+    min-width: 0;
+    padding: 3px 0;
+    border: 0;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .inc-table th.inc-lead {
+    min-width: 0;
+    padding-bottom: 6px;
+    border: 0;
+  }
+
+  .inc-table td {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .inc-table td > * {
+    justify-self: start;
+  }
+
+  .inc-table td::before {
+    content: attr(data-label);
+    color: var(--ui-muted);
+    font-family: var(--ui-font-sans);
+    font-size: 12px;
+  }
+
+  .inc-table tbody tr:hover td {
+    background: none;
+  }
+}
+
+/* ---- Detail ---- */
+.inc-detail {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.inc-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.inc-detail-main,
+.inc-detail-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+@container content (max-width: 1000px) {
+  .inc-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.inc-fact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+  padding: 0 20px 14px;
+}
+
+.inc-fact {
+  min-width: 0;
+}
+
+.inc-fact dt {
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+
+.inc-fact dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.inc-prose {
+  padding: 0 20px 16px;
+  border-top: 1px solid var(--ui-line-soft);
+}
+
+.inc-prose h3 {
+  margin: 14px 0 4px;
+}
+
+.inc-prose p {
+  margin: 0;
+  color: var(--ui-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.inc-exit {
+  padding-left: 10px;
+  border-left: 3px solid var(--ui-accent);
+}
+
+.inc-command-panel .inc-command-body {
+  display: grid;
+  gap: 6px;
+  padding: 0 20px 4px;
+}
+
+.inc-command-body p {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.inc-actions {
+  padding-top: 8px;
+}
+
+.inc-inline-form {
+  display: grid;
+  gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--ui-line-soft);
+}
+
+.inc-inline-form h3 {
+  margin: 0;
+}
+
+.inc-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+}
+
+.inc-form-row > .ui-field {
+  min-width: 0;
+}
+
+.inc-grow {
+  flex: 1 1 12rem;
+}
+
+.inc-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.inc-page textarea.ui-field-control {
+  resize: vertical;
+}
+
+.inc-list {
+  display: grid;
+  margin: 0;
+  padding: 0 20px 14px;
+  list-style: none;
+}
+
+.inc-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+  overflow-wrap: anywhere;
+}
+
+.inc-list li:last-child {
+  border-bottom: 0;
+}
+
+.inc-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-accent);
+}
+
+.inc-list a svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---- Timeline ---- */
+.inc-timeline {
+  margin: 0;
+  padding: 4px 20px 16px;
+  list-style: none;
+}
+
+.inc-event {
+  --inc-dot: var(--ui-faint);
+  position: relative;
+  padding: 0 0 14px 20px;
+}
+
+.inc-event::before {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--inc-dot);
+  content: "";
+}
+
+.inc-event:not(:last-child)::after {
+  position: absolute;
+  top: 16px;
+  bottom: 0;
+  left: 4px;
+  width: 1px;
+  background: var(--ui-line);
+  content: "";
+}
+
+.inc-event:is(
+  [data-type="claimed"],
+  [data-type="resolved"],
+  [data-type="signal-cleared"],
+  [data-type="handed-off"]
+) {
+  --inc-dot: var(--ui-sev-ok);
+}
+
+.inc-event:is([data-type="signal-firing"], [data-type="reopened"]) {
+  --inc-dot: var(--ui-sev-error);
+}
+
+.inc-event:is(
+  [data-type="dispatched"],
+  [data-type="status-changed"],
+  [data-type="update"]
+) {
+  --inc-dot: var(--ui-accent);
+}
+
+.inc-event-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  align-items: baseline;
+}
+
+.inc-event-head time {
+  font-size: 12px;
+}
+
+.inc-event-detail,
+.inc-event-body {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.inc-event-detail {
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+
+.inc-event-body {
+  color: var(--ui-ink);
+  white-space: pre-wrap;
+}
+
+/* ---- Dialog ---- */
+.inc-dialog {
+  width: min(34rem, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  overflow: auto;
+}
+
+.inc-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+.inc-dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: color-mix(in srgb, black 45%, transparent);
+}
+
+.inc-dialog-form {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.inc-dialog-title {
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+
+.inc-dialog-description {
+  margin: 0;
+  color: var(--ui-muted);
+  overflow-wrap: anywhere;
+}
+
+.inc-dialog-error {
+  margin: 0;
+  color: var(--ui-sev-error-text);
+}
+
+.inc-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---- Declare ---- */
+.inc-declare {
+  display: grid;
+  gap: 16px;
+  max-width: 54rem;
+  padding: 20px;
+}
+
+.inc-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 10px 14px 12px;
+  border: 1px solid var(--ui-line-soft);
+  border-radius: 8px;
+}
+
+.inc-fieldset legend {
+  padding: 0 4px;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+
+.inc-choice {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.inc-choice input {
+  accent-color: var(--ui-accent);
+}
+
+.inc-choice label {
+  padding: 5px 0;
+}
+
+.inc-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0 12px;
+}
+
+.inc-window {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inc-duplicate {
+  display: grid;
+  gap: 10px;
+  padding: 16px 20px;
+  border: 1px solid
+    color-mix(in srgb, var(--ui-sev-warning) 45%, var(--ui-panel));
+  border-radius: 10px;
+  background: var(--ui-sev-warning-soft);
+}
+
+.inc-duplicate p {
+  margin: 0;
+  color: var(--ui-ink-2);
+}
+
+.inc-duplicate-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+
+.inc-duplicate-meta,
+.inc-home-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+/* ---- Home ---- */
+.inc-home .block-heading a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.inc-home .block-heading a:hover {
+  color: var(--ui-accent);
+}
+
+.inc-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 14px;
+  align-items: start;
+}
+
+@container content (max-width: 900px) {
+  .inc-home-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.inc-home-panel {
+  padding: 4px 16px 6px;
+}
+
+.inc-home-title {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 10px 0 6px;
+}
+
+.inc-home-panel .inc-empty {
+  padding: 2px 0 10px;
+}
+
+.inc-home-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inc-home-row {
+  display: grid;
+  gap: 5px;
+  padding: 9px 0;
+  border-top: 1px solid var(--ui-line-soft);
+}
+
+/* Narrow layouts: stack the heading, and keep form text at 16px on touch
+   screens so mobile browsers do not zoom into a focused field. */
+@container content (max-width: 720px) {
+  .inc-page .page-heading {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .inc-declare {
+    padding: 16px;
+  }
+}
+
+@media (pointer: coarse) {
+  .inc-page :is(.ui-field-control, select, input, textarea) {
+    font-size: max(1rem, 1em);
+  }
+
+  .inc-page .ui-field-control {
+    min-height: 44px;
+  }
+}
