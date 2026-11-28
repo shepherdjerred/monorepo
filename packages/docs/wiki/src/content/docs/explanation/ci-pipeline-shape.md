@@ -92,7 +92,20 @@ modification time, so
 [game servers](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/packages/discord-plays-core/src/webserver/image-file-options.ts)
 never derive HTTP cache validators from it.
 [Invariant tests](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/ci/scripts/images/application-image-reproducibility.test.ts)
-hold every application Dockerfile to these rules. The
+hold every application Dockerfile to these rules.
+
+The clamp is BuildKit's export-time `rewrite-timestamp` option, and it costs
+disk writes on the CI node. Upstream BuildKit
+[re-converts every non-base layer on every export](https://github.com/moby/buildkit/blob/v0.35.1/exporter/containerimage/writer.go#L454-L495).
+It decompresses each layer, rewrites the tar headers and recompresses the
+result, even when the layer was a cache hit and the output is byte-identical to
+the last push. `packages/homelab/images/buildkitd` holds a patched daemon that
+records each rewritten blob on its source blob and reuses it. Images stay
+byte-for-byte identical. That image is not deployed; its README lists the
+enablement steps and how to drop the patch once upstream reuses rewritten
+blobs itself.
+
+The
 [chart producer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/helm/helm-push.ts)
 freezes those exact inputs into immutable archives. Changed-file selectors and
 the producer dependency closure determine CI work; there is no pin-only shortcut.
