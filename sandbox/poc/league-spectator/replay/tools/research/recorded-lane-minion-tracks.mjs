@@ -6,14 +6,13 @@ import {
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
 import { createCurrentLaneMinionPacketReader } from "./recorded-lane-minion-packets.mjs";
 
-const openingWaveBoundary = 36;
-
 function registerGameplay(
   readPacket,
   readWaypoints,
   substitution,
   onBirth,
   includeCreationPayload,
+  openingWaveBoundary,
 ) {
   const births = new Map();
   const openingTeam = new Map();
@@ -89,7 +88,7 @@ function resolveBirthTeam(packets) {
   return null;
 }
 
-function verifyLife(context, birth, openingTeam) {
+function verifyLife(context, birth, openingTeam, openingWaveBoundary) {
   const { creation, endings } = birth;
   if (creation.entity !== context) return "entityDisagreement";
   if (creation.unitType < 4 || creation.unitType > 7) return "unsupportedClass";
@@ -149,8 +148,10 @@ function readActor(
   openingTeam,
   barracksPlacements,
   worldPoint,
+  openingWaveBoundary,
+  mayhemBloom,
 ) {
-  const reason = verifyLife(context, birth, openingTeam);
+  const reason = verifyLife(context, birth, openingTeam, openingWaveBoundary);
   if (reason !== undefined) return { reason };
   const { unitType, barracks } = birth.creation;
   const [
@@ -173,7 +174,8 @@ function readActor(
   if (assets.size !== 1) return { reason: "missingLaunchCorroboration" };
   const [asset] = assets;
   const team = resolveBirthTeam(birth.teamPackets) * 100;
-  if (!(team === 100 ? /^sru_order/ : /^sru_chaos/).test(asset))
+  const assetPrefix = mayhemBloom ? "ha_" : "sru_";
+  if (!asset.startsWith(assetPrefix + (team === 100 ? "order" : "chaos")))
     return { reason: "launchTeamMismatch" };
   const paths = readPaths(observations, killTimeSeconds, worldPoint);
   if (paths.length === 0) return { reason: "missingBoundedMotion" };
@@ -204,14 +206,17 @@ export function createCurrentLaneMinionCollector({
   onBirth,
   includeCreationPayload = false,
   readWaypoints = createWaypointReaderFromCodecs(codecs),
+  mayhemBloom = false,
 }) {
+  const openingWaveBoundary = mayhemBloom ? 55 : 36;
   if (
-    barracksPlacements.length !== 6 ||
+    barracksPlacements.length !== (mayhemBloom ? 2 : 6) ||
     movementOrigin.length !== 2 ||
-    !movementOrigin.every(Number.isFinite)
+    !movementOrigin.every(Number.isFinite) ||
+    (mayhemBloom && (movementOrigin[0] !== 6581 || movementOrigin[1] !== 6241))
   )
     throw Error(
-      "Recorded lane paths require authenticated Map11 barracks and movement origin",
+      "Recorded lane paths require authenticated barracks and movement origin",
     );
   const { observe, births, openingTeam } = registerGameplay(
     createCurrentLaneMinionPacketReader(replay, codecs),
@@ -219,6 +224,7 @@ export function createCurrentLaneMinionCollector({
     recoverTerrainByteSubstitution(codecs),
     onBirth,
     includeCreationPayload,
+    openingWaveBoundary,
   );
   function finish() {
     const durationSeconds = replay.durationMilliseconds / 1000;
@@ -242,6 +248,8 @@ export function createCurrentLaneMinionCollector({
         openingTeam,
         barracksPlacements,
         worldPoint,
+        openingWaveBoundary,
+        mayhemBloom,
       );
       if (actor !== undefined && actor.removalTimeSeconds > durationSeconds)
         throw Error(

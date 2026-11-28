@@ -1387,6 +1387,21 @@ of `.cache`, and `{ "path": "…", "sha256": "…" }` references in `terrain`,
 textures relative to its directory. The catalog lists equipped models relative
 to its directory.
 
+Prepare the lane minion catalog from the exact build's Map12 archive and
+ordinal model exporter, then bundle the current browser worker with the pinned
+decompressor.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/mayhem-lane-minion-catalog.mjs $installation $ordinalExporter $laneCatalogDirectory
+bun sandbox/poc/league-spectator/replay/tools/build-native-terrain-motion-worker.mjs $fzstd $worker
+```
+
+Use the resulting catalog `manifest.json` and printed SHA-256 for
+`laneMinions`, and the worker file and its printed SHA-256 for `worker`.
+The catalog uses the two authored Bloom barracks and their KIWI overrides.
+The worker binds their eight Skin0 models to recorded spawn, team, path,
+health, and defeat observations.
+
 ```powershell
 $package = bun sandbox/poc/league-spectator/replay/tools/research/build-local-scout-mayhem-package.mjs $inputs | ConvertFrom-Json
 $env:SCOUT_REPLAY_E2E_MANIFEST = $package.manifestPath
@@ -1397,7 +1412,8 @@ Pop-Location
 ```
 
 Use the original `NA1-5686263770.rofl`. The test checks the ten recorded
-champions and textured geometry, runs the 1:00–1:30 window at 1×, rewinds, and
+champions and textured geometry, verifies all 12 first-wave minions at 1:00,
+runs the 1:00–1:30 window at 1×, rewinds, and
 checks a timestamp and player camera shared with a fresh signed-out browser.
 It checks Soraka's recorded health and level on the shared frame. The replay
 worker supplies the recorded player names, scoreboard, and elimination jumps.

@@ -513,11 +513,11 @@ const worldUnitInstance = z.object({
 });
 const laneMinionId = z
   .string()
-  .regex(/^sru_(?:order|chaos)minion(?:melee|ranged|siege|super)$/);
+  .regex(/^(?:sru|ha)_(?:order|chaos)minion(?:melee|ranged|siege|super)$/);
 const laneMinionAsset = z.strictObject({
   asset: z
     .string()
-    .regex(/^sru_(?:order|chaos)minion(?:melee|ranged|siege|super)\/0$/),
+    .regex(/^(?:sru|ha)_(?:order|chaos)minion(?:melee|ranged|siege|super)\/0$/),
 });
 const laneTransformRow = z.tuple([
   z.number(),
@@ -525,27 +525,41 @@ const laneTransformRow = z.tuple([
   z.number(),
   z.number(),
 ]);
-const LaneMinionCatalogSchema = z.strictObject({
-  barracksPlacements: z
-    .array(
-      z.strictObject({
-        transform: z.tuple([
-          laneTransformRow,
-          laneTransformRow,
-          laneTransformRow,
-          laneTransformRow,
-        ]),
-        units: z.strictObject({
-          "4": laneMinionAsset,
-          "5": laneMinionAsset,
-          "6": laneMinionAsset,
-          "7": laneMinionAsset,
+const LaneMinionCatalogSchema = z
+  .strictObject({
+    map: z.literal("mayhem-bloom").optional(),
+    barracksPlacements: z
+      .array(
+        z.strictObject({
+          transform: z.tuple([
+            laneTransformRow,
+            laneTransformRow,
+            laneTransformRow,
+            laneTransformRow,
+          ]),
+          units: z.strictObject({
+            "4": laneMinionAsset,
+            "5": laneMinionAsset,
+            "6": laneMinionAsset,
+            "7": laneMinionAsset,
+          }),
         }),
-      }),
-    )
-    .length(6),
-  models: z.array(z.tuple([laneMinionId, participantId])).length(8),
-});
+      )
+      .min(2)
+      .max(6),
+    models: z.array(z.tuple([laneMinionId, participantId])).length(8),
+  })
+  .refine(({ map, barracksPlacements, models }) => {
+    const mayhem = map === "mayhem-bloom";
+    const prefix = mayhem ? "ha_" : "sru_";
+    return (
+      barracksPlacements.length === (mayhem ? 2 : 6) &&
+      barracksPlacements.every(({ units }) =>
+        Object.values(units).every(({ asset }) => asset.startsWith(prefix)),
+      ) &&
+      models.every(([model]) => model.startsWith(prefix))
+    );
+  });
 const laneCount = z.number().int().positive();
 const LaneMinionCoverageSchema = z.strictObject({
   candidateBirths: z.number().int().nonnegative(),
@@ -1170,6 +1184,8 @@ export const SceneSchema = TerrainSceneFields.refine(
       if (
         bindings === undefined ||
         scene.identity.build !== currentTerrainPositionBuild ||
+        (scene.identity.mayhemMapSkin === "Bloom") !==
+          (catalog.map === "mayhem-bloom") ||
         scene.workerMotion?.allowCurrentBuild !== true ||
         scene.motion !== undefined ||
         scene.teamVision !== undefined
@@ -1921,9 +1937,10 @@ function loadWorldUnits(
   const contexts = occupiedWorldContexts(scene);
   const counts = new Map<string, number>();
   const duration = scene.identity.durationMilliseconds / 1000;
+  const orderPrefix = catalog.map === "mayhem-bloom" ? "ha_order" : "sru_order";
   for (const actor of laneActors) {
     const model = models.get(actor.participantId);
-    const team = model?.startsWith("sru_order") ? 100 : 200;
+    const team = model?.startsWith(orderPrefix) ? 100 : 200;
     if (
       model === undefined ||
       actor.teamId !== team ||

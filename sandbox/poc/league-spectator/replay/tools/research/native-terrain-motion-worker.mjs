@@ -69,10 +69,9 @@ function cacheLastWaypoints(read) {
   };
 }
 
-const laneModelId = /^sru_(?:order|chaos)minion(?:melee|ranged|siege|super)$/;
 const laneVariants = ["melee", "ranged", "siege", "super"];
 
-function readLaneBarracksTeam(row) {
+function readLaneBarracksTeam(row, prefix) {
   if (
     row === null ||
     typeof row !== "object" ||
@@ -90,7 +89,7 @@ function readLaneBarracksTeam(row) {
     Object.keys(row.units).length !== 4
   )
     throw Error("Invalid authored lane minion barracks placement.");
-  const team = /^sru_(order|chaos)minionmelee\/0$/.exec(
+  const team = /^(?:sru|ha)_(order|chaos)minionmelee\/0$/.exec(
     row.units[4]?.asset,
   )?.[1];
   if (
@@ -101,7 +100,7 @@ function readLaneBarracksTeam(row) {
         unit === null ||
         typeof unit !== "object" ||
         Object.keys(unit).length !== 1 ||
-        unit.asset !== `sru_${team}minion${variant}/0`
+        unit.asset !== `${prefix}${team}minion${variant}/0`
       );
     })
   )
@@ -117,25 +116,36 @@ async function sha256Hex(bytes) {
 }
 
 async function readLaneModelIds(catalog) {
-  if (typeof catalog !== "object" || Object.keys(catalog).length !== 2)
+  const mayhemBloom = catalog.map === "mayhem-bloom";
+  const prefix = mayhemBloom ? "ha_" : "sru_";
+  const placementsPerTeam = mayhemBloom ? 1 : 3;
+  if (
+    typeof catalog !== "object" ||
+    Object.keys(catalog).length !== (mayhemBloom ? 3 : 2)
+  )
     throw Error("Invalid authored lane minion catalog.");
   const { barracksPlacements, models } = catalog;
   if (
     !Array.isArray(barracksPlacements) ||
-    barracksPlacements.length !== 6 ||
+    barracksPlacements.length !== placementsPerTeam * 2 ||
     !Array.isArray(models) ||
     models.length !== 8
   )
     throw Error("Invalid authored lane minion catalog.");
-  const teams = barracksPlacements.map(readLaneBarracksTeam);
-  if (teams.filter((team) => team === "order").length !== 3)
-    throw Error("Invalid authored Map11 lane minion teams.");
+  const teams = barracksPlacements.map((row) =>
+    readLaneBarracksTeam(row, prefix),
+  );
+  if (teams.filter((team) => team === "order").length !== placementsPerTeam)
+    throw Error("Invalid authored lane minion teams.");
+  const expectedDigest = mayhemBloom
+    ? "130210f73735547fdca96dc91c6b653e3cbfeb2db4623c8b1c138829edaa59fd"
+    : "4a2ba16f5b7210953c6d3aede1ac77a1652b169aa090c2d6da93290821a9b703";
   if (
     (await sha256Hex(
       new TextEncoder().encode(JSON.stringify(barracksPlacements)),
-    )) !== "4a2ba16f5b7210953c6d3aede1ac77a1652b169aa090c2d6da93290821a9b703"
+    )) !== expectedDigest
   )
-    throw Error("Authored Map11 lane minion barracks digest differs.");
+    throw Error("Authored lane minion barracks digest differs.");
   const ids = new Map();
   const used = new Set();
   for (const row of models) {
@@ -144,7 +154,10 @@ async function readLaneModelIds(catalog) {
     const [modelId, participantId] = row;
     if (
       typeof modelId !== "string" ||
-      !laneModelId.test(modelId) ||
+      !modelId.startsWith(prefix) ||
+      !/^(?:order|chaos)minion(?:melee|ranged|siege|super)$/.test(
+        modelId.slice(prefix.length),
+      ) ||
       !Number.isSafeInteger(participantId) ||
       participantId <= 0 ||
       ids.has(modelId) ||
@@ -393,6 +406,7 @@ async function prepareMotion({
     decodeNeutralCamps === true
       ? readCurrentNeutralCampSkins(neutralCampSkins, neutralModelIds)
       : undefined;
+  const mayhemLaneMinions = laneMinionCatalog?.map === "mayhem-bloom";
   if (
     laneMinionCatalog !== undefined &&
     (laneMinionCatalog === null ||
@@ -400,8 +414,8 @@ async function prepareMotion({
       replay.build !== currentTerrainPositionBuild ||
       !Array.isArray(waypointOrigin) ||
       waypointOrigin.length !== 2 ||
-      waypointOrigin[0] !== 7358 ||
-      waypointOrigin[1] !== 7412)
+      waypointOrigin[0] !== (mayhemLaneMinions ? 6581 : 7358) ||
+      waypointOrigin[1] !== (mayhemLaneMinions ? 6241 : 7412))
   )
     throw Error(
       "Replay-derived lane minions require the reviewed current build.",
@@ -624,6 +638,7 @@ async function prepareMotion({
           barracksPlacements: laneMinionCatalog.barracksPlacements,
           onBirth: teamVision?.addCandidate,
           readWaypoints,
+          mayhemBloom: mayhemLaneMinions,
         });
   const laneHealth =
     lane === undefined ? undefined : createLaneMinionHealthCollector(codecs);

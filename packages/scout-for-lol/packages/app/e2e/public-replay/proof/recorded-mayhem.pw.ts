@@ -51,8 +51,15 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
   const slider = page.getByRole("slider", { name: "Replay time" });
   const camera = page.getByRole("combobox", { name: "Camera" });
   const score = page.getByRole("group", { name: "Replay team score" });
+  const laneModels = [...fixture.paths.values()].filter((path) =>
+    path.startsWith("world-unit-models/"),
+  );
+  const laneMinions = page.locator("[data-map-actor=minion]");
   await expect(play).toBeEnabled();
   await expect(page.getByRole("combobox", { name: "Speed" })).toHaveValue("1");
+  expect(laneModels).toHaveLength(8);
+  await seek(page, 49);
+  await expect(laneMinions).toHaveCount(0);
   await seek(page, 60);
   await expect(camera.getByRole("option")).toHaveCount(11);
   await expect(score).toContainText(/Red team\s*0\s*kills/);
@@ -71,7 +78,8 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
   }
   expect(
     new Set(opening.actorOrigins.map((origin) => origin.join(","))).size,
-  ).toBe(10);
+  ).toBe(22);
+  await expect(laneMinions).toHaveCount(12);
   const openingPixels = sha256(
     await canvas.screenshot({
       path: testInfo.outputPath("bloom-opening-fight.png"),

@@ -10,6 +10,7 @@ import { prepareReplayForSeek } from "../../../../../packages/scout-for-lol/pack
 import { replayTimedPacketEnvelopes } from "../replay-packet-clock.mjs";
 import { movementWorldPaths } from "../movement-records.mjs";
 import { openReplay, replayPacketEnvelopes } from "../transport.mjs";
+import { buildMotionWorker } from "./build-native-terrain-motion-worker.mjs";
 import { readExactClassicCameraDefaults } from "./exact-map-bin.mjs";
 import {
   bindNativeSceneParticipants,
@@ -505,45 +506,6 @@ async function readPinned(path) {
     `Local Map11 digest mismatch: ${path}`,
   );
   return bytes;
-}
-
-async function buildMotionWorker(decompressorPath) {
-  const vendor = await readFile(decompressorPath);
-  assert.equal(
-    sha256(vendor),
-    "1a901fc5a58c349bbdb4f2aa1e688637ef56891ec58243a9f0cd863166b0d2a4",
-    "Unexpected terrain worker decompressor",
-  );
-  const result = await Bun.build({
-    entrypoints: [
-      fileURLToPath(
-        new URL("./research/native-terrain-motion-worker.mjs", import.meta.url),
-      ),
-    ],
-    target: "browser",
-    format: "esm",
-    plugins: [
-      {
-        name: "pinned-terrain-decompressor",
-        setup(builder) {
-          builder.onResolve({ filter: /^scout-terrain-fzstd$/ }, () => ({
-            path: "fzstd.mjs",
-            namespace: "terrain-decompressor",
-          }));
-          builder.onLoad(
-            { filter: /^fzstd\.mjs$/, namespace: "terrain-decompressor" },
-            () => ({ contents: vendor.toString("utf8"), loader: "js" }),
-          );
-        },
-      },
-    ],
-  });
-  if (!result.success || result.outputs.length !== 1)
-    throw new AggregateError(
-      result.logs,
-      "Browser replay worker bundle failed",
-    );
-  return result.outputs[0];
 }
 
 async function loadTerrainMaterials(manifestPath, meshes, proof, assetDigests) {

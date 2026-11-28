@@ -6,6 +6,10 @@ import {
   mayhemFlowMapAsset,
   mayhemFlowMapControlSha256,
 } from "./mayhem-flowmap-control-contract.mjs";
+import {
+  mayhemLaneMaterialsSha256,
+  verifyMayhemLaneCatalog,
+} from "./mayhem-lane-minion-catalog.mjs";
 import { readRecordedMayhemExperienceThresholds } from "./recorded-champion-experience.mjs";
 
 const map = { mapId: 12, gameMode: "KIWI", mayhemMapSkin: "Bloom" };
@@ -14,8 +18,6 @@ const protocol = "8bbfcd5af2bc92db";
 const sha256 = (bytes) =>
   new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
 
-const bloomMaterialsSha256 =
-  "edda022b5e925b62ccf05430623e339873cb06a67e7a6ef02764a5a3552f683b";
 const bloomMaterialPath =
   "Maps/KitPieces/Howling_Abyss/Bloom/Materials/Default/";
 const twilightCanopyTexture =
@@ -151,7 +153,7 @@ async function buildPackage(inputs) {
     terrainResource("materials/materials.json"),
   );
   assert.deepEqual(materials.coverage, terrain.coverage);
-  assert.equal(materials.source.materialsSha256, bloomMaterialsSha256);
+  assert.equal(materials.source.materialsSha256, mayhemLaneMaterialsSha256);
   const blendedCanopies = new Map(
     Object.entries(blendedCanopyTextures).map(([name, texture]) => [
       bloomMaterialPath + name,
@@ -183,6 +185,35 @@ async function buildPackage(inputs) {
   }
 
   const { min, max, x, z, step, movementOrigin } = terrain.navigation;
+  let laneMinionCatalog;
+  const laneMinionModelBindings = [];
+  if (inputs.laneMinions !== undefined) {
+    const lanes = await readReceipt(inputs.laneMinions);
+    verifyMayhemLaneCatalog(lanes);
+    const models = [];
+    for (const [index, key] of Object.keys(lanes.assets).sort().entries()) {
+      const { model, skinScale, hiddenRanges } = lanes.assets[key];
+      const participantId = 1_000_000 + index;
+      const url = `/world-unit-models/${model.sha256}.glb`;
+      assert.ok(!participantIds.has(participantId));
+      await add(url, {
+        path: join(dirname(inputs.laneMinions.path), model.file),
+        sha256: model.sha256,
+      });
+      models.push([key.slice(0, -2), participantId]);
+      laneMinionModelBindings.push({
+        participantId,
+        url,
+        skinScale,
+        hiddenRanges,
+      });
+    }
+    laneMinionCatalog = {
+      map: "mayhem-bloom",
+      barracksPlacements: lanes.barracksPlacements,
+      models,
+    };
+  }
   const thresholds =
     inputs.experienceMap === undefined
       ? undefined
@@ -232,6 +263,7 @@ async function buildPackage(inputs) {
     },
     navgrid: { columns: x, rows: z, step },
     minimap: true,
+    ...(laneMinionCatalog === undefined ? {} : { laneMinionModelBindings }),
     ...(mayhemFlowMapControl === undefined ? {} : { mayhemFlowMapControl }),
     ...(thresholds === undefined
       ? {}
@@ -241,6 +273,7 @@ async function buildPackage(inputs) {
       allowCurrentBuild: true,
       decodeChampionStats: true,
       decodePlayerState: true,
+      ...(laneMinionCatalog === undefined ? {} : { laneMinionCatalog }),
       ...(thresholds === undefined ? {} : { decodeChampionExperience: true }),
       championModelCatalog: {
         schema: catalog.schema,
