@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
+import * as Timers from "node:timers/promises";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
 import { DeploymentDetailSchema } from "@shepherdjerred/delivery/contract";
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
 import { argoApplication } from "#lib/delivery/model/step-testing.ts";
+import { withLeaseLoss } from "#lib/delivery/model/effect-signal.ts";
 import { forumDetail } from "#lib/delivery/model/forum-testing.ts";
 import { artifact, detail } from "#lib/delivery/model/testing.ts";
 import type * as Activity from "@temporalio/activity";
@@ -50,6 +52,10 @@ const calls = vi.hoisted(() => {
     failUpdate: false,
     failRestore: false,
   };
+});
+vi.mock("node:timers/promises", async (original) => {
+  const timers = await original<typeof Timers>();
+  return { ...timers, setTimeout: vi.fn(timers.setTimeout) };
 });
 vi.mock("@temporalio/activity", async (importOriginal) => {
   const { mockActivityModule } =
@@ -296,7 +302,9 @@ function minecraftFixture(
 }
 
 describe("Minecraft chart apply-safety", () => {
+  const retryWait = vi.mocked(Timers.setTimeout);
   afterEach(() => {
+    retryWait.mockReset();
     vi.unstubAllGlobals();
   });
 
@@ -348,6 +356,118 @@ describe("Minecraft chart apply-safety", () => {
     },
   );
 
+  test.each([502, 503, 504])(
+    "retries HTTP %i only on the exact pinned chart GET",
+    async (status) => {
+      const { current, recipe } = minecraftFixture(
+        `${LEGACY_CHART_REGISTRY}${CHART_PATH}`,
+      );
+      const download = vi
+        .fn()
+        .mockResolvedValueOnce(new Response("gateway unavailable", { status }))
+        .mockResolvedValueOnce(new Response(CHART_CONTENT));
+      vi.stubGlobal("fetch", download);
+      retryWait.mockResolvedValueOnce(undefined);
+      calls.reads = [null];
+
+      await applySafety(current, recipe, "step-apply-safety");
+
+      const uri = `${CHART_REGISTRY}${CHART_PATH}`;
+      const options = expect.objectContaining({
+        method: "GET",
+        redirect: "error",
+      });
+      expect(download.mock.calls).toEqual([
+        [uri, options],
+        [uri, options],
+      ]);
+      expect(retryWait).toHaveBeenCalledExactlyOnceWith(5000, undefined, {
+        signal: expect.any(AbortSignal),
+      });
+      expect(calls.stages.at(-1)?.receipt).toMatchObject({
+        evidence: [
+          { summary: expect.stringContaining(`bytes match ${CHART_DIGEST}`) },
+          { kind: "preflight" },
+        ],
+      });
+    },
+  );
+
+  test("bounds repeated chart gateway failures before any stage or Argo write", async () => {
+    const { current, recipe } = minecraftFixture(
+      `${CHART_REGISTRY}${CHART_PATH}`,
+    );
+    const download = vi.fn(() =>
+      Promise.resolve(new Response(null, { status: 502 })),
+    );
+    vi.stubGlobal("fetch", download);
+    retryWait.mockResolvedValue(undefined);
+
+    await expect(
+      applySafety(current, recipe, "step-apply-safety"),
+    ).rejects.toThrow("Source inspection returned HTTP 502");
+
+    expect(download).toHaveBeenCalledTimes(4);
+    expect(retryWait.mock.calls.map(([milliseconds]) => milliseconds)).toEqual([
+      5000, 10_000, 20_000,
+    ]);
+    expect(calls.events).toEqual([]);
+    expect(calls.stages).toEqual([]);
+  });
+
+  test.each([401, 403, 404, 500])(
+    "refuses chart HTTP %i before retry or writes",
+    async (status) => {
+      const { current, recipe } = minecraftFixture(
+        `${CHART_REGISTRY}${CHART_PATH}`,
+      );
+      const download = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status }));
+      vi.stubGlobal("fetch", download);
+
+      await expect(
+        applySafety(current, recipe, "step-apply-safety"),
+      ).rejects.toThrow(`Source inspection returned HTTP ${status.toString()}`);
+
+      expect(download).toHaveBeenCalledTimes(1);
+      expect(retryWait).not.toHaveBeenCalled();
+      expect(calls.events).toEqual([]);
+      expect(calls.stages).toEqual([]);
+    },
+  );
+
+  test("lease loss cancels chart retry backoff before stage or Argo writes", async () => {
+    const { current, recipe } = minecraftFixture(
+      `${CHART_REGISTRY}${CHART_PATH}`,
+    );
+    const download = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 502 }));
+    vi.stubGlobal("fetch", download);
+    const lost = new AbortController();
+    const waiting = Promise.withResolvers<undefined>();
+    const timers = await vi.importActual<typeof Timers>("node:timers/promises");
+    retryWait.mockImplementationOnce((milliseconds, value, options) => {
+      waiting.resolve(undefined);
+      return timers.setTimeout(milliseconds, value, options);
+    });
+
+    const outcome = expect(
+      withLeaseLoss(
+        lost.signal,
+        async () => await applySafety(current, recipe, "step-apply-safety"),
+      ),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    await waiting.promise;
+    lost.abort();
+    await outcome;
+
+    expect(download).toHaveBeenCalledTimes(1);
+    expect(calls.events).toEqual([]);
+    expect(calls.stages).toEqual([]);
+  });
+
   test("refuses changed bytes from the replacement mirror before writing anything", async () => {
     const { current, recipe } = minecraftFixture(
       `${LEGACY_CHART_REGISTRY}${CHART_PATH}`,
@@ -364,6 +484,7 @@ describe("Minecraft chart apply-safety", () => {
       `${CHART_REGISTRY}${CHART_PATH}`,
       expect.objectContaining({ redirect: "error" }),
     );
+    expect(retryWait).not.toHaveBeenCalled();
     expect(calls.events).toEqual([]);
     expect(calls.stages).toEqual([]);
   });

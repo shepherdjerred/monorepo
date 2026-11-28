@@ -6,6 +6,7 @@ import {
 } from "#lib/delivery/model/effect-signal.ts";
 import type { DeliveryModelStepResult } from "#shared/delivery-executor.ts";
 import { createHash } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 import type {
   DeploymentDetail,
   EvidenceInput,
@@ -62,6 +63,7 @@ import {
 
 const DEFAULT_READBACK_TIMEOUT_SECONDS = 600;
 const READBACK_INTERVAL_MS = 5000;
+const CHART_READ_RETRY_DELAYS_MS = [5000, 10_000, 20_000] as const;
 /** The Delivery API caps an evidence summary at 4000 chars; chunk below it. */
 const EVIDENCE_SUMMARY_BUDGET = 3500;
 
@@ -99,6 +101,27 @@ function reconciliationEvidence(
   }));
 }
 
+/** A Charts restart can interrupt this GET, before Delivery writes to ArgoCD. */
+async function fetchChartSource(uri: string, redirect: "error" | "follow") {
+  const cancellation = effectSignal();
+  for (let attempt = 0; ; attempt++) {
+    cancellation.throwIfAborted();
+    const response = await fetch(uri, {
+      method: "GET",
+      signal: AbortSignal.any([cancellation, AbortSignal.timeout(30_000)]),
+      redirect,
+    });
+    if (response.ok) return response;
+    const wait = CHART_READ_RETRY_DELAYS_MS[attempt];
+    if (wait === undefined || ![502, 503, 504].includes(response.status))
+      throw new Error(
+        `Source inspection returned HTTP ${response.status.toString()}`,
+      );
+    await response.body?.cancel();
+    await delay(wait, undefined, { signal: cancellation });
+  }
+}
+
 /**
  * HTTPS chart bytes must match the artifact digest, and an OCI chart's tag
  * must still resolve to it; other stores serve the recorded version. The
@@ -127,14 +150,7 @@ async function verifySourceBytes(
       archiveBytes: null,
     };
   const mapped = readUri !== artifact.uri;
-  const response = await fetch(readUri, {
-    signal: AbortSignal.any([effectSignal(), AbortSignal.timeout(30_000)]),
-    redirect: mapped ? "error" : "follow",
-  });
-  if (!response.ok)
-    throw new Error(
-      `Source inspection returned HTTP ${response.status.toString()}`,
-    );
+  const response = await fetchChartSource(readUri, mapped ? "error" : "follow");
   const archiveBytes = new Uint8Array(await response.arrayBuffer());
   const digest = `sha256:${createHash("sha256").update(archiveBytes).digest("hex")}`;
   if (digest !== artifact.digest)
