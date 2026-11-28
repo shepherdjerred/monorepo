@@ -4,6 +4,8 @@ import { parseTimeout } from "#lib/ci/arguments.ts";
 import { ciBenchmarkCommand } from "#commands/ci-benchmark.ts";
 import { ciSourceProofCommand } from "#commands/ci-source-proof.ts";
 import { ciAnalyzeCommand } from "#commands/ci-analyze.ts";
+import { ciMaintenanceRetryCommand } from "#commands/ci-maintenance-retry.ts";
+import { ciScorecardCommand } from "#commands/ci-scorecard.ts";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
 
@@ -122,14 +124,46 @@ function validateOptions(
     throw new Error("--head requires a PR or main wait, or a PR explanation");
 }
 
-async function runAnalyze(args: string[]): Promise<void> {
+async function reportingFailures(run: () => Promise<void>): Promise<void> {
   try {
-    await ciAnalyzeCommand(args, async () => {
-      await resolveCredentials(requiredCredentialsFor("ci", "analyze"));
-    });
+    await run();
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 2;
+  }
+}
+
+/** Subcommands that parse their own arguments instead of the shared options. */
+function standaloneCommand(
+  subcommand: string,
+  args: string[],
+): (() => Promise<void>) | null {
+  switch (subcommand) {
+    case "benchmark":
+      return () => ciBenchmarkCommand(args);
+    case "source-proof":
+      return () => ciSourceProofCommand(args);
+    case "analyze":
+      return () =>
+        reportingFailures(() =>
+          ciAnalyzeCommand(args, async () => {
+            await resolveCredentials(requiredCredentialsFor("ci", "analyze"));
+          }),
+        );
+    case "scorecard":
+      return () =>
+        reportingFailures(() =>
+          ciScorecardCommand(args, async () => {
+            await resolveCredentials(requiredCredentialsFor("ci", "scorecard"));
+          }),
+        );
+    case "maintenance":
+      return args[0] === "retry"
+        ? () =>
+            reportingFailures(() => ciMaintenanceRetryCommand(args.slice(1)))
+        : null;
+    default:
+      return null;
   }
 }
 
@@ -137,16 +171,10 @@ export async function handleCiCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (subcommand === "benchmark") {
-    await ciBenchmarkCommand(args);
-    return;
-  }
-  if (subcommand === "source-proof") {
-    await ciSourceProofCommand(args);
-    return;
-  }
-  if (subcommand === "analyze") {
-    await runAnalyze(args);
+  const standalone =
+    subcommand === undefined ? null : standaloneCommand(subcommand, args);
+  if (standalone !== null) {
+    await standalone();
     return;
   }
   const json = args.includes("--json");
@@ -161,8 +189,10 @@ export async function handleCiCommand(
   main            Show main's current verification and latest completed verdict
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
   timings         Report recent latency by actual workflow class and attempt
-  analyze         Rank uncached tasks, critical paths, repeated misses and hot files
+  scorecard       Ready-PR and main latency, failure share, queue, and CI pool writes by writer
+  analyze         Rank uncached tasks, critical paths, miss causes, repeated misses and hot files
   maintenance     Show recent maintenance runs and coordinator inspection details
+  maintenance retry <kind> [--apply]  Retry a blocked maintenance stream (dry run by default)
   benchmark       Inspect and archive retained canary resource evidence
   source-proof PR --source SHA  Verify exact reviewed, green source is merged into main before bootstrap
 
