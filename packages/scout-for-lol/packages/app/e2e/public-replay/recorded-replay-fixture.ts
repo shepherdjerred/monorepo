@@ -238,6 +238,69 @@ async function verifyMaskedGroundDraws(
       })
       .toEqual([expectedParticleDraws(track, seconds), expected]);
   }
+
+  const camera = page.getByRole("combobox", { name: "Camera" });
+  const initialCamera = await camera.inputValue();
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  const maskedDraws = async () => {
+    const { recordedMaskedGroundDraws } = await readRecordedDraw(page);
+    return recordedMaskedGroundDraws;
+  };
+  await camera.selectOption("player:1073742170");
+  await expect.poll(maskedDraws).toBe(1);
+  for (const [perspective, expected] of [
+    ["blue", 0],
+    ["red", 0],
+    ["all", 1],
+  ] as const) {
+    await vision.selectOption(perspective);
+    await expect.poll(maskedDraws).toBe(expected);
+  }
+  await camera.selectOption("free");
+  await expect.poll(maskedDraws).toBe(1);
+  await camera.selectOption(initialCamera);
+}
+
+async function verifyYasuoWindWallDraws(
+  page: Page,
+  track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
+) {
+  if (track.schema === 1) return;
+  const flashes = track.families.filter(({ id }) =>
+    id.startsWith("yasuo-wind-wall-flash-"),
+  );
+  if (flashes.length === 0) return;
+  expect(flashes).toHaveLength(4);
+  for (const { id, components } of flashes) {
+    const creates = track.effects.filter(({ family }) => family === id);
+    expect(creates).toHaveLength(1);
+    expect(components).toHaveLength(1);
+    const [create] = creates;
+    const [component] = components;
+    if (create === undefined || component === undefined)
+      throw new Error(`Missing recorded Yasuo flash data for ${id}.`);
+    const { start } = create;
+    const { lifetime, samples } = component;
+    const firstSample = Math.min(...samples.map(({ age }) => age));
+    const before = (Math.ceil((start + firstSample) * 10) - 1) / 10;
+    const active = Math.ceil((start + firstSample) * 10) / 10;
+    const expired = Math.ceil((start + lifetime) * 10) / 10;
+    for (const [seconds, activeDraws] of [
+      [before, 0],
+      [active, 1],
+      [expired, 0],
+      [active, 1],
+    ] as const) {
+      expect(expectedFor(start, components, seconds)).toBe(activeDraws);
+      await seek(page, seconds);
+      await expect
+        .poll(async () => {
+          const { recordedParticleDraws } = await readRecordedDraw(page);
+          return recordedParticleDraws;
+        })
+        .toBe(expectedParticleDraws(track, seconds));
+    }
+  }
 }
 
 export async function verifyRecordedParticlePreview(
@@ -273,6 +336,7 @@ export async function verifyRecordedParticlePreview(
     );
   await vision.selectOption("all");
   await verifyMaskedGroundDraws(page, track);
+  await verifyYasuoWindWallDraws(page, track);
   await verifySnowflashDraws(page, track);
   if (track.effects.length > 100) {
     // Five distinct impacts share one start time in the recorded fight.

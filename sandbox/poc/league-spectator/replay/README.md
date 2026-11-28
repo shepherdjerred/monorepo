@@ -930,6 +930,23 @@ uv run --with unicorn python $snowflashProbe $macGameExecutable $reviewedSnowfla
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-anivia-snowflash.mjs $ammoTrackDirectory $fightPlacements $fightStopReceipt $snowflashLow $snowflashHigh $snowflashSample $snowflashMip0 $newPrivateParticleDirectory
 ```
 
+The Yasuo Wind Wall track adds the authored `Flash` component at four recorded
+creates. Each replay handle has a separate native rotation and lifetime sample.
+The author seeds the original sampler from the replay digest and handle and
+uses the existing depth-tested, alpha-tested billboard pass. The current track
+covers the flashes. Wind Wall geometry remains outside this proof.
+
+```powershell
+$yasuoProbe = 'sandbox/poc/league-spectator/replay/tools/research/probe-recorded-yasuo-wind-wall-flash.py'
+foreach ($handle in 1073820923, 1073820924, 1073820962, 1073821375) {
+  uv run --with unicorn python $yasuoProbe $macGameExecutable $reviewedYasuoAuthoredReceipt seeded $handle > "$privateYasuoReceiptDirectory/yasuo-flash-seeded-$handle.json"
+}
+foreach ($lane in '0.125', '0.875') {
+  uv run --with unicorn python $yasuoProbe $macGameExecutable $reviewedYasuoAuthoredReceipt $lane 1073820923 > "$privateYasuoReceiptDirectory/yasuo-flash-$lane-1073820923.json"
+}
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-yasuo-wind-wall-flash.mjs $maskedTrackDirectory $reviewedYasuoAuthoredReceipt $fightStopReceipt $privateYasuoReceiptDirectory $yasuoFlashMip0 $newPrivateParticleDirectory
+```
+
 The Illaoi spawn probe records the original `Ground_SLOW2` world-space quads
 at the detached replay origin. It initializes the inner render system's UV
 scale through the archived constructor and executes the stop on a separate
@@ -978,14 +995,45 @@ bun sandbox/poc/league-spectator/replay/tools/research/extract-rift-navmesh-obst
 uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-navmesh-obstacles.py $macGameExecutable $newPrivateObstacleCensus $newPrivateObstacleReceipt
 ```
 
+The fight effect catalog binds native creation and stop receipts to the
+physical packets of the supplied ROFL. It resolves keys through the equipped
+skins' archived resource resolvers. It retains unresolvable requests, original
+parent contexts, and any earlier observed creation referenced by a stop
+request. An identified parent still needs a native attachment transform.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-rift-effect-catalog.mjs --replay $replayPath --position-codecs $exactPositionCodecs --installation $installation --resources $equippedSkinResourceReceipt --resources-sha256 $equippedSkinResourceSha256 --creation $nativeFightCreationReceipt --creation-sha256 $nativeFightCreationSha256 --stop $nativeFightStopReceipt --stop-sha256 $nativeFightStopSha256 --out $freshFightCatalog
+```
+
+The reviewed particle track derives three fixed billboard components for
+Heimerdinger W and Kai’Sa E from their authored curves. The producer compares
+the computed vertices with the retained original samples byte for byte before
+writing the particle track. The viewer evaluates those components at the
+current replay clock using the same textures and depth state. Other
+components use their existing sampled or world-space geometry.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-billboards.mjs $reviewedFlashTrackManifest $newPrivateParticleDirectory
+```
+
 Capture continuous 1× playback of the reviewed fight from a signed-out
-loopback Scout preview. The video and timeline cover 28:32–28:41. The timeline
-records the package digest, follow camera, actor draws, and particle draws at
-the known effect clocks. Use the video to review the scene and effect coverage.
+loopback Scout preview. The video and timeline cover 28:32–28:41. The
+fixed-camera run records the manifest digest, camera, actor draws, and
+texture-identified effect draws. At the selected effect clocks it also
+compares stable pixels with the relevant draws suppressed and after a seek.
+Use these captures to review the fight and verify the visible contribution of
+each tested family.
 
 ```powershell
 bun packages/scout-for-lol/packages/app/e2e/public-replay/proof/capture-recorded-rift-fight.ts $loopbackReplayUrl $newPrivateCaptureDirectory
 ```
+
+The 1080p performance fixture writes WebGL submission measurements across the
+reviewed scenes. It also measures Chromium compositor draws at 1× and 4× in
+the selected fight. The compositor receipt binds the replay clock range to
+browser trace markers and counts distinct draw and drop events for the page's
+layer tree. Physical display cadence and worker processing budgets need
+separate measurements.
 
 Use the pixel attribution control on a clock where the family under review is
 the only active effect of its draw class. It captures the whole scene twice

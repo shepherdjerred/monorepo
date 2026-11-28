@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { evaluateRecordedBillboard } from "./recorded-terrain-billboard.mjs";
 
 const png = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.png$/);
 const glsl = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.glsl$/);
@@ -22,10 +23,34 @@ const component = (lifetime: number) =>
     lifetime: z.literal(Math.fround(lifetime)),
   });
 const material = z.enum(["one-one", "src-alpha-one"]);
+const unitFloat = z.number().min(0).max(1).transform(Math.fround);
+const scaleFloat = z.number().min(0).max(4096).transform(Math.fround);
+const scalePair = z.tuple([scaleFloat, scaleFloat]);
+const colorVector = z.tuple([unitFloat, unitFloat, unitFloat, unitFloat]);
+const billboardCurve = <Value extends z.ZodType>(value: Value) =>
+  z
+    .array(z.tuple([unitFloat, value]))
+    .min(1)
+    .max(32)
+    .refine(
+      (keys) =>
+        keys[0]?.[0] === 0 &&
+        keys.every(
+          ([time], index) => index === 0 || time > keys[index - 1]![0],
+        ),
+      "Billboard curve keys must begin at zero and increase.",
+    );
+const billboardProgram = z.strictObject({
+  birthScale: scalePair,
+  birthColor: colorVector,
+  scale: billboardCurve(scalePair),
+  color: billboardCurve(colorVector),
+});
 const familyComponent = quadComponent.extend({
   palette: png,
   blend: material,
   centerY: z.number(),
+  billboard: billboardProgram.optional(),
 });
 const programComponent = familyComponent.extend({ alphaTest: z.boolean() });
 const familyId = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
@@ -351,7 +376,10 @@ export async function loadRecordedTerrainParticles(
   const compiledFamilies = new Map(
     track.families.map(({ id, components: entries }) => [
       id,
-      entries.map(({ indices, samples, ...entry }) => {
+      entries.map((component) => {
+        const { indices, samples, ...entry } = component;
+        const billboard =
+          "billboard" in component ? component.billboard : undefined;
         if (
           !Number.isFinite(Math.fround(entry.centerY)) ||
           samples.some(
@@ -361,15 +389,51 @@ export async function loadRecordedTerrainParticles(
           )
         )
           throw new Error("The recorded particle component is invalid.");
+        const nativeSamples = samples.map(({ age, vertices }) => ({
+          age,
+          vertices: decodeVertices(vertices, true),
+        }));
+        const program =
+          billboard === undefined
+            ? undefined
+            : {
+                centerY: Math.fround(entry.centerY),
+                lifetime: Math.fround(entry.lifetime),
+                blend: entry.blend,
+                billboard,
+              };
+        if (
+          program !== undefined &&
+          (nativeSamples.length < 3 ||
+            nativeSamples.some(({ age, vertices }) =>
+              evaluateRecordedBillboard(program, age).some(
+                (byte, index) => byte !== vertices[index],
+              ),
+            ))
+        )
+          throw new Error(
+            "The billboard program disagrees with native vertices.",
+          );
+        const firstLiveAge = Math.fround(nativeSamples[0]!.age);
         return {
-          ...entry,
+          texture: entry.texture,
+          palette: entry.palette,
+          blend: entry.blend,
+          centerY: entry.centerY,
+          lifetime: entry.lifetime,
           alphaTest: "alphaTest" in entry ? entry.alphaTest : true,
           depthTest: "depthTest" in entry ? entry.depthTest : true,
           indices: decodeHex(indices),
-          samples: samples.map(({ age, vertices }) => ({
-            age,
-            vertices: decodeVertices(vertices, true),
-          })),
+          verticesAt:
+            program === undefined
+              ? (age: number) =>
+                  nativeSamples.findLast((sample) => sample.age <= age)
+                    ?.vertices
+              : (age: number) =>
+                  Math.fround(age) < firstLiveAge ||
+                  Math.fround(age) >= program.lifetime
+                    ? undefined
+                    : evaluateRecordedBillboard(program, age),
         };
       }),
     ]),
@@ -389,16 +453,16 @@ export async function loadRecordedTerrainParticles(
       const { start, position, family } = track.effects[index]!;
       const age = timeSeconds - start;
       if (age < 0) break;
-      for (const { lifetime, samples, ...style } of compiledFamilies.get(
+      for (const { lifetime, verticesAt, ...style } of compiledFamilies.get(
         family,
       )!) {
         if (age >= lifetime) continue;
-        const sample = samples.findLast((entry) => entry.age <= age);
-        if (sample !== undefined)
+        const vertices = verticesAt(age);
+        if (vertices !== undefined)
           legacyParticles.push({
             ...style,
             position,
-            vertices: sample.vertices,
+            vertices,
           });
       }
     }

@@ -3,7 +3,71 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium, expect } from "@playwright/test";
 import { PublicReplayDescriptorSchema } from "@scout-for-lol/domain/artifacts/public-replay.ts";
-import { installRecordedDrawProbe } from "#replay-e2e/recorded-draw-probe.ts";
+import {
+  installRecordedDrawProbe,
+  readRecordedDraw,
+} from "#replay-e2e/recorded-draw-probe.ts";
+import { seek } from "#replay-e2e/recorded-replay-fixture.ts";
+import { comparePixels } from "./compare-recorded-pixels.ts";
+import { installRiftFightTextureProbe } from "./rift-fight-texture-probe.ts";
+
+// Base texture hashes and inclusive UI-clock windows from the reviewed Rift
+// particle track. Multiple instances of a family can draw the same texture.
+const textures = {
+  "77fe7d5cb87d81abbb080dc57dc446e311699df17cc0910d7e815016f6d9d3e4":
+    "illaoi-ground-ring",
+  "5d12032cdab3f822722f45ac312843f78b3723572181bc760d76d231cee027ce":
+    "maokai-r-ribbon",
+  c2c40c2bc7f6d15811504ccda9bcdcb3cc8ac1208674a41a3a086bd660e538a9:
+    "anivia-q-snowflash",
+  "3a6f6646121c4881b8df499088f5d4b99f76b0369a44852a893538caaa8363e3":
+    "yasuo-wind-wall-flash",
+  a177eee4d856d39db66d579c806ce0fe3cfc72063069860fdb74d2e53a1632d9:
+    "heimerdinger-w-impact",
+  "13678fbc62c31d02bc3ae0f66f92ad03b8a25ff87f22d0e23180ced7189a57c1":
+    "heimerdinger-w-impact",
+  "0df0fde80d211e8b9f53222a27b197fa79701a88e049a103554985cb1c1ac633":
+    "heimerdinger-q-ammo-spend",
+  "33fbb0aa732bf24befe556da253e9fefbac5f19fa1f3551924c4b1f85d63f10b":
+    "kaisa-e-activation",
+};
+const cues = [
+  { family: "illaoi-ground-ring", from: 1712.7, to: 1714.7, seekAt: 1713.1 },
+  { family: "maokai-r-ribbon", from: 1714, to: 1715.1, seekAt: 1714.3 },
+  { family: "anivia-q-snowflash", from: 1714.4, to: 1714.5, seekAt: 1714.5 },
+  { family: "yasuo-wind-wall-flash", from: 1714.8, to: 1717.6, seekAt: 1717.5 },
+  { family: "heimerdinger-w-impact", from: 1715.6, to: 1715.9, seekAt: 1715.7 },
+  {
+    family: "heimerdinger-q-ammo-spend",
+    from: 1715.7,
+    to: 1717.2,
+    seekAt: 1715.8,
+  },
+  { family: "kaisa-e-activation", from: 1718.9, to: 1719.6, seekAt: 1719 },
+];
+const mapPoint = { x: 0.806, y: 0.254 };
+const fightBounds = { minX: 11_606, maxX: 12_120, minZ: 10_616, maxZ: 11_516 };
+
+function fightRegionInFrame(matrix: number[]) {
+  if (matrix.length !== 16) return false;
+  for (const x of [fightBounds.minX, fightBounds.maxX])
+    for (const z of [fightBounds.minZ, fightBounds.maxZ])
+      for (const y of [0, 192]) {
+        const at = (row: number) =>
+          x * (matrix[row] ?? Number.NaN) +
+          y * (matrix[row + 4] ?? Number.NaN) +
+          z * (matrix[row + 8] ?? Number.NaN) +
+          (matrix[row + 12] ?? Number.NaN);
+        const w = at(3);
+        if (!(
+          w > 0 &&
+          Math.abs(at(0)) < w * 0.95 &&
+          Math.abs(at(1)) < w * 0.95
+        ))
+          return false;
+      }
+  return true;
+}
 
 // Run with bun and the installed Playwright Chromium. Pass the real signed-out
 // loopback replay URL and a fresh local directory for the evidence.
@@ -24,13 +88,18 @@ const replayId = /^\/app\/replays\/([\da-f-]+)$/.exec(preview.pathname)?.[1];
 assert.ok(replayId !== undefined, "Expected the public replay route.");
 const start = 1712;
 const end = 1721;
-const follow = "1073742170";
-preview.search = new URLSearchParams({ t: String(start), follow }).toString();
+preview.search = new URLSearchParams({ t: String(start) }).toString();
 await mkdir(output);
 
+const graphics = Bun.env["SCOUT_REPLAY_E2E_PERF_GRAPHICS"] ?? "swiftshader";
+assert.ok(graphics === "edge" || graphics === "swiftshader");
 const browser = await chromium.launch({
+  ...(graphics === "edge" ? { channel: "msedge" } : {}),
   headless: true,
-  args: ["--ignore-gpu-blocklist", "--enable-unsafe-swiftshader"],
+  args:
+    graphics === "edge"
+      ? ["--enable-gpu"]
+      : ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
 });
 try {
   const page = await browser.newPage({
@@ -50,6 +119,7 @@ try {
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
   await installRecordedDrawProbe(page);
+  await installRiftFightTextureProbe(page, textures);
   const descriptorRequest = page.waitForResponse(
     (response) =>
       new URL(response.url()).pathname === `/api/replays/${replayId}`,
@@ -79,8 +149,21 @@ try {
   await expect(clockControl).toHaveValue(String(start));
   await expect(clockControl).toHaveAttribute("aria-busy", "false");
   await expect(speedControl).toHaveValue("1");
-  await expect(cameraControl).toHaveValue(`player:${follow}`);
-  await page.screenshot({ path: path.join(output, "fight-start.png") });
+  const minimap = page.getByRole("button", { name: "Replay minimap" });
+  const mapImage = await minimap.locator("img").boundingBox();
+  assert.ok(mapImage !== null);
+  await page.mouse.click(
+    mapImage.x + mapImage.width * mapPoint.x,
+    mapImage.y + mapImage.height * mapPoint.y,
+  );
+  await expect(cameraControl).toHaveValue("free");
+  await expect
+    .poll(async () => {
+      const { viewProjection } = await readRecordedDraw(page);
+      return fightRegionInFrame(viewProjection);
+    })
+    .toBe(true);
+  await canvas.screenshot({ path: path.join(output, "fight-start.png") });
 
   const capture = canvas.evaluate(async (element, endSeconds) => {
     if (!(element instanceof HTMLCanvasElement))
@@ -107,7 +190,8 @@ try {
       seekBusy: boolean;
       rate: string;
       camera: string;
-      cameraAnchor: number[];
+      viewProjection: number[];
+      families: Record<string, number>;
       texturedIndices: number;
       actorDraws: number;
       particleDraws: number;
@@ -139,15 +223,14 @@ try {
         recordedDepthDisabledParticleDraws,
         recordedMaskedGroundDraws,
       } = globalThis.recordedReplayDraw;
-      // At fixed zoom and pitch the homogeneous translation columns change
-      // as the followed actor moves. Keep them for cross-package comparison.
       samples.push({
         elapsedMilliseconds: now - startedAt,
         seconds: clock.valueAsNumber,
         seekBusy: clock.getAttribute("aria-busy") === "true",
         rate: speed.value,
         camera: camera.value,
-        cameraAnchor: viewProjection.slice(12, 16),
+        viewProjection,
+        families: globalThis.recordedRiftTextures.frame.families,
         texturedIndices,
         actorDraws: actorOrigins.length,
         particleDraws: recordedParticleDraws,
@@ -192,30 +275,22 @@ try {
   await play.click();
   const { samples, video } = await capture;
   await pause.click();
-  await page.screenshot({ path: path.join(output, "fight-end.png") });
+  await page.evaluate(() => {
+    globalThis.scrollTo(0, 0);
+  });
+  await canvas.screenshot({ path: path.join(output, "fight-end.png") });
 
   const bytes = Buffer.from(video, "base64");
-  // These disjoint windows are anchored by the baseline package's events.
-  // Draws in the windows corroborate rendering during play. The video still
-  // requires visual review, particularly where later packages overlap effects.
-  const events = [
-    { family: "heimerdinger-w-impact", start: 1715.5684140625, lifetime: 0.3 },
-    { family: "kaisa-e-activation", start: 1718.8984140625, lifetime: 0.15 },
-    { family: "kaisa-e-activation", start: 1719.4314140625, lifetime: 0.15 },
-  ].map((event) => {
-    // The range control represents current time to the nearest tenth.
-    const peakParticleDraws = Math.max(
-      0,
-      ...samples
-        .filter(
-          (sample) =>
-            sample.seconds >= event.start - 0.05 &&
-            sample.seconds <= event.start + event.lifetime + 0.05,
-        )
-        .map((sample) => sample.particleDraws),
-    );
-    return { ...event, peakParticleDraws };
-  });
+  const events = cues.map((cue) => ({
+    ...cue,
+    observed: samples
+      .filter(({ seconds }) => seconds >= cue.from && seconds <= cue.to)
+      .map(({ seconds, families }) => ({
+        seconds,
+        draws: families[cue.family] ?? 0,
+      }))
+      .filter(({ draws }) => draws > 0),
+  }));
   await writeFile(path.join(output, "rift-fight-1x.webm"), bytes);
   await writeFile(
     path.join(output, "timeline.json"),
@@ -223,7 +298,11 @@ try {
       {
         replaySha256: descriptor.sha256,
         packageSha256: descriptor.playback.package.sha256,
-        cameraTarget: follow,
+        cameraMode: "free",
+        mapPoint,
+        fightBounds,
+        graphics,
+        textures,
         browserErrors,
         credentialedRequests: [...credentialedRequests],
         events,
@@ -247,7 +326,12 @@ try {
     );
     assert.equal(sample.seekBusy, false);
     assert.equal(sample.rate, "1");
-    assert.equal(sample.camera, `player:${follow}`);
+    assert.equal(sample.camera, "free");
+    assert.deepEqual(sample.viewProjection, samples[0]?.viewProjection);
+    assert.ok(
+      fightRegionInFrame(sample.viewProjection),
+      "The fight left the viewport.",
+    );
     previousSeconds = sample.seconds;
   }
   for (let second = start; second < end; second += 1) {
@@ -256,29 +340,112 @@ try {
         (sample) =>
           Math.floor(sample.seconds) === second &&
           sample.texturedIndices > 0 &&
-          sample.actorDraws > 0 &&
-          sample.cameraAnchor.length === 4,
+          sample.actorDraws > 0,
       ),
       `Missing terrain, actors, or camera at ${String(second)}s.`,
     );
   }
-  assert.notDeepEqual(
-    samples.at(0)?.cameraAnchor,
-    samples.at(-1)?.cameraAnchor,
-  );
-
   for (const event of events)
     assert.ok(
-      event.peakParticleDraws > 0,
-      `No particle draws around ${event.family} at ${String(event.start)}s.`,
+      event.observed.length > 0,
+      `No ${event.family} texture submissions in its playback window.`,
     );
+
+  // Seek away before each repeat to force a fresh paused presentation. Each
+  // pass submits the same draws, while only the named texture is suppressed.
+  const seekControls = [];
+  const readFrame = () =>
+    page.evaluate(() => globalThis.recordedRiftTextures.frame);
+  for (const { family, seekAt } of cues) {
+    const paused = [];
+    for (const [label, suppressed] of [
+      ["enabled", null],
+      ["suppressed", family],
+      ["suppressed-repeat", family],
+      ["restored", null],
+    ] as const) {
+      await page.evaluate((value) => {
+        globalThis.recordedRiftTextures.suppress = value;
+      }, suppressed);
+      await seek(page, start);
+      const reset = await readFrame();
+      await seek(page, seekAt);
+      await expect
+        .poll(async () => {
+          const { generation } = await readFrame();
+          return generation;
+        })
+        .toBeGreaterThan(reset.generation);
+      const before = await readFrame();
+      const screenshot = await canvas.screenshot({
+        path: path.join(output, `${family}-${label}.png`),
+      });
+      const after = await readFrame();
+      assert.equal(before.suppressed, suppressed);
+      assert.equal(after.suppressed, suppressed);
+      assert.deepEqual(before.families, after.families);
+      const { viewProjection } = await readRecordedDraw(page);
+      assert.deepEqual(viewProjection, samples[0]?.viewProjection);
+      paused.push({ screenshot, frame: after });
+    }
+    const [enabled, suppressed, repeat, restored] = paused;
+    assert.ok(enabled && suppressed && repeat && restored);
+    const { metrics, mask } = await comparePixels(
+      page,
+      [enabled, suppressed, repeat, restored].map(
+        ({ screenshot }) => screenshot,
+      ),
+    );
+    assert.ok(mask !== undefined);
+    await writeFile(
+      path.join(output, `${family}-causal-pixel-mask.png`),
+      Buffer.from(mask, "base64"),
+    );
+    const evidence = {
+      family,
+      seekAt,
+      draws: enabled.frame.families,
+      metrics,
+      frames: paused.map(({ frame }) => frame),
+    };
+    seekControls.push(evidence);
+    await writeFile(
+      path.join(output, "seek-controls.json"),
+      JSON.stringify(seekControls, null, 2),
+    );
+    for (const { frame } of paused)
+      assert.deepEqual(frame.families, evidence.draws);
+    assert.ok(
+      (evidence.draws[family] ?? 0) > 0,
+      `No ${family} texture at its seek cue.`,
+    );
+  }
+  assert.deepEqual(
+    seekControls
+      .filter(({ metrics }) => metrics.causal === 0)
+      .map(({ family }) => family),
+    [],
+    "No stable visible contribution at the sampled seek for these families.",
+  );
+  assert.deepEqual(browserErrors, []);
+  assert.deepEqual([...credentialedRequests], []);
   process.stdout.write(
     JSON.stringify(
       {
         samples: samples.length,
         wallMilliseconds: samples.at(-1)?.elapsedMilliseconds,
         bytes: bytes.length,
-        events,
+        events: events.map(({ family, observed }) => ({
+          family,
+          observations: observed.length,
+          peakDraws: Math.max(...observed.map(({ draws }) => draws)),
+        })),
+        seekControls: seekControls.map(({ family, seekAt, metrics }) => ({
+          family,
+          seekAt,
+          causalPixels: metrics.causal,
+          unstablePixels: metrics.unstable,
+        })),
       },
       null,
       2,

@@ -1,4 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  captureRecordedCompositor,
+  summarizeFrameStarts,
+} from "./proof/recorded-compositor-trace.ts";
 import { recordedInhibitorReturnWitnesses } from "./recorded-inhibitor-assertions.ts";
 import { readRecordedReplay, replayPath } from "./recorded-replay-data.ts";
 import {
@@ -148,29 +152,6 @@ async function installFrameProbe(page: Page) {
       }
     };
   }, sceneLabel);
-}
-
-function summarizeFrameStarts(starts: number[]) {
-  const intervals = starts
-    .slice(1)
-    .map((start, index) => start - (starts[index] ?? start))
-    .sort((left, right) => left - right);
-  const minimum = starts[0] ?? 0;
-  const span = (starts.at(-1) ?? minimum) - minimum;
-  const percentile = (fraction: number) =>
-    intervals[Math.ceil(intervals.length * fraction) - 1];
-  return {
-    frameSubmissions: starts.length,
-    submissionsPerSecond: (1000 * intervals.length) / span,
-    intervalMilliseconds: {
-      p50: percentile(0.5),
-      p95: percentile(0.95),
-      p99: percentile(0.99),
-      max: intervals.at(-1),
-    },
-    intervalsAbove33ms: intervals.filter((interval) => interval > 33.34).length,
-    intervalsAbove50ms: intervals.filter((interval) => interval > 50).length,
-  };
 }
 
 function observeWorkerLifetimes(page: Page) {
@@ -437,4 +418,75 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
     2,
   );
   await Bun.write(testInfo.outputPath("frame-submissions.json"), receipt);
+});
+
+test("samples replay compositor draws at 1080p and both playback rates", async ({
+  baseURL,
+  browser,
+  page,
+}, testInfo) => {
+  if (baseURL === undefined)
+    throw new Error("A loopback base URL is required.");
+  const fixture = await readRecordedReplay();
+  const traffic = await observeRecordedReplayRequests(page, baseURL);
+  const { play, surface } = await preparePlaybackSurface(page);
+  const scenes = await reviewedSamplingWindows(fixture);
+  const scene =
+    scenes.find(({ verifyParticleDraws }) => verifyParticleDraws === true) ??
+    scenes[0];
+  if (scene === undefined) throw new Error("Missing replay sampling scene.");
+  if (scene.follow !== undefined)
+    await page
+      .getByRole("combobox", { name: "Camera" })
+      .selectOption(`player:${String(scene.follow)}`);
+  const clock = page.getByRole("slider", { name: "Replay time" });
+  const samples = [];
+  for (const rate of [1, 4]) {
+    await seek(page, scene.timeSeconds);
+    await page
+      .getByRole("combobox", { name: "Speed" })
+      .selectOption(String(rate));
+    const { drawTimes, ...compositor } = await captureRecordedCompositor(
+      browser,
+      {
+        clock,
+        play,
+        pause: page.getByRole("button", { name: "Pause", exact: true }),
+        sceneTime: scene.timeSeconds,
+        duration: sampleMilliseconds,
+      },
+    );
+    expect(compositor.finalTime).toBeGreaterThan(compositor.initialTime);
+    expect(compositor.sceneSubmissions).toBeGreaterThan(1);
+    if (scene.verifyParticleDraws === true)
+      expect(compositor.particleDraws).toBeGreaterThan(0);
+    expect(drawTimes.length).toBeGreaterThan(1);
+    const intervals = summarizeFrameStarts(drawTimes);
+    samples.push({
+      rate,
+      ...compositor,
+      drawFrames: intervals.frameSubmissions,
+      drawsPerSecond: intervals.submissionsPerSecond,
+      intervalMilliseconds: intervals.intervalMilliseconds,
+    });
+  }
+  expect(traffic.credentialed.size).toBe(0);
+  await Bun.write(
+    testInfo.outputPath("compositor-draws.json"),
+    JSON.stringify(
+      {
+        browserVersion: browser.version(),
+        headless: true,
+        replaySha256: fixture.descriptor.sha256,
+        manifestSha256: fixture.descriptor.playback.package.sha256,
+        measurement:
+          "Chromium compositor DrawFrame trace events for the replay page",
+        surface,
+        scene,
+        samples,
+      },
+      null,
+      2,
+    ),
+  );
 });
