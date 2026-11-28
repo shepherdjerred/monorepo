@@ -494,36 +494,39 @@ describe("software video graph (real ffmpeg)", () => {
   });
 });
 
+// Run the production VAAPI graph's canvas, subtitle and framesync behavior in
+// software by swapping only the GPU stages. The hardware filters themselves
+// are covered at runtime by the hardware-to-software retry.
+async function softwareVaapiSubtitleGraph() {
+  const resolved = await resolveSubtitleForFile(
+    config,
+    sidecarClip,
+    undefined,
+    NEVER_ABORT,
+  );
+  if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
+
+  const graph = buildVaapiVideoGraph({
+    width: 320,
+    height: 240,
+    frameRate: 10,
+    inputColor: "sdr",
+    subtitle: { path: resolved.path, startTime: 0 },
+  });
+  if (graph.kind !== "filterComplex") throw new Error("expected complex");
+  const proxy = graph.graph.map((chain) =>
+    chain
+      .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
+      .replace(",hwupload[subs]", "[subs]")
+      .replace("overlay_vaapi", "overlay"),
+  );
+  return { filters: proxy.join(";"), map: `[${graph.mapLabel}]` };
+}
+
 describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for software)", () => {
   test("the alpha canvas + libass + overlay composition renders the cue", async () => {
-    const resolved = await resolveSubtitleForFile(
-      config,
-      sidecarClip,
-      undefined,
-      NEVER_ABORT,
-    );
-    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
-
-    // Take the REAL VAAPI graph and swap only the GPU-bound stages for software equivalents
-    // (scale_vaapi→scale, drop hwupload, overlay_vaapi→overlay). This validates everything CI can
-    // validate without a GPU: the canvas branch string (color@0 + format=bgra + subtitles alpha),
-    // path escaping, labels, and overlay framesync. tonemap_vaapi/overlay_vaapi themselves are
-    // covered at runtime by the HW→SW retry.
-    const graph = buildVaapiVideoGraph({
-      width: 320,
-      height: 240,
-      frameRate: 10,
-      inputColor: "sdr",
-      subtitle: { path: resolved.path, startTime: 0 },
-    });
-    if (graph.kind !== "filterComplex") throw new Error("expected complex");
-    const proxyGraph = graph.graph.map((chain) =>
-      chain
-        .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
-        .replace(",hwupload[subs]", "[subs]")
-        .replace("overlay_vaapi", "overlay"),
-    );
-    expect(proxyGraph.join(";")).not.toContain("vaapi");
+    const { filters, map } = await softwareVaapiSubtitleGraph();
+    expect(filters).not.toContain("vaapi");
 
     const out = path.join(dir, "overlay-proxy.png");
     await runCommand([
@@ -534,9 +537,9 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
       "-i",
       sidecarClip,
       "-filter_complex",
-      proxyGraph.join(";"),
+      filters,
       "-map",
-      `[${graph.mapLabel}]`,
+      map,
       "-frames:v",
       "1",
       out,
@@ -552,29 +555,8 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
   });
 
   test("the subtitle canvas terminates when the primary video reaches EOF", async () => {
-    const resolved = await resolveSubtitleForFile(
-      config,
-      sidecarClip,
-      undefined,
-      NEVER_ABORT,
-    );
-    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
-
-    const graph = buildVaapiVideoGraph({
-      width: 320,
-      height: 240,
-      frameRate: 10,
-      inputColor: "sdr",
-      subtitle: { path: resolved.path, startTime: 0 },
-    });
-    if (graph.kind !== "filterComplex") throw new Error("expected complex");
-    const proxyGraph = graph.graph.map((chain) =>
-      chain
-        .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
-        .replace(",hwupload[subs]", "[subs]")
-        .replace("overlay_vaapi", "overlay"),
-    );
-    expect(proxyGraph.join(";")).toContain("overlay=shortest=1");
+    const { filters, map } = await softwareVaapiSubtitleGraph();
+    expect(filters).toContain("overlay=shortest=1");
 
     // No -frames:v or -t guard: ffmpeg must terminate because the three-second primary input
     // ended. Without shortest=1, the color source is infinite and this command hits the timeout.
@@ -585,9 +567,9 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
         "-i",
         sidecarClip,
         "-filter_complex",
-        proxyGraph.join(";"),
+        filters,
         "-map",
-        `[${graph.mapLabel}]`,
+        map,
         "-f",
         "null",
         "-",

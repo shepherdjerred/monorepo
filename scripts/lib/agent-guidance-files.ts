@@ -85,13 +85,15 @@ async function readWorktreeEntry(
     if (isMissingPath(error)) return undefined;
     throw error;
   }
-  if (status.isSymbolicLink() || trackedSymlinks.has(entryPath)) {
+  const isSymlink = status.isSymbolicLink();
+  if (isSymlink || trackedSymlinks.has(entryPath)) {
+    const target = isSymlink
+      ? await readlink(absolutePath)
+      : await Bun.file(absolutePath).text();
     return {
       path: entryPath,
       kind: "symlink",
-      contents: status.isSymbolicLink()
-        ? await readlink(absolutePath)
-        : await Bun.file(absolutePath).text(),
+      contents: isSymlink ? target.split(path.sep).join("/") : target,
     };
   }
   return {

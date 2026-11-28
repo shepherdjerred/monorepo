@@ -1,42 +1,13 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { GitHubClient } from "#lib/ci/github.ts";
-import {
-  getFollowedMainSnapshot,
-  getMainRun,
-  getMainStatus,
-  resolveMainHeadSha,
-} from "#lib/ci/main.ts";
+import { getMainRun, getMainStatus, resolveMainHeadSha } from "#lib/ci/main.ts";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
-import { CI_HEAD } from "./fixtures.ts";
+import {
+  CI_HEAD,
+  MAIN_WOODPECKER_CONFIG as config,
+  mainPipeline as pipeline,
+} from "./fixtures.ts";
 
-const config = {
-  baseUrl: "https://woodpecker.sjer.red",
-  token: "test",
-  repoId: 1,
-};
-const required = [
-  "verify",
-  "homelab-release-admission",
-  "images",
-  "helm-push",
-  "argocd-sync",
-];
-function pipeline(
-  number: number,
-  event: string,
-  status = "success",
-): WoodpeckerPipeline {
-  return {
-    number,
-    event,
-    status,
-    commit: CI_HEAD,
-    branch: "main",
-    ref: "refs/heads/main",
-    finished: status === "running" ? 0 : number,
-    workflows: required.map((name) => ({ name, state: status })),
-  };
-}
 function failedPush(): WoodpeckerPipeline {
   return { ...pipeline(7, "push", "failure"), commit: "older-main" };
 }
@@ -94,7 +65,7 @@ test("partial, skipped and inconsistent manual successes cannot clear a failure"
     full.workflows.filter((workflow) => workflow.name !== "verify"),
     full.workflows.map((workflow) => ({
       ...workflow,
-      state: workflow.name === "argocd-sync" ? "skipped" : "success",
+      state: workflow.name === "delivery-publish" ? "skipped" : "success",
     })),
     [...full.workflows, { name: "extra-check", state: "pending" }],
   ]) {
@@ -239,123 +210,137 @@ test("resolveMainHeadSha expands short hex prefixes via GitHub commits API and p
   expect(fetchSpy).toHaveBeenCalledTimes(1);
 });
 
-function mockFollowedApi(tipSha: string, pages: WoodpeckerPipeline[]): void {
+test("superseded canceled and killed main pushes do not turn main red while a newer verifying push runs", async () => {
+  const canceledBurst = Array.from({ length: 55 }, (_, index) => ({
+    ...pipeline(200 - index, "push", index % 2 === 0 ? "canceled" : "killed"),
+    commit: `superseded-${String(index)}`,
+  }));
+  mockApi([
+    [
+      { ...pipeline(201, "push", "running"), commit: CI_HEAD },
+      ...canceledBurst.slice(0, 49),
+    ],
+    [
+      ...canceledBurst.slice(49),
+      { ...pipeline(140, "push", "success"), commit: "last-green" },
+    ],
+  ]);
+  const result = await status();
+  expect(result.state).toBe("pending");
+  expect(result.latest?.number).toBe(201);
+  expect(result.lastVerdict?.number).toBe(140);
+});
+
+test("superseded canceled pushes still preserve an older failed main verdict across pagination", async () => {
+  const canceledBurst = Array.from({ length: 50 }, (_, index) => ({
+    ...pipeline(300 - index, "push", "canceled"),
+    commit: `superseded-${String(index)}`,
+  }));
+  mockApi([
+    [
+      { ...pipeline(301, "push", "running"), commit: CI_HEAD },
+      ...canceledBurst.slice(0, 49),
+    ],
+    [...canceledBurst.slice(49), failedPush()],
+  ]);
+  const result = await status();
+  expect(result.state).toBe("red");
+  expect(result.latest?.number).toBe(301);
+  expect(result.lastVerdict?.number).toBe(7);
+});
+
+test("manually killing the tip main push keeps main red when no newer verifying run exists", async () => {
+  const partialManual = {
+    ...pipeline(12, "manual", "success"),
+    workflows: [{ name: "ci-noop", state: "success" }],
+  };
+  mockApi([
+    [
+      partialManual,
+      pipeline(11, "push", "killed"),
+      { ...pipeline(10, "push", "success"), commit: "older-green" },
+    ],
+  ]);
+  const result = await status();
+  expect(result.state).toBe("red");
+  expect(result.latest?.number).toBe(11);
+  expect(result.lastVerdict?.number).toBe(11);
+});
+
+function stubPinnedMainFetch(options: {
+  tipSha: string;
+  runs: (ReturnType<typeof pipeline> & { commit: string })[];
+  compareStatus: string;
+  compares?: string[];
+}) {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (input: URL) => {
+    vi.fn((input: URL) => {
       const url = new URL(input);
       if (url.pathname.endsWith("/branches/main")) {
-        return Response.json({ commit: { sha: tipSha } });
+        return Promise.resolve(
+          Response.json({ commit: { sha: options.tipSha } }),
+        );
       }
-      const num = /\/pipelines\/(\d+)$/u.exec(url.pathname)?.[1];
-      return num === undefined
-        ? Response.json(pages)
-        : Response.json(pages.find((item) => item.number === Number(num)));
+      const compare = /\/compare\/([^/]+)$/.exec(url.pathname)?.[1];
+      if (compare !== undefined) {
+        options.compares?.push(compare);
+        return Promise.resolve(
+          Response.json({ status: options.compareStatus }),
+        );
+      }
+      const number = /\/pipelines\/(\d+)$/.exec(url.pathname)?.[1];
+      if (number !== undefined) {
+        const found = options.runs.find(
+          (item) => item.number === Number(number),
+        );
+        return found === undefined
+          ? Promise.reject(new Error(`Unexpected pipeline ${number}`))
+          : Promise.resolve(Response.json(found));
+      }
+      return Promise.resolve(Response.json(options.runs));
     }),
   );
 }
 
-test("getFollowedMainSnapshot returns a passing recovery at or after startSha even while newer main tips are running", async () => {
-  const startSha = "1".repeat(40);
-  const recoverySha = "2".repeat(40);
-  const newestTip = "3".repeat(40);
-  mockFollowedApi(newestTip, [
-    { ...pipeline(20, "push", "running"), commit: newestTip },
-    { ...pipeline(19, "push", "success"), commit: recoverySha },
-    { ...pipeline(18, "push", "failure"), commit: startSha },
-  ]);
-  const snap = await getFollowedMainSnapshot(
-    new GitHubClient("test"),
-    config,
-    startSha,
-  );
-  expect(snap.sha).toBe(recoverySha);
-  expect(snap.tipSha).toBe(newestTip);
-  expect(snap.run?.number).toBe(19);
-  expect(snap.run?.status).toBe("success");
+test("pinned main wait follows the earliest non-superseded descendant when the pinned push was canceled", async () => {
+  const pinnedSha = "1".repeat(40);
+  const canceledNext = "2".repeat(40);
+  const keptRunning = "3".repeat(40);
+  const newestTip = "4".repeat(40);
+  const compares: string[] = [];
+  stubPinnedMainFetch({
+    tipSha: newestTip,
+    compareStatus: "ahead",
+    compares,
+    runs: [
+      { ...pipeline(103, "push", "pending"), commit: newestTip, finished: 0 },
+      { ...pipeline(102, "push", "running"), commit: keptRunning },
+      { ...pipeline(101, "push", "canceled"), commit: canceledNext },
+      { ...pipeline(100, "push", "canceled"), commit: pinnedSha },
+    ],
+  });
+
+  const result = await pinned(pinnedSha);
+  expect(result.sha).toBe(pinnedSha);
+  expect(result.tipSha).toBe(newestTip);
+  expect(result.run?.number).toBe(102);
+  expect(compares).toEqual([`${pinnedSha}...${keptRunning}`]);
 });
 
-test("getFollowedMainSnapshot keeps waiting when a newer main run after a passing recovery has failed", async () => {
-  const startSha = "1".repeat(40);
-  const recoverySha = "2".repeat(40);
-  const failedTip = "3".repeat(40);
-  mockFollowedApi(failedTip, [
-    { ...pipeline(20, "push", "failure"), commit: failedTip },
-    { ...pipeline(19, "push", "success"), commit: recoverySha },
-    { ...pipeline(18, "push", "failure"), commit: startSha },
-  ]);
-  const snap = await getFollowedMainSnapshot(
-    new GitHubClient("test"),
-    config,
-    startSha,
-  );
-  expect(snap.sha).toBe(failedTip);
-  expect(snap.run?.number).toBe(20);
-  expect(snap.run?.status).toBe("failure");
-});
+test("pinned main wait refuses non-descendant newer commits and keeps a killed tip failed", async () => {
+  const pinnedSha = "5".repeat(40);
+  const divergedSha = "6".repeat(40);
+  stubPinnedMainFetch({
+    tipSha: divergedSha,
+    compareStatus: "diverged",
+    runs: [
+      { ...pipeline(51, "push", "running"), commit: divergedSha },
+      { ...pipeline(50, "push", "canceled"), commit: pinnedSha },
+    ],
+  });
 
-test("getFollowedMainSnapshot ignores passing commits older than startSha", async () => {
-  const olderGreen = "0".repeat(40);
-  const startSha = "1".repeat(40);
-  const runningTip = "2".repeat(40);
-  mockFollowedApi(runningTip, [
-    { ...pipeline(20, "push", "running"), commit: runningTip },
-    { ...pipeline(18, "push", "failure"), commit: startSha },
-    { ...pipeline(17, "push", "success"), commit: olderGreen },
-  ]);
-  const snap = await getFollowedMainSnapshot(
-    new GitHubClient("test"),
-    config,
-    startSha,
-  );
-  expect(snap.sha).toBe(runningTip);
-  expect(snap.run?.number).toBe(20);
-  expect(snap.run?.status).toBe("running");
-});
-
-test("getFollowedMainSnapshot preserves a failed commit verdict while its manual rerun is pending", async () => {
-  const greenBase = "1".repeat(40);
-  const failedCommit = "2".repeat(40);
-  const unscheduledTip = "3".repeat(40);
-  mockFollowedApi(failedCommit, [
-    { ...pipeline(21, "manual", "running"), commit: failedCommit },
-    { ...pipeline(19, "push", "failure"), commit: failedCommit },
-    { ...pipeline(18, "push", "success"), commit: greenBase },
-  ]);
-  const pendingAtTip = await getFollowedMainSnapshot(
-    new GitHubClient("test"),
-    config,
-    greenBase,
-  );
-  expect(pendingAtTip.sha).toBe(failedCommit);
-  expect(pendingAtTip.run?.number).toBe(21);
-  expect(pendingAtTip.run?.status).toBe("running");
-
-  mockFollowedApi(unscheduledTip, [
-    { ...pipeline(21, "manual", "running"), commit: failedCommit },
-    { ...pipeline(19, "push", "failure"), commit: failedCommit },
-    { ...pipeline(18, "push", "success"), commit: greenBase },
-  ]);
-  const pendingBehindTip = await getFollowedMainSnapshot(
-    new GitHubClient("test"),
-    config,
-    greenBase,
-  );
-  expect(pendingBehindTip.sha).toBe(failedCommit);
-  expect(pendingBehindTip.run?.number).toBe(19);
-  expect(pendingBehindTip.run?.status).toBe("failure");
-
-  mockFollowedApi(failedCommit, [
-    { ...pipeline(21, "manual", "success"), commit: failedCommit },
-    { ...pipeline(19, "push", "failure"), commit: failedCommit },
-    { ...pipeline(18, "push", "success"), commit: greenBase },
-  ]);
-  const recovered = await getFollowedMainSnapshot(
-    new GitHubClient("test"),
-    config,
-    greenBase,
-  );
-  expect(recovered.sha).toBe(failedCommit);
-  expect(recovered.run?.number).toBe(21);
-  expect(recovered.run?.status).toBe("success");
+  const result = await pinned(pinnedSha);
+  expect(result.run?.number).toBe(50);
+  expect(result.run?.status).toBe("canceled");
 });

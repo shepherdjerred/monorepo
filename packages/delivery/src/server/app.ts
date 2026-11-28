@@ -13,8 +13,6 @@ import {
   ComposeVersionSetSchema,
   CreateDeploymentSchema,
   FinishDeploymentSchema,
-  LatestQualifiedArtifactQuerySchema,
-  LatestRetainableArtifactQuerySchema,
   PublishBuildSchema,
   StageRequestSchema,
 } from "#shared/contract.ts";
@@ -51,7 +49,10 @@ import { settlesExistingStage } from "./stage-settlement.ts";
 import { registerWorkerRecoveryRoutes } from "./worker-recovery-routes.ts";
 import { registerMinecraftRecoveryRoutes } from "./minecraft-recovery-routes.ts";
 import type { InspectMinecraftRecovery } from "#infrastructure/minecraft-recovery/inspector.ts";
-import { deliveryMetrics } from "./metrics.ts";
+import {
+  createRetainableQualificationCounters,
+  deliveryMetrics,
+} from "./metrics.ts";
 import { registerArtifactRoutes } from "./artifact-routes.ts";
 import { registerQualificationRoutes } from "./qualification-routes.ts";
 import type { UpstreamFetch } from "#infrastructure/upstream-artifact.ts";
@@ -154,9 +155,14 @@ export function createApp(options: Options) {
     return await readinessProbe;
   }
   app.get("/healthz", (c) => c.json({ status: "ok" }));
+  const retainableQualifications = createRetainableQualificationCounters();
   app.get("/metrics", async (c) => {
     c.header("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
-    return c.body(await deliveryMetrics(options.delivery.database));
+    return c.body(
+      await deliveryMetrics(options.delivery.database, {
+        retainablePendingQualifications: retainableQualifications.snapshot(),
+      }),
+    );
   });
   app.get("/readyz", async (c) => {
     if (options.drain?.draining() === true)
@@ -231,28 +237,16 @@ export function createApp(options: Options) {
   registerQualificationRoutes(app, delivery, options.qualifyBuild);
   registerArtifactRoutes(app, delivery, {
     repositoryId: options.ciRepositoryId,
+    qualifyBuild: options.qualifyBuild,
+    recordRetainableQualification: (outcome) => {
+      retainableQualifications.record(outcome);
+    },
     ...(options.upstreamFetch === undefined
       ? {}
       : { transport: options.upstreamFetch }),
   });
   app.get("/api/v1/identity", (c) => c.json(c.get("principal")));
   app.get("/api/v1/overview", async (c) => c.json(await delivery.overview()));
-  app.get("/api/v1/artifacts/latest-qualified", async (c) =>
-    c.json(
-      await delivery.latestQualifiedArtifact(
-        LatestQualifiedArtifactQuerySchema.parse(c.req.query()),
-        options.ciRepositoryId,
-      ),
-    ),
-  );
-  app.get("/api/v1/artifacts/latest-retainable", async (c) =>
-    c.json(
-      await delivery.latestRetainableArtifact(
-        LatestRetainableArtifactQuerySchema.parse(c.req.query()),
-        options.ciRepositoryId,
-      ),
-    ),
-  );
   app.get("/api/v1/versions", async (c) =>
     c.json(await delivery.versions(c.req.query("serviceId"))),
   );

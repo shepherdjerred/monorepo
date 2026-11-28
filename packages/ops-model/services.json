@@ -927,6 +927,17 @@
       "package": "artifacts",
       "namespaces": ["artifacts"],
       "argoApps": []
+    },
+    {
+      "id": "experiments",
+      "rootReleaseExclusions": { "experiments": "inactive" },
+      "images": ["experiments"],
+      "charts": ["experiments"],
+      "title": "Experiments",
+      "kind": "product",
+      "package": "experiments",
+      "namespaces": ["experiments"],
+      "argoApps": []
     }
   ]
 }

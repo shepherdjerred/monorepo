@@ -1162,6 +1162,19 @@ continuation cursors and deletion receipts remain in Workflow results; logs alon
 are deleted. See the [operator procedure](../docs/wiki/src/content/docs/how-to/retain-woodpecker-logs.md)
 for candidate rollout, dry-run review and activation.
 
+SeaweedFS stores S3 lifecycle `Expiration` rules but never enforces them, so the
+`seaweedfs-lifecycle-enforcer` schedule (daily 04:30 Pacific, SKIP overlap,
+initially paused) applies them. It reads every bucket's live lifecycle
+configuration and, for each Enabled rule with `Expiration.Days` over a key prefix
+(an empty prefix is the whole bucket), lists the prefix in bounded eight-minute
+Activity chunks on the serial infra queue. Tag, `Date`, version and transition
+rules are reported as unsupported and skipped. The `seaweedfs-lifecycle-enforcer-mode`
+flag defaults to `report`: nothing is deleted, and the Workflow result and
+`seaweedfs_lifecycle_*` metrics carry per-rule candidate counts, bytes and sample
+keys. `delete` mode deletes in batches of 1000 up to `…-max-deletes` per run, only
+in buckets matching `…-buckets`. See the
+[operator procedure](../docs/wiki/src/content/docs/how-to/enforce-seaweedfs-lifecycle-expiry.md).
+
 The `llm-archive-index` schedule runs every 15 minutes in UTC (`SKIP` overlap,
 initially paused during candidate rollout), executing `runLlmArchiveIndex` on
 `monorepo-workflows` and `syncLlmArchiveIndex` on the serial `infra` queue. It

@@ -45,10 +45,29 @@ if [ -n "${CI_CARGO_CACHE_DIR:-}" ]; then
   done
 fi
 
+# Cargo reads a per-package profile override only from a config file, never from
+# CARGO_PROFILE_* variables. The pipeline sets CI_CARGO_DEPENDENCY_DEBUG so
+# every non-workspace dependency drops debuginfo while workspace crates keep
+# the debuginfo level its environment chooses. A config file in CARGO_HOME
+# binds only CI steps, leaves the repository's Cargo.toml and a developer's
+# builds alone, and does not move CARGO_HOME. `test` inherits these `dev`
+# overrides. Fail on a config this script did not write rather than shadow it.
+if [ -n "${CI_CARGO_DEPENDENCY_DEBUG:-}" ]; then
+  cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+  cargo_ci_config=$(printf '[profile.dev.package."*"]\ndebug = "%s"\n' "$CI_CARGO_DEPENDENCY_DEBUG")
+  if [ -e "$cargo_home/config.toml" ] &&
+    [ "$(cat "$cargo_home/config.toml")" != "$cargo_ci_config" ]; then
+    echo "toolchain: $cargo_home/config.toml exists and is not the CI dependency debuginfo override" >&2
+    return 1
+  fi
+  mkdir -p "$cargo_home"
+  printf '%s\n' "$cargo_ci_config" >"$cargo_home/config.toml"
+fi
+
 # Stale images without mise (the Playwright image) bootstrap the same release
 # ci-base pins, so both read mise.lock's format identically.
 # renovate: datasource=github-releases depName=jdx/mise
-MISE_BOOTSTRAP_VERSION="v2026.11.11"
+MISE_BOOTSTRAP_VERSION="v2026.11.14"
 # An image baked before the pin carries an older mise that rejects the
 # lockfile's format, so replace any mise older than the pin, not only a missing
 # one. The bootstrap targets ~/.local/bin, which the PATH below puts first.
@@ -65,8 +84,8 @@ mise_current() {
 # means the bootstrap neither depends on GitHub serving that manifest nor runs
 # an unpinned installer script. Asset names carry the version, so a version
 # bump without new checksums fails scripts/checks/deps/check-mise-lock-sync.ts.
-MISE_BOOTSTRAP_SHA256="4760a05d70f8fcc2176f935705060c709bafde86e98b01a836ccd68129ccbc3d  mise-v2026.11.11-linux-x64-musl.tar.gz
-06231a655ae71c6641230f563ab45c344fbea56a19ff5e8377603f536df6088e  mise-v2026.11.11-linux-arm64-musl.tar.gz"
+MISE_BOOTSTRAP_SHA256="86a5c3d8cf3d62b45a10ddd6afe8225bada9423e517ec8df7d589aa7d02c171d  mise-v2026.11.14-linux-x64-musl.tar.gz
+bf73525892d7942b881b885867bb028cab98ed528356c4490364eb1001ef9deb  mise-v2026.11.14-linux-arm64-musl.tar.gz"
 install_bootstrap_mise() {
   case "$(uname -m)" in
     x86_64 | amd64) mise_arch=x64 ;;

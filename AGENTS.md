@@ -135,19 +135,19 @@ bunx lefthook run pre-commit # includes jscpd (standalone: bun run jscpd)
 ```
 
 Woodpecker runs the `ci` test tier exhaustively and is the CI source of truth.
-Use `toolkit ci wait <PR>` for merge readiness, `toolkit ci explain <PR>` for
-blockers, and `toolkit ci load` for capacity. Use `toolkit woodpecker` for
-native CI operations and `toolkit pr health` for a one-shot combined report.
-Run `bun run verify` locally only when reproducing CI or changing verification
-machinery.
+`toolkit ci wait <PR>` gives merge readiness, `explain` blockers, `ci load`
+capacity, `toolkit pr health` a one-shot report, `toolkit woodpecker` native
+operations. Run `bun run verify` only to reproduce CI or change verification.
 
 Steps marked `tier: "extended"` in a workspace's `ci-tests.json` (suites that
 start PostgreSQL, the Temporal test server, ffmpeg or a game server, or exceed
-a three-minute p50) do not run on pull requests. Before marking a PR ready, run
-`bun run verify:extended -- --filter='...[origin/main...HEAD]'` (or
-`bunx turbo run test:extended --filter='...[origin/main...HEAD]' --continue`)
-and record the command and result in the PR body's Verification. The nightly
-`ci-extended-verify` run on main is the safety net, not a substitute.
+a three-minute p50) and the browser suites (unless the PR changes
+`ci/ci-playwright/**`) do not run on pull requests. Keep a PR in draft until its
+affected checks pass locally: the focused tasks above,
+`bun run verify:extended -- --filter='...[origin/main...HEAD]'`, and
+`bun run e2e:affected` (commit first; `-- --linux` for visual snapshots).
+Record each command and result in the PR body's Verification, then mark it
+ready once (`monorepo-delivery` "Submit once").
 
 Verify claims from the live tree before reporting them. Preserve unrelated
 worktree changes. Do not call an issue "pre-existing" when the task explicitly
@@ -184,9 +184,9 @@ review gate observes both the code and thread state.
 
 Use the matching repository skill in `.agents/skills/` for repeatable delivery,
 homelab, Delivery recovery, Scout, Temporal, TaskNotes, Minecraft harness and
-building, docs, Tracker, PostHog, Discord, or report rendering work. Package-local runtime
-skills remain application assets and do not replace repository workflow
-guidance.
+building, docs, Tracker, Experiments, PostHog, Discord, or report rendering
+work. Package-local runtime skills remain application assets and do not replace
+repository workflow guidance.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

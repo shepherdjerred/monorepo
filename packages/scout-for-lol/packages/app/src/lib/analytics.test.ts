@@ -176,6 +176,8 @@ describe("normalizePath", () => {
       "/players/:playerId/matches/:matchId",
     );
     expect(normalizePath("/champions/22")).toBe("/champions/:championId");
+    expect(normalizePath("/live")).toBe("/live");
+    expect(normalizePath("/live/NA1_5500000777")).toBe("/live/:riotMatchId");
     expect(normalizePath("/halls/123")).toBe("/halls/:guildId");
     expect(normalizePath("/challenges/template-123")).toBe(
       "/challenges/:templateId",

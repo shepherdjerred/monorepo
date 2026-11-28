@@ -270,7 +270,25 @@ export function createApp(options: AppOptions): Hono {
   app.all("/internal/*", apiNotFound);
 
   app.use("/assets/*", serveStatic({ root: clientRoot }));
-  app.get("*", serveStatic({ root: clientRoot, path: "index.html" }));
+  const serveClient = serveStatic({ root: clientRoot, path: "index.html" });
+  const experimentsEnabled = options.modules?.some(
+    (module) => module.id === "experiments",
+  );
+  app.get("*", async (context, next) => {
+    const response = await serveClient(context, next);
+    if (experimentsEnabled !== true || response?.ok !== true) return response;
+    const html = new HTMLRewriter()
+      .on("head", {
+        element(head) {
+          head.append('<meta name="hub-experiments" content="enabled">', {
+            html: true,
+          });
+        },
+      })
+      .transform(response);
+    html.headers.delete("content-length");
+    return html;
+  });
   app.notFound((context) => context.json({ error: "Not found" }, 404));
   app.onError((error, context) => {
     const opsResponse = opsErrorResponse(error, context);

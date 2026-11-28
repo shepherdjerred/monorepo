@@ -6,7 +6,7 @@ This directory contains a post-processor that transforms Prisma's generated type
 
 After `prisma generate` creates type definitions, this script:
 
-1. **Parses the generated TypeScript AST** using `ts-morph`
+1. **Parses the generated TypeScript AST** with Bun built-ins
 2. **Finds all `$XPayload` types** in the Prisma namespace
 3. **Transforms number IDs to branded types**:
    - `Player.id: number` → `Player.id: PlayerId`
@@ -84,7 +84,7 @@ export type $PlayerPayload = {
 
 ## How It Works
 
-Uses TypeScript's AST (via ts-morph) to:
+Uses TypeScript's AST (without extra parser dependencies) to:
 
 1. Navigate to `Prisma` namespace
 2. Find type aliases like `$PlayerPayload<ExtArgs>`
@@ -102,7 +102,7 @@ This is **much more robust** than regex-based replacement because it:
 ## Implementation
 
 **File**: `scripts/brand-prisma-types.ts`
-**Dependencies**: `ts-morph` (TypeScript Compiler API wrapper)
+**Dependencies**: none beyond Bun built-ins
 **Runtime**: Bun (works with Node.js too)
 
 ## Maintenance

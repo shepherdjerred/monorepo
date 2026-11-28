@@ -42,14 +42,15 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5",
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2",
     "@trpc/server": "^11.18.0",
     "hono": "^4.12.18"
   },
   "dependencies": {
     "@shepherdjerred/delivery": "workspace:*",
     "@shepherdjerred/errors": "workspace:*",
+    "@shepherdjerred/experiments": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@trpc/client": "^11.17.0",
     "@shepherdjerred/artifacts": "workspace:*",

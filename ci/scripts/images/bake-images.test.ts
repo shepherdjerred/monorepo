@@ -279,6 +279,10 @@ test("runs the default application candidate smoke check", async () => {
       environment: {},
       readRetainableImages: async () => new Map(),
       getManifestDigest: async () => digest,
+      verifyPrivateRepositories: async (targets) => {
+        expect(targets).toEqual(["birmel"]);
+        expect(commands).toEqual([]);
+      },
       verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),
       getRuntimeFingerprint: async () => "new",
@@ -287,6 +291,31 @@ test("runs the default application candidate smoke check", async () => {
     },
   );
   expect(commands.some((command) => command.includes("--file"))).toBe(true);
+});
+
+test("never pushes when preflight cannot confirm private repositories", async () => {
+  const commands: string[][] = [];
+  await expect(
+    pushImages(
+      {
+        targets: ["artifacts"],
+        commit: "commit",
+        buildNumber: "42",
+        contractHash: "contract",
+      },
+      {
+        executor: async (command) => {
+          commands.push([...command]);
+          return commandResult();
+        },
+        readRetainableImages: async () => new Map(),
+        verifyPrivateRepositories: async () => {
+          throw new Error("private repository prerequisite failed");
+        },
+      },
+    ),
+  ).rejects.toThrow("private repository prerequisite failed");
+  expect(commands).toEqual([]);
 });
 
 test("only accepts documented flags", () => {
@@ -854,6 +883,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
         events.push(`resolve:${image}`);
         return digest;
       },
+      verifyPrivateRepositories: () => Promise.resolve(),
       verifyRegistryAccess: async (target, reference) => {
         events.push(`public:${target}:${reference}`);
       },
@@ -992,6 +1022,7 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
             },
           ]),
         getManifestDigest: async () => digest,
+        verifyPrivateRepositories: () => Promise.resolve(),
         verifyRegistryAccess: async () => {
           events.push("public");
         },
@@ -1031,6 +1062,7 @@ test("keeps upstream provenance for infrastructure images", async () => {
           },
         ]),
       getManifestDigest: async () => digest,
+      verifyPrivateRepositories: () => Promise.resolve(),
       verifyRegistryAccess: async () => {
         events.push("public");
       },
@@ -1080,6 +1112,7 @@ test("retains every qualified original when no selected candidate changed conten
       environment: {},
       readRetainableImages: async () => catalog,
       getManifestDigest: async () => digest,
+      verifyPrivateRepositories: () => Promise.resolve(),
       verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),
       smokeCandidate: () => Promise.resolve(),

@@ -84,9 +84,11 @@ export function snapshotQuery() {
   return queryOptions({
     queryKey: opsKeys.snapshot(),
     queryFn: ({ signal }) =>
-      request("/api/v1/ops/snapshot?consumer=web", SnapshotResponseSchema, {
-        signal,
-      }),
+      request(
+        "/api/v1/ops/snapshot?consumer=web&includeExperiments=1",
+        SnapshotResponseSchema,
+        { signal },
+      ),
     refetchInterval: REFRESH_MS,
   });
 }

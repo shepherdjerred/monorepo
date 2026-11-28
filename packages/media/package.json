@@ -83,7 +83,7 @@
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
-    "@temporalio/client": "1.26.0",
+    "@temporalio/client": "1.27.0",
     "cheerio": "1.2.0",
     "hono": "^4.12.18",
     "lucide-react": "^1.14.0",
@@ -94,7 +94,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.14.0",
+    "@axe-core/playwright": "4.14.1",
     "@fontsource-variable/dm-sans": "5.3.0",
     "@fontsource-variable/manrope": "5.3.0",
     "@playwright/test": "1.64.0",
@@ -111,7 +111,7 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   }
 }

@@ -1,0 +1,44 @@
+[
+  {
+    "rule": "theme-color",
+    "file": "index.html",
+    "count": 2,
+    "reason": "Baseline when artifacts (#5331) joined the conformance scan."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/client/styles/base.css",
+    "count": 1,
+    "reason": "Baseline when artifacts (#5331) joined the conformance scan."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles/base.css",
+    "count": 7,
+    "reason": "Baseline when artifacts (#5331) joined the conformance scan."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/client/styles/base.css",
+    "count": 5,
+    "reason": "Baseline when artifacts (#5331) joined the conformance scan."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/client/styles/pages.css",
+    "count": 2,
+    "reason": "Baseline when artifacts (#5331) joined the conformance scan."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/client/styles/viewers.css",
+    "count": 9,
+    "reason": "Baseline when artifacts (#5331) joined the conformance scan."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/viewers/file-viewer.tsx",
+    "count": 1,
+    "reason": "Baseline when artifacts (#5331) joined the conformance scan."
+  }
+]

@@ -255,7 +255,7 @@ export function ActionDialog({
       </Button>
       <dialog
         ref={dialog}
-        className="inc-dialog"
+        className="ui-dialog"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
         onClose={() => {
@@ -266,41 +266,47 @@ export function ActionDialog({
           <form
             ref={focusFirstField}
             method="dialog"
-            className="inc-dialog-form"
             onSubmit={(event) => {
               event.preventDefault();
               void submit(event.currentTarget);
             }}
           >
-            <h1 id={titleId} className="inc-dialog-title">
-              {title}
-            </h1>
-            <p id={descriptionId} className="inc-dialog-description">
-              {description}
-            </p>
-            {children}
-            <div className="ui-field">
-              <div className="ui-field-box">
-                <label className="ui-field-label" htmlFor={`${id}-note`}>
-                  {noteLabel}
-                  {noteRequired ? <span aria-hidden="true"> *</span> : null}
-                </label>
-                <textarea
-                  id={`${id}-note`}
-                  name="note"
-                  className="ui-field-control"
-                  required={noteRequired}
-                  rows={4}
-                  aria-describedby={error === null ? undefined : errorId}
-                />
-              </div>
+            <div className="ui-dialog-head">
+              <h1 id={titleId} className="ui-dialog-title">
+                {title}
+              </h1>
             </div>
-            {error === null ? null : (
-              <p id={errorId} className="inc-dialog-error" role="alert">
-                {error}
+            <div className="ui-dialog-body">
+              <p
+                id={descriptionId}
+                className="ui-dialog-description inc-action-description"
+              >
+                {description}
               </p>
-            )}
-            <div className="inc-dialog-actions">
+              {children}
+              <div className="ui-field">
+                <div className="ui-field-box">
+                  <label className="ui-field-label" htmlFor={`${id}-note`}>
+                    {noteLabel}
+                    {noteRequired ? <span aria-hidden="true"> *</span> : null}
+                  </label>
+                  <textarea
+                    id={`${id}-note`}
+                    name="note"
+                    className="ui-field-control"
+                    required={noteRequired}
+                    rows={4}
+                    aria-describedby={error === null ? undefined : errorId}
+                  />
+                </div>
+              </div>
+              {error === null ? null : (
+                <p id={errorId} className="inc-action-error" role="alert">
+                  {error}
+                </p>
+              )}
+            </div>
+            <div className="ui-dialog-actions">
               <Button
                 onClick={() => {
                   dialog.current?.close();

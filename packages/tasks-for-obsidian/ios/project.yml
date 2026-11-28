@@ -1,6 +1,6 @@
 name: TasksForObsidian
 options:
-  minimumXcodeGenVersion: "2.48.0"
+  minimumXcodeGenVersion: "2.49.0"
   deploymentTarget:
     iOS: "18.0"
 packages:

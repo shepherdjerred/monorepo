@@ -61,10 +61,9 @@ const discordAuthPattern =
 function backgroundProbeSmoke(
   packageDir: string,
   entry: string,
-  logName: string,
   probeScript: string,
 ): string {
-  const logFile = `/tmp/${logName}-smoke.log`;
+  const logFile = `/tmp/${packageDir}-smoke.log`;
   return [
     "set -eu",
     `cd /app/packages/${packageDir}`,
@@ -81,17 +80,28 @@ function backgroundProbeSmoke(
   ].join("\n");
 }
 
+/** Probe the health endpoint, browser route and linked JavaScript asset. */
+function spaProbeSmoke(
+  packageDir: string,
+  port: number,
+  pagePath = "/",
+): string {
+  const origin = `http://127.0.0.1:${String(port)}`;
+  const probe = String.raw`const health = await fetch("${origin}/healthz"); const page = await fetch("${origin}${pagePath}"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);`;
+  return backgroundProbeSmoke(packageDir, "src/server/index.ts", probe);
+}
+
+function healthProbeSmoke(packageDir: string, port: number): string {
+  const probe = `const health = await fetch("http://127.0.0.1:${String(port)}/healthz"); if (!health.ok) process.exit(1);`;
+  return backgroundProbeSmoke(packageDir, "src/index.ts", probe);
+}
+
 const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
   delivery: {
-    command: backgroundProbeSmoke(
-      "delivery",
-      "src/server/index.ts",
-      "delivery",
-      String.raw`const health = await fetch("http://127.0.0.1:17353/healthz"); const page = await fetch("http://127.0.0.1:17353/"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);`,
-    ),
+    command: spaProbeSmoke("delivery", 17_353),
     env: {
       DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/delivery",
       HOST: "127.0.0.1",
@@ -102,12 +112,7 @@ const commands: Record<
     },
   },
   golink: {
-    command: backgroundProbeSmoke(
-      "golink",
-      "src/server/index.ts",
-      "golink",
-      String.raw`const health = await fetch("http://127.0.0.1:17352/healthz"); const page = await fetch("http://127.0.0.1:17352/"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);`,
-    ),
+    command: spaProbeSmoke("golink", 17_352),
     env: {
       DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/golink",
       HOST: "127.0.0.1",
@@ -190,12 +195,7 @@ const commands: Record<
     },
   },
   tracker: {
-    command: backgroundProbeSmoke(
-      "tracker",
-      "src/server/index.ts",
-      "tracker",
-      String.raw`const health = await fetch("http://127.0.0.1:17351/healthz"); const page = await fetch("http://127.0.0.1:17351/issues/AI-1"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);`,
-    ),
+    command: spaProbeSmoke("tracker", 17_351, "/issues/AI-1"),
     env: {
       DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/tracker",
       HOST: "127.0.0.1",
@@ -212,7 +212,6 @@ const commands: Record<
     command: backgroundProbeSmoke(
       "storm-brain",
       "src/index.ts",
-      "storm-brain",
       'const app = await fetch("http://127.0.0.1:18794/readyz"); const metrics = await fetch("http://127.0.0.1:18795/metrics"); if (!app.ok || !metrics.ok || !(await metrics.text()).includes("storm_brain_requests_total")) process.exit(1);',
     ),
     env: {
@@ -467,12 +466,7 @@ const commands: Record<
     env: {},
   },
   flags: {
-    command: backgroundProbeSmoke(
-      "flags",
-      "src/index.ts",
-      "flags",
-      'const health = await fetch("http://127.0.0.1:17360/healthz"); if (!health.ok) process.exit(1);',
-    ),
+    command: healthProbeSmoke("flags", 17_360),
     env: {
       HOST: "127.0.0.1",
       PORT: "17360",
@@ -482,7 +476,6 @@ const commands: Record<
     command: backgroundProbeSmoke(
       "storm-stats",
       "src/index.ts",
-      "storm-stats",
       String.raw`const contract = await Bun.file("./contracts/ingest-v1.json").json(); const health = await fetch("http://127.0.0.1:17420/healthz"); const page = await fetch("http://127.0.0.1:17420/"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1); const viewerRes = await fetch("http://127.0.0.1:17421/api/v1/viewer"); if (!viewerRes.ok || (await viewerRes.json()).role !== "staff") process.exit(1); const staffOnPublic = await fetch("http://127.0.0.1:17420/api/staff/network"); if (staffOnPublic.status !== 404 || !(staffOnPublic.headers.get("content-type") ?? "").includes("application/json")) process.exit(1); const ingestRes = await fetch("http://127.0.0.1:17422/api/v1/ingest", { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer smoke-storm-stats-ingest-token-0000" }, body: JSON.stringify({ schemaVersion: contract.schemaVersion, batchId: "00000000-0000-4000-8000-000000000001", serverName: "The Storm", sentAt: "2026-11-22T19:00:00Z", events: [{ type: "connection_bounce", eventId: "00000000-0000-4000-8000-000000000002", occurredAt: "2026-11-22T19:00:00Z", playerUuid: null, playerName: "SmokeProbe", category: "maintenance", reason: "smoke test", joinAddress: "ts-mc.net" }], playerSnapshots: [], serverSnapshot: null }) }); if (!ingestRes.ok || (await ingestRes.json()).acceptedEvents !== 1) process.exit(1);`,
     ),
     env: {
@@ -515,7 +508,6 @@ const commands: Record<
     command: backgroundProbeSmoke(
       "errors",
       "src/index.ts",
-      "errors",
       String.raw`const health = await fetch("http://127.0.0.1:17370/healthz"); const page = await fetch("http://127.0.0.1:17370/"); const html = await page.text(); if (health.status !== 200 || page.status !== 200 || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || (await fetch(new URL(asset, page.url))).status !== 200) process.exit(1); const ingestHealth = await fetch("http://127.0.0.1:17371/healthz"); if (ingestHealth.status !== 200) process.exit(1); const adminOnIngest = await fetch("http://127.0.0.1:17371/api/v1/projects"); if (adminOnIngest.status !== 404) process.exit(1);`,
     ),
     env: {
@@ -528,13 +520,26 @@ const commands: Record<
     },
   },
   artifacts: {
-    command: backgroundProbeSmoke(
-      "artifacts",
-      "src/index.ts",
-      "artifacts",
-      'const health = await fetch("http://127.0.0.1:17440/healthz"); if (!health.ok) process.exit(1);',
-    ),
-    env: { HOST: "127.0.0.1", PORT: "17440" },
+    command: healthProbeSmoke("artifacts", 17_440),
+    // Both image smokes boot without backing services. The probe uses the
+    // internal host class, which differs from the app and content origins.
+    env: {
+      HOST: "127.0.0.1",
+      PORT: "17440",
+      DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/artifacts",
+      S3_ENDPOINT: "http://127.0.0.1:19000",
+      AWS_ACCESS_KEY_ID: "smoke",
+      AWS_SECRET_ACCESS_KEY: "smoke",
+      ARTIFACTS_APP_ORIGIN: "http://artifacts.smoke.test",
+      ARTIFACTS_CONTENT_ORIGIN: "http://artifacts-content.smoke.test",
+      ARTIFACTS_OPERATOR_LOGINS: "smoke@example.test",
+      ENVIRONMENT: "test",
+      FEATURE_FLAGS_MODE: "disabled",
+    },
+  },
+  experiments: {
+    command: "cd /app/packages/experiments && bun run smoke",
+    env: {},
   },
 };
 
@@ -557,21 +562,14 @@ if (import.meta.main) {
   }
   if (target === "scout-for-lol") {
     const expectedContractHash = Bun.env["EXPECTED_CONTRACT_HASH"];
-    if (
-      expectedContractHash !== undefined &&
-      expectedContractHash.length > 0 &&
-      Bun.env["CONTRACT_HASH"] !== expectedContractHash
-    ) {
+    const actualContractHash = Bun.env["CONTRACT_HASH"];
+    if (expectedContractHash && actualContractHash !== expectedContractHash) {
       throw new Error(
-        `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(Bun.env["CONTRACT_HASH"])}`,
+        `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(actualContractHash)}`,
       );
     }
   }
-  const command = imageSmokeCommand(target);
-
-  assertPassed(
-    await runShell(command.command, command.env),
-    `${target} in-image smoke`,
-  );
+  const { command, env } = imageSmokeCommand(target);
+  assertPassed(await runShell(command, env), `${target} in-image smoke`);
   console.log(`${target} in-image smoke passed`);
 }

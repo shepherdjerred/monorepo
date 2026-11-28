@@ -17,6 +17,7 @@ type Identity = Omit<
 const DIAGNOSTIC_WORKFLOWS = [
   "verify",
   "playwright-e2e",
+  "playwright-media-e2e",
   "verify-extended",
 ] as const satisfies readonly Identity["workflow"][];
 
@@ -32,7 +33,7 @@ export async function prepareDiagnostics(
   workflow: Identity["workflow"],
   root: string,
 ): Promise<Set<string>> {
-  if (workflow === "playwright-e2e") {
+  if (workflow === "playwright-e2e" || workflow === "playwright-media-e2e") {
     await rm(path.join(root, "playwright-selection-report.json"), {
       force: true,
     });

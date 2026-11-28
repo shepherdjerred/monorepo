@@ -30,12 +30,11 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@ai-sdk/otel": "1.0.179",
+    "@ai-sdk/otel": "1.0.183",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.223.0",
     "@opentelemetry/core": "^2.12.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
-    "@opentelemetry/semantic-conventions": "^1.40.0",
     "@shepherdjerred/llm-models": "workspace:*",
     "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/s3-signed-request": "workspace:*",
@@ -55,7 +54,7 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   }
 }

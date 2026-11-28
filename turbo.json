@@ -507,6 +507,7 @@
         "@shepherdjerred/artifacts#generate",
         "@shepherdjerred/delivery#generate",
         "@shepherdjerred/errors#generate",
+        "@shepherdjerred/experiments#generate",
         "@shepherdjerred/golink#generate",
         "@shepherdjerred/incidents#generate",
         "@shepherdjerred/tracker#generate",

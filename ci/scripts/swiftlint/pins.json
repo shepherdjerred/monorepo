@@ -4,16 +4,16 @@
   "sourceRevision": "6aba03e3d8302b33f106e0f922210f35ca4b52cf",
   "sourceArchive": "https://codeload.github.com/realm/SwiftLint/legacy.tar.gz/6aba03e3d8302b33f106e0f922210f35ca4b52cf",
   "sourceArchiveSHA256": "1542223d8407c8fca1dc8b066c64391fa087654a5670e3ae0906083ddb04265d",
-  "builderImage": "docker.io/library/swift:6.3.3-jammy@sha256:8346ae8fdc6f1dcd4c2b228b9eb7e55ef98743a4abead5765b806b0bcae74de5",
+  "builderImage": "docker.io/library/swift:6.4.3-jammy@sha256:a76121ceda0315af40b7c15e71a8447248a318787b0d8b41b212a2812279542f",
   "runtimeLicenses": [
     {
       "name": "Swift-LICENSE.txt",
-      "url": "https://raw.githubusercontent.com/swiftlang/swift/swift-6.3.3-RELEASE/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/swiftlang/swift/swift-6.4.3-RELEASE/LICENSE.txt",
       "sha256": "770af8291f708538d8ff885a0bbc4e045cd700531741c4f99528d435c14d7f55"
     },
     {
       "name": "LLVM-LICENSE.txt",
-      "url": "https://raw.githubusercontent.com/swiftlang/llvm-project/swift-6.3.3-RELEASE/llvm/LICENSE.TXT",
+      "url": "https://raw.githubusercontent.com/swiftlang/llvm-project/swift-6.4.3-RELEASE/llvm/LICENSE.TXT",
       "sha256": "8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee"
     }
   ]

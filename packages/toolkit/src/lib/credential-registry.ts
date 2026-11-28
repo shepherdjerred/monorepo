@@ -138,6 +138,13 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       ref: `${HOMELAB_VAULT_REF}/${FLAGS_ITEM_ID}/FLAGS_MACHINE_TOKEN`,
     },
   },
+  EXPERIMENTS_MACHINE_TOKEN: {
+    description: "Experiments service machine token for Toolkit",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/experiments-auth/EXPERIMENTS_MACHINE_TOKEN`,
+    },
+  },
   GRAFANA_API_KEY: {
     description: "Grafana API key",
     source: {

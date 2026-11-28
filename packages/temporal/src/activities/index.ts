@@ -60,6 +60,7 @@ import { preparePhotonCommand } from "./agent/photon/prepare.ts";
 import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
 import { waitForPhotonCommand } from "./agent/photon/wait.ts";
 import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retention.ts";
+import { seaweedfsLifecycleActivities } from "./maintenance/seaweedfs-lifecycle/activities.ts";
 import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
 import { ciExtendedVerifyActivities } from "./maintenance/ci-extended-verify.ts";
 import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
@@ -91,6 +92,7 @@ export const infraActivities = {
   ...trackerAttachmentActivities,
   ...stormCompanionActivities,
   ...woodpeckerRetentionActivities,
+  ...seaweedfsLifecycleActivities,
   ...dnsAuditActivities,
   ...homelabAuditActivities,
   ...homelabAuditCollectorActivities,

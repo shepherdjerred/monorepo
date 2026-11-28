@@ -1,7 +1,7 @@
 import { GaugeIcon } from "lucide-react";
 import { describe, expect, it } from "vitest";
 
-import { registry } from "./modules.ts";
+import { createClientRegistry } from "./modules.ts";
 import {
   CORE_MODULE_ID,
   resolveModules,
@@ -25,8 +25,18 @@ function module(overrides: Partial<ClientModule>): ClientModule {
 }
 
 const core = module({ id: CORE_MODULE_ID, basePath: "" });
+const registry = createClientRegistry(true);
 
 describe("the composed module registry", () => {
+  it("omits the Experiments navigation and routes until the service is configured", () => {
+    const prepared = createClientRegistry(false);
+    expect(prepared.modules.map((entry) => entry.id)).not.toContain(
+      "experiments",
+    );
+    expect(prepared.routes.map((route) => route.path)).not.toContain(
+      "/experiments",
+    );
+  });
   it("serves Home at the root and Flow at /flow, keeps /overview and /delivery for their redirects, and registers Hub 2.0 facet pages", () => {
     expect(
       registry.routes.map((route) => `${route.chrome} ${route.path}`),
@@ -64,6 +74,9 @@ describe("the composed module registry", () => {
       "shell /incidents/:ref",
       "shell /traces",
       "shell /traces/:traceId",
+      "shell /experiments",
+      "shell /experiments/new",
+      "shell /experiments/:id",
     ]);
   });
 
@@ -89,6 +102,7 @@ describe("the composed module registry", () => {
           "Review /review",
           "Reports /reports",
           "Traces /traces",
+          "Experiments /experiments",
         ],
       },
       {
@@ -129,6 +143,7 @@ describe("the composed module registry", () => {
       "Promotion",
       "Open incidents",
       "LLM traces",
+      "Experiments",
     ]);
   });
 
