@@ -18,10 +18,16 @@ file). The ISC text and original copyright are retained in [`LICENSE`](./LICENSE
    `require` instead of a top-level `import`, because eagerly loading its native binding crashes
    on some bun / global-cache layouts. Previously carried as a committed bun patch in the consumer
    packages; now baked into source. `sharp` is only used by the optional stream-preview path.
-3. **`videoFilters` option** (`src/media/newApi.ts`) — `prepareStream` gains `videoFilters?: string[]`,
-   appended (via the pure `buildVideoFilterChain`) to the transcoding `-vf` chain right after the
-   built-in `scale`, so it composes with scale/encoder filters instead of clobbering them like a raw
-   `-vf` in `customFfmpegFlags` would. streambot uses it to burn in subtitles (`subtitles='…'`).
+3. **`subtitleBurn` option** (`src/media/newApi.ts`, graphs in `src/media/videoGraph.ts`) —
+   `prepareStream` composes the subtitle burn into its own video graph instead of a raw `-vf` in
+   `customFfmpegFlags` clobbering the built-in scale. A text file (`{ path, fontsDir? }`) is rendered
+   by libass: a `subtitles=` filter after the HDR tonemap on the software path, or a transparent
+   BGRA canvas uploaded and blended with `overlay_vaapi` on the GPU pipeline; either way
+   PTS-compensated for `startTime`. `fontsDir` adds an ASS track's attached fonts. An image track
+   (`{ kind: "image", subtitleStreamIndex }`: PGS, VobSub, DVB) overlays the input's own
+   `0:s:<i>` stream, fitted to the picture — `overlay` on the software path, `hwupload` +
+   `overlay_vaapi` on the GPU pipeline. The input `-ss` seeks that stream with the video, so it
+   needs no compensation, but a cue already on screen at the seek point is not redrawn.
 4. **Voice-gateway close surfacing** (`src/client/voice/BaseMediaConnection.ts`) — every voice ws
    close is logged (`conn` namespace) with its close code, and a non-resumable close now emits a
    typed `close` event (`MediaConnectionCloseInfo { code, canResume, deliberate }`, where

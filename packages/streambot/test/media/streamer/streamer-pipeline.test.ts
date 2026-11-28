@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import type { SubtitleBurn } from "@shepherdjerred/discord-video-stream";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import type {
   PlayerFactory,
@@ -28,7 +29,7 @@ const RESOLVED_HDR_WITH_SUBS: ResolvedSource = {
   ffmpegInput: "/videos/movie.mkv",
   mediaKind: "video",
   chapters: [],
-  subtitle: { path: SUBTITLE_PATH, cleanupPath: SUBTITLE_PATH },
+  subtitle: { kind: "text", path: SUBTITLE_PATH, cleanupPath: SUBTITLE_PATH },
   hdr: true,
 };
 
@@ -36,7 +37,7 @@ type PrepareSnapshot = {
   hardwareAcceleratedDecoding: boolean | undefined;
   hardwarePipelineMode: string | undefined;
   hasEncoder: boolean;
-  subtitleBurn: { path: string } | undefined;
+  subtitleBurn: SubtitleBurn | undefined;
   inputColor: string | undefined;
   audioOnly: boolean | undefined;
   audioVolume: number | undefined;

@@ -26,7 +26,11 @@
         "$TURBO_ROOT$/packages/native-release/windows/**"
       ],
       "outputs": [],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     },
     "typecheck": {
       "inputs": [
@@ -47,7 +51,11 @@
         "$TURBO_ROOT$/packages/native-release/windows/**"
       ],
       "outputs": [],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     },
     "test:local": {
       "inputs": [
@@ -69,7 +77,11 @@
         "$TURBO_ROOT$/packages/native-release/windows/**"
       ],
       "outputs": [],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     },
     "lint": {
       "inputs": [
@@ -90,7 +102,11 @@
         "$TURBO_ROOT$/packages/native-release/windows/**"
       ],
       "outputs": [],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     }
   }
 }

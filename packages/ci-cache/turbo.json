@@ -12,17 +12,29 @@
         "!target/**"
       ],
       "outputs": ["dist/**"],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^build", "^generate", "generate"],
       "inputs": ["$TURBO_DEFAULT$", "!target/**"],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     },
     "lint": {
       "dependsOn": ["^build", "^generate", "generate"],
       "inputs": ["$TURBO_DEFAULT$", "!target/**"],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     },
     "test": {
       "dependsOn": ["^build", "^generate", "generate"],
@@ -32,7 +44,18 @@
         "$TURBO_ROOT$/vitest.config.ts",
         "!target/**"
       ],
-      "passThroughEnv": ["MISE_DATA_DIR"]
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
+    },
+    "test:ci": {
+      "passThroughEnv": [
+        "$TURBO_EXTENDS$",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ]
     }
   }
 }

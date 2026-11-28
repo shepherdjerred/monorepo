@@ -4,6 +4,7 @@ import {
   ExploreConversationIdSchema,
   PlayerIdSchema,
   ReportIdSchema,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import { queryClient } from "#src/lib/query/query-client.ts";
 import { trpcOptions } from "#src/lib/query/trpc-options.ts";
@@ -105,6 +106,30 @@ export function consumerPlayerLoader({ params }: LoaderFunctionArgs): null {
     queryClient.query(
       trpcOptions.consumerPlayer.status.queryOptions(undefined, {
         staleTime: 0,
+      }),
+    ),
+  );
+  return null;
+}
+
+/**
+ * The Live pages read every server the viewer shares, which is the input a
+ * visit starts on; the routes use the same input so both share one cache entry.
+ */
+export function consumerLiveLoader(): null {
+  void preloadQuery(
+    queryClient.query(trpcOptions.consumerLive.list.queryOptions({})),
+  );
+  return null;
+}
+
+export function consumerLiveGameLoader({ params }: LoaderFunctionArgs): null {
+  const parsed = RiotMatchIdSchema.safeParse(params["riotMatchId"]);
+  if (!parsed.success) return null;
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerLive.game.queryOptions({
+        riotMatchId: parsed.data,
       }),
     ),
   );

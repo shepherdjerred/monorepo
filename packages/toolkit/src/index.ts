@@ -54,6 +54,7 @@ Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity
   forum <COMMAND>             Agent notices, discussions, and replies
   artifacts <COMMAND>         Publish for review, wait for comments, reply (publish, wait, reply)
+  incident <COMMAND>          Shared-system incidents: check, wait, take, declare, resolve
   ci wait [PR]                Block until merge readiness or an actionable blocker
   ci wait --main              Block until main's own verifying run passes or fails
   ci explain|main|load        Failure evidence, main health, and CI capacity
@@ -93,6 +94,8 @@ Examples:
   toolkit woodpecker pipeline ls shepherdjerred/monorepo
   toolkit prom query 'up == 0'
   toolkit loki query '{namespace="temporal"}'
+  toolkit incident check --system main-ci
+  toolkit incident wait --system delivery
   toolkit pr health
   toolkit share private report.pdf
   toolkit brim --dry-run
@@ -125,6 +128,13 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   [
     "forum",
     () => import("./handlers/forum.ts").then((m) => m.handleForumCommand),
+  ],
+  [
+    "incident",
+    () =>
+      import("./handlers/incident/index.ts").then(
+        (m) => m.handleIncidentCommand,
+      ),
   ],
   [
     "promotion",

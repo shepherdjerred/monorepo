@@ -150,6 +150,17 @@ gives verify `woodpecker-format-main` on the default branch,
 a trusted proposal: `ci-pod-guard` admits the main volume only for
 default-branch verify, and the PR volume is written by Renovate's code.
 
+The same environment cuts the bytes verify writes into Rust `target/`
+directories. `CARGO_PROFILE_DEV_DEBUG` and `CARGO_PROFILE_TEST_DEBUG` set
+workspace crates to `limited` debuginfo (function names and line tables), and
+`CI_CARGO_DEPENDENCY_DEBUG=none` makes `ci/scripts/toolchain.sh` write
+`[profile.dev.package."*"] debug = "none"` into `$CARGO_HOME/config.toml`,
+because Cargo has no environment form for a per-package override. Each Rust
+package's `turbo.json` passes the two profile variables through on its cargo
+tasks (never the root `turbo.json`, a global input). Release profiles,
+`Cargo.toml` and local builds keep their own settings, and the config file is
+identical on main and in pull requests, so `sccache` keys still match.
+
 ### Experimental workspace reuse
 
 Each performance optimization resolves separately. Production defaults enable

@@ -226,7 +226,7 @@ describe("authenticated web playback", () => {
     expect(menu.tracks.map((track) => track.label)).toEqual([
       "Off",
       "en · sidecar",
-      "fr · embedded",
+      "fr · embedded SRT",
     ]);
     expect(JSON.stringify(menu)).not.toContain("/private/");
     const token = menu.tracks[1]?.token;

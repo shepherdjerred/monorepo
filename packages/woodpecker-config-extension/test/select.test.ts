@@ -514,8 +514,11 @@ describe("selected lane contracts", () => {
       changedBase: "x",
     }).find((candidate) => candidate.key === "semgrep");
     expect(semgrep?.commands[1]).toBe(
-      'git fetch --no-tags --filter=tree:0 --depth=100 origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
+      'git fetch --no-tags --depth=100 origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
     );
+    // A filtered fetch would make the golden-clone workspace a partial clone
+    // and rewrite its whole checkout into a new pack.
+    expect(semgrep?.commands.join("\n")).not.toContain("--filter");
   });
 
   /**

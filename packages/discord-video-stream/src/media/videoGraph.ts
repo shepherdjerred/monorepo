@@ -46,17 +46,37 @@ export type VideoGraphSpec = {
    * HDR sources get range-squashed into SDR and look washed out.
    */
   inputColor: "sdr" | "hdr";
-  /**
-   * Burn this subtitle file into the video. `startTime` is the input `-ss` seek offset: an input
-   * seek re-stamps frame PTS from 0, but libass picks cues by PTS, so the subtitle filter must see
-   * media-clock timestamps (see {@link subtitlePtsSandwich}).
-   */
-  subtitle?: { path: string; startTime: number };
+  /** Burn subtitles into the video: a text file through libass, or an image subtitle stream. */
+  subtitle?: TextSubtitleGraphSpec | ImageSubtitleGraphSpec;
   /**
    * The decoder emits system-memory frames (upload pipeline mode): prefix the GPU graph with
    * `hwupload` so scale/tonemap/overlay still run on the device. Software graphs ignore this.
    */
   uploadInput?: boolean;
+};
+
+/**
+ * A text subtitle file burned by libass (`subtitles=`). `startTime` is the input `-ss` seek offset:
+ * an input seek re-stamps frame PTS from 0, but libass picks cues by PTS, so the subtitle filter
+ * must see media-clock timestamps (see {@link subtitlePtsSandwich}). `fontsDir` adds the fonts an
+ * ASS track was authored with (MKV font attachments) to libass's font lookup.
+ */
+export type TextSubtitleGraphSpec = {
+  kind?: "text";
+  path: string;
+  fontsDir?: string;
+  startTime: number;
+};
+
+/**
+ * An image subtitle stream (PGS, VobSub, DVB) of input 0, by subtitle-relative index (`0:s:<i>`).
+ * ffmpeg decodes it into transparent BGRA frames (sub2video) that are overlaid on the video. No
+ * seek compensation is needed: an input `-ss` re-stamps the subtitle stream together with the video,
+ * so both stay on the same 0-based clock.
+ */
+export type ImageSubtitleGraphSpec = {
+  kind: "image";
+  streamIndex: number;
 };
 
 export type VideoGraph =
@@ -118,18 +138,59 @@ export function formatFrameRate(rate: number): string {
 /** Scale options converting an SDR picture to BT.709 limited range (`scale` and `scale_vaapi` share the names). */
 const BT709_LIMITED_SCALE_OPTIONS = ":out_color_matrix=bt709:out_range=tv";
 
-/** The `subtitles=` burn filter (libass). `alpha` is enabled on the GPU overlay canvas branch. */
-function subtitlesFilter(path: string, alpha: boolean): string {
-  return `subtitles=filename=${escapeFilterPath(path)}${alpha ? ":alpha=1" : ""}`;
+/**
+ * The `subtitles=` burn filter (libass). `alpha` is enabled on the GPU overlay canvas branch;
+ * `fontsdir` adds the source's attached fonts (ASS tracks name the fonts they were styled with).
+ */
+function subtitlesFilter(
+  subtitle: TextSubtitleGraphSpec,
+  alpha: boolean,
+): string {
+  const fonts =
+    subtitle.fontsDir === undefined
+      ? ""
+      : `:fontsdir=${escapeFilterPath(subtitle.fontsDir)}`;
+  return `subtitles=filename=${escapeFilterPath(subtitle.path)}${fonts}${alpha ? ":alpha=1" : ""}`;
+}
+
+function videoInputLabel(
+  spec: Pick<VideoGraphSpec, "videoStreamIndex">,
+): string {
+  return spec.videoStreamIndex === undefined
+    ? "[0:v]"
+    : `[0:v:${String(spec.videoStreamIndex)}]`;
 }
 
 /**
- * Software (`-vf`) video graph: optional deinterlace → scale (optionally to BT.709) → optional
- * letterbox pad → optional HDR tonemap → optional subtitle burn (PTS-compensated) → encoder output
- * filters (e.g. `hwupload` when a hardware encoder consumes software-decoded frames). Deinterlace
- * runs first so field combing is never scaled. Subtitles burn after the tonemap so libass renders
- * onto SDR `yuv420p` frames — burning before would tonemap the subtitle pixels themselves (and
- * libass can't take the chain's intermediate float-RGB format anyway).
+ * The image-subtitle branch: the input's subtitle stream decoded to BGRA frames, fitted inside the
+ * picture without distortion (a Blu-ray's 1920x1080 PGS canvas over a 1920x804 scope encode keeps
+ * its shape and every cue stays visible) and centered on a transparent `canvas`-sized frame so the
+ * overlay composites at 0,0. A subtitle canvas that already matches the picture passes through
+ * unscaled. BGRA is what `hwupload` → `overlay_vaapi` accepts on the GPU path.
+ */
+function imageSubtitleBranch(
+  streamIndex: number,
+  fit: { width: number; height: number },
+  canvas: { width: number; height: number },
+): string {
+  return (
+    `[0:s:${String(streamIndex)}]` +
+    `scale=${String(fit.width)}:${String(fit.height)}:force_original_aspect_ratio=decrease,` +
+    `pad=${String(canvas.width)}:${String(canvas.height)}:-1:-1:color=black@0,format=bgra`
+  );
+}
+
+/**
+ * Software video graph: optional deinterlace → scale (optionally to BT.709) → optional letterbox
+ * pad → optional HDR tonemap → optional subtitle burn → encoder output filters (e.g. `hwupload`
+ * when a hardware encoder consumes software-decoded frames). Deinterlace runs first so field
+ * combing is never scaled. Subtitles burn after the tonemap so they land on SDR `yuv420p` frames —
+ * burning before would tonemap the subtitle pixels themselves (and libass can't take the chain's
+ * intermediate float-RGB format anyway).
+ *
+ * A text subtitle stays a single `-vf` chain (`subtitles=`, PTS-compensated). An image subtitle
+ * needs a second input branch, so it becomes a `-filter_complex` graph that `overlay`s the
+ * subtitle stream; `eof_action=pass` keeps the picture going after the last cue.
  */
 export function buildSoftwareVideoGraph(
   spec: VideoGraphSpec & {
@@ -139,21 +200,39 @@ export function buildSoftwareVideoGraph(
 ): VideoGraph {
   const { width, height, inputColor, subtitle, pad, encoderOutFilters } = spec;
   const toBt709 = spec.convertToBt709 === true && inputColor === "sdr";
-  const filters = [
+  const picture = [
     ...(spec.deinterlace === true
       ? ["bwdif=mode=send_frame:deint=interlaced"]
       : []),
-    `scale=${width}:${height}${toBt709 ? BT709_LIMITED_SCALE_OPTIONS : ""}`,
-    ...(pad ? [`pad=${pad.width}:${pad.height}:-1:-1:color=black`] : []),
+    `scale=${String(width)}:${String(height)}${toBt709 ? BT709_LIMITED_SCALE_OPTIONS : ""}`,
+    ...(pad
+      ? [`pad=${String(pad.width)}:${String(pad.height)}:-1:-1:color=black`]
+      : []),
     ...(inputColor === "hdr" ? [SOFTWARE_TONEMAP_CHAIN] : []),
+  ];
+  const outFilters = encoderOutFilters.filter((filter) => filter.length > 0);
+  if (subtitle?.kind === "image") {
+    const canvas = pad ?? { width, height };
+    return {
+      kind: "filterComplex",
+      graph: [
+        `${videoInputLabel(spec)}${picture.join(",")}[main]`,
+        `${imageSubtitleBranch(subtitle.streamIndex, { width, height }, canvas)}[subs]`,
+        `[main][subs]${["overlay=eof_action=pass", ...outFilters].join(",")}[vout]`,
+      ],
+      mapLabel: "vout",
+    };
+  }
+  const filters = [
+    ...picture,
     ...(subtitle
       ? subtitlePtsSandwich(
-          subtitlesFilter(subtitle.path, false),
+          subtitlesFilter(subtitle, false),
           subtitle.startTime,
         )
       : []),
-    ...encoderOutFilters,
-  ].filter((filter) => filter.length > 0);
+    ...outFilters,
+  ];
   return { kind: "filterChain", filters };
 }
 
@@ -163,18 +242,23 @@ export function buildSoftwareVideoGraph(
  * - SDR: `scale_vaapi` to NV12 (what h264_vaapi consumes), optionally converting to BT.709.
  * - HDR: scale first in 10-bit P010 (keeps precision, and the tonemap VPP then processes output-
  *   resolution pixels instead of 4K), then `tonemap_vaapi` to BT.709 NV12.
- * - Subtitles: a `color@0` transparent BGRA canvas (vanilla-ffmpeg stand-in for jellyfin-ffmpeg's
- *   `alphasrc`) is rendered by libass (`alpha=1`), uploaded, and blended with `overlay_vaapi`.
- *   BGRA is deliberate: it's libass's native composition format and iHD `hwupload` accepts it,
- *   while planar YUV+alpha has no VAAPI surface format.
+ * - Text subtitles: a `color@0` transparent BGRA canvas (vanilla-ffmpeg stand-in for
+ *   jellyfin-ffmpeg's `alphasrc`) is rendered by libass (`alpha=1`), uploaded, and blended with
+ *   `overlay_vaapi`. BGRA is deliberate: it's libass's native composition format and iHD
+ *   `hwupload` accepts it, while planar YUV+alpha has no VAAPI surface format. `shortest=1` ends
+ *   the graph with the video, since the canvas source is infinite.
+ * - Image subtitles: the input's subtitle stream replaces the canvas — decoded to BGRA, fitted and
+ *   padded to the picture size in software (only the subtitle frames, never the video), then
+ *   uploaded and blended with the same `overlay_vaapi`. The subtitle stream ends before the video,
+ *   so `eof_action=pass` (not `shortest`) keeps the picture going after the last cue.
  */
 export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
   const { width, height, frameRate, inputColor, subtitle, uploadInput } = spec;
   const scale =
     inputColor === "hdr"
-      ? `scale_vaapi=w=${width}:h=${height}:format=p010,` +
+      ? `scale_vaapi=w=${String(width)}:h=${String(height)}:format=p010,` +
         "tonemap_vaapi=format=nv12:t=bt709:m=bt709:p=bt709"
-      : `scale_vaapi=w=${width}:h=${height}:format=nv12${spec.convertToBt709 === true ? BT709_LIMITED_SCALE_OPTIONS : ""}`;
+      : `scale_vaapi=w=${String(width)}:h=${String(height)}:format=nv12${spec.convertToBt709 === true ? BT709_LIMITED_SCALE_OPTIONS : ""}`;
   // Upload mode: the decoder emitted system-memory frames; put them on the device first so the
   // rest of the graph is unchanged. See PrepareStreamOptions.hardwarePipelineMode.
   const base = [
@@ -187,23 +271,34 @@ export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
   if (!subtitle) {
     return { kind: "filterChain", filters: [base] };
   }
-  const canvas = `color=c=black@0:s=${width}x${height}${frameRate === undefined ? "" : `:r=${formatFrameRate(frameRate)}`}`;
+  const baseBranch = `${videoInputLabel(spec)}${base}[base]`;
+  if (subtitle.kind === "image") {
+    const size = { width, height };
+    return {
+      kind: "filterComplex",
+      graph: [
+        baseBranch,
+        `${imageSubtitleBranch(subtitle.streamIndex, size, size)},hwupload[subs]`,
+        "[base][subs]overlay_vaapi=eof_action=pass[vout]",
+      ],
+      mapLabel: "vout",
+    };
+  }
+  const canvas = `color=c=black@0:s=${String(width)}x${String(height)}${frameRate === undefined ? "" : `:r=${formatFrameRate(frameRate)}`}`;
   const subsBranch = [
     canvas,
     "format=bgra",
-    ...subtitlePtsSandwich(
-      subtitlesFilter(subtitle.path, true),
-      subtitle.startTime,
-    ),
+    ...subtitlePtsSandwich(subtitlesFilter(subtitle, true), subtitle.startTime),
     "hwupload",
   ].join(",");
   return {
     kind: "filterComplex",
     graph: [
-      `${spec.videoStreamIndex === undefined ? "[0:v]" : `[0:v:${String(spec.videoStreamIndex)}]`}${base}[base]`,
+      baseBranch,
       `${subsBranch}[subs]`,
       "[base][subs]overlay_vaapi=shortest=1[vout]",
     ],
     mapLabel: "vout",
   };
 }
+

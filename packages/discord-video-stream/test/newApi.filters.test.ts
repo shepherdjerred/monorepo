@@ -22,6 +22,86 @@ describe("prepareStream subtitleBurn + noTranscoding guard", () => {
       }),
     ).toThrow(/noTranscoding/);
   });
+
+  test("throws on an image burn whose subtitle stream index is not a non-negative integer", () => {
+    expect(() =>
+      prepareStream("input.mkv", {
+        subtitleBurn: { kind: "image", subtitleStreamIndex: -1 },
+      }),
+    ).toThrow(/subtitleStreamIndex/);
+  });
+});
+
+describe("prepareStream subtitleBurn mapping", () => {
+  function argsFor(
+    options: Parameters<typeof prepareStream>[1],
+  ): readonly string[] {
+    const { command, output, promise } = prepareStream("movie.mkv", options);
+    promise.catch(() => {});
+    try {
+      return [...ffmpegArgs(command)];
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  }
+
+  function optionValue(args: readonly string[], flag: string): string {
+    const index = args.indexOf(flag);
+    const value = args[index + 1];
+    if (index === -1 || value === undefined) throw new Error(`missing ${flag}`);
+    return value;
+  }
+
+  test("text burn with fontsDir stays a -vf chain and passes fontsdir to libass", () => {
+    const args = argsFor({
+      width: 1280,
+      height: 720,
+      subtitleBurn: { path: "/tmp/track.ass", fontsDir: "/tmp/fonts" },
+    });
+    expect(args).not.toContain("-filter_complex");
+    expect(args.join(" ")).toContain(
+      "subtitles=filename=/tmp/track.ass:fontsdir=/tmp/fonts",
+    );
+  });
+
+  test("software image burn overlays the input's subtitle stream through -filter_complex", () => {
+    const args = argsFor({
+      width: 1920,
+      height: 804,
+      startTime: 600,
+      subtitleBurn: { kind: "image", subtitleStreamIndex: 2 },
+    });
+    expect(optionValue(args, "-filter_complex")).toBe(
+      "[0:v]scale=1920:804[main];" +
+        "[0:s:2]scale=1920:804:force_original_aspect_ratio=decrease," +
+        "pad=1920:804:-1:-1:color=black@0,format=bgra[subs];" +
+        "[main][subs]overlay=eof_action=pass[vout]",
+    );
+    expect(optionValue(args, "-map")).toBe("[vout]");
+    // The input seek shifts the subtitle stream with the video: no setpts compensation.
+    expect(optionValue(args, "-ss")).toBe("600");
+    expect(args.join(" ")).not.toContain("setpts");
+    expect(args).not.toContain("0:v");
+  });
+
+  test("GPU image burn uploads the fitted subtitle frames and blends them with overlay_vaapi", async () => {
+    const { Encoders } = await import("../src/media/encoders/index.ts");
+    const args = argsFor({
+      width: 1920,
+      height: 1080,
+      hardwareAcceleratedDecoding: true,
+      encoder: Encoders.vaapi({ device: "/dev/dri/renderD128" }),
+      subtitleBurn: { kind: "image", subtitleStreamIndex: 0 },
+    });
+    expect(optionValue(args, "-filter_complex")).toBe(
+      "[0:v]scale_vaapi=w=1920:h=1080:format=nv12[base];" +
+        "[0:s:0]scale=1920:1080:force_original_aspect_ratio=decrease," +
+        "pad=1920:1080:-1:-1:color=black@0,format=bgra,hwupload[subs];" +
+        "[base][subs]overlay_vaapi=eof_action=pass[vout]",
+    );
+    expect(args).toContain("-hwaccel_output_format");
+  });
 });
 
 function ffmpegArgs(command: FfmpegProcessHandle): readonly string[] {

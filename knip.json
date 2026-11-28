@@ -555,9 +555,6 @@
     "scripts/observability/local-stack/**"
   ],
   "ignoreDependencies": [
-    "@eslint-community/eslint-plugin-eslint-comments",
-    "@eslint/eslintrc",
-    "@eslint/js",
     "@fontsource/roboto",
     "@grafana/grafana-foundation-sdk",
     "@iconify-json/heroicons",
@@ -568,23 +565,9 @@
     "@resvg/resvg-js",
     "@shepherdjerred/eslint-config",
     "@svgr/plugin-jsx",
-    "@tanstack/eslint-plugin-query",
-    "@types/eslint-plugin-jsx-a11y",
     "@types/react",
-    "@typescript-eslint/eslint-plugin",
-    "@typescript-eslint/parser",
-    "@typescript-eslint/utils",
-    "eslint-config-prettier",
     "eslint-import-resolver-typescript-bun",
-    "eslint-plugin-astro",
-    "eslint-plugin-jsx-a11y",
-    "eslint-plugin-react",
-    "eslint-plugin-react-hooks",
-    "eslint-plugin-react-refresh",
-    "eslint-plugin-regexp",
-    "eslint-plugin-unicorn",
-    "jiti",
-    "typescript-eslint"
+    "jiti"
   ],
   "ignoreBinaries": [
     "cmake",

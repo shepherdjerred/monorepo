@@ -30,7 +30,7 @@ import {
   configurationRevision,
 } from "./delivery-data.ts";
 import { liveSet, precedesPipelineOrigin } from "./composition/automatic.ts";
-import { doomed } from "./delivery-qualification.ts";
+import { doomed, type QualifyPendingBuild } from "./delivery-qualification.ts";
 
 const RETAINABLE_PAGE = 20;
 
@@ -105,10 +105,77 @@ export async function latestQualifiedArtifact(
  * A retention whose original producer precedes the live entry's producer
  * also cannot serve as a base (R2).
  */
+type RetainableCandidate = Prisma.BuildArtifactSelectionGetPayload<{
+  include: { artifact: { include: { build: true } }; build: true };
+}>;
+type QualifiedEntryRow = NonNullable<
+  Awaited<ReturnType<typeof qualifiedEntry>>
+>;
+
+function isStaleRetention(
+  candidate: RetainableCandidate,
+  liveEntry: QualifiedEntryRow | null,
+): boolean {
+  return (
+    liveEntry !== null &&
+    candidate.artifact.buildId !== candidate.buildId &&
+    precedesPipelineOrigin(candidate.artifact.build, liveEntry.artifact.build)
+  );
+}
+
+async function isViableRetainableCandidate(
+  database: Database,
+  candidate: RetainableCandidate,
+  qualifyPending?: QualifyPendingBuild,
+): Promise<boolean> {
+  if (qualifyPending !== undefined && candidate.build.status === "pending") {
+    const settled = await qualifyPending(candidate.build);
+    if (settled === "failed") return false;
+    if (settled === "verified") return true;
+  }
+  return !(await doomed(database, candidate.build, new Set(), qualifyPending));
+}
+
+async function selectRetainableFromPage(
+  database: Database,
+  page: readonly RetainableCandidate[],
+  liveEntry: QualifiedEntryRow | null,
+  qualifyPending?: QualifyPendingBuild,
+) {
+  for (const candidate of page) {
+    if (isStaleRetention(candidate, liveEntry)) continue;
+    if (await isViableRetainableCandidate(database, candidate, qualifyPending))
+      return artifactView(candidate.artifact);
+  }
+  return null;
+}
+
+async function resolveFallbackEntry(options: {
+  database: Database;
+  input: LatestRetainableArtifactQuery;
+  repositoryId: number;
+  initialLiveId: string | null;
+  initialLiveEntry: QualifiedEntryRow | null;
+  qualifyPending: QualifyPendingBuild | undefined;
+}) {
+  if (options.qualifyPending === undefined) return options.initialLiveEntry;
+  const currentLive = await liveSet(options.database, options.input.serviceId);
+  if (currentLive === null) return null;
+  return currentLive.id === options.initialLiveId
+    ? options.initialLiveEntry
+    : qualifiedEntry(
+        options.database,
+        currentLive.id,
+        options.input,
+        options.repositoryId,
+      );
+}
+
 export async function latestRetainableArtifact(
   this: Delivery,
   rawInput: LatestRetainableArtifactQuery,
   repositoryId: number,
+  qualifyPending?: QualifyPendingBuild,
 ) {
   const input = LatestRetainableArtifactQuerySchema.parse(rawInput);
   await ensureService(this.database, input.serviceId);
@@ -117,49 +184,52 @@ export async function latestRetainableArtifact(
     live === null
       ? null
       : await qualifiedEntry(this.database, live.id, input, repositoryId);
-  const where = {
-    component: input.component,
-    artifact: { kind: input.kind },
-    build: {
-      serviceId: input.serviceId,
-      repositoryId,
-      sourceKind: "ci",
-      status: { in: ["pending", "verified"] },
-      pipelineNumber: {
-        gt: live?.orderMajor ?? 0,
-        lt: input.beforePipeline,
-      },
-    },
-  } satisfies Prisma.BuildArtifactSelectionWhereInput;
-  for (let skip = 0; ; skip += RETAINABLE_PAGE) {
+  const seenBuildIds: string[] = [];
+  for (;;) {
     const page = await this.database.buildArtifactSelection.findMany({
-      where,
+      where: {
+        ...(seenBuildIds.length === 0
+          ? {}
+          : { buildId: { notIn: seenBuildIds } }),
+        component: input.component,
+        artifact: { kind: input.kind },
+        build: {
+          serviceId: input.serviceId,
+          repositoryId,
+          sourceKind: "ci",
+          status: { in: ["pending", "verified"] },
+          pipelineNumber: {
+            gt: live?.orderMajor ?? 0,
+            lt: input.beforePipeline,
+          },
+        },
+      } satisfies Prisma.BuildArtifactSelectionWhereInput,
       orderBy: [
         { build: { pipelineNumber: "desc" } },
         { build: { registrationSequence: "desc" } },
       ],
       include: { artifact: { include: { build: true } }, build: true },
-      skip,
       take: RETAINABLE_PAGE,
     });
-    for (const candidate of page) {
-      if (
-        liveEntry !== null &&
-        candidate.artifact.buildId !== candidate.buildId &&
-        precedesPipelineOrigin(
-          candidate.artifact.build,
-          liveEntry.artifact.build,
-        )
-      )
-        continue;
-      // The qualifier will fail a doomed build, so it is no base.
-      if (!(await doomed(this.database, candidate.build)))
-        return artifactView(candidate.artifact);
-    }
+    const selected = await selectRetainableFromPage(
+      this.database,
+      page,
+      liveEntry,
+      qualifyPending,
+    );
+    if (selected !== null) return selected;
     if (page.length < RETAINABLE_PAGE) break;
+    seenBuildIds.push(...page.map((entry) => entry.buildId));
   }
   const row = required(
-    liveEntry,
+    await resolveFallbackEntry({
+      database: this.database,
+      input,
+      repositoryId,
+      initialLiveId: live?.id ?? null,
+      initialLiveEntry: liveEntry,
+      qualifyPending,
+    }),
     `Retainable ${input.kind} artifact ${input.serviceId}/${input.component}`,
   );
   return artifactView(row.artifact);
