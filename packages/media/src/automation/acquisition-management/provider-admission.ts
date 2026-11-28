@@ -7,7 +7,10 @@ import { candidateUpgradeAllowed } from "./quality.ts";
 
 export async function reserveProviderUpgradeAllowed(
   context: MediaAutomationContext,
-  input: Parameters<typeof candidateUpgradeAllowed>[1] & { mediaId: string },
+  input: Parameters<typeof candidateUpgradeAllowed>[1] & {
+    mediaId: string;
+    epoch: number;
+  },
   tx: Prisma.TransactionClient,
 ) {
   if (!(await candidateUpgradeAllowed(context, input))) return false;
@@ -28,6 +31,8 @@ export async function reserveProviderUpgradeAllowed(
     {
       releaseId: input.release.id,
       mediaId: input.mediaId,
+      mediaIds: input.mediaIds,
+      epoch: input.epoch,
       profile: input.profile,
       rank: chooseUpgrade(listing).evaluation.qualityRank,
     },

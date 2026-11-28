@@ -206,6 +206,7 @@ async function reserveLockedCandidate(
         profile,
         mediaIds,
         mediaId: input.mediaId,
+        epoch,
       },
       tx,
     ))

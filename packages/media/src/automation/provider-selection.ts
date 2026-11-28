@@ -14,11 +14,17 @@ import {
 } from "#domain/provider-availability.ts";
 import { queueOperation } from "./store.ts";
 import { candidateDigest } from "#infrastructure/acquisition-identity/snapshot.ts";
+import {
+  duplicateObsolete,
+  hasRetainedSeasonCompensation,
+} from "./acquisition-management/compensated-season-pack.ts";
 
 type CandidateAdmission = {
   releaseId: string;
   mediaId: string;
   edition?: string;
+  mediaIds?: readonly string[];
+  epoch?: number;
   rank: number;
   profile: QualityProfile;
 };
@@ -106,6 +112,13 @@ export async function readProviderCandidateAdmission(
     return {
       accepted: false,
       reason: "provider_disabled",
+      eligibleAt: null,
+      priority: policy.priority,
+    };
+  if (await hasRetainedSeasonCompensation(context, transaction, release, input))
+    return {
+      accepted: false,
+      reason: duplicateObsolete.reason,
       eligibleAt: null,
       priority: policy.priority,
     };

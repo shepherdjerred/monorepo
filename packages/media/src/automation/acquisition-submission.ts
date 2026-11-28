@@ -1,4 +1,8 @@
 import { ownedTorrent } from "./acquisition-management/ownership.ts";
+import {
+  readSettledSeasonDuplicate,
+  settleCompensatedSeasonDuplicate,
+} from "./acquisition-management/compensated-season-pack.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { networkMovieAccess } from "./editions/access.ts";
 import { assertAttemptMovieChoice } from "./editions/choice.ts";
@@ -174,6 +178,8 @@ export async function submit(
     where: { id: input.attemptId },
     include: { release: true, torrent: true },
   });
+  const settled = readSettledSeasonDuplicate(attempt, input.operationId);
+  if (settled !== null) return settled;
   const recovering =
     attempt.state === "submitting" || attempt.state === "submission_unknown";
   if (await acknowledgeManagedAcquisition(context, input, attempt))
@@ -183,15 +189,7 @@ export async function submit(
     attempt,
     recovering,
   );
-  if (prerequisite !== null)
-    return {
-      status:
-        prerequisite === "intent_changed" ||
-        (!recovering && prerequisite === "recovery_epoch_changed")
-          ? "obsolete"
-          : "blocked",
-      reason: prerequisite,
-    };
+  if (prerequisite !== null) return prerequisite;
   if (attempt.state === "imported")
     return { status: "submitted", reason: "resume_committed_publication" };
   if (attempt.release.encryptedSource === null)
@@ -206,6 +204,12 @@ export async function submit(
   );
   await context.qbittorrent.login();
   const existing = await context.qbittorrent.observe(candidate.infoHash);
+  const duplicate = await settleCompensatedSeasonDuplicate(context, attempt, {
+    operationId: input.operationId,
+    infoHash: candidate.infoHash,
+    observed: existing,
+  });
+  if (duplicate !== null) return duplicate;
   if (existing === null) {
     if (recovering)
       return { status: "blocked", reason: "submission_outcome_unknown" };
@@ -225,15 +229,20 @@ async function submissionPrerequisite(
   context: MediaAutomationContext,
   attempt: AcquisitionAttempt,
   recovering: boolean,
-): Promise<string | null> {
-  if (attempt.edition !== "default") return "edition_not_available";
+): Promise<{ status: "blocked" | "obsolete"; reason: string } | null> {
+  if (attempt.edition !== "default")
+    return { status: "blocked", reason: "edition_not_available" };
   const runtime = await requireActiveRuntime(context.db);
-  if (runtime.epoch !== attempt.recoveryEpoch) return "recovery_epoch_changed";
-  if (!runtime.active) return "runtime_observe";
+  if (runtime.epoch !== attempt.recoveryEpoch)
+    return {
+      status: recovering ? "blocked" : "obsolete",
+      reason: "recovery_epoch_changed",
+    };
+  if (!runtime.active) return { status: "blocked", reason: "runtime_observe" };
   if (!recovering && !(await validAttempt(context, attempt.id)))
-    return "intent_changed";
+    return { status: "obsolete", reason: "intent_changed" };
   if (!recovering && !(await context.gates.acquisition()))
-    return "acquisition_disabled";
+    return { status: "blocked", reason: "acquisition_disabled" };
   if (
     !recovering &&
     !["imported", "completed"].includes(attempt.state) &&
@@ -242,7 +251,7 @@ async function submissionPrerequisite(
       context.libraryManagement === undefined ? "movies" : "tv",
     ))
   )
-    return PLEX_EXCLUSION_PROOF_REQUIRED;
+    return { status: "blocked", reason: PLEX_EXCLUSION_PROOF_REQUIRED };
   return null;
 }
 
