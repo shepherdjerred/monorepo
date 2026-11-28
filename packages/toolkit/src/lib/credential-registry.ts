@@ -26,7 +26,6 @@ const BACKBLAZE_VELERO_ITEM_ID = "i3upt4mhwczcau7ojyxfpw2s6e";
 const BACKBLAZE_POSTGRES_WAL_ITEM_ID = "ydap5smx2eirpq73oklmhkzxfm";
 const BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID = "q3t3h5dkrqwtbllgybca7pjvke";
 const CLOUDFLARE_R2_ARCHIVES_ITEM_ID = "du6dxzjfiml7f7qnj2peyff3ba";
-const BUGSINK_ITEM = "jeuqmwh3r4nwu2ivo4pa3gr7om";
 const WOODPECKER_ITEM = "covttsojandjk7fx62a3dbk7em";
 const DELIVERY_SERVICE_ITEM_ID = "ahbp4izt7fibvwdjwd4ffhiime";
 const DELIVERY_TRMNL_READER_ITEM_ID = "542onhpijguqgaukmyvbujbu74";
@@ -188,13 +187,6 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     source: {
       kind: "keychain",
       service: "monorepo-workstation-discord-bot-token",
-    },
-  },
-  BUGSINK_TOKEN: {
-    description: "Bugsink API token",
-    source: {
-      kind: "op",
-      ref: `${HOMELAB_VAULT_REF}/${BUGSINK_ITEM}/BUGSINK_TOKEN`,
     },
   },
   KUBE_CERTIFICATE_AUTHORITY_DATA: {

@@ -1099,11 +1099,6 @@ PinchTab credentials or config.
   stacktraces, releases, Tracker links, and Bugsink imports in the first-party
   `errors` service (`ERRORS_URL`, default `https://errors.tailnet-1a49.ts.net`).
   See [Errors](#errors).
-- `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
-  and releases in self-hosted Bugsink. `issues` lists unresolved, unmuted
-  issues across every project unless `--project` narrows it; `--all` includes
-  resolved and muted issues. `issues` and `events` accept `--limit` and
-  `--max-pages`. The canonical API is read-only.
 - `toolkit discord ...` operates the private local Discord session daemon.
   `TOOLKIT_DISCORD_DIR` selects an isolated daemon directory and socket.
   `discord daemon start --password-login` uses parent-injected
@@ -1779,15 +1774,15 @@ the unsafe setting without printing its value, including for help commands.
 Option names are checked after ArgoCD-compatible quote and escape parsing;
 header values and root paths containing the same text are preserved.
 
-| Commands                                                                                                                   | Registered backend             |
-| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `woodpecker`, `pr health`, `pr land`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `bugsink` | 1Password service account      |
-| `talosctl`, `kube credential`, `aws credential`, `run`                                                                     | 1Password service account      |
-| `discord`                                                                                                                  | macOS Keychain / Windows DPAPI |
-| `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                                                 | 1Password service account      |
-| `flags --machine` (`FLAGS_MACHINE_TOKEN`)                                                                                  | 1Password service account      |
-| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                                                | 1Password service account      |
-| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)                                | 1Password service account      |
+| Commands                                                                                                        | Registered backend             |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `woodpecker`, `pr health`, `pr land`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account      |
+| `talosctl`, `kube credential`, `aws credential`, `run`                                                          | 1Password service account      |
+| `discord`                                                                                                       | macOS Keychain / Windows DPAPI |
+| `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                                      | 1Password service account      |
+| `flags --machine` (`FLAGS_MACHINE_TOKEN`)                                                                       | 1Password service account      |
+| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                                     | 1Password service account      |
+| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)                     | 1Password service account      |
 
 The registry in `src/lib/credential-registry.ts` owns the variable names and
 secret locators; `src/lib/credentials.ts` resolves them. Backend failures are errors; a missing Keychain secret does not
@@ -2296,8 +2291,7 @@ profiles remain owned by their respective clients.
 | Variable              | Purpose                                     |
 | --------------------- | ------------------------------------------- |
 | `ALERT_DASHBOARD_URL` | Hub URL; defaults to the `hub` tailnet host |
-| `BUGSINK_URL`         | Bugsink instance URL                        |
-| `BUGSINK_TOKEN`       | Bugsink API token                           |
+| `ERRORS_URL`          | Errors console URL                          |
 | `DISCORD_BOT_TOKEN`   | Bot identity for `discord daemon start`     |
 | `DISCORD_USER_TOKEN`  | Userbot identity for `discord daemon start` |
 

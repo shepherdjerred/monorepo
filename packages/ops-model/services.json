@@ -641,21 +641,6 @@
       "deploy": []
     },
     {
-      "id": "bugsink",
-      "title": "Bugsink",
-      "kind": "platform",
-      "aliases": [],
-      "namespaces": ["bugsink"],
-      "argoApps": ["bugsink"],
-      "charts": [],
-      "images": [],
-      "bootstrapImages": [],
-      "bugsinkProjects": [],
-      "analyticsSites": [],
-      "grafanaDashboards": [],
-      "deploy": []
-    },
-    {
       "id": "ci",
       "title": "CI (Woodpecker)",
       "kind": "platform",

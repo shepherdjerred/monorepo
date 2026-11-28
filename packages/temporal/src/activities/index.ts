@@ -7,7 +7,6 @@ import { homelabAuditActivities } from "./homelab/homelab-audit.ts";
 import { homelabAuditCollectorActivities } from "./homelab/homelab-audit-collectors.ts";
 import { agentTaskActivities } from "./agent/agent-task.ts";
 import { zfsMaintenanceActivities } from "./homelab/zfs-maintenance.ts";
-import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon/data-dragon.ts";
 import { lanePriorActivities } from "./lane-prior-refresh.ts";
 import { championMetaActivities } from "./scout/champion-meta-refresh.ts";
@@ -64,6 +63,7 @@ import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
 import { ciExtendedVerifyActivities } from "./maintenance/ci-extended-verify.ts";
 import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
 import { codeReviewActivities } from "./ci/code-review.ts";
+import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { ddnsActivities } from "./infra/ddns.ts";
 import { gitBackupActivities } from "./repo/git-backup.ts";
 
@@ -85,6 +85,7 @@ export const reportActivities = {
 };
 
 export const infraActivities = {
+  ...bugsinkHousekeepingActivities,
   ...ddnsActivities,
   ...trackerAttachmentActivities,
   ...stormCompanionActivities,
@@ -93,7 +94,6 @@ export const infraActivities = {
   ...homelabAuditActivities,
   ...homelabAuditCollectorActivities,
   ...zfsMaintenanceActivities,
-  ...bugsinkHousekeepingActivities,
   ...veleroOrphanAuditActivities,
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,

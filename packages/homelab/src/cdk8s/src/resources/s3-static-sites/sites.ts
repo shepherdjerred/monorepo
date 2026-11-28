@@ -35,7 +35,7 @@ const scoutCsp = [
   "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
-  "connect-src 'self' https://j.sjer.red https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
+  "connect-src 'self' https://j.sjer.red https://logging.sjer.red https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
   "frame-src https://ct.pinterest.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",

@@ -184,11 +184,13 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
 }
 
 describe("temporal homelab audit tooling configuration", () => {
-  it("injects Woodpecker, Bugsink and trusted ArgoCD configuration", async () => {
+  it("injects Woodpecker, Errors and trusted ArgoCD configuration", async () => {
     const yaml = await synthesizeApp();
 
-    expect(yaml).toContain("name: BUGSINK_URL");
-    expect(yaml).toContain("value: https://bugsink.sjer.red");
+    expect(yaml).toContain("name: ERRORS_URL");
+    expect(yaml).toContain(
+      "value: http://errors.errors.svc.cluster.local:7370",
+    );
     expect(yaml).toContain("name: WOODPECKER_TOKEN");
     expect(yaml).toContain("name: WOODPECKER_REPO_ID");
     expect(yaml).toContain("name: WOODPECKER_URL");

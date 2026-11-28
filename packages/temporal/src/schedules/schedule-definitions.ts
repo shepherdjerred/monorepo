@@ -337,24 +337,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   },
   ...SECURITY_SCHEDULES,
   {
-    id: "bugsink-housekeeping",
-    workflowType: "runBugsinkHousekeepingWorkflow",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "0 3 * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
-  },
-  {
     id: "scout-image-gc-daily",
     workflowType: "runScoutImageGcWorkflow",
     args: [{ retentionDays: 30, dryRun: false }],
-    // 04:00 PT — after the 03:00 bugsink/zfs maintenance window so the nightly
+    // 04:00 PT — after the 03:00 ZFS maintenance window so the nightly
     // destructive jobs don't contend for the worker pod at once.
     timing: {
       kind: "cron",

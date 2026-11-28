@@ -7,7 +7,6 @@
       "args": [
         "test/commands",
         "test/lib",
-        "test/bugsink",
         "test/s3",
         "test/deployed",
         "test/screenshot",

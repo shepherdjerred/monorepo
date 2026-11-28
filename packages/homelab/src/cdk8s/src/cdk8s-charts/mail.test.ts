@@ -178,11 +178,6 @@ describe("createMailChart", () => {
           from: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "bugsink" },
-              },
-            },
-            {
-              namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "storm-forum" },
               },
               podSelector: {
