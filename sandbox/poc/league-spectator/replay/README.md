@@ -897,6 +897,19 @@ the camera. All vision shows these ribbons for three recorded missiles up to
 the verified contact or stop. The remaining emitters and post-stop trails are
 outside this track.
 
+The Heimerdinger Ammo Spend author extends that same track with the `bubble`
+camera quad at two recorded detached creates. It binds the reviewed create and
+stop receipts, two matching native control runs, and the exact texture mip.
+The bubble uses the existing particle shader with alpha testing, additive
+blending and depth testing. This family covers the bubble component.
+
+```powershell
+$ammoProbe = 'sandbox/poc/league-spectator/replay/tools/research/probe-recorded-heimer-ammo-bubble.py'
+uv run --with unicorn python $ammoProbe $macGameExecutable $reviewedAmmoAuthoredReceipt 0.125 > $ammoProbeLow
+uv run --with unicorn python $ammoProbe $macGameExecutable $reviewedAmmoAuthoredReceipt 0.875 > $ammoProbeHigh
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-heimer-ammo-bubble.mjs $ribbonTrackDirectory $fightPlacements $fightStopReceipt $ammoProbeLow $ammoProbeHigh $ammoBubbleMip0 $newPrivateParticleDirectory
+```
+
 The Illaoi spawn probe captures the original `Ground_SLOW2` arbitrary quads at
 the recorded detached origin. It also checks the native stop request. It supplies
 an identity attachment and leaves ground-mask, fog and post-stop scheduling
