@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.20.5](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.4...astro-opengraph-images-v1.20.5) (2026-11-01)
+
+No public API changes.
+
+- Custom-property descriptions now truncate at grapheme boundaries, keeping emoji, flags, and ZWJ sequences whole ([32409d1](https://github.com/shepherdjerred/monorepo/commit/32409d12c6eccb6bc044ebf91c1612243110f4da))
+
 ## [1.20.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.3...astro-opengraph-images-v1.20.4) (2026-10-09)
 
 Small rendering compatibility and dependency improvements for the built-in presets.
