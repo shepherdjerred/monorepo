@@ -1,6 +1,6 @@
 /**
- * Behaviour every Feeds store backend must share. `store.test.ts` runs it
- * against SQLite and `postgres/store.integration.test.ts` against PostgreSQL.
+ * The Feeds store's behaviour. `postgres/store.integration.test.ts` runs it
+ * against PostgreSQL.
  */
 import {
   searchesAndMarksRead,

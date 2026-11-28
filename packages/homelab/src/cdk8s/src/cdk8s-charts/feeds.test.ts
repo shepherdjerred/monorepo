@@ -42,7 +42,7 @@ const DeploymentSchema = z.looseObject({
 beforeEach(resetProbeRegistry);
 
 describe("feeds cdk8s chart", () => {
-  test("is active by default and renders console + public reader services, tunnel binding, PVC, and network policy", () => {
+  test("is active by default and renders console + public reader services, tunnel binding, and network policy", () => {
     expect(FEEDS_ACTIVE).toBe(true);
     const summaries = z
       .array(K8sManifestHeaderSchema)
@@ -55,7 +55,6 @@ describe("feeds cdk8s chart", () => {
         "Service/feeds",
         "Service/feeds-reader-service",
         "OnePasswordItem/feeds-auth",
-        "PersistentVolumeClaim/feeds-data",
         "NetworkPolicy/feeds-app-netpol",
       ]),
     );
@@ -68,7 +67,7 @@ describe("feeds cdk8s chart", () => {
     );
   });
 
-  test("provisions feeds-postgresql, migrates and imports before the server, and lets only Feeds reach it", () => {
+  test("provisions feeds-postgresql, migrates it before the server, and lets only Feeds reach it", () => {
     const manifests = z
       .array(K8sManifestHeaderSchema)
       .parse(createFeedsChart(new App()).toJson());
@@ -79,10 +78,11 @@ describe("feeds cdk8s chart", () => {
       expect.arrayContaining([
         "postgresql/feeds-postgresql",
         "NetworkPolicy/feeds-pg-netpol",
-        // The SQLite volume stays until the cutover has been verified.
-        "PersistentVolumeClaim/feeds-data",
       ]),
     );
+    expect(
+      summaries.some((entry) => entry.startsWith("PersistentVolumeClaim/")),
+    ).toBe(false);
 
     const deployment = DeploymentSchema.parse(
       manifests.find((obj) => obj.kind === "Deployment"),
@@ -90,14 +90,6 @@ describe("feeds cdk8s chart", () => {
     const pod = deployment.spec.template.spec;
     expect(pod.initContainers.map((container) => container.name)).toEqual([
       "prisma-migrate",
-      "sqlite-import",
-    ]);
-    expect(pod.initContainers[1]?.command).toEqual([
-      "bun",
-      "src/migration/import-sqlite.ts",
-      "--from",
-      "/var/lib/feeds/feeds.sqlite",
-      "--cutover",
     ]);
     expect(deployment.spec.strategy).toEqual({ type: "Recreate" });
     expect(pod.initContainers[0]?.command).toEqual([

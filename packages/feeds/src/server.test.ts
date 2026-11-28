@@ -5,8 +5,7 @@ import {
   SummaryResponseSchema,
 } from "./shared/contract.ts";
 import { startServer, type FeedsServer } from "./server.ts";
-import { asyncFeedsRepository } from "./server/sqlite-repository.ts";
-import { FeedsStore } from "./server/store.ts";
+import { createCatalogTestRepository } from "./server/test-catalog-repository.ts";
 import type { FeedsRepository } from "./server/types.ts";
 
 const SubscriptionsBodySchema = z.object({
@@ -15,9 +14,9 @@ const SubscriptionsBodySchema = z.object({
 
 const activeServers: FeedsServer[] = [];
 
-/** An empty in-memory store; PostgreSQL behaviour is covered by the store contract. */
+/** The code catalog in memory; PostgreSQL behaviour is covered by the store contract. */
 function memoryStore(): FeedsRepository {
-  return asyncFeedsRepository(FeedsStore.open(":memory:"));
+  return createCatalogTestRepository();
 }
 
 afterEach(async () => {

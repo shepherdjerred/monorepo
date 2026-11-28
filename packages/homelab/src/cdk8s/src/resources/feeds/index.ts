@@ -40,8 +40,6 @@ const FEEDS_HTTP_PORT = FEEDS_ENDPOINT.port;
 const FEEDS_READER_PORT = 7431;
 const FEEDS_ITEM_ID = "hs2u3hto2k2e77sdjceh6pkuru";
 const FEEDS_READER_SERVICE_NAME = "feeds-reader-service";
-const FEEDS_DATA_PATH = "/var/lib/feeds";
-const FEEDS_SQLITE_PATH = `${FEEDS_DATA_PATH}/feeds.sqlite`;
 
 /** Public HTTP/HTTPS feed polling excluding RFC1918, CGNAT/Tailscale, and link-local ranges. */
 const PUBLIC_FEED_EGRESS_BLOCK_EXCEPTIONS = [
@@ -64,35 +62,6 @@ function buildFeedsMigrateContainer(
     resources: {
       cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
       memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
-    },
-    envVariables: { ...dbEnv, HOME: EnvValue.fromValue("/tmp") },
-  };
-}
-
-/**
- * Copies the SQLite file into PostgreSQL and verifies the copy before the
- * server starts. The Recreate strategy stops the old pod first, so the file
- * is quiescent. Any failed gate fails the pod and leaves the file untouched.
- * Once PostgreSQL holds the cutover marker, the importer exits without
- * writing.
- */
-function buildFeedsSqliteImportContainer(
-  dbEnv: Record<string, EnvValue>,
-): FirstPartyInitContainer {
-  return {
-    name: "sqlite-import",
-    image: firstPartyImageRecipe("feeds"),
-    command: [
-      "bun",
-      "src/migration/import-sqlite.ts",
-      "--from",
-      FEEDS_SQLITE_PATH,
-      "--cutover",
-    ],
-    securityContext: restrictedContainer(1000),
-    resources: {
-      cpu: { request: Cpu.millis(50), limit: Cpu.millis(1000) },
-      memory: { request: Size.mebibytes(128), limit: Size.mebibytes(768) },
     },
     envVariables: { ...dbEnv, HOME: EnvValue.fromValue("/tmp") },
   };
@@ -125,10 +94,7 @@ export function createFeedsDeployment(
         authItem.name,
       );
       return {
-        init: [
-          buildFeedsMigrateContainer(database.env),
-          buildFeedsSqliteImportContainer(database.env),
-        ],
+        init: [buildFeedsMigrateContainer(database.env)],
         server: {
           image: firstPartyImageRecipe("feeds"),
           securityContext: restrictedContainer(1000),
@@ -167,13 +133,6 @@ export function createFeedsDeployment(
           },
         },
       };
-    },
-    // The SQLite file the cutover import reads; removed once the move is
-    // verified and backed up.
-    data: {
-      id: "feeds-data",
-      storage: Size.gibibytes(2),
-      path: FEEDS_DATA_PATH,
     },
     serviceName: "feeds",
     tailscale: {

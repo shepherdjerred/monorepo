@@ -9,7 +9,7 @@ import {
 import {
   asyncFeedsRepository,
   type SyncFeedsRepository,
-} from "./sqlite-repository.ts";
+} from "./test-async-repository.ts";
 import type { ParsedFeedEntry, StoredFeed } from "./types.ts";
 
 function createFakeStore(initialFeeds: readonly StoredFeed[] = []) {

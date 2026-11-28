@@ -25,25 +25,9 @@ The server exposes two listeners with strict surface separation:
 
 The server reads and writes through `FeedsRepository` (`src/server/types.ts`), served by `PostgresFeedsStore` (`src/server/postgres/store.ts`): Prisma on `DATABASE_URL` (required), with schema and migrations in `prisma/`. Writes run one at a time, each in its own transaction, so entry IDs stay newest-highest.
 
-The SQLite `FeedsStore` (`src/server/store.ts`) stays only so the cutover import can compare the two stores. One contract suite (`src/server/contract/`) checks that both behave the same.
+One contract suite (`src/server/contract/`) defines the store's behaviour and runs against PostgreSQL in the extended test tier.
 
-Search matches titles and authors. PostgreSQL stores a tsvector literal built by `src/server/search/search-tokens.ts`, which tokenizes exactly as SQLite FTS5's `unicode61` tokenizer did (its per-code-point table, `unicode61-table.json`, is checked against SQLite for every code point by `search-tokens.test.ts`; `bun run generate:unicode61` rewrites it). The same query therefore returns the same entries that SQLite returned, newest first.
-
-### Moving data to PostgreSQL
-
-`src/migration/import-sqlite.ts` copies the SQLite file into PostgreSQL in one transaction from one read snapshot, then checks every gate and prints a JSON report (counts, check names and row IDs only):
-
-1. every table has the same rows, column for column;
-2. the console and Reader API read paths return the same records from both stores;
-3. the same search terms return the same entries, and every title and author tokenizes as FTS5 indexed it.
-
-```bash
-# Rehearsal against the live file, from the feeds pod (DATABASE_URL is set there).
-kubectl --context admin@torvalds -n feeds exec deploy/feeds -c feeds -- \
-  bun src/migration/import-sqlite.ts --from /var/lib/feeds/feeds.sqlite
-```
-
-A rehearsal replaces PostgreSQL's rows and exits non-zero when a gate fails. In production the `sqlite-import` init container runs `--cutover` against the quiescent file (the `Recreate` strategy stops the old pod first) before the server starts. A failed gate keeps the pod from starting and leaves the file untouched. Once the gates pass it records the `storage_cutover` marker in `meta`. From then on the importer leaves PostgreSQL alone and a rehearsal refuses to run.
+Search matches titles and authors. PostgreSQL stores a tsvector literal built by `src/server/search/search-tokens.ts`, which tokenizes exactly as SQLite FTS5's `unicode61` tokenizer did (its per-code-point table, `unicode61-table.json`, is checked against SQLite for every code point by `search-tokens.test.ts`; `bun run generate:unicode61` rewrites it). The same query therefore returns the same entries that FTS5 did, newest first.
 
 ## Commands
 
@@ -52,13 +36,7 @@ bun run dev        # Vite client dev server (:7432 -> :7430)
 bun run start      # Start Bun HTTP server
 bun run build      # Build Vite client bundle to dist/client
 bun run typecheck  # Type-check with tsgo
-bun run test       # Run Vitest unit, protocol, SSRF, UI, and migration suites
-bun run test:extended  # PostgreSQL store contract, search parity, and importer suites
+bun run test       # Run Vitest unit, protocol, SSRF, and UI suites
+bun run test:extended  # PostgreSQL store contract and search parity suites
 bun run lint       # Run ESLint
-```
-
-To import a WAL-consistent snapshot of FreshRSS's user SQLite database:
-
-```bash
-bun src/migration/import-freshrss.ts --from /tmp/freshrss-snapshot.sqlite --to /var/lib/feeds/feeds.sqlite
 ```

@@ -146,7 +146,7 @@ async function cleanupObsoleteManagedCategories(
 }
 
 /**
- * The SQLite store's catalog reconcile: managed categories and code feeds
+ * The catalog reconcile: managed categories and code feeds
  * follow the catalog, removed code feeds go (with their entries), user feeds
  * stay, and the subscription etag moves only when something changed.
  */
