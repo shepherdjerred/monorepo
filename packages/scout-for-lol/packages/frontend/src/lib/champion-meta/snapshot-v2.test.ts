@@ -520,7 +520,8 @@ describe("snapshot v2 refresh guard", () => {
     expect(changedFileCount(full)).toBe(LIMIT);
     const written = await readSnapshotDirectory(target);
     expect(written.size).toBe(LIMIT);
-  });
+    // Writes about 7,500 real files; the default 5s timeout is too short on a loaded machine.
+  }, 60_000);
 
   test("refuses a change set over the limit, names AI-1031 and plan (b), and writes nothing", async () => {
     const target = path.join(directory, "champion-meta");
