@@ -4,7 +4,7 @@ import { MEDIUM_TIER, SERVICE_TIER } from "#src/pipeline/tiers.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
 const PAPER_SERVER_IMAGE =
-  "itzg/minecraft-server:2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd";
+  "itzg/minecraft-server:2026.11.1-java25@sha256:0634ff76eee896c7e9760a35117d24fad394857d10bc8c1d9bc7f7ff7deef3c2";
 const REPO_ROOT = "/woodpecker/src/github.com/shepherdjerred/monorepo";
 const PAPER_WORKSPACE =
   "/woodpecker/src/github.com/shepherdjerred/monorepo/packages/the-storm/.cache/e2e/woodpecker";

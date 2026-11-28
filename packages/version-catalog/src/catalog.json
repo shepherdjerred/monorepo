@@ -104,7 +104,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.31.1@sha256:df744af5a0c976e2ec671052ecc1f8a9aa757fa12b8f9930b59910b7295f0da6"
+      "value": "v0.32.0@sha256:1099ffd7cc53f165916a07644874448011308a46eadbcd4edd328786e59b5eb9"
     },
     {
       "name": "trmnl/trmnlp",
@@ -141,7 +141,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.18.2",
+      "value": "10.20.0",
       "component": true
     },
     {
@@ -167,7 +167,7 @@
         "registryUrl": "https://intel.github.io/helm-charts/",
         "versioning": "semver"
       },
-      "value": "0.37.1",
+      "value": "0.37.2",
       "component": true
     },
     {
@@ -180,7 +180,7 @@
         "registryUrl": "https://intel.github.io/helm-charts/",
         "versioning": "semver"
       },
-      "value": "0.37.1",
+      "value": "0.37.2",
       "component": true
     },
     {
@@ -206,7 +206,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "93.6.1",
+      "value": "93.11.1",
       "component": true
     },
     {
@@ -232,7 +232,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.21.3",
+      "value": "11.26.2",
       "component": true
     },
     {
@@ -257,7 +257,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v0.13.1",
+      "value": "v0.14.0",
       "component": true
     },
     {
@@ -270,7 +270,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd",
+      "value": "2026.11.1-java25@sha256:0634ff76eee896c7e9760a35117d24fad394857d10bc8c1d9bc7f7ff7deef3c2",
       "notes": [
         "java25 variant for Paper 26.x used by mc-sandbox and the-storm-server:",
         "Minecraft 26.1 and newer requires running the server with Java 25 or above."
@@ -299,7 +299,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2.18.2@sha256:d3c53deb09f6b8fffd1476c7154da538394193955d1e909f3b126068102fb7cf"
+      "value": "2.19.1@sha256:f7b4f820aace9cad346770bbd70da6329cf3acebac75534fe61cf8fae2d2262b"
     },
     {
       "name": "linuxserver/bazarr",
@@ -311,7 +311,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.2@sha256:e0c5d45965242830c5eeddaafe9ae2b5e8ca3f6c01ecda9ee9364f550921dc50"
+      "value": "1.6.2@sha256:b3db4247d3afa0c68bc5aa311bedd67b1caf4b3eabc3a85577682970435d5013"
     },
     {
       "name": "seerr-team/seerr",
@@ -347,7 +347,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "3.0.2@sha256:45117ba8439e2337a92ffe38a451a4dafc0be771754d05d88cdf102419d09646"
+      "value": "3.1.0@sha256:2806c9b763810589c42157730d547c293639e55c7610e9f5069314854639ec48"
     },
     {
       "name": "qdm12/gluetun",
@@ -371,7 +371,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.3.0@sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384",
+      "value": "5.3.1@sha256:1fa2f9692501f27ce51c4fffd771d63ec38f1163cb648941c324344b7c5a3915",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
@@ -399,7 +399,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "4.0.20@sha256:c7d1df25e428da6c9ace05daea0d34e59522978a3843ea1944812f855af4086c"
+      "value": "4.0.20@sha256:5c943771636f8f13b833efc0eae81b9373737435a262503a29157842c052ed0b"
     },
     {
       "name": "cloudflare/cloudflared",
@@ -423,7 +423,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "v1.102.4@sha256:2667499ed87ae29218f292556ba062918402dd5e92e93637af14867e4df12dd3"
+      "value": "v1.104.7@sha256:72c1e19e0aedca96b8533bbb0b4368564410ff20b17e53b804eb6c1f04a31be4"
     },
     {
       "name": "home-assistant/home-assistant",
@@ -435,7 +435,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2026.11.2@sha256:493a07e8f6530fc640223f4a0a5248f20a61ca2f718bb1d31efbf08a2c5ea28f"
+      "value": "2026.11.3@sha256:24e541ddae5818bf8eb27898b9ba00d0c344a655aa5097e9e9bd4b19356be847"
     },
     {
       "name": "bropat/eufy-security-ws",
@@ -471,7 +471,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "v0.147.0-noble-full@sha256:e78b4fcecdd6c61acaaf22b50ccef303c738da58cc0be57afdb116521df52296"
+      "value": "v0.148.12-noble-full@sha256:dc6a3cdab95df0e42f726e3513b8a1445cf03631ce083e71007eaa1cc2ae2397"
     },
     {
       "name": "fuatakgun/eufy_security",
@@ -504,7 +504,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.11.11"
+      "value": "v1.11.12"
     },
     {
       "name": "magico13/ha-emporia-vue",
@@ -582,18 +582,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.1.7@sha256:c4207d8f5b66d5f67eedb636b75500b5a04898e9f33299d252f4b966c41a4128"
-    },
-    {
-      "name": "dotdc/grafana-dashboards-kubernetes",
-      "category": "upstream",
-      "artifactType": "source",
-      "management": {
-        "managed": true,
-        "datasource": "github-releases",
-        "versioning": "semver-coerced"
-      },
-      "value": "v3.0.9"
+      "value": "2.1.7@sha256:91e5a75d719b4f9919fc5332c7350d1477cf07bd62143506cec88694e94fbbc9"
     },
     {
       "name": "minecraft",
@@ -631,7 +620,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.56.5@sha256:e2f002006d617b2df898c9beec963baa212c685aae1df83de5a13ebf5b5966c9",
+      "value": "1.57.1@sha256:0dd5d379e0930a912a96e12e082ff7d379f8dcef874dd9b6eae7c71387279ae2",
       "component": true
     },
     {
@@ -695,7 +684,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.4.3",
+      "value": "2.4.4",
       "component": true
     },
     {
@@ -721,7 +710,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v5.12.11@sha256:cfa6c8f63e6d626f90208f2880f15bd5facc279daec1b9bb642af07aa850d95e",
+      "value": "v5.12.12@sha256:7ec15ea713a82d0cc16aaf1575b5416a6f8b178f475f4d1685e3322a5ce3fae3",
       "component": true
     },
     {
@@ -783,7 +772,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "3.1.0@sha256:3076b8dcdfb32fd6bc5ccef85e7b7313e6199b9cb84366257fc17ecb696db5fd"
+      "value": "3.1.1@sha256:64e2fbd56d9c2b3412a4b430a58ea59e91a670b1e75f920a0c702213ad145044"
     },
     {
       "name": "minio/mc",
@@ -843,7 +832,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.186.0@sha256:6e1b04340e60e910fbb4ddbf3c857ab0918f064417ad5ac530014ccb3cf8c8f1"
+      "value": "1.187.0@sha256:0c8dfa7aa1ca8c50233ec9110e8cd88d139dedd603d56507493f74c6f4b3e062"
     },
     {
       "name": "woodpeckerci/woodpecker-server",
@@ -904,7 +893,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.20.7@sha256:f39b8bede7a69fa500f3e0b1e72697be73579396f5b7dbd063bdce4a86c7484a",
+      "value": "0.20.8@sha256:11f05e9a2d51c1e4c97ec5572bdc5d405f8492c0b6051b3dc9232cda751470b2",
       "component": true
     },
     {
@@ -1159,7 +1148,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.54.0",
+      "value": "4.55.0",
       "component": true
     },
     {
@@ -1172,7 +1161,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "4.54@sha256:4b42c212543a0acd4c0e675215ecdcaf62a186ef98def76c7e12701871222d15",
+      "value": "4.55@sha256:7ca46aeae2f223b37e5d91593c17ab37738eec6df6ab69b48a0487f7643342b9",
       "notes": [
         "Runs weed filer.backup beside the seaweedfs chart, whose servers use the chart's own image.",
         "renovate.json groups both so filer.backup tracks the server version."
@@ -1276,7 +1265,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.31.9-alpine@sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7",
+      "value": "1.31.10-alpine@sha256:7fc0fb4af7bf006aeb31aea88069976060f8f0a0a86b667126742cc17f4e31ae",
       "notes": [
         "Also CI's Gradle build cache, which relies on the image's WebDAV module and BusyBox cryptpw; keep the alpine variant."
       ]

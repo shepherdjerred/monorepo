@@ -10,6 +10,7 @@ export type InteldevicepluginsoperatorHelmValuesManager = {
    * @default {"hub":"intel","tag":"","pullPolicy":"IfNotPresent"}
    */
   image?: InteldevicepluginsoperatorHelmValuesManagerImage;
+  extraEnv?: unknown[];
   devices?: unknown;
 };
 
@@ -59,7 +60,7 @@ export type InteldevicepluginsoperatorHelmValues = {
    */
   nodeSelector?: Record<string, string>;
   /**
-   * @default {"image":{"hub":"intel","tag":"","pullPolicy":"IfNotPresent"},"devices":null}
+   * @default {"image":{"hub":"intel","tag":"","pullPolicy":"IfNotPresent"},"extraEnv":[],"devices":null}
    */
   manager?: InteldevicepluginsoperatorHelmValuesManager;
   /**
@@ -84,6 +85,7 @@ export type InteldevicepluginsoperatorHelmParameters = {
   "manager.image.hub"?: string;
   "manager.image.tag"?: string;
   "manager.image.pullPolicy"?: string;
+  "manager.extraEnv"?: string;
   "manager.devices"?: string;
   "privateRegistry.registryUrl"?: string;
   "privateRegistry.registryUser"?: string;

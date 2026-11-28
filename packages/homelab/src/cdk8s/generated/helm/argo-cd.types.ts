@@ -2831,7 +2831,7 @@ export type ArgocdHelmValuesRedis = {
   /**
    * Automount API credentials for the Service Account into the pod.
    *
-   * @default true
+   * @default false
    */
   automountServiceAccountToken?: boolean;
   /**
@@ -3040,7 +3040,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.97.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.99.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -3079,7 +3079,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.97.0"
+   * @default "v1.99.0"
    */
   tag?: string;
   /**
@@ -3587,7 +3587,7 @@ export type ArgocdHelmValuesRedisha = {
   /**
    * Prometheus redis-exporter sidecar
    *
-   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.97.0"}
+   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.99.0"}
    */
   exporter?: ArgocdHelmValuesRedishaExporter;
   /**
@@ -3697,7 +3697,7 @@ export type ArgocdHelmValuesRedishaExporter = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.97.0"
+   * @default "v1.99.0"
    */
   tag?: string;
 };
@@ -6200,8 +6200,9 @@ export type ArgocdHelmValuesRepoServer = {
   clusterRoleRules?: ArgocdHelmValuesRepoServerClusterRoleRules;
   /**
    * Automount API credentials for the Service Account into the pod.
+   * Always mounted when `repoServer.rbac` is not empty or `repoServer.clusterRoleRules.enabled` is true.
    *
-   * @default true
+   * @default false
    */
   automountServiceAccountToken?: boolean;
   /**
@@ -6921,7 +6922,7 @@ export type ArgocdHelmValuesRepoServerServiceAccount = {
   /**
    * Automount API credentials for the Service Account
    *
-   * @default true
+   * @default false
    */
   automountServiceAccountToken?: boolean;
 };
@@ -8313,10 +8314,12 @@ export type ArgocdHelmValuesNotifications = {
    */
   cm?: ArgocdHelmValuesNotificationsCm;
   /**
-   * Enable this and set the rules: to whatever custom rules you want for the Cluster Role resource.
-   * Defaults to off
+   * Create a ClusterRole and ClusterRoleBinding for the notifications controller.
+   * It is created automatically when `configs.params.application\.namespaces` or
+   * `configs.params.notificationscontroller\.selfservice\.enabled` is enabled, or when custom rules are set.
+   * Defaults to off otherwise, so the controller only gets namespace-scoped permissions.
    *
-   * @default {"rules":[]}
+   * @default {"enabled":false,"rules":[]}
    */
   clusterRoleRules?: ArgocdHelmValuesNotificationsClusterRoleRules;
   subscriptions?: unknown[];
@@ -8917,6 +8920,12 @@ export type ArgocdHelmValuesNotificationsCm = {
 };
 
 export type ArgocdHelmValuesNotificationsClusterRoleRules = {
+  /**
+   * Create the notifications controller's ClusterRole and ClusterRoleBinding when no automatic condition applies
+   *
+   * @default false
+   */
+  enabled?: boolean;
   rules?: unknown[];
 };
 
@@ -10533,6 +10542,7 @@ export type ArgocdHelmParameters = {
   "notifications.serviceAccount.name"?: string;
   "notifications.serviceAccount.automountServiceAccountToken"?: string;
   "notifications.cm.create"?: string;
+  "notifications.clusterRoleRules.enabled"?: string;
   "notifications.clusterRoleRules.rules"?: string;
   "notifications.subscriptions"?: string;
   "notifications.networkPolicy.create"?: string;
