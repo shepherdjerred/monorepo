@@ -111,10 +111,18 @@ describe("application image inputs", () => {
     expect(dockerfile).toContain(
       "FROM oven/bun:1.4.5-slim@sha256:b780593f3e10918cbdaec3d5a08d52224b9198069a65eb47812085c2ec007643 AS bun-harness",
     );
-    expect(dockerfile).toContain("/tmp/smoke-bun");
     expect(dockerfile).toContain(
       'exec "$(command -v bun || echo /tmp/smoke-bun)" /app/ci/scripts/images/smoke-app-in-image.ts',
     );
+    // The harness is bind-mounted into the smoke RUN, never committed as a
+    // layer on top of each exact candidate.
+    expect(dockerfile).toContain(
+      "--mount=type=bind,from=bun-harness,source=/usr/local/bin/bun,target=/tmp/smoke-bun",
+    );
+    expect(dockerfile).toContain(
+      "--mount=type=bind,source=ci/scripts/images/smoke-app-in-image.ts,target=/app/ci/scripts/images/smoke-app-in-image.ts",
+    );
+    expect(dockerfile).not.toMatch(/^(?:COPY|ADD)\s/m);
   });
 
   test("pins and verifies mozilla/sccache for both architectures in Rust Dockerfiles", async () => {

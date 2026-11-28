@@ -265,6 +265,34 @@ export async function classifyRuntimeChange(
     : "bumped";
 }
 
+/**
+ * The exact-digest smoke harness. A retained original passed the harness that
+ * ran when it was registered; once these change, it has not met the new one.
+ */
+export const EXACT_SMOKE_HARNESS: readonly string[] = [
+  "ci/application-image-smoke.Dockerfile",
+  "ci/scripts/images/application-image-runtime.ts",
+];
+
+/**
+ * Whether this run must prove a changed exact-smoke harness. A fallback
+ * selection has no diff, so the change set is unknown and the answer is yes.
+ */
+export async function exactSmokeHarnessChanged(
+  fallbackReason: string,
+  report: string,
+): Promise<boolean> {
+  if (fallbackReason !== "") return true;
+  const changed = asRecord(await Bun.file(report).json())?.["changedPaths"];
+  if (
+    !Array.isArray(changed) ||
+    !changed.every((path) => typeof path === "string")
+  ) {
+    throw new TypeError(`${report} must list changedPaths`);
+  }
+  return changed.some((path) => EXACT_SMOKE_HARNESS.includes(path));
+}
+
 export async function runExactCandidateSmoke(
   options: {
     readonly target: string;

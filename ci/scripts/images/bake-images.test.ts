@@ -1,4 +1,7 @@
 import { expect, test } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
 import {
   annotate,
   ensureBuilder,
@@ -15,6 +18,8 @@ import { writeFallbackReport } from "./image-selection-report.ts";
 import {
   assertImageSourceLabel,
   CI_IMAGE_IGNORED_ENV_PREFIXES,
+  EXACT_SMOKE_HARNESS,
+  exactSmokeHarnessChanged,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
   runtimeFingerprintFromImage,
@@ -800,7 +805,7 @@ test("runs application smoke against the exact candidate digest", async () => {
   ).rejects.toThrow("not defined");
 });
 
-test("smokes exact candidates, reuses identical runtime fingerprints, and tags Starlight", async () => {
+test("smokes only changed exact candidates, reuses identical runtime fingerprints, and tags Starlight", async () => {
   const digest = `sha256:${"b".repeat(64)}`;
   const pinned = `sha256:${"a".repeat(64)}`;
   const commands: string[][] = [];
@@ -904,12 +909,21 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
   );
   expect(events[1]).toBe(`public:birmel:${digest}`);
   expect(events[2]).toBe(`source:docker.io/shepherdjerred/birmel@${digest}`);
+  // Classification precedes the exact-digest smoke: the candidate and its pin
+  // are fingerprinted first, and only a changed candidate is smoked.
   expect(events[3]).toBe(
-    `smoke:birmel:docker.io/shepherdjerred/birmel@${digest}`,
-  );
-  expect(events[4]).toBe(
     `fingerprint:docker.io/shepherdjerred/birmel@${digest}`,
   );
+  expect(events[4]).toBe(
+    `fingerprint:docker.io/shepherdjerred/birmel@${pinned}`,
+  );
+  expect(events[5]).toBe(
+    `smoke:birmel:docker.io/shepherdjerred/birmel@${digest}`,
+  );
+  expect(events.filter((event) => event.startsWith("smoke:"))).toEqual([
+    `smoke:birmel:docker.io/shepherdjerred/birmel@${digest}`,
+    `smoke:starlight-karma-bot:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
+  ]);
   expect(
     events.indexOf(
       "resolve:docker.io/shepherdjerred/scout-for-lol:candidate-commit",
@@ -922,7 +936,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     events.indexOf(`source:docker.io/shepherdjerred/scout-for-lol@${digest}`),
   ).toBeLessThan(
     events.indexOf(
-      `smoke:scout-for-lol:docker.io/shepherdjerred/scout-for-lol@${digest}`,
+      `fingerprint:docker.io/shepherdjerred/scout-for-lol@${digest}`,
     ),
   );
   expect(
@@ -942,6 +956,15 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
   ).toBeLessThan(
     events.indexOf(
       `fingerprint:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    ),
+  );
+  expect(
+    events.indexOf(
+      `fingerprint:docker.io/shepherdjerred/starlight-karma-bot@${pinned}`,
+    ),
+  ).toBeLessThan(
+    events.indexOf(
+      `smoke:starlight-karma-bot:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
     ),
   );
   // A content-unchanged candidate is never handed to Delivery as a new
@@ -1005,7 +1028,8 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
       },
     ),
   ).rejects.toBeInstanceOf(TransientError);
-  expect(events).toEqual(["public", "source", "smoke"]);
+  // An unclassifiable candidate is never smoked or registered.
+  expect(events).toEqual(["public", "source"]);
 });
 
 test("keeps upstream provenance for infrastructure images", async () => {
@@ -1063,6 +1087,7 @@ test("retains every qualified original when no selected candidate changed conten
     retained: readonly ArtifactVersion[];
   }[] = [];
   const tagged: string[][] = [];
+  const smoked: string[] = [];
   const outcomes: { path: string; contents: string }[] = [];
 
   await pushImages(
@@ -1082,7 +1107,9 @@ test("retains every qualified original when no selected candidate changed conten
       getManifestDigest: async () => digest,
       verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),
-      smokeCandidate: () => Promise.resolve(),
+      smokeCandidate: async (target) => {
+        smoked.push(target);
+      },
       getRuntimeFingerprint: async () => "same",
       writeDeliveryMetadata: async (digests, retained) => {
         deliveryWrites.push({ digests, retained });
@@ -1093,6 +1120,8 @@ test("retains every qualified original when no selected candidate changed conten
     },
   );
 
+  // A discarded duplicate is never pulled back for an exact-digest smoke.
+  expect(smoked).toEqual([]);
   // Nothing new for Delivery: unbuilt originals come first, then the
   // content-unchanged originals in target order.
   expect(deliveryWrites).toEqual([
@@ -1116,6 +1145,90 @@ test("retains every qualified original when no selected candidate changed conten
     { image: "scout-for-lol", outcome: "content-unchanged" },
     { image: "starlight-karma-bot", outcome: "content-unchanged" },
   ]);
+});
+
+test("a changed exact-smoke harness boots every retained application original", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const pinned = `sha256:${"a".repeat(64)}`;
+  const catalog = qualifiedInventory([
+    { name: "shepherdjerred/birmel", value: `2.0.0-1@${pinned}` },
+    { name: "shepherdjerred/scout-for-lol", value: `2.0.0-2@${pinned}` },
+    { name: "shepherdjerred/redlib", value: `2.0.0-3@${pinned}` },
+  ]);
+  const smoked: string[] = [];
+  const deliveryWrites: {
+    digests: Readonly<Record<string, string>>;
+    retained: readonly ArtifactVersion[];
+  }[] = [];
+
+  await pushImages(
+    {
+      targets: ["birmel", "scout-for-lol", "redlib"],
+      commit: "commit",
+      buildNumber: "42",
+      contractHash: "contract",
+      exactHarnessChanged: true,
+    },
+    {
+      executor: async () => commandResult(),
+      environment: {},
+      readRetainableImages: async () => catalog,
+      getManifestDigest: async () => digest,
+      verifyRegistryAccess: () => Promise.resolve(),
+      verifySourceLabel: () => Promise.resolve(),
+      // birmel changed; scout and redlib rebuilt byte-identical runtimes.
+      getRuntimeFingerprint: async (image) =>
+        image.includes("birmel") && image.endsWith(digest) ? "new" : "same",
+      smokeCandidate: async (target, image) => {
+        smoked.push(`${target}:${image}`);
+      },
+      writeDeliveryMetadata: async (digests, retained) => {
+        deliveryWrites.push({ digests, retained });
+      },
+      writeText: () => Promise.resolve(),
+    },
+  );
+
+  // The changed candidate and the retained application original both meet
+  // the new harness; infrastructure has no exact-digest smoke.
+  expect(smoked).toEqual([
+    `birmel:docker.io/shepherdjerred/birmel@${digest}`,
+    `scout-for-lol:docker.io/shepherdjerred/scout-for-lol@${pinned}`,
+  ]);
+  expect(deliveryWrites).toEqual([
+    {
+      digests: { "shepherdjerred/birmel": digest },
+      retained: [catalog.get("scout-for-lol"), catalog.get("redlib")],
+    },
+  ]);
+});
+
+test("detects an exact-smoke harness change from the selection diff", async () => {
+  const directory = await mkdtemp(nodePath.join(tmpdir(), "exact-harness-"));
+  try {
+    const report = nodePath.join(directory, "report.json");
+    // A fallback build has no diff, so the harness must be proven.
+    expect(
+      await exactSmokeHarnessChanged("selector failed", `${report}.missing`),
+    ).toBe(true);
+    for (const path of EXACT_SMOKE_HARNESS) {
+      await Bun.write(report, JSON.stringify({ changedPaths: [path] }));
+      expect(await exactSmokeHarnessChanged("", report), path).toBe(true);
+    }
+    await Bun.write(
+      report,
+      JSON.stringify({
+        changedPaths: ["ci/scripts/images/smoke-app-in-image.ts"],
+      }),
+    );
+    expect(await exactSmokeHarnessChanged("", report)).toBe(false);
+    await Bun.write(report, JSON.stringify({ targets: {} }));
+    await expect(exactSmokeHarnessChanged("", report)).rejects.toThrow(
+      "must list changedPaths",
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("writes a deterministic full-build fallback report", async () => {
