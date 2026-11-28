@@ -47,6 +47,8 @@ const SCOUT_ANALYTICS_EVENTS = [
   "player_profile_opened",
   "player_profile_filter_changed",
   "champion_comparison_opened",
+  "live_games_opened",
+  "live_game_opened",
   "match_detail_opened",
   "match_timeline_viewed",
   // Competitions

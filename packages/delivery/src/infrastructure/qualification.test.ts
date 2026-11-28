@@ -202,5 +202,14 @@ describe("exact CI qualification", () => {
         fetch: async () => new Response("denied", { status: 403 }),
       })(build),
     ).rejects.toMatchObject({ code: "PAUSED" });
+    await expect(
+      createQualifier({
+        origin: "https://woodpecker.sjer.red",
+        repositoryId: 1,
+        token: "test-only-credential",
+        recordSourceCommit: unreachable,
+        fetch: () => Promise.reject(new TypeError("fetch failed")),
+      })(build),
+    ).rejects.toMatchObject({ code: "PAUSED" });
   });
 });

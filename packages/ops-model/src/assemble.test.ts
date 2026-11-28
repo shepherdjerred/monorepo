@@ -68,6 +68,33 @@ describe("assembleSnapshot", () => {
     expect(findSection(snapshot, "errors").severity).toBe("unknown");
   });
 
+  test("Work stays available before Experiments is configured", () => {
+    const snapshot = assembleSnapshot({
+      generatedAt,
+      sources: sources().filter((status) => status.source !== "experiments"),
+      signals: [],
+      metrics: [],
+    });
+    expect(findSection(snapshot, "work")).toMatchObject({
+      sources: ["tracker"],
+      severity: "ok",
+    });
+  });
+
+  test("a configured Experiments outage is visible in Work", () => {
+    const snapshot = assembleSnapshot({
+      generatedAt,
+      sources: sources(["experiments"]),
+      signals: [],
+      metrics: [],
+    });
+    expect(findSection(snapshot, "work")).toMatchObject({
+      sources: ["tracker", "experiments"],
+      severity: "unknown",
+      summary: "no data from experiments",
+    });
+  });
+
   test("signals roll up worst-first and needsMe is counted", () => {
     const snapshot = assembleSnapshot({
       generatedAt,

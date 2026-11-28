@@ -1,6 +1,7 @@
 import {
   allSignals,
   applyFreshness,
+  assembleSnapshot,
   newSignals,
   type FreshSnapshot,
 } from "@shepherdjerred/ops-model/assemble.ts";
@@ -13,6 +14,7 @@ import {
 import {
   parseOpsIngest,
   SnapshotResponseSchema,
+  type Snapshot,
   type SnapshotResponse,
 } from "@shepherdjerred/ops-model/snapshot.ts";
 import { Temporal } from "@js-temporal/polyfill";
@@ -58,6 +60,31 @@ import {
 
 const SERVICE_DETAIL_CHANGE_LIMIT = 50;
 
+/** Keep the default v1 response readable by clients with the older source enum. */
+function withoutExperiments(snapshot: Snapshot): Snapshot {
+  const hasExperiments =
+    snapshot.sources.some(({ source }) => source === "experiments") ||
+    snapshot.sections.some(
+      ({ sources, signals, metrics }) =>
+        sources.includes("experiments") ||
+        signals.some(({ source }) => source === "experiments") ||
+        metrics.some(({ source }) => source === "experiments"),
+    );
+  if (!hasExperiments) return snapshot;
+  return assembleSnapshot({
+    generatedAt: toContractDate(Temporal.Instant.from(snapshot.generatedAt)),
+    sources: snapshot.sources.filter(({ source }) => source !== "experiments"),
+    signals: snapshot.sections.flatMap(({ signals }) =>
+      signals.filter(({ source }) => source !== "experiments"),
+    ),
+    metrics: snapshot.sections.flatMap(({ id: section, metrics }) =>
+      metrics
+        .filter(({ source }) => source !== "experiments")
+        .map((metric) => ({ ...metric, section })),
+    ),
+  });
+}
+
 export type OpsServiceOptions = {
   repository: OpsRepository;
   series: SeriesPort;
@@ -98,7 +125,7 @@ export class OpsService {
   }
 
   /** The newest stored snapshot with freshness applied now. */
-  async freshSnapshot(): Promise<{
+  async freshSnapshot(includeExperiments = true): Promise<{
     stored: StoredOpsSnapshot;
     fresh: FreshSnapshot;
   } | null> {
@@ -108,12 +135,20 @@ export class OpsService {
     }
     return {
       stored,
-      fresh: applyFreshness(stored.snapshot, toContractDate(this.#clock.now())),
+      fresh: applyFreshness(
+        includeExperiments
+          ? stored.snapshot
+          : withoutExperiments(stored.snapshot),
+        toContractDate(this.#clock.now()),
+      ),
     };
   }
 
-  async snapshot(consumer?: CursorConsumer): Promise<SnapshotResponse> {
-    const latest = await this.freshSnapshot();
+  async snapshot(
+    consumer?: CursorConsumer,
+    includeExperiments = false,
+  ): Promise<SnapshotResponse> {
+    const latest = await this.freshSnapshot(includeExperiments);
     if (latest === null) {
       throw new SnapshotUnavailableError();
     }

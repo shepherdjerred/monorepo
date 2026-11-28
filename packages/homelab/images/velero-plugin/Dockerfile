@@ -1,5 +1,5 @@
 # The upstream 3.6.0 plugin with GUID-based restore, rotation and expiry sweep.
-FROM golang:1.27.4@sha256:205c7636d74e0ffbe3d007162df7d74f859f5a8c8322dfb9f907977686c126cf AS builder
+FROM golang:1.27.4@sha256:5f1b98fa02fe396ebce2a0227a0e08309e11792915b9dd2e1f71053d7e7e6666 AS builder
 WORKDIR /src
 RUN git init . && git remote add origin https://github.com/openebs/velero-plugin.git \
   && git fetch --depth 1 origin cea57783e3ed887d2b7b0e7bafc436ff26bd9a7b \

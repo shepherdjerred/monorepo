@@ -22,7 +22,7 @@
     "@shepherdjerred/bugsink-config": "workspace:*",
     "@base-ui/react": "^1.7.0",
     "@orama/orama": "^3.1.18",
-    "@sentry/react": "^11.16.0",
+    "@sentry/react": "^11.18.0",
     "@tanstack/query-async-storage-persister": "^5.101.4",
     "@shepherdjerred/loaded": "workspace:*",
     "@tanstack/react-query": "^5.101.4",
@@ -51,10 +51,9 @@
     "jiti": "^2.7.0",
     "shadcn": "^4.14.1",
     "tailwindcss": "^4.2.4",
-    "typescript-eslint": "^8.72.2",
     "vite": "^8.0.11",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   },
   "browserslist": {
     "production": [

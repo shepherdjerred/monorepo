@@ -145,6 +145,44 @@ if ! rg -Fq 'ln -s "$CI_CARGO_CACHE_DIR/$cargo_cache" "$cargo_home/$cargo_cache"
   exit 1
 fi
 
+# CI-only dependency debuginfo: Cargo has no environment form for a per-package
+# profile override, so toolchain.sh writes it to CARGO_HOME's config file when
+# the pipeline asks, and refuses to shadow a config it did not write. Run the
+# block itself against a scratch CARGO_HOME.
+cargo_debug_root=$(mktemp -d)
+cargo_debug_block="$cargo_debug_root/block.sh"
+awk '/^if \[ -n "\$\{CI_CARGO_DEPENDENCY_DEBUG:-\}" \]; then$/ { copying = 1 }
+  copying { print }
+  copying && /^fi$/ { exit }' "$TOOLCHAIN" >"$cargo_debug_block"
+if [ ! -s "$cargo_debug_block" ]; then
+  echo "toolchain.sh must write CI's dependency debuginfo override from CI_CARGO_DEPENDENCY_DEBUG" >&2
+  exit 1
+fi
+expected_cargo_config=$'[profile.dev.package."*"]\ndebug = "none"'
+rm -rf "$cargo_debug_root/cargo-home"
+if ! env -u CI_CARGO_DEPENDENCY_DEBUG CARGO_HOME="$cargo_debug_root/cargo-home" \
+  bash -c '. "$1"' _ "$cargo_debug_block" ||
+  [ -e "$cargo_debug_root/cargo-home/config.toml" ]; then
+  echo "toolchain.sh must not touch CARGO_HOME unless the pipeline asks for the override" >&2
+  exit 1
+fi
+for _ in 1 2; do
+  if ! CI_CARGO_DEPENDENCY_DEBUG=none CARGO_HOME="$cargo_debug_root/cargo-home" \
+    bash -c 'set -eu; . "$1"' _ "$cargo_debug_block" ||
+    [ "$(cat "$cargo_debug_root/cargo-home/config.toml")" != "$expected_cargo_config" ]; then
+    echo "toolchain.sh must write the per-package dependency override, idempotently" >&2
+    exit 1
+  fi
+done
+printf '[build]\njobs = 1\n' >"$cargo_debug_root/cargo-home/config.toml"
+if CI_CARGO_DEPENDENCY_DEBUG=none CARGO_HOME="$cargo_debug_root/cargo-home" \
+  bash -c 'set -eu; . "$1"' _ "$cargo_debug_block" >"$cargo_debug_root/refusal.log" 2>&1 ||
+  [ "$(cat "$cargo_debug_root/cargo-home/config.toml")" != $'[build]\njobs = 1' ]; then
+  echo "toolchain.sh must refuse to overwrite a Cargo config it did not write" >&2
+  exit 1
+fi
+rm -rf "$cargo_debug_root"
+
 # A recursive chmod copies every image-layer file it visits into the
 # container's writable layer, even when the mode already matches.
 if rg -q 'chmod -R' "$TOOLCHAIN" ||

@@ -140,6 +140,20 @@ describe("flagValueSchemas", () => {
     expect(validateVariantValue("karma-admin-user-id", "abc").ok).toBe(false);
   });
 
+  test("defaults the SeaweedFS lifecycle sweep to report-only across every bucket", () => {
+    expect(
+      decodeVariantValue("seaweedfs-lifecycle-enforcer-mode", "report"),
+    ).toBe("report");
+    expect(
+      decodeVariantValue("seaweedfs-lifecycle-enforcer-max-deletes", "20000"),
+    ).toBe(20_000);
+    for (const raw of ["*", "ci-handoff", "ci-handoff, sjer-red,cook"]) {
+      expect(
+        validateVariantValue("seaweedfs-lifecycle-enforcer-buckets", raw),
+      ).toEqual({ ok: true });
+    }
+  });
+
   test("encodes canonically", () => {
     expect(encodeVariantValue("delivery-lease-seconds", 900)).toBe("900");
     expect(encodeVariantValue("birmel-llm-decisions-threshold", 0.25)).toBe(
@@ -175,6 +189,13 @@ describe("flagValueSchemas", () => {
     ["trmnl-ha-presence-entities", "person.jerred:Jerred,", ""],
     ["explore-guild-allowlist", "123,abc", ""],
     ["temporal-agent-chat-photon-owners", "a,,b", ""],
+    ["seaweedfs-lifecycle-enforcer-mode", "purge", ""],
+    ["seaweedfs-lifecycle-enforcer-mode", "", ""],
+    ["seaweedfs-lifecycle-enforcer-max-deletes", "0", ""],
+    ["seaweedfs-lifecycle-enforcer-max-deletes", "1000001", ""],
+    ["seaweedfs-lifecycle-enforcer-buckets", "", ""],
+    ["seaweedfs-lifecycle-enforcer-buckets", "ci-handoff,", ""],
+    ["seaweedfs-lifecycle-enforcer-buckets", "CI_Handoff", ""],
     [
       "scout-explore-quota-limits",
       '{"userMinute":4,"userHour":30,"userDay":100,"userWeek":300,"globalHour":10,"globalDay":600,"globalWeek":2000}',

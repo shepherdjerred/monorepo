@@ -135,9 +135,9 @@ function original(name: string) {
   });
 }
 
-test("all 30 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
-  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(30);
-  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(30);
+test("all 31 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
+  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(31);
+  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(31);
   expect(CANONICAL_IMAGE_TARGETS).toContain("feeds");
   expect(CANONICAL_IMAGE_TARGETS).toContain("charts");
   expect(CANONICAL_IMAGE_TARGETS).toContain("ci-cache");

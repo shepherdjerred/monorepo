@@ -28,7 +28,9 @@ import {
   GOLINK_ENDPOINT,
   MAIL_API_ENDPOINT,
   TRACKER_ENDPOINT,
+  EXPERIMENTS_INTERNAL_ENDPOINT,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import { experimentsHubConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/experiments/index.ts";
 
 /**
  * The gateway's public webhook listeners (GitHub, agent tasks, Xcode Cloud,
@@ -245,6 +247,14 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         monitoringEgress(PROMETHEUS_GATEWAY_PORT),
         { ports: [tcp(7341)] },
         { to: [TRACKER_ENDPOINT.peer()], ports: [TRACKER_ENDPOINT.tcp()] },
+        ...(experimentsHubConfig.active
+          ? [
+              {
+                to: [EXPERIMENTS_INTERNAL_ENDPOINT.peer()],
+                ports: [EXPERIMENTS_INTERNAL_ENDPOINT.tcp()],
+              },
+            ]
+          : []),
         { to: [GOLINK_ENDPOINT.peer()], ports: [GOLINK_ENDPOINT.tcp()] },
         {
           to: [ERRORS_ADMIN_ENDPOINT.peer()],

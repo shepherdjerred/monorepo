@@ -22,6 +22,10 @@ export function appRoutes(): AuditRoute[] {
   );
   const competitionId = envValue("SCOUT_DESIGN_AUDIT_COMPETITION_ID", "1");
   const reportId = envValue("SCOUT_DESIGN_AUDIT_REPORT_ID", "1");
+  const liveMatchId = envValue(
+    "SCOUT_DESIGN_AUDIT_LIVE_MATCH_ID",
+    "NA1_5500000777",
+  );
   const exploreConversationId = envValue(
     "SCOUT_DESIGN_AUDIT_EXPLORE_CONVERSATION_ID",
     "1b4e28ba-2fa1-41d2-883f-0016d3cca427",
@@ -215,6 +219,22 @@ export function appRoutes(): AuditRoute[] {
       path: "/app/dares/settings",
       authenticated: true,
       golden: false,
+    },
+    // The seed's game in progress (backend testing/design-audit/live-roster.ts): a
+    // friend on Ahri in mid, six minutes in at the time of seeding.
+    {
+      name: "live",
+      surface: "app",
+      path: "/app/live",
+      authenticated: true,
+      golden: true,
+    },
+    {
+      name: "live-game",
+      surface: "app",
+      path: `/app/live/${liveMatchId}`,
+      authenticated: true,
+      golden: true,
     },
   ];
 }

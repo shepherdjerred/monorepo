@@ -11,12 +11,11 @@ import {
   buildSoftwareVideoGraph,
   buildVaapiVideoGraph,
 } from "@shepherdjerred/discord-video-stream";
-import {
-  resolveSubtitleForFile,
-  sweepSubtitleTempDir,
-} from "@shepherdjerred/streambot/sources/subtitle-io.ts";
+import { resolveSubtitleForFile } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
+import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle-process.ts";
 import { probeMedia } from "@shepherdjerred/streambot/sources/probe.ts";
 import { cleanRollingSrt } from "@shepherdjerred/streambot/sources/subtitle-clean.ts";
+import { writePgsSup } from "./pgs-fixture.ts";
 
 /**
  * Real-ffmpeg integration tests. These run ONLY via `bun run test:integration` — run it where
@@ -272,7 +271,7 @@ describe("resolveSubtitleForFile (real ffmpeg/ffprobe)", () => {
       NEVER_ABORT,
     );
     expect(resolved).toBeDefined();
-    if (resolved === undefined) throw new Error("expected a subtitle");
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
     const text = await readFile(resolved.path, "utf8");
     expect(text).toContain(CUE);
     // Staged to the controlled temp dir, not the user's path.
@@ -288,7 +287,7 @@ describe("resolveSubtitleForFile (real ffmpeg/ffprobe)", () => {
       NEVER_ABORT,
     );
     expect(resolved).toBeDefined();
-    if (resolved === undefined) throw new Error("expected a subtitle");
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
     const text = await readFile(resolved.path, "utf8");
     expect(text).toContain(CUE);
   });
@@ -301,7 +300,7 @@ describe("resolveSubtitleForFile (real ffmpeg/ffprobe)", () => {
       NEVER_ABORT,
     );
     expect(resolved).toBeDefined();
-    if (resolved === undefined) throw new Error("expected a subtitle");
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
     const text = await readFile(resolved.path, "utf8");
     expect(text).toContain(CUE);
     expect(text).not.toContain(FORCED_CUE);
@@ -315,7 +314,7 @@ describe("resolveSubtitleForFile (real ffmpeg/ffprobe)", () => {
       NEVER_ABORT,
     );
     expect(resolved).toBeDefined();
-    if (resolved === undefined) throw new Error("expected a subtitle");
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
     const text = await readFile(resolved.path, "utf8");
     expect(text).toContain(FORCED_CUE);
   });
@@ -361,7 +360,7 @@ describe("software video graph (real ffmpeg)", () => {
       undefined,
       NEVER_ABORT,
     );
-    if (resolved === undefined) throw new Error("expected a subtitle");
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
 
     const graph = buildSoftwareVideoGraph({
       width: 320,
@@ -397,7 +396,7 @@ describe("software video graph (real ffmpeg)", () => {
       undefined,
       NEVER_ABORT,
     );
-    if (resolved === undefined) throw new Error("expected a subtitle");
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
 
     // Seek to 5s — inside the 4–6s cue. Input -ss re-stamps PTS from 0, so without the setpts
     // sandwich libass looks up cues at t≈0 and renders nothing.
@@ -441,7 +440,7 @@ describe("software video graph (real ffmpeg)", () => {
       undefined,
       NEVER_ABORT,
     );
-    if (resolved === undefined) throw new Error("expected a subtitle");
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
 
     const graph = buildSoftwareVideoGraph({
       width: 320,
@@ -495,36 +494,39 @@ describe("software video graph (real ffmpeg)", () => {
   });
 });
 
+// Run the production VAAPI graph's canvas, subtitle and framesync behavior in
+// software by swapping only the GPU stages. The hardware filters themselves
+// are covered at runtime by the hardware-to-software retry.
+async function softwareVaapiSubtitleGraph() {
+  const resolved = await resolveSubtitleForFile(
+    config,
+    sidecarClip,
+    undefined,
+    NEVER_ABORT,
+  );
+  if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
+
+  const graph = buildVaapiVideoGraph({
+    width: 320,
+    height: 240,
+    frameRate: 10,
+    inputColor: "sdr",
+    subtitle: { path: resolved.path, startTime: 0 },
+  });
+  if (graph.kind !== "filterComplex") throw new Error("expected complex");
+  const proxy = graph.graph.map((chain) =>
+    chain
+      .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
+      .replace(",hwupload[subs]", "[subs]")
+      .replace("overlay_vaapi", "overlay"),
+  );
+  return { filters: proxy.join(";"), map: `[${graph.mapLabel}]` };
+}
+
 describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for software)", () => {
   test("the alpha canvas + libass + overlay composition renders the cue", async () => {
-    const resolved = await resolveSubtitleForFile(
-      config,
-      sidecarClip,
-      undefined,
-      NEVER_ABORT,
-    );
-    if (resolved === undefined) throw new Error("expected a subtitle");
-
-    // Take the REAL VAAPI graph and swap only the GPU-bound stages for software equivalents
-    // (scale_vaapi→scale, drop hwupload, overlay_vaapi→overlay). This validates everything CI can
-    // validate without a GPU: the canvas branch string (color@0 + format=bgra + subtitles alpha),
-    // path escaping, labels, and overlay framesync. tonemap_vaapi/overlay_vaapi themselves are
-    // covered at runtime by the HW→SW retry.
-    const graph = buildVaapiVideoGraph({
-      width: 320,
-      height: 240,
-      frameRate: 10,
-      inputColor: "sdr",
-      subtitle: { path: resolved.path, startTime: 0 },
-    });
-    if (graph.kind !== "filterComplex") throw new Error("expected complex");
-    const proxyGraph = graph.graph.map((chain) =>
-      chain
-        .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
-        .replace(",hwupload[subs]", "[subs]")
-        .replace("overlay_vaapi", "overlay"),
-    );
-    expect(proxyGraph.join(";")).not.toContain("vaapi");
+    const { filters, map } = await softwareVaapiSubtitleGraph();
+    expect(filters).not.toContain("vaapi");
 
     const out = path.join(dir, "overlay-proxy.png");
     await runCommand([
@@ -535,9 +537,9 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
       "-i",
       sidecarClip,
       "-filter_complex",
-      proxyGraph.join(";"),
+      filters,
       "-map",
-      `[${graph.mapLabel}]`,
+      map,
       "-frames:v",
       "1",
       out,
@@ -553,29 +555,8 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
   });
 
   test("the subtitle canvas terminates when the primary video reaches EOF", async () => {
-    const resolved = await resolveSubtitleForFile(
-      config,
-      sidecarClip,
-      undefined,
-      NEVER_ABORT,
-    );
-    if (resolved === undefined) throw new Error("expected a subtitle");
-
-    const graph = buildVaapiVideoGraph({
-      width: 320,
-      height: 240,
-      frameRate: 10,
-      inputColor: "sdr",
-      subtitle: { path: resolved.path, startTime: 0 },
-    });
-    if (graph.kind !== "filterComplex") throw new Error("expected complex");
-    const proxyGraph = graph.graph.map((chain) =>
-      chain
-        .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
-        .replace(",hwupload[subs]", "[subs]")
-        .replace("overlay_vaapi", "overlay"),
-    );
-    expect(proxyGraph.join(";")).toContain("overlay=shortest=1");
+    const { filters, map } = await softwareVaapiSubtitleGraph();
+    expect(filters).toContain("overlay=shortest=1");
 
     // No -frames:v or -t guard: ffmpeg must terminate because the three-second primary input
     // ended. Without shortest=1, the color source is infinite and this command hits the timeout.
@@ -586,15 +567,423 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
         "-i",
         sidecarClip,
         "-filter_complex",
-        proxyGraph.join(";"),
+        filters,
         "-map",
-        `[${graph.mapLabel}]`,
+        map,
         "-f",
         "null",
         "-",
       ],
       10_000,
     );
+  });
+});
+
+/** Input `-ss` (the streamer's seek) and output `-ss` (which frame after it to keep), in seconds. */
+type FrameTiming = { ss?: number; at: number };
+
+/**
+ * One 320x240 frame of `input` as raw 8-bit luma, through a `-filter_complex` graph or (without
+ * one) a plain scale. Raw luma rather than PNG: an overlay of a fully transparent subtitle frame
+ * still re-rounds chroma, so "no cue" has to be judged on pixel values, not on identical bytes.
+ */
+async function grabLuma(
+  input: string,
+  complex: {
+    readonly graph: readonly string[];
+    readonly mapLabel: string;
+  } | null,
+  out: string,
+  timing: FrameTiming,
+): Promise<Buffer> {
+  await runCommand([
+    config.ffmpegPath,
+    "-y",
+    ...(timing.ss === undefined ? [] : ["-ss", String(timing.ss)]),
+    "-i",
+    input,
+    ...(complex === null
+      ? ["-vf", "scale=320:240"]
+      : [
+          "-filter_complex",
+          complex.graph.join(";"),
+          "-map",
+          `[${complex.mapLabel}]`,
+        ]),
+    "-ss",
+    String(timing.at),
+    "-frames:v",
+    "1",
+    "-pix_fmt",
+    "gray",
+    "-f",
+    "rawvideo",
+    out,
+  ]);
+  return readFile(out);
+}
+
+/** The PGS fixture's cue box (an opaque white bar), in the 320x240 output. */
+const CUE_BOX = { x: 40, y: 190, width: 240, height: 30 };
+
+/** Mean absolute luma difference between two raw 320x240 frames inside {@link CUE_BOX}. */
+function cueLumaDelta(a: Buffer, b: Buffer): number {
+  let sum = 0;
+  for (let y = CUE_BOX.y; y < CUE_BOX.y + CUE_BOX.height; y++) {
+    for (let x = CUE_BOX.x; x < CUE_BOX.x + CUE_BOX.width; x++) {
+      const i = y * 320 + x;
+      sum += Math.abs((a[i] ?? 0) - (b[i] ?? 0));
+    }
+  }
+  return sum / (CUE_BOX.width * CUE_BOX.height);
+}
+
+/** Luma change a burn makes inside the cue box versus the same frame without subtitles. */
+async function cueDelta(
+  input: string,
+  complex: { readonly graph: readonly string[]; readonly mapLabel: string },
+  name: string,
+  timing: FrameTiming,
+): Promise<number> {
+  const burned = await grabLuma(
+    input,
+    complex,
+    path.join(dir, `${name}.gray`),
+    timing,
+  );
+  const plain = await grabLuma(
+    input,
+    null,
+    path.join(dir, `${name}-plain.gray`),
+    timing,
+  );
+  expect(burned).toHaveLength(320 * 240);
+  return cueLumaDelta(burned, plain);
+}
+
+/** A visible cue moves the box's luma by tens of levels; an empty overlay by rounding only. */
+const CUE_SHOWN = 40;
+const CUE_HIDDEN = 4;
+
+/** Render one frame of `input` through a `-filter_complex` graph (output-seeked to `at`), to a PNG. */
+async function grabComplexFrame(
+  input: string,
+  complex: { readonly graph: readonly string[]; readonly mapLabel: string },
+  out: string,
+  timing: FrameTiming,
+): Promise<Buffer> {
+  await runCommand([
+    config.ffmpegPath,
+    "-y",
+    ...(timing.ss === undefined ? [] : ["-ss", String(timing.ss)]),
+    "-i",
+    input,
+    "-filter_complex",
+    complex.graph.join(";"),
+    "-map",
+    `[${complex.mapLabel}]`,
+    "-ss",
+    String(timing.at),
+    "-frames:v",
+    "1",
+    out,
+  ]);
+  return readFile(out);
+}
+
+/** Swap the VAAPI graph's GPU-only stages for software equivalents (CI has no GPU). */
+function vaapiProxy(graph: readonly string[]): string[] {
+  return graph.map((chain) =>
+    chain
+      .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
+      .replace(",hwupload[subs]", "[subs]")
+      .replace("overlay_vaapi", "overlay"),
+  );
+}
+
+describe("image subtitles (PGS) are overlaid from the input stream (real ffmpeg)", () => {
+  /**
+   * 8s clip, subtitle track 0 = a forced Italian subrip, track 1 = an English PGS track whose cues
+   * are opaque white bars at 1–3s and 5–7s. The English-only-as-PGS shape of a Blu-ray remux.
+   */
+  let pgsClip: string;
+
+  beforeAll(async () => {
+    pgsClip = path.join(dir, "PGS Movie (2021) Remux-1080p.mkv");
+    const sup = path.join(dir, "pgs.sup");
+    await writePgsSup(sup, { width: 320, height: 240 }, [
+      { start: 1, end: 3, x: 40, y: 190, width: 240, height: 30 },
+      { start: 5, end: 7, x: 40, y: 190, width: 240, height: 30 },
+    ]);
+    const italian = path.join(dir, "ita.srt");
+    await writeFile(italian, SRT, "utf8");
+    await runCommand([
+      config.ffmpegPath,
+      "-y",
+      ...lavfi(8),
+      "-i",
+      italian,
+      "-i",
+      sup,
+      // Keep the PGS cue times as authored (ffmpeg otherwise rebases each input to start at 0).
+      "-copyts",
+      "-map",
+      "0:v",
+      "-map",
+      "1:a",
+      "-map",
+      "2:s",
+      "-map",
+      "3:s",
+      ...X264,
+      "-c:s",
+      "copy",
+      "-metadata:s:s:0",
+      "language=ita",
+      "-disposition:s:0",
+      "forced",
+      "-metadata:s:s:1",
+      "language=eng",
+      pgsClip,
+    ]);
+  }, 60_000);
+
+  test("the English PGS track is selected over the foreign text track and is not extracted", async () => {
+    const resolved = await resolveSubtitleForFile(
+      config,
+      pgsClip,
+      undefined,
+      NEVER_ABORT,
+    );
+    expect(resolved).toEqual({
+      kind: "image",
+      subtitleIndex: 1,
+      codec: "hdmv_pgs_subtitle",
+    });
+  });
+
+  test("software graph: the cue is burned while on screen and absent between cues", async () => {
+    const graph = buildSoftwareVideoGraph({
+      width: 320,
+      height: 240,
+      inputColor: "sdr",
+      subtitle: { kind: "image", streamIndex: 1 },
+      encoderOutFilters: [],
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected complex");
+    expect(
+      await cueDelta(pgsClip, graph, "pgs-during", { at: 2 }),
+    ).toBeGreaterThan(CUE_SHOWN);
+    expect(
+      await cueDelta(pgsClip, graph, "pgs-between", { at: 4 }),
+    ).toBeLessThan(CUE_HIDDEN);
+    expect(
+      await cueDelta(pgsClip, graph, "pgs-after-last", { at: 7.5 }),
+    ).toBeLessThan(CUE_HIDDEN);
+  });
+
+  test("seek: an input -ss keeps the subtitle stream in sync with the picture (no PTS compensation)", async () => {
+    const graph = buildSoftwareVideoGraph({
+      width: 320,
+      height: 240,
+      inputColor: "sdr",
+      subtitle: { kind: "image", streamIndex: 1 },
+      encoderOutFilters: [],
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected complex");
+    // Seek to 4s; 1.5s later the media clock is 5.5s — inside the second cue.
+    expect(
+      await cueDelta(pgsClip, graph, "pgs-seek-in-cue", { ss: 4, at: 1.5 }),
+    ).toBeGreaterThan(CUE_SHOWN);
+    // 0.5s after the seek the media clock is 4.5s — between cues, so nothing may show early.
+    expect(
+      await cueDelta(pgsClip, graph, "pgs-seek-before-cue", { ss: 4, at: 0.5 }),
+    ).toBeLessThan(CUE_HIDDEN);
+    // 2.5s after the seek the media clock is 6.5s; 3.5s after, 7.5s (the cue cleared at 7s).
+    expect(
+      await cueDelta(pgsClip, graph, "pgs-seek-late-cue", { ss: 4, at: 2.5 }),
+    ).toBeGreaterThan(CUE_SHOWN);
+    expect(
+      await cueDelta(pgsClip, graph, "pgs-seek-cleared", { ss: 4, at: 3.5 }),
+    ).toBeLessThan(CUE_HIDDEN);
+  });
+
+  test("VAAPI graph (GPU stages swapped for software): burns the cue and runs to the end of the video", async () => {
+    const graph = buildVaapiVideoGraph({
+      width: 320,
+      height: 240,
+      frameRate: 10,
+      inputColor: "sdr",
+      subtitle: { kind: "image", streamIndex: 1 },
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected complex");
+    const proxy = vaapiProxy(graph.graph);
+    expect(proxy.join(";")).not.toContain("vaapi");
+    expect(proxy.join(";")).toContain("overlay=eof_action=pass");
+
+    const complex = { graph: proxy, mapLabel: graph.mapLabel };
+    expect(
+      await cueDelta(pgsClip, complex, "pgs-vaapi-proxy", { at: 6 }),
+    ).toBeGreaterThan(CUE_SHOWN);
+    expect(
+      await cueDelta(pgsClip, complex, "pgs-vaapi-proxy-gap", { at: 4 }),
+    ).toBeLessThan(CUE_HIDDEN);
+
+    // The subtitle stream ends before the picture: every one of the 80 frames still comes out, and
+    // ffmpeg terminates on its own.
+    const md5 = path.join(dir, "pgs-vaapi-proxy.framemd5");
+    await runWithin(
+      [
+        config.ffmpegPath,
+        "-y",
+        "-i",
+        pgsClip,
+        "-filter_complex",
+        proxy.join(";"),
+        "-map",
+        `[${graph.mapLabel}]`,
+        "-f",
+        "framemd5",
+        md5,
+      ],
+      20_000,
+    );
+    const md5Text = await readFile(md5, "utf8");
+    const frames = md5Text
+      .split("\n")
+      .filter((line) => line.length > 0 && !line.startsWith("#"));
+    expect(frames).toHaveLength(80);
+  });
+});
+
+describe("ASS tracks keep styling and attached fonts (real ffmpeg)", () => {
+  const ASS = [
+    "[Script Info]",
+    "ScriptType: v4.00+",
+    "PlayResX: 320",
+    "PlayResY: 240",
+    "",
+    "[V4+ Styles]",
+    "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
+    "Style: Sign,Attached Sign Font,24,&H000000FF,&H000000FF,&H00FFFFFF,&H00000000,-1,0,0,0,100,100,0,0,1,2,0,7,10,10,10,1",
+    "",
+    "[Events]",
+    "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
+    String.raw`Dialogue: 0,0:00:00.00,0:00:03.00,Sign,,0,0,0,,{\pos(20,20)}SIGN TEXT`,
+    "",
+  ].join("\n");
+  /** Attachment payload: the extraction must reproduce it byte for byte. */
+  const FONT_BYTES = Buffer.from("not-really-a-font-but-dumped-verbatim");
+  let assClip: string;
+
+  beforeAll(async () => {
+    assClip = path.join(dir, "ASS Anime (2021) Remux-1080p.mkv");
+    const assPath = path.join(dir, "styled.ass");
+    await writeFile(assPath, ASS, "utf8");
+    const fontPath = path.join(dir, "Sign.ttf");
+    await writeFile(fontPath, FONT_BYTES);
+    await runCommand([
+      config.ffmpegPath,
+      "-y",
+      ...lavfi(3),
+      "-i",
+      assPath,
+      "-map",
+      "0:v",
+      "-map",
+      "1:a",
+      "-map",
+      "2:s",
+      ...X264,
+      "-c:s",
+      "copy",
+      "-metadata:s:s:0",
+      "language=eng",
+      "-attach",
+      fontPath,
+      "-metadata:s:t:0",
+      "mimetype=application/x-truetype-font",
+      assClip,
+    ]);
+  }, 60_000);
+
+  test("extracts the track as .ass (styles and positioning intact) and dumps the attached font", async () => {
+    const resolved = await resolveSubtitleForFile(
+      config,
+      assClip,
+      undefined,
+      NEVER_ABORT,
+    );
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
+    expect(resolved.path.endsWith(".ass")).toBe(true);
+    const text = await readFile(resolved.path, "utf8");
+    expect(text).toContain("[V4+ Styles]");
+    expect(text).toContain("Attached Sign Font");
+    expect(text).toContain(String.raw`{\pos(20,20)}SIGN TEXT`);
+    if (resolved.fontsDir === undefined) throw new Error("expected fonts");
+    expect(
+      Buffer.compare(
+        await readFile(path.join(resolved.fontsDir, "font-0.ttf")),
+        FONT_BYTES,
+      ),
+    ).toBe(0);
+    // Uncached: track and fonts live in one per-item directory, removed as a unit.
+    expect(resolved.cleanupPath).toBe(path.dirname(resolved.path));
+  });
+
+  test("libass burns the extracted track with fontsdir on both graph shapes", async () => {
+    const resolved = await resolveSubtitleForFile(
+      config,
+      assClip,
+      undefined,
+      NEVER_ABORT,
+    );
+    if (resolved?.kind !== "text" || resolved.fontsDir === undefined) {
+      throw new Error("expected a text subtitle with fonts");
+    }
+    const subtitle = {
+      path: resolved.path,
+      fontsDir: resolved.fontsDir,
+      startTime: 1,
+    };
+    const software = buildSoftwareVideoGraph({
+      width: 320,
+      height: 240,
+      inputColor: "sdr",
+      subtitle,
+      encoderOutFilters: [],
+    });
+    if (software.kind !== "filterChain") throw new Error("expected chain");
+    expect(software.filters.join(",")).toContain("fontsdir=");
+    const withSubs = await grabFrame(
+      assClip,
+      software.filters,
+      path.join(dir, "ass-sw.png"),
+      1,
+    );
+    const without = await grabFrame(
+      assClip,
+      ["scale=320:240"],
+      path.join(dir, "ass-without.png"),
+      1,
+    );
+    expect(Buffer.compare(withSubs, without)).not.toBe(0);
+
+    const vaapi = buildVaapiVideoGraph({
+      width: 320,
+      height: 240,
+      frameRate: 10,
+      inputColor: "sdr",
+      subtitle,
+    });
+    if (vaapi.kind !== "filterComplex") throw new Error("expected complex");
+    const gpu = await grabComplexFrame(
+      assClip,
+      { graph: vaapiProxy(vaapi.graph), mapLabel: vaapi.mapLabel },
+      path.join(dir, "ass-vaapi-proxy.png"),
+      { ss: 1, at: 0 },
+    );
+    expect(Buffer.compare(gpu, without)).not.toBe(0);
   });
 });
 

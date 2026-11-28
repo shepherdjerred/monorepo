@@ -58,6 +58,7 @@ const ALL_TARGET_INPUTS = [
   "packages/woodpecker-config-extension/src/pipeline/lanes/playwright.ts",
   "ci/scripts/bun-install.sh",
   "ci/scripts/selectors/select-image-targets-lockfile.ts",
+  "ci/scripts/selection/playwright-partition.ts",
   "ci/scripts/selection/playwright-targets.ts",
   "ci/scripts/selection/run-playwright.ts",
   "ci/scripts/selectors/select-image-targets-workspaces.ts",

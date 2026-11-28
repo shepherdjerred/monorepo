@@ -18,6 +18,7 @@ import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 import { CI_SCHEDULES } from "./ci-schedule-definitions.ts";
 import { OPS_CI_DASHBOARD_SCHEDULES } from "./ops-ci-dashboard.ts";
 import { TRACKER_ATTACHMENT_SCHEDULE } from "./tracker-attachments.ts";
+import { SEAWEEDFS_LIFECYCLE_SCHEDULE } from "./seaweedfs-lifecycle-schedule.ts";
 import { TEMPORAL_FAILURE_WATCH_SCHEDULE } from "./temporal-failure-watch.ts";
 import { DELIVERY_DISPATCH_SCHEDULE } from "./delivery.ts";
 import { MEDIA_SCHEDULES } from "./media.ts";
@@ -88,6 +89,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   MEDIA_QUALITY_GUIDE_SCHEDULE,
   ...MEDIA_SUBTITLE_MAINTENANCE_SCHEDULES_V1,
   TRACKER_ATTACHMENT_SCHEDULE,
+  SEAWEEDFS_LIFECYCLE_SCHEDULE,
   TEMPORAL_FAILURE_WATCH_SCHEDULE,
   DELIVERY_DISPATCH_SCHEDULE,
   {

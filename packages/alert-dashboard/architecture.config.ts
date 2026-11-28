@@ -5,7 +5,11 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * this list and the directories on disk disagree, so a module can never ship
  * without its boundary.
  */
-export const MODULE_IDS: readonly string[] = ["incidents", "traces"];
+export const MODULE_IDS: readonly string[] = [
+  "incidents",
+  "traces",
+  "experiments",
+];
 
 /** The core module's inner layers, which no other module may reach into. */
 const CORE_INNER_LAYERS = ["domain", "application", "infrastructure"];

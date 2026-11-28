@@ -54,7 +54,8 @@ export default defineConfig({
         ],
       ]
     : "list",
-  use: { baseURL, trace: "retain-on-failure" },
+  // CI only needs a trace for the retry of a failed test; passing runs write none.
+  use: { baseURL, trace: ci ? "on-first-retry" : "retain-on-failure" },
   // A spec named `*.desktop.spec.ts` or `*.phone.spec.ts` tests something
   // only that layout has (the sidebar, the tab bar) and runs in that project
   // alone. Every other spec runs in both.

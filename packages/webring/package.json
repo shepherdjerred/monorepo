@@ -50,20 +50,17 @@
     "@tsconfig/node24": "^24.0.4",
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "1.4.5",
-    "@types/express": "^5.0.6",
     "@types/node": "^26.1.1",
     "@types/sanitize-html": "^2.16.1",
     "eslint": "^10.7.0",
-    "express": "^5.2.1",
-    "globals": "^17.5.0",
     "jiti": "^2.7.0",
     "typedoc": "^0.28.19",
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.3",
     "typescript": "^6.0.3",
-    "vitest": "5.0.5",
+    "vitest": "5.1.2",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "@vitest/coverage-istanbul": "5.1.2"
   },
   "files": [
     "dist",

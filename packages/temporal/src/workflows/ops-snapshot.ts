@@ -31,6 +31,7 @@ export const OPS_COLLECTORS: readonly (readonly [SourceId, CollectorName])[] = [
   ["github", "collectOpsGithub"],
   ["renovate", "collectOpsRenovate"],
   ["tracker", "collectOpsTracker"],
+  ["experiments", "collectOpsExperiments"],
   ["bugsink", "collectOpsBugsink"],
   ["posthog", "collectOpsPosthog"],
   ["probes", "collectOpsProbes"],
@@ -103,48 +104,54 @@ function failureReason(error: unknown): string {
 export const OPS_TRACES_PATCH = "ops-traces-collector";
 export const OPS_TEMPORAL_PATCH = "ops-temporal-schedules-collector";
 export const OPS_TRACKER_PATCH = "ops-tracker-source";
+export const OPS_EXPERIMENTS_PATCH = "ops-experiments-collector";
 
 export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
   const { collectors, assembleAndPublishOpsSnapshot } = activitiesForRun();
   const collectTraces = patched(OPS_TRACES_PATCH);
   const collectTemporal = patched(OPS_TEMPORAL_PATCH);
   const collectTracker = patched(OPS_TRACKER_PATCH);
+  const collectExperiments = patched(OPS_EXPERIMENTS_PATCH);
   const outcomes = await Promise.all(
-    OPS_COLLECTORS.map(
-      async ([source, collector]): Promise<OpsCollectorOutcome> => {
-        const recordedSource =
-          source === "tracker" && !collectTracker ? "linear" : source;
-        const recordedCollector =
-          source === "tracker" && !collectTracker
-            ? "collectOpsLinear"
-            : collector;
-        if (
-          (source === "traces" && !collectTraces) ||
-          (source === "temporal" && !collectTemporal)
-        ) {
-          return {
-            source,
-            ok: false,
-            error: "not collected by this workflow build",
-          };
+    OPS_COLLECTORS.filter(
+      ([source]) => source !== "experiments" || collectExperiments,
+    ).map(async ([source, collector]): Promise<OpsCollectorOutcome | null> => {
+      const recordedSource =
+        source === "tracker" && !collectTracker ? "linear" : source;
+      const recordedCollector =
+        source === "tracker" && !collectTracker
+          ? "collectOpsLinear"
+          : collector;
+      if (
+        (source === "traces" && !collectTraces) ||
+        (source === "temporal" && !collectTemporal)
+      ) {
+        return {
+          source,
+          ok: false,
+          error: "not collected by this workflow build",
+        };
+      }
+      try {
+        const result = await collectors[recordedCollector]();
+        return result === null
+          ? null
+          : { source: recordedSource, ok: true, result };
+      } catch (error: unknown) {
+        if (isCancellation(error)) {
+          throw error;
         }
-        try {
-          const result = await collectors[recordedCollector]();
-          return { source: recordedSource, ok: true, result };
-        } catch (error: unknown) {
-          if (isCancellation(error)) {
-            throw error;
-          }
-          return {
-            source: recordedSource,
-            ok: false,
-            error: failureReason(error),
-          };
-        }
-      },
-    ),
+        return {
+          source: recordedSource,
+          ok: false,
+          error: failureReason(error),
+        };
+      }
+    }),
   );
-  return await assembleAndPublishOpsSnapshot({ outcomes });
+  return await assembleAndPublishOpsSnapshot({
+    outcomes: outcomes.filter((outcome) => outcome !== null),
+  });
 }
 
 export async function runOpsDigest(input: { kind: OpsDigestKind }) {

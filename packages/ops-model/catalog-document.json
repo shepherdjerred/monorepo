@@ -235,6 +235,12 @@
       "title": "Artifacts",
       "kind": "product",
       "package": "artifacts"
+    },
+    {
+      "id": "experiments",
+      "title": "Experiments",
+      "kind": "product",
+      "package": "experiments"
     }
   ],
   "services": [
@@ -2750,6 +2756,34 @@
           "artifacts": "inactive"
         },
         "charts": ["artifacts"]
+      }
+    },
+    {
+      "id": "experiments",
+      "title": "Experiments",
+      "package": "experiments",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "experiments",
+      "components": [
+        {
+          "name": "image:experiments",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:experiments",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["experiments"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "experiments": "inactive"
+        },
+        "charts": ["experiments"]
       }
     }
   ],

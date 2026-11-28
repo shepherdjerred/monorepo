@@ -41,7 +41,7 @@
         "versioning": "docker",
         "packageName": "library/swift"
       },
-      "value": "6.3.3-jammy@sha256:8346ae8fdc6f1dcd4c2b228b9eb7e55ef98743a4abead5765b806b0bcae74de5",
+      "value": "6.4.3-jammy@sha256:a76121ceda0315af40b7c15e71a8447248a318787b0d8b41b212a2812279542f",
       "notes": [
         "Build-only SwiftLint compiler against a libc compatible with Debian Bookworm. Only its declared SourceKit/runtime libraries and licenses enter the final CI image."
       ]

@@ -4,6 +4,7 @@ import { publicHostname, tailnetService } from "homelab/src/platform-model.ts";
 import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { createMinecraftPublicStatus } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/public-status.ts";
+import { createMinecraftTsmcEgress } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/tsmc-egress.ts";
 import { Size } from "cdk8s";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
@@ -86,6 +87,7 @@ export function minecraftChartRepository(
 export function createMinecraftTsmcResources(chart: Chart): void {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   createMinecraftPublicStatus(chart);
+  createMinecraftTsmcEgress(chart);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
   // the env-var ref below): DISCORD_BOT_TOKEN. Channel routing lives in Git.
   onePasswordSecret(
