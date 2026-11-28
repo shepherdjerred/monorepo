@@ -7,7 +7,7 @@
     "lint": "bunx --no-install eslint .",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "pretypecheck": "bun --no-install run --cwd ../helm-types build",
-    "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run && bun run test:gpu-resources",
+    "test": "bun run scripts/run-test.ts",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
     "test:bazarr": "bun run scripts/test-bazarr-providers.ts",
@@ -55,6 +55,7 @@
   "devDependencies": {
     "@shepherdjerred/delivery": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/incidents": "workspace:*",
     "@types/bun": "1.4.5",
     "@types/lodash": "^4.17.24",
     "@typescript/native": "npm:typescript@7.0.2",

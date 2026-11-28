@@ -811,6 +811,27 @@ describe("Feature flag gating, LLM synthesis fallback, and S3 pipeline", () => {
   test("persists items and latest-index.json to S3, reuses cache hits, and enforces priority + miss cap", async () => {
     const { store, objects } = makeInMemoryStore();
     const fixedNow = new Date("2026-11-21T22:30:00.000Z");
+    await store.putLatestIndex({
+      updatedAt: fixedNow.toISOString(),
+      deltasByBranch: {
+        "renovate/rate-limited-pkg": {
+          cacheKey: "previous-baseline",
+          generatedAt: fixedNow.toISOString(),
+          runningVersion: null,
+          pinnedVersion: "1.0.0",
+          targetVersion: "1.2.0",
+          effectiveFromVersion: "1.0.0",
+          versionsBehindCount: 2,
+          summary: "Stale cached baseline",
+          impactLevel: "low",
+          breakingChanges: [],
+          highlights: [],
+          repoRelevance: "Dependency Dashboard",
+          evidenceSource: "none",
+          releaseUrls: [],
+        },
+      },
+    });
 
     const firstOrder: string[] = [];
     const firstRun = await runRenovateDeltaEnrichmentPipeline(

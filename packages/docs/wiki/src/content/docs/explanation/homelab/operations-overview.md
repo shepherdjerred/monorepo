@@ -185,6 +185,24 @@ cached delta without repeating GitHub or LLM calls. During the five-minute
 joins `latest-index.json` in one S3 read and degrades to unenriched rows if S3
 is unreachable.
 
+## A red main also reaches Incidents
+
+The CI collector posts `main`'s verdict on every run as a `main-ci` signal to
+Hub's Incidents module (`/api/incidents/internal/signals`, Bearer
+`OPS_INGEST_TOKEN`) from
+[`main-ci-signal.ts`](packages/temporal/src/activities/ops/incidents/main-ci-signal.ts).
+A red verdict fires with a suspect read from the failing commit: the squash
+subject's `(#N)`, the last `Claude-Session:` trailer, and the Woodpecker author,
+so the session that broke `main` can take command. A green verdict clears the
+same `main-ci:main` key. The server
+[applies signals idempotently by key](packages/incidents/src/domain/signals.ts),
+so retries are harmless.
+
+The signal is an optional output of the CI source. A failed post never fails
+the snapshot; it is logged and sets `incidents_signal_post_ok` to 0.
+[`IncidentsSignalDeliveryFailing`](packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/ops-snapshot.ts)
+pages once every post has failed for 30 minutes.
+
 ## The service catalog is the join key
 
 Triage and product questions only work if names from different systems meet.

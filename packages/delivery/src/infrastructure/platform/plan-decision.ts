@@ -10,7 +10,10 @@ import {
   ApproveTofuPlanSchema,
   type ApproveTofuPlan,
 } from "#shared/model/route-contract.ts";
-import { PLAN_APPROVAL_STAGE_KEY } from "#shared/model/stage-keys.ts";
+import {
+  PLAN_APPROVAL_STAGE_KEY,
+  stepStageKey,
+} from "#shared/model/stage-keys.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import {
   audit,
@@ -197,6 +200,19 @@ export async function approveTofuPlan(
         input,
         actor,
       });
+    const approveStep = await tx.stage.findUnique({
+      where: {
+        deploymentId_key: {
+          deploymentId,
+          key: stepStageKey("step", "approve"),
+        },
+      },
+    });
+    if (approveStep?.status === "succeeded")
+      throw new DeliveryError(
+        "CONFLICT",
+        "This deployment's approve step has already settled",
+      );
     const pending = undecided(row, row.approval);
     const plan = await namedPlan(tx, deploymentId, input);
     const rejected = input.decision === "rejected";

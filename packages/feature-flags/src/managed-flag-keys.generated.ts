@@ -202,6 +202,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout-explore-model-picker-enabled",
   "scout-evidence-recovery-enabled",
   "scout-participant-crawl-enabled",
+  "scout-rank-refresh-enabled",
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
   "scout_client_result_recovery",
@@ -279,6 +280,10 @@ export type BirmelFlagKey = (typeof BIRMEL_FLAG_KEYS)[number];
 export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "player-card-enabled",
   "streambot-assistant-v2-enabled",
+  "streambot-audio-dialog-downmix-enabled",
+  "streambot-audio-live-resync-enabled",
+  "streambot-audio-loudness-normalization-enabled",
+  "streambot-audio-track-ranking-enabled",
   "streambot-automatic-channel-routing-enabled",
   "streambot-history-enabled",
   "streambot-music-over-voice-enabled",
@@ -380,6 +385,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "the-storm-rwf-recording-archive-enabled",
   "temporal-renovate-llm-delta-enabled",
   "temporal-code-review-enabled",
+  "temporal-renovate-publishing-enabled",
   "temporal-report-auto-remediation-enabled",
 ] as const;
 
@@ -412,7 +418,12 @@ export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
 export const ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS = [
   "alert-dashboard-email-enabled",
+  "alert-dashboard-incidents-enabled",
+  "alert-dashboard-incidents-auto-open-alertmanager-enabled",
+  "alert-dashboard-incidents-auto-open-main-ci-enabled",
+  "alert-dashboard-incidents-takeover-spawn-enabled",
   "alert-dashboard-daily-digest-quiet-clear",
+  "alert-dashboard-ci-jobs-enabled",
 ] as const;
 
 export type AlertDashboardBooleanFlagKey =
@@ -425,6 +436,9 @@ export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [
   "alert-dashboard-incident-email-to",
   "alert-dashboard-digest-email-from",
   "alert-dashboard-digest-email-to",
+  "alert-dashboard-incidents-takeover-grace-seconds",
+  "alert-dashboard-incidents-dispatch-lease-seconds",
+  "alert-dashboard-incidents-takeover-provider",
 ] as const;
 
 export type AlertDashboardVariantFlagKey =

@@ -29,6 +29,9 @@ const config = [
     rules: {
       "custom-rules/require-ts-extensions": "off",
       "custom-rules/no-type-assertions": "off",
+      "custom-rules/prefer-bun-apis": "off",
+      "custom-rules/prefer-zod-validation": "off",
+      "no-restricted-imports": "off",
       "@typescript-eslint/triple-slash-reference": "off",
       "@typescript-eslint/no-deprecated": "off",
       "@typescript-eslint/no-misused-spread": "off",
@@ -41,6 +44,7 @@ const config = [
     files: ["src/rules/*.ts"],
     rules: {
       "custom-rules/no-type-assertions": "off",
+      "custom-rules/prefer-bun-apis": "off",
       "custom-rules/require-ts-extensions": "off",
       "@typescript-eslint/no-unsafe-enum-comparison": "off",
       "unicorn/consistent-function-scoping": "off",

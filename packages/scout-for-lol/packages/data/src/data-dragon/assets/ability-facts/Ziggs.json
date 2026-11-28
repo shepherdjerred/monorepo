@@ -18,7 +18,30 @@
         ]
       },
       "resolvedDescription": "Periodically, Ziggs' next basic attack deals bonus magic damage. This cooldown is reduced whenever Ziggs uses an ability.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "ziggspassiveattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Bouncing Bomb",
@@ -104,7 +127,58 @@
         ]
       },
       "resolvedDescription": "Ziggs throws a bouncing bomb that deals 80/130/180/230/280 (+60/65/70/75/80% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 125,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": [
+          {
+            "name": "ziggsqspell",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ziggsqspell2",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ziggsqspell3",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Satchel Charge",
@@ -211,7 +285,15 @@
         ]
       },
       "resolvedDescription": "Ziggs flings an explosive charge that detonates after 4 seconds, or when this ability is Recast. It deals 70/105/140/175/210 (+50% AP) magic damage to enemies and Knocks them Back. Ziggs is also knocked away, but takes no damage. Satchel Charge will automatically destroy towers below 25/27.5/30/32.5/35% of their Health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 275,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Hexplosive Minefield",
@@ -297,7 +379,44 @@
         ]
       },
       "resolvedDescription": "Ziggs scatters proximity mines that detonate on enemy contact, dealing 30/70/110/150/190 (+25/30/35/40/45% AP) magic damage and Slows by 10/20/30/40/50% for 1.5 seconds. Mines last 10 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 235,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": [
+          {
+            "name": "ziggse2",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1550,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ziggse3",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Mega Inferno Bomb",
@@ -346,7 +465,86 @@
         ]
       },
       "resolvedDescription": "Ziggs hurls his ultimate creation, dealing 300/500/700 (+100% AP) magic damage in the center of the blast radius, or 195/325/455 (+65% AP) magic damage at the edge.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 250,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": [
+          {
+            "name": "ziggsrboom",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ziggsrboomextralong",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 2250,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ziggsrboomlong",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 2250,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ziggsrboommedium",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 2250,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ziggsrtimer",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

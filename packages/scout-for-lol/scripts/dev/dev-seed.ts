@@ -1,6 +1,12 @@
 import { cp, mkdir, rm, rename } from "node:fs/promises";
 import path from "node:path";
-import { publishedBuildId, seedLakeDir, seedRoot } from "./dev-lake-seed.ts";
+import {
+  DEV_SEED_REFRESH_COMMAND,
+  describeBuildSchemaMismatch,
+  inspectPublishedBuild,
+  seedLakeDir,
+  seedRoot,
+} from "./dev-lake-seed.ts";
 
 /**
  * Fill the machine-wide report-lake seed that every checkout copies from.
@@ -16,7 +22,7 @@ import { publishedBuildId, seedLakeDir, seedRoot } from "./dev-lake-seed.ts";
 const FLAGS = ["--from-checkout", "--status"] as const;
 type Flag = (typeof FLAGS)[number];
 
-function parseFlags(argv: string[]): Set<Flag> {
+export function parseFlags(argv: readonly string[]): Set<Flag> {
   const flags = new Set<Flag>();
   for (const argument of argv) {
     const known = FLAGS.find((flag) => flag === argument);
@@ -30,19 +36,30 @@ function parseFlags(argv: string[]): Set<Flag> {
   return flags;
 }
 
-async function describe(lakeDir: string, label: string): Promise<string> {
-  const buildId = await publishedBuildId(lakeDir);
-  return buildId === null
-    ? `${label}: no published build (${lakeDir})`
-    : `${label}: build ${buildId} (${lakeDir})`;
+export async function describe(
+  lakeDir: string,
+  label: string,
+): Promise<string> {
+  const inspection = await inspectPublishedBuild(lakeDir);
+  if (inspection === null) {
+    return `${label}: no published build (${lakeDir})`;
+  }
+  return inspection.compatible
+    ? `${label}: build ${inspection.buildId} [schema: ${inspection.schemaStatus}] (${lakeDir})`
+    : `${label}: build ${inspection.buildId} [incompatible: ${describeBuildSchemaMismatch(inspection)} — refresh with \`${DEV_SEED_REFRESH_COMMAND}\`] (${lakeDir})`;
 }
 
 /** Copy a checkout's lake into the seed, atomically swapping the old one out. */
-async function publishFromCheckout(checkoutLake: string): Promise<void> {
-  const buildId = await publishedBuildId(checkoutLake);
-  if (buildId === null) {
+export async function publishFromCheckout(checkoutLake: string): Promise<void> {
+  const inspection = await inspectPublishedBuild(checkoutLake);
+  if (inspection === null) {
     throw new Error(
       `${checkoutLake} has no published build to seed from. Run a rebuild there first, or run this without --from-checkout.`,
+    );
+  }
+  if (!inspection.compatible) {
+    throw new Error(
+      `Refusing to seed from incompatible build ${inspection.buildId} at ${checkoutLake} (${describeBuildSchemaMismatch(inspection)}). Run \`${DEV_SEED_REFRESH_COMMAND}\` instead.`,
     );
   }
   const seed = seedLakeDir();
@@ -52,7 +69,32 @@ async function publishFromCheckout(checkoutLake: string): Promise<void> {
   await cp(checkoutLake, staging, { recursive: true });
   await rm(seed, { recursive: true, force: true });
   await rename(staging, seed);
-  console.log(`Seeded build ${buildId} into ${seed}`);
+  console.log(`Seeded build ${inspection.buildId} into ${seed}`);
+}
+
+type SpawnedProcess = Pick<Bun.Subprocess, "exited">;
+type SpawnSeedCommand = (
+  command: readonly string[],
+  options: {
+    readonly cwd: string;
+    readonly env: Record<string, string | undefined>;
+  },
+) => SpawnedProcess;
+
+function defaultSpawnSeedCommand(
+  command: readonly string[],
+  options: {
+    readonly cwd: string;
+    readonly env: Record<string, string | undefined>;
+  },
+): SpawnedProcess {
+  return Bun.spawn([...command], {
+    cwd: options.cwd,
+    env: options.env,
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
 }
 
 /**
@@ -61,11 +103,14 @@ async function publishFromCheckout(checkoutLake: string): Promise<void> {
  * Runs the backend's own compactor rather than reimplementing it — the lake
  * layout and the CURRENT-pointer publish protocol have exactly one owner.
  */
-async function rebuildIntoSeed(scoutRoot: string): Promise<void> {
+export async function rebuildIntoSeed(
+  scoutRoot: string,
+  spawnProcess: SpawnSeedCommand = defaultSpawnSeedCommand,
+): Promise<void> {
   const seed = seedLakeDir();
   await mkdir(seed, { recursive: true });
   console.log(`Rebuilding the report lake into ${seed} (walks S3; not quick)`);
-  const child = Bun.spawn(
+  const child = spawnProcess(
     [
       "op",
       "run",
@@ -82,9 +127,6 @@ async function rebuildIntoSeed(scoutRoot: string): Promise<void> {
         REPORT_LAKE_DIR: seed,
         AWS_PROFILE: Bun.env["AWS_PROFILE"] ?? "seaweedfs",
       },
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
     },
   );
   const code = await child.exited;
@@ -96,15 +138,18 @@ async function rebuildIntoSeed(scoutRoot: string): Promise<void> {
   console.log(await describe(seed, "seed"));
 }
 
-if (import.meta.main) {
-  const scoutRoot = path.resolve(import.meta.dir, "../..");
+export async function runDevSeedCli(
+  argv: readonly string[],
+  scoutRoot: string = path.resolve(import.meta.dir, "../.."),
+  spawnProcess: SpawnSeedCommand = defaultSpawnSeedCommand,
+): Promise<void> {
   const checkoutLake = path.join(
     scoutRoot,
     "packages",
     "backend",
     "report-lake",
   );
-  const flags = parseFlags(Bun.argv.slice(2));
+  const flags = parseFlags(argv);
 
   if (flags.has("--status")) {
     console.log(await describe(seedLakeDir(), "seed"));
@@ -112,6 +157,10 @@ if (import.meta.main) {
   } else if (flags.has("--from-checkout")) {
     await publishFromCheckout(checkoutLake);
   } else {
-    await rebuildIntoSeed(scoutRoot);
+    await rebuildIntoSeed(scoutRoot, spawnProcess);
   }
+}
+
+if (import.meta.main) {
+  await runDevSeedCli(Bun.argv.slice(2));
 }

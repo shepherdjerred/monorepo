@@ -9,8 +9,13 @@ import { IdentifierSchema } from "#shared/artifact-contract.ts";
  * are that deployment's evidence (V3).
  */
 
-/** The only tokens an evidence query may carry; the executor renders them from the accepted artifact. */
-export const MONITOR_PLACEHOLDERS = ["window", "version", "gitSha"] as const;
+/** The only tokens an evidence query may carry; values come from the accepted deployment. */
+export const MONITOR_PLACEHOLDERS = [
+  "window",
+  "version",
+  "gitSha",
+  "acceptedAt",
+] as const;
 const placeholderPattern = /\$([A-Za-z_]\w*)/gu;
 
 /** Placeholder names in a query that are not in `MONITOR_PLACEHOLDERS`. */
@@ -30,7 +35,7 @@ export const MonitorQuerySchema = z
     if (unknown.length > 0) {
       context.addIssue({
         code: "custom",
-        message: `Monitor queries may only use $window, $version and $gitSha; found $${unknown.join(", $")}`,
+        message: `Monitor queries may only use ${MONITOR_PLACEHOLDERS.map((name) => `$${name}`).join(", ")}; found $${unknown.join(", $")}`,
       });
     }
   });
@@ -246,7 +251,13 @@ export type MonitorStatus = z.infer<typeof MonitorStatusSchema>;
 
 export function renderMonitorQuery(
   query: string,
-  values: Record<(typeof MONITOR_PLACEHOLDERS)[number], string>,
+  values: Record<
+    Exclude<(typeof MONITOR_PLACEHOLDERS)[number], "acceptedAt">,
+    string
+  > & {
+    /** Acceptance time in Unix seconds, including fractional milliseconds. */
+    acceptedAt?: number;
+  },
 ): string {
   return query.replaceAll(placeholderPattern, (token, name: string) => {
     switch (name) {
@@ -256,6 +267,13 @@ export function renderMonitorQuery(
         return values.version;
       case "gitSha":
         return values.gitSha;
+      case "acceptedAt":
+        if (!Number.isFinite(values.acceptedAt)) {
+          throw new TypeError(
+            "Monitor placeholder $acceptedAt requires finite epoch seconds",
+          );
+        }
+        return String(values.acceptedAt);
       default:
         throw new Error(`Unknown monitor placeholder ${token}`);
     }

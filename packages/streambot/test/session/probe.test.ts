@@ -57,6 +57,21 @@ describe("isHdrTransfer", () => {
   });
 });
 
+/** A 5.1 E-AC-3 source whose video stream carries the given ffprobe fields. */
+function videoOf(stream: Record<string, unknown>) {
+  return parseFfprobeOutput({
+    streams: [
+      { codec_type: "video", codec_name: "h264", ...stream },
+      {
+        codec_type: "audio",
+        codec_name: "eac3",
+        channels: 6,
+        channel_layout: "5.1(side)",
+      },
+    ],
+  });
+}
+
 describe("parseFfprobeOutput", () => {
   test("selects the complete A/V rendition when an HLS master has empty first tracks", () => {
     const info = parseFfprobeOutput({
@@ -118,6 +133,99 @@ describe("parseFfprobeOutput", () => {
     expect(info?.durationSeconds).toBeCloseTo(10_862.123, 2);
   });
 
+  describe("display properties", () => {
+    test("a scope film keeps its 2.39:1 display aspect", () => {
+      const info = videoOf({ width: 1920, height: 804 });
+      expect(info?.video?.displayAspect).toBeCloseTo(2.388, 3);
+      expect(info?.video?.rotation).toBe(0);
+    });
+
+    test("anamorphic pixels widen the display aspect (16:9 NTSC DVD)", () => {
+      const info = videoOf({
+        width: 720,
+        height: 480,
+        sample_aspect_ratio: "32:27",
+      });
+      expect(info?.video?.displayAspect).toBeCloseTo(16 / 9, 3);
+    });
+
+    test("an unknown 0:1 pixel aspect is treated as square", () => {
+      const info = videoOf({
+        width: 1440,
+        height: 1080,
+        sample_aspect_ratio: "0:1",
+      });
+      expect(info?.video?.displayAspect).toBeCloseTo(4 / 3, 3);
+    });
+
+    test("a display-matrix rotation of -90 makes a landscape grid portrait", () => {
+      const info = videoOf({
+        width: 1920,
+        height: 1080,
+        side_data_list: [{ side_data_type: "Display Matrix", rotation: -90 }],
+      });
+      expect(info?.video?.rotation).toBe(90);
+      expect(info?.video?.displayAspect).toBeCloseTo(9 / 16, 3);
+    });
+
+    test("the legacy rotate tag is honoured when there is no display matrix", () => {
+      const info = videoOf({
+        width: 1920,
+        height: 1080,
+        tags: { rotate: "270" },
+      });
+      expect(info?.video?.rotation).toBe(270);
+      expect(info?.video?.displayAspect).toBeCloseTo(9 / 16, 3);
+    });
+
+    test("upside-down video keeps its landscape aspect", () => {
+      const info = videoOf({
+        width: 1920,
+        height: 1080,
+        side_data_list: [{ rotation: 180 }],
+      });
+      expect(info?.video?.rotation).toBe(180);
+      expect(info?.video?.displayAspect).toBeCloseTo(16 / 9, 3);
+    });
+
+    test("reads frame rate, interlacing, and colour", () => {
+      const info = videoOf({
+        width: 720,
+        height: 480,
+        field_order: "tt",
+        avg_frame_rate: "30000/1001",
+        r_frame_rate: "60000/1001",
+        color_space: "smpte170m",
+        color_range: "tv",
+      });
+      expect(info?.video?.interlaced).toBe(true);
+      expect(info?.video?.frameRate).toBeCloseTo(29.97, 2);
+      expect(info?.video?.colorSpace).toBe("smpte170m");
+      expect(info?.video?.colorRange).toBe("tv");
+    });
+
+    test("falls back to r_frame_rate when the average is 0/0", () => {
+      const info = videoOf({
+        width: 1920,
+        height: 1080,
+        field_order: "progressive",
+        avg_frame_rate: "0/0",
+        r_frame_rate: "24000/1001",
+      });
+      expect(info?.video?.interlaced).toBe(false);
+      expect(info?.video?.frameRate).toBeCloseTo(23.976, 3);
+    });
+
+    test("reports the selected audio stream's channel layout", () => {
+      const info = videoOf({ width: 1920, height: 1080 });
+      expect(info?.audio).toEqual({ channels: 6, channelLayout: "5.1(side)" });
+    });
+
+    test("a stream without usable dimensions has no display properties", () => {
+      expect(videoOf({ width: 0, height: 0 })?.video).toBeUndefined();
+    });
+  });
+
   test("falls back to 'unknown' codecs when streams are missing", () => {
     const info = parseFfprobeOutput({ streams: [] });
     expect(info?.videoCodec).toBe("unknown");
@@ -129,5 +237,188 @@ describe("parseFfprobeOutput", () => {
   test("returns null for malformed input", () => {
     expect(parseFfprobeOutput({ streams: "not-an-array" })).toBeNull();
     expect(parseFfprobeOutput(null)).toBeNull();
+  });
+});
+
+const ENGLISH = { languages: ["en", "eng", "en-US"] };
+
+function audioTrack(
+  channels: number,
+  extra: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    codec_type: "audio",
+    codec_name: "ac3",
+    channels,
+    channel_layout: channels === 6 ? "5.1(side)" : "stereo",
+    ...extra,
+  };
+}
+
+function rankedAudio(
+  streams: Record<string, unknown>[],
+  preferences = ENGLISH,
+) {
+  return parseFfprobeOutput(
+    {
+      streams: [{ codec_type: "video", width: 1920, height: 1080 }, ...streams],
+    },
+    preferences,
+  )?.ranked;
+}
+
+describe("audio track ranking", () => {
+  test("the default disposition wins over a richer later track", () => {
+    expect(
+      rankedAudio([
+        audioTrack(2, { disposition: { default: 1 } }),
+        audioTrack(6, { disposition: { default: 0 } }),
+      ])?.audioStreamIndex,
+    ).toBe(0);
+  });
+
+  test("then the preferred language, canonicalised like subtitles (eng == en)", () => {
+    const ranked = rankedAudio([
+      audioTrack(6, { tags: { language: "jpn" } }),
+      audioTrack(2, { tags: { language: "eng" } }),
+    ]);
+    expect(ranked?.audioStreamIndex).toBe(1);
+    expect(ranked?.audio).toEqual({ channels: 2, channelLayout: "stereo" });
+  });
+
+  test("never a commentary or audio-description track while a main track exists", () => {
+    expect(
+      rankedAudio([
+        audioTrack(6, {
+          tags: { language: "eng", title: "Director's Commentary" },
+        }),
+        audioTrack(2, {
+          tags: { language: "eng", title: "Descriptive Audio" },
+        }),
+        audioTrack(2, { disposition: { visual_impaired: 1 } }),
+        audioTrack(2, { disposition: { comment: 1 } }),
+        audioTrack(2, { tags: { language: "eng", title: "Stereo" } }),
+      ])?.audioStreamIndex,
+    ).toBe(4);
+    // With nothing else to play, a commentary track still beats silence.
+    expect(
+      rankedAudio([audioTrack(2, { tags: { title: "Commentary" } })])
+        ?.audioStreamIndex,
+    ).toBe(0);
+  });
+
+  test("then the most channels, then stream order", () => {
+    const ranked = rankedAudio([
+      audioTrack(2, { tags: { language: "eng" } }),
+      audioTrack(6, { tags: { language: "eng" } }),
+      audioTrack(6, { tags: { language: "eng" } }),
+    ]);
+    expect(ranked?.audioStreamIndex).toBe(1);
+    expect(ranked?.audio).toEqual({ channels: 6, channelLayout: "5.1(side)" });
+  });
+
+  test("skips audio streams that report no channels, like the legacy selection", () => {
+    expect(
+      rankedAudio([{ codec_type: "audio", channels: 0 }, audioTrack(2)])
+        ?.audioStreamIndex,
+    ).toBe(1);
+  });
+
+  test("leaves the legacy selection untouched", () => {
+    const info = parseFfprobeOutput(
+      {
+        streams: [
+          audioTrack(2, { tags: { language: "jpn" } }),
+          audioTrack(6, { tags: { language: "eng" } }),
+        ],
+      },
+      ENGLISH,
+    );
+    expect(info?.audioStreamIndex).toBe(0);
+    expect(info?.audio).toEqual({ channels: 2, channelLayout: "stereo" });
+    expect(info?.ranked.audioStreamIndex).toBe(1);
+  });
+
+  test("a mistyped ranking field reads as absent instead of nulling the probe", () => {
+    const info = parseFfprobeOutput(
+      {
+        streams: [
+          audioTrack(2, {
+            disposition: { default: "yes" },
+            tags: { language: 7, title: ["x"], variant_bitrate: 1 },
+          }),
+          audioTrack(6, { tags: { language: "eng" } }),
+        ],
+      },
+      ENGLISH,
+    );
+    expect(info).not.toBeNull();
+    expect(info?.audioCodec).toBe("ac3");
+    expect(info?.ranked.audioStreamIndex).toBe(1);
+  });
+});
+
+function hlsVariant(height: number, bitrate?: number, extra = {}) {
+  return {
+    codec_type: "video",
+    codec_name: "h264",
+    width: Math.round((height * 16) / 9),
+    height,
+    ...(bitrate === undefined
+      ? {}
+      : { tags: { variant_bitrate: String(bitrate) } }),
+    ...extra,
+  };
+}
+
+describe("video variant ranking", () => {
+  const master = [
+    hlsVariant(360, 800_000),
+    hlsVariant(1080, 4_500_000),
+    hlsVariant(720, 3_000_000),
+    hlsVariant(1080, 6_000_000),
+    hlsVariant(2160, 16_000_000),
+    { codec_type: "audio", channels: 2, channel_layout: "stereo" },
+  ];
+
+  test("the tallest variant that fits the output box, then the highest bitrate", () => {
+    const info = parseFfprobeOutput(
+      { streams: master },
+      { languages: [], maxVideoHeight: 1080 },
+    );
+    expect(info?.videoStreamIndex).toBe(0); // legacy: first with dimensions
+    expect(info?.ranked.videoStreamIndex).toBe(3);
+    expect(info?.ranked.video?.displayAspect).toBeCloseTo(16 / 9, 2);
+    expect(info?.ranked.hdr).toBe(false);
+  });
+
+  test("without a box, the tallest variant", () => {
+    expect(
+      parseFfprobeOutput({ streams: master })?.ranked.videoStreamIndex,
+    ).toBe(4);
+  });
+
+  test("when nothing fits, the shortest variant above the box", () => {
+    expect(
+      parseFfprobeOutput(
+        { streams: [hlsVariant(2160), hlsVariant(1440)] },
+        { languages: [], maxVideoHeight: 1080 },
+      )?.ranked.videoStreamIndex,
+    ).toBe(1);
+  });
+
+  test("counts cover art in the index, never ranks it, and carries the variant's transfer", () => {
+    const ranked = parseFfprobeOutput(
+      {
+        streams: [
+          { ...hlsVariant(1080), disposition: { attached_pic: 1 } },
+          hlsVariant(720),
+          hlsVariant(1080, undefined, { color_transfer: "smpte2084" }),
+        ],
+      },
+      { languages: [], maxVideoHeight: 1080 },
+    )?.ranked;
+    expect(ranked?.videoStreamIndex).toBe(2);
+    expect(ranked?.hdr).toBe(true);
   });
 });

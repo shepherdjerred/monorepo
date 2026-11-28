@@ -1,5 +1,5 @@
 {
-  "id": "scout-beta/3",
+  "id": "scout-beta/4",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -92,7 +92,7 @@
         "evidence": [
           {
             "key": "matches-processed",
-            "query": "sum(increase(scout_durable_receipts_recorded_total{environment=\"beta\",git_sha=\"$gitSha\",outcome=\"applied\"}[$window]))",
+            "query": "count(max by (rank) ((scout_durable_recent_applied_receipt_timestamp_seconds{environment=\"beta\",git_sha=\"$gitSha\",role=\"application\",rank=~\"[1-5]\"} > $acceptedAt) <= time())) or on() vector(0)",
             "threshold": 5
           }
         ],

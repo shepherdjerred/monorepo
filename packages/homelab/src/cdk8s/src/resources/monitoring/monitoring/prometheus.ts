@@ -10,7 +10,7 @@ import { getNvmeRuleGroups } from "./rules/storage/nvme.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
 import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
 import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
-import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
+import { getErrorsRuleGroups } from "./rules/errors.ts";
 import { getSeaweedfsRuleGroups } from "./rules/storage/seaweedfs.ts";
 import { getMailRuleGroups } from "./rules/mail.ts";
 import { getScoutRuleGroups } from "./rules/scout.ts";
@@ -230,15 +230,14 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
   });
 
-  // Create Bugsink rules
-  new PrometheusRule(chart, "prometheus-bugsink-rules", {
+  new PrometheusRule(chart, "prometheus-errors-rules", {
     metadata: {
-      name: "prometheus-bugsink-rules",
-      namespace: "bugsink",
+      name: "prometheus-errors-rules",
+      namespace: "prometheus",
       labels: { release: "prometheus" },
     },
     spec: {
-      groups: getBugsinkRuleGroups(),
+      groups: getErrorsRuleGroups(),
     },
   });
 

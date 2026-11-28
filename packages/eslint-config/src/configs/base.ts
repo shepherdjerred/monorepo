@@ -9,6 +9,7 @@ import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import noSecrets from "eslint-plugin-no-secrets";
 import sonarjs from "eslint-plugin-sonarjs";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { computeDependencyTopologyHash } from "./dependency-topology.js";
 import { reviewedUnicornConfig } from "./unicorn.js";
 
 export type BaseConfigOptions = {
@@ -96,6 +97,10 @@ export function baseConfig(
           projectService,
           tsconfigRootDir,
         },
+      },
+      settings: {
+        "@shepherdjerred/dependency-topology":
+          computeDependencyTopologyHash(tsconfigRootDir),
       },
     },
     // Report unused disable directives as errors

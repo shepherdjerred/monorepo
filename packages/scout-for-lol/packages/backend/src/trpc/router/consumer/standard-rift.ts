@@ -11,6 +11,19 @@ const STANDARD_RIFT_QUEUE_IDS = new Set([
   710, // Ranked Teams
 ]);
 
+/** The lake `queue` values the community pages count as ordinary games. */
+export const STANDARD_COMMUNITY_QUEUES = [
+  "solo",
+  "flex",
+  "ranked 5s",
+  "clash",
+  "normal",
+  "draft pick",
+  "quickplay",
+  "swiftplay",
+  "custom",
+];
+
 /**
  * A user-created lobby or tournament game, classified from the stored ids
  * rather than the stored `queue`, which older lake rows leave empty.

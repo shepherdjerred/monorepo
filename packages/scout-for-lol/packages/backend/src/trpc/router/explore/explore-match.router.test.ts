@@ -54,6 +54,8 @@ function matchRow(
     inhibitor_kills: 0,
     baron_kills: 0,
     dragon_kills: 0,
+    end_of_game_result: "GameComplete",
+    early_surrendered: false,
     item0: 0,
     item1: 0,
     item2: 0,

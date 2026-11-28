@@ -1,164 +1,20 @@
-import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   DiscordGuildIdSchema,
   HallQueueFamilyIdSchema,
-  HallRecordEvidenceSchema,
-  HallRecordHolderSchema,
   HallRecordIdSchema,
-  classifyHallQueueFamily,
-  compareHallCandidate,
-  hallRecordValue,
-  isHallEligibleMatch,
   type DiscordGuildId,
-  type HallRecordEvidence,
-  type HallRecordHolder,
-  type HallRecordId,
 } from "@scout-for-lol/data";
 import type { ScoutHallBaselineInput } from "@scout-for-lol/temporal";
 import { prisma, type Db } from "#src/database/index.ts";
 import { hallBaselineDuration } from "#src/metrics/progression.ts";
-import {
-  fetchProgressionMatches,
-  type ProgressionMatchCursor,
-  type ProgressionMatchRow,
-} from "#src/progression/progression-lake-reads.ts";
-
-const PAGE_SIZE = 10_000;
+import { calculateHallStandings } from "./history.ts";
+import { hallCellKey, hallRankingsColumns } from "./rankings.ts";
 
 export async function lockHallRecords(
   tx: Pick<Db, "$executeRaw">,
   guildId: DiscordGuildId,
 ): Promise<void> {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-hall-records'), hashtext(${guildId}))`;
-}
-
-type TrackedAccount = {
-  readonly id: number;
-  readonly alias: string;
-  readonly puuid: LeaguePuuid;
-  readonly createdTime: Date;
-  readonly player: { readonly id: number; readonly alias: string };
-};
-
-type BaselineValue = {
-  readonly value: number;
-  readonly holders: HallRecordHolder[];
-  readonly evidence: HallRecordEvidence[];
-};
-
-function cellKey(queueFamilyId: string, recordId: string): string {
-  return `${queueFamilyId}:${recordId}`;
-}
-
-function holderFor(account: TrackedAccount): HallRecordHolder {
-  return HallRecordHolderSchema.parse({
-    playerId: account.player.id,
-    playerAlias: account.player.alias,
-    accountId: account.id,
-    accountAlias: account.alias,
-    puuid: account.puuid,
-  });
-}
-
-function evidenceFor(
-  match: ProgressionMatchRow,
-  value: number,
-  holder: HallRecordHolder,
-): HallRecordEvidence {
-  return HallRecordEvidenceSchema.parse({
-    matchId: match.match_id,
-    gameEndAt: match.game_end_at,
-    value,
-    holder,
-  });
-}
-
-function considerMatch(
-  values: Map<string, BaselineValue>,
-  match: ProgressionMatchRow,
-  account: TrackedAccount,
-  catalog: {
-    readonly targetCellKeys: ReadonlySet<string>;
-    readonly recordIds: readonly HallRecordId[];
-  },
-): void {
-  if (!isHallEligibleMatch(match, account.createdTime)) return;
-  const family = classifyHallQueueFamily(match.queue);
-  if (family === null) return;
-  const holder = holderFor(account);
-  for (const recordId of catalog.recordIds) {
-    const key = cellKey(family, recordId);
-    if (!catalog.targetCellKeys.has(key)) continue;
-    const value = hallRecordValue(match, recordId);
-    const candidateEvidence = evidenceFor(match, value, holder);
-    const current = values.get(key);
-    const comparison = compareHallCandidate(
-      current?.value ?? null,
-      current?.holders ?? [],
-      current?.evidence ?? [],
-      {
-        queueFamilyId: family,
-        recordId,
-        value,
-        holder,
-        evidence: candidateEvidence,
-      },
-    );
-    if (comparison.kind === "below") continue;
-    values.set(key, {
-      value: comparison.kind === "break" ? comparison.value : value,
-      holders: comparison.holders,
-      evidence: comparison.evidence,
-    });
-  }
-}
-
-function nextCursor(
-  rows: readonly ProgressionMatchRow[],
-): ProgressionMatchCursor {
-  const last = rows.at(-1);
-  if (last === undefined) throw new Error("Cannot advance an empty Hall page");
-  return {
-    gameEndMs: last.game_end_ms,
-    matchId: last.match_id,
-    puuid: last.puuid,
-  };
-}
-
-async function calculateBaseline(
-  accounts: readonly TrackedAccount[],
-  targetCellKeys: ReadonlySet<string>,
-  recordIds: readonly HallRecordId[],
-  onProgress: ((rows: number) => void) | undefined,
-): Promise<Map<string, BaselineValue>> {
-  const earliest = accounts.reduce(
-    (minimum, account) =>
-      new Date(Math.min(account.createdTime.getTime(), minimum.getTime())),
-    accounts[0]?.createdTime ?? new Date(),
-  );
-  const byPuuid = new Map(accounts.map((account) => [account.puuid, account]));
-  const values = new Map<string, BaselineValue>();
-  let cursor: ProgressionMatchCursor | undefined;
-  let processed = 0;
-  for (;;) {
-    const rows = await fetchProgressionMatches({
-      puuids: [...byPuuid.keys()],
-      startAt: earliest,
-      ...(cursor === undefined ? {} : { cursor }),
-      limit: PAGE_SIZE,
-    });
-    for (const match of rows) {
-      const account = byPuuid.get(match.puuid);
-      if (account === undefined) {
-        throw new Error(`Hall lake returned unrequested PUUID ${match.puuid}`);
-      }
-      considerMatch(values, match, account, { targetCellKeys, recordIds });
-    }
-    processed += rows.length;
-    onProgress?.(processed);
-    if (rows.length < PAGE_SIZE) return values;
-    cursor = nextCursor(rows);
-  }
 }
 
 async function markBaselineFailed(
@@ -236,9 +92,9 @@ async function calculateAndPersistBaseline(
     where: { serverId: guildId },
     include: { player: true },
   });
-  const keys = new Set(
+  const targetCellKeys = new Set(
     cells.map((cell) =>
-      cellKey(
+      hallCellKey(
         HallQueueFamilyIdSchema.parse(cell.queueFamilyId),
         HallRecordIdSchema.parse(cell.recordId),
       ),
@@ -247,10 +103,17 @@ async function calculateAndPersistBaseline(
   const recordIds = [
     ...new Set(cells.map((cell) => HallRecordIdSchema.parse(cell.recordId))),
   ];
-  const values = await calculateBaseline(accounts, keys, recordIds, onProgress);
+  const values = await calculateHallStandings({
+    accounts,
+    targetCellKeys,
+    recordIds,
+    onProgress,
+  });
   const completedAt = new Date();
   for (const cell of cells) {
-    const value = values.get(cellKey(cell.queueFamilyId, cell.recordId));
+    const standings =
+      values.get(hallCellKey(cell.queueFamilyId, cell.recordId)) ?? [];
+    const rankings = hallRankingsColumns(standings, input.revision);
     await tx.hallRecordCell.updateMany({
       where: {
         id: cell.id,
@@ -259,10 +122,8 @@ async function calculateAndPersistBaseline(
       },
       data: {
         baselineStatus: "ready",
-        baselineValue: value?.value ?? null,
-        currentValue: value?.value ?? null,
-        holdersJson: JSON.stringify(value?.holders ?? []),
-        evidenceJson: JSON.stringify(value?.evidence ?? []),
+        baselineValue: rankings.currentValue,
+        ...rankings,
         errorMessage: null,
         baselineCompletedAt: completedAt,
       },

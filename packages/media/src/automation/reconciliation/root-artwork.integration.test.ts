@@ -283,32 +283,91 @@ test("TMDB having no images is an observation; TMDB failing for a title is not, 
   });
   const before = await footprint();
   const { context, reads } = tmdb(answers);
-  await expect(sweepDue(context)).resolves.toBeDefined();
-  expect(reads).toHaveLength(6);
-  expect(await footprint()).toEqual(before);
-  const rows = await db.mediaItem.findMany({
-    where: { id: { in: roots.map((root) => root.id) } },
-    orderBy: { tmdbId: "asc" },
+  const rawLogs: string[] = [];
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation((line) => {
+    rawLogs.push(String(line));
   });
-  expect(
-    rows.map((row) => [row.tmdbId, row.artworkObservedAt !== null]),
-  ).toEqual([
-    [70_200, true],
-    [70_201, false],
-    [70_202, false],
-    [70_203, false],
-    [70_204, false],
-    [70_205, true],
-  ]);
-  expect(rows[0]).toMatchObject({
-    posterPath: null,
-    backdropPath: null,
-    overview: null,
-  });
-  // The four failures are still waiting, and are asked about again.
-  await sweepDue(context);
-  expect(reads).toHaveLength(10);
-  expect(await db.operation.count({ where: { status: "failed" } })).toBe(0);
+  try {
+    await expect(sweepDue(context)).resolves.toBeDefined();
+    expect(reads).toHaveLength(6);
+    expect(await footprint()).toEqual(before);
+    const rows = await db.mediaItem.findMany({
+      where: { id: { in: roots.map((root) => root.id) } },
+      orderBy: { tmdbId: "asc" },
+    });
+    expect(
+      rows.map((row) => [row.tmdbId, row.artworkObservedAt !== null]),
+    ).toEqual([
+      [70_200, true],
+      [70_201, false],
+      [70_202, false],
+      [70_203, false],
+      [70_204, false],
+      [70_205, true],
+    ]);
+    expect(rows[0]).toMatchObject({
+      posterPath: null,
+      backdropPath: null,
+      overview: null,
+    });
+    for (const line of rawLogs) {
+      expect(line).not.toContain("http://");
+      expect(line).not.toContain("https://");
+      expect(line).not.toContain("Bearer");
+    }
+    const logged = rawLogs
+      .map((line) => JSON.parse(line))
+      .filter((entry) => entry.event === "media.root_artwork.tmdb_failed")
+      .sort((a, b) => a.tmdbId - b.tmdbId);
+    expect(logged).toEqual([
+      {
+        level: "warn",
+        event: "media.root_artwork.tmdb_failed",
+        mediaId: rows[1]?.id,
+        mediaKind: "series",
+        tmdbId: 70_201,
+        failureKind: "unavailable",
+        status: 404,
+        reason: "upstream_tmdb_error",
+      },
+      {
+        level: "warn",
+        event: "media.root_artwork.tmdb_failed",
+        mediaId: rows[2]?.id,
+        mediaKind: "movie",
+        tmdbId: 70_202,
+        failureKind: "unavailable",
+        status: null,
+        reason: "upstream_tmdb_error",
+      },
+      {
+        level: "warn",
+        event: "media.root_artwork.tmdb_failed",
+        mediaId: rows[3]?.id,
+        mediaKind: "series",
+        tmdbId: 70_203,
+        failureKind: "invalid-response",
+        status: null,
+        reason: "upstream_tmdb_error",
+      },
+      {
+        level: "warn",
+        event: "media.root_artwork.tmdb_failed",
+        mediaId: rows[4]?.id,
+        mediaKind: "movie",
+        tmdbId: 70_204,
+        failureKind: "invalid-response",
+        status: null,
+        reason: "id_mismatch",
+      },
+    ]);
+    // The four failures are still waiting, and are asked about again.
+    await sweepDue(context);
+    expect(reads).toHaveLength(10);
+    expect(await db.operation.count({ where: { status: "failed" } })).toBe(0);
+  } finally {
+    warnSpy.mockRestore();
+  }
 });
 
 test("a corrupt TMDB identity is a broken contract and fails the sweep", async () => {

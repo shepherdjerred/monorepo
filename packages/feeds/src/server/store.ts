@@ -37,9 +37,9 @@ import {
   queryReaderStreamIdsFromDb,
   querySummaryFromDb,
 } from "./store-queries.ts";
+import { reconcileCatalogInDb } from "./store-reconcile.ts";
 import {
-  bumpSubscriptionsEtagInDb,
-  ensureCategoryInDb,
+  ensureSchemaMigrationsInDb,
   FEED_SELECT_SQL,
   getFeedByIdFromDb,
   getFeedByUrlFromDb,
@@ -47,7 +47,6 @@ import {
   SCHEMA_SQL,
   subscriptionsEtagFromDb,
   type FeedRow,
-  type IdRow,
 } from "./store-sql.ts";
 import type {
   ConsoleEntriesQuery,
@@ -60,6 +59,84 @@ import type {
   StoredFeed,
   StoreMutationFailure,
 } from "./types.ts";
+
+const DEFAULT_MAX_READ_PER_FEED = 5000;
+const STALE_POLL_ENTRY_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
+type ExistingPollEntryRow = {
+  readonly id: number;
+  readonly is_read: number;
+  readonly is_starred: number;
+  readonly auto_read_matched: number;
+};
+
+function orderPolledEntriesChronologically(
+  entries: readonly ParsedFeedEntry[],
+): readonly ParsedFeedEntry[] {
+  return entries
+    .map((entry, index) => ({ entry, index }))
+    .toSorted(
+      (a, b) => a.entry.publishedAt - b.entry.publishedAt || b.index - a.index,
+    )
+    .map(({ entry }) => entry);
+}
+
+function updateExistingPolledEntry(input: {
+  readonly updateEntry: ReturnType<Database["query"]>;
+  readonly existing: ExistingPollEntryRow;
+  readonly entry: ParsedFeedEntry;
+  readonly feed: StoredFeed;
+}): boolean {
+  const { updateEntry, existing, entry, feed } = input;
+  const newlyAutoRead =
+    existing.is_read === 0 &&
+    existing.is_starred === 0 &&
+    existing.auto_read_matched === 0 &&
+    matchesAutoReadRule(feed.autoRead, entry);
+  updateEntry.run(
+    entry.title,
+    entry.url,
+    entry.author,
+    entry.contentHtml,
+    JSON.stringify(entry.enclosures),
+    JSON.stringify(entry.categories ?? []),
+    newlyAutoRead ? 1 : existing.is_read,
+    newlyAutoRead ? 1 : existing.auto_read_matched,
+    existing.id,
+  );
+  return newlyAutoRead;
+}
+
+function insertNewPolledEntry(input: {
+  readonly insertEntry: ReturnType<Database["query"]>;
+  readonly id: number;
+  readonly feed: StoredFeed;
+  readonly entry: ParsedFeedEntry;
+  readonly crawledAtMs: number;
+  readonly staleCutoffSeconds: number | null;
+}): boolean {
+  const { insertEntry, id, feed, entry, crawledAtMs, staleCutoffSeconds } =
+    input;
+  const matched = matchesAutoReadRule(feed.autoRead, entry);
+  const staleArchive =
+    staleCutoffSeconds !== null && entry.publishedAt < staleCutoffSeconds;
+  insertEntry.run(
+    id,
+    feed.id,
+    entry.guid,
+    entry.url,
+    entry.title,
+    entry.author,
+    entry.contentHtml,
+    entry.publishedAt,
+    crawledAtMs,
+    JSON.stringify(entry.enclosures),
+    JSON.stringify(entry.categories ?? []),
+    matched || staleArchive ? 1 : 0,
+    matched ? 1 : 0,
+  );
+  return matched;
+}
 
 export class FeedsStore implements FeedsRepository {
   #lastEntryId: number;
@@ -82,6 +159,7 @@ export class FeedsStore implements FeedsRepository {
       db.run("PRAGMA synchronous = NORMAL");
     }
     db.run(SCHEMA_SQL);
+    ensureSchemaMigrationsInDb(db);
     return new FeedsStore(db);
   }
 
@@ -102,54 +180,7 @@ export class FeedsStore implements FeedsRepository {
     readonly upserted: number;
     readonly pruned: number;
   } {
-    const upsertStmt = this.db.query(`
-      INSERT INTO feeds (url, title, category_id, html_url, description, source, hidden, auto_read_json) VALUES (?, ?, ?, ?, ?, 'code', ?, ?)
-      ON CONFLICT(url) DO UPDATE SET title = excluded.title, category_id = excluded.category_id, html_url = COALESCE(excluded.html_url, feeds.html_url),
-        description = excluded.description, source = 'code', hidden = excluded.hidden, auto_read_json = excluded.auto_read_json
-      WHERE feeds.title IS NOT excluded.title OR feeds.category_id IS NOT excluded.category_id OR (excluded.html_url IS NOT NULL AND feeds.html_url IS NOT excluded.html_url)
-         OR feeds.description IS NOT excluded.description OR feeds.source IS NOT excluded.source OR feeds.hidden IS NOT excluded.hidden OR feeds.auto_read_json IS NOT excluded.auto_read_json
-    `);
-    return this.db.transaction(() => {
-      const repoCat = ensureCategoryInDb(this.db, "Repo Stack", 1, 10);
-      const blogsCat = ensureCategoryInDb(this.db, "Blogs", 1, 20);
-      const uncat = ensureCategoryInDb(this.db, "Uncategorized", 0, 30);
-      let changed = repoCat.changed || blogsCat.changed || uncat.changed;
-      const declaredUrls = new Set<string>();
-      for (const feed of feeds) {
-        declaredUrls.add(feed.url);
-        const categoryId =
-          feed.category === "Repo Stack" ? repoCat.id : blogsCat.id;
-        const autoJson =
-          feed.autoRead === undefined ? null : JSON.stringify(feed.autoRead);
-        const res = upsertStmt.run(
-          feed.url,
-          feed.title,
-          categoryId,
-          feed.htmlUrl ?? null,
-          feed.description ?? null,
-          feed.hidden === true ? 1 : 0,
-          autoJson,
-        );
-        changed = changed || res.changes > 0;
-      }
-      const existingCode = this.db
-        .query<{ readonly id: number; readonly url: string }, []>(
-          "SELECT id, url FROM feeds WHERE source = 'code'",
-        )
-        .all();
-      const delStmt = this.db.query("DELETE FROM feeds WHERE id = ?");
-      let pruned = 0;
-      for (const row of existingCode) {
-        if (!declaredUrls.has(row.url)) {
-          delStmt.run(row.id);
-          pruned += 1;
-        }
-      }
-      if (changed || pruned > 0) {
-        bumpSubscriptionsEtagInDb(this.db);
-      }
-      return { upserted: feeds.length, pruned };
-    })();
+    return reconcileCatalogInDb(this.db, feeds);
   }
 
   pruneOldEntries(options?: {
@@ -157,7 +188,7 @@ export class FeedsStore implements FeedsRepository {
     readonly minAgeSeconds?: number | undefined;
     readonly nowSeconds?: number | undefined;
   }): number {
-    const maxRead = options?.maxReadPerFeed ?? 500;
+    const maxRead = options?.maxReadPerFeed ?? DEFAULT_MAX_READ_PER_FEED;
     const minAge = options?.minAgeSeconds ?? 120 * 24 * 60 * 60;
     const now = options?.nowSeconds ?? Math.floor(Date.now() / 1000);
     return this.db
@@ -211,14 +242,14 @@ export class FeedsStore implements FeedsRepository {
     readonly discoveredHtmlUrl?: string | null | undefined;
     readonly entries: readonly ParsedFeedEntry[];
   }): { readonly inserted: number; readonly autoRead: number } {
-    const findExisting = this.db.query<IdRow, [number, string]>(
-      "SELECT id FROM entries WHERE feed_id = ? AND guid = ?",
+    const findExisting = this.db.query<ExistingPollEntryRow, [number, string]>(
+      "SELECT id, is_read, is_starred, auto_read_matched FROM entries WHERE feed_id = ? AND guid = ?",
     );
     const insertEntry = this.db.query(
-      "INSERT INTO entries (id, feed_id, guid, url, title, author, content_html, published_at, crawled_at_ms, enclosures_json, is_read, is_starred, auto_read_matched) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
+      "INSERT INTO entries (id, feed_id, guid, url, title, author, content_html, published_at, crawled_at_ms, enclosures_json, categories_json, is_read, is_starred, auto_read_matched) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
     );
     const updateEntry = this.db.query(
-      "UPDATE entries SET title = ?, url = ?, author = ?, content_html = ?, enclosures_json = ? WHERE id = ?",
+      "UPDATE entries SET title = ?, url = ?, author = ?, content_html = ?, enclosures_json = ?, categories_json = ?, is_read = ?, auto_read_matched = ? WHERE id = ?",
     );
     return this.db.transaction(() => {
       const feed = this.getFeedById(input.feedId);
@@ -226,37 +257,35 @@ export class FeedsStore implements FeedsRepository {
         throw new Error(`Unknown feed id: ${String(input.feedId)}`);
       }
       const crawledAtMs = input.polledAtSeconds * 1000;
+      const staleCutoffSeconds =
+        feed.lastSuccessAt === null
+          ? null
+          : input.polledAtSeconds - STALE_POLL_ENTRY_MAX_AGE_SECONDS;
       let inserted = 0;
       let autoRead = 0;
-      for (const entry of input.entries) {
-        const encJson = JSON.stringify(entry.enclosures);
+      for (const entry of orderPolledEntriesChronologically(input.entries)) {
         const existing = findExisting.get(input.feedId, entry.guid);
         if (existing !== null) {
-          updateEntry.run(
-            entry.title,
-            entry.url,
-            entry.author,
-            entry.contentHtml,
-            encJson,
-            existing.id,
-          );
+          if (
+            updateExistingPolledEntry({
+              updateEntry,
+              existing,
+              entry,
+              feed,
+            })
+          ) {
+            autoRead += 1;
+          }
           continue;
         }
-        const matched = matchesAutoReadRule(feed.autoRead, entry);
-        insertEntry.run(
-          this.#allocateEntryId(crawledAtMs),
-          input.feedId,
-          entry.guid,
-          entry.url,
-          entry.title,
-          entry.author,
-          entry.contentHtml,
-          entry.publishedAt,
+        const matched = insertNewPolledEntry({
+          insertEntry,
+          id: this.#allocateEntryId(crawledAtMs),
+          feed,
+          entry,
           crawledAtMs,
-          encJson,
-          matched ? 1 : 0,
-          matched ? 1 : 0,
-        );
+          staleCutoffSeconds,
+        });
         inserted += 1;
         if (matched) {
           autoRead += 1;

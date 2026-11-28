@@ -1,7 +1,7 @@
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
 import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
-import { lock, required, audit, wire } from "./delivery-records.ts";
+import { audit, lock, required, wire } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import {
   id,
@@ -11,6 +11,8 @@ import {
 } from "./delivery-data.ts";
 import { reconcilePlatform } from "./platform/selection.ts";
 import { legacyPipelineOf } from "./execution/legacy-recipe.ts";
+import { reconcileAutomaticRebind } from "./selection/automatic-rebind.ts";
+import type { RetirementReplacement } from "./selection/retirement-precedence.ts";
 import {
   releaseStrandedOwnership,
   releaseTerminalOwnership,
@@ -49,17 +51,19 @@ async function reconcileEnvironment(
     where: {
       environmentId: row.id,
       OR: [
-        { kind: { notIn: ["adopt-worker", "repair-trmnl"] } },
+        // A settled retirement does not replace the last release attempt.
+        { kind: { notIn: ["adopt-worker", "repair-trmnl", "retire-host"] } },
         { status: { in: ["queued", "awaiting_approval", "running"] } },
+        { kind: "retire-host", recoveryRequired: true },
       ],
     },
     orderBy: { createdAt: "desc" },
   });
   // D2: a recovery-required failure holds the environment until its reader
-  // settles it (D5). A settled failure of any kind suppresses only its own set
-  // revision, as a cancellation does (automaticSelectionBlocked), so a newer
-  // revision still deploys. A request awaiting approval is superseded only
-  // when it is automatic and undecided (D3).
+  // settles it (D5). A settled release failure or cancellation suppresses only
+  // its own set revision (automaticSelectionBlocked), so a newer revision
+  // still deploys. A request awaiting approval is superseded only when it is
+  // automatic and undecided (D3).
   if (
     last !== null &&
     (last.status === "running" ||
@@ -72,13 +76,26 @@ async function reconcileEnvironment(
     target.id === row.acceptedVersionSetRevisionId ||
     target.revision <= row.automaticSuppressedThroughRevision
   )
-    return null;
-  return (await automaticSelectionBlocked.call(this, last, target.id, actor))
+    return reconcileAutomaticRebind.call(
+      this,
+      { row, definition, last },
+      actor,
+    );
+  const replaceRetirementId =
+    last?.kind === "retire-host" ? last.id : undefined;
+  const blocked =
+    replaceRetirementId === undefined &&
+    (await automaticSelectionBlocked.call(this, last, target.id, actor));
+  return blocked
     ? null
     : requestAutomatic.call(
         this,
         row,
-        { id: target.id, kind: automaticKind(definition.kind) },
+        {
+          id: target.id,
+          kind: automaticKind(definition.kind),
+          replaceRetirementId,
+        },
         actor,
       );
 }
@@ -336,6 +353,36 @@ export async function supersedeQueuedAutomatic(
   });
 }
 
+export async function lastTerminalId(
+  database: Delivery["database"],
+  environmentId: string,
+) {
+  const row = await database.deployment.findFirst({
+    where: {
+      environmentId,
+      status: { in: ["succeeded", "failed", "canceled"] },
+    },
+    orderBy: [{ finishedAt: "desc" }, { createdAt: "desc" }],
+    select: { id: true },
+  });
+  return row?.id ?? "initial";
+}
+
+export async function submitAutomatic(
+  delivery: Delivery,
+  input: Parameters<Delivery["createDeployment"]>[0],
+  actor: Principal,
+  replacement?: RetirementReplacement,
+) {
+  try {
+    return await delivery.createDeployment(input, actor, replacement ?? true);
+  } catch (error) {
+    if (error instanceof DeliveryError && error.code === "CONFLICT")
+      return null;
+    throw error;
+  }
+}
+
 export async function requestAutomatic(
   this: Delivery,
   row: {
@@ -343,44 +390,38 @@ export async function requestAutomatic(
     generation: number;
     promotionSourceEnvironmentId: string | null;
   },
-  target: { id: string; kind: "deploy" | "channel-publish" },
+  target: {
+    id: string;
+    kind: "deploy" | "channel-publish";
+    replaceRetirementId: string | undefined;
+  },
   actor: Principal,
 ) {
-  const targetId = target.id;
-  // Automatic request identity keys on the environment's last terminal
-  // deployment, not on the binding generation (D3).
-  const lastTerminal = await this.database.deployment.findFirst({
-    where: {
-      environmentId: row.id,
-      status: { in: ["succeeded", "failed", "canceled"] },
-    },
-    orderBy: [{ finishedAt: "desc" }, { createdAt: "desc" }],
-    select: { id: true },
-  });
-  const requestId = `automatic/${row.id}/${targetId}/${lastTerminal?.id ?? "initial"}`;
-  try {
-    return await this.createDeployment(
-      row.promotionSourceEnvironmentId === null
-        ? {
-            requestId,
-            environmentId: row.id,
-            versionSetRevisionId: targetId,
-            expectedGeneration: row.generation,
-            kind: target.kind,
-          }
-        : {
-            requestId,
-            environmentId: row.id,
-            expectedGeneration: row.generation,
-            kind: "promote",
-            sourceEnvironmentId: row.promotionSourceEnvironmentId,
-          },
-      actor,
-      true,
-    );
-  } catch (error) {
-    if (error instanceof DeliveryError && error.code === "CONFLICT")
-      return null;
-    throw error;
-  }
+  const after = await lastTerminalId(this.database, row.id);
+  const requestId = `automatic/${row.id}/${target.id}/${after}`;
+  return submitAutomatic(
+    this,
+    row.promotionSourceEnvironmentId === null
+      ? {
+          requestId,
+          environmentId: row.id,
+          versionSetRevisionId: target.id,
+          expectedGeneration: row.generation,
+          kind: target.kind,
+        }
+      : {
+          requestId,
+          environmentId: row.id,
+          expectedGeneration: row.generation,
+          kind: "promote",
+          sourceEnvironmentId: row.promotionSourceEnvironmentId,
+        },
+    actor,
+    target.replaceRetirementId === undefined
+      ? undefined
+      : {
+          retirementId: target.replaceRetirementId,
+          versionSetId: target.id,
+        },
+  );
 }

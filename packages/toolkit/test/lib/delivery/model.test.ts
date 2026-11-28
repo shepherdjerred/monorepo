@@ -8,6 +8,7 @@ import {
   runDeployCommand,
   validateDeployCommand,
 } from "#commands/deploy/deploy.ts";
+import { attestWhenOwned } from "#commands/deploy/model.ts";
 import { parseDeployArgs } from "#commands/deploy/common.ts";
 import { assertServiceRetirableOnMain } from "#commands/deploy/model-io.ts";
 import { deployMachineCredential } from "#commands/deploy/forum.ts";
@@ -220,6 +221,60 @@ describe("reads", () => {
       exitCode: 0,
     });
   });
+
+  test("selected returns the environment selection and populated versionSet components", async () => {
+    const selectedVersion = fixtures.versionSets.find(
+      (entry) =>
+        entry.id === fixtures.selections.prod.accepted?.versionSetRevisionId,
+    );
+    if (selectedVersion === undefined) {
+      throw new Error("Expected fixture version set for prod selection");
+    }
+    const { client, sent } = delivery({
+      [`GET /environments/${prod}/selection`]: fixtures.selections.prod,
+      [`GET /versions/${encodeURIComponent(selectedVersion.id)}`]:
+        selectedVersion,
+    });
+    const result = await run(client, "selected", [fixtures.PROD]);
+    expect(result).toEqual({
+      result: {
+        environmentId: fixtures.PROD,
+        selection: fixtures.selections.prod,
+        versionSet: selectedVersion,
+      },
+      exitCode: 0,
+    });
+    expect(
+      selectedVersion.components["image:scout-for-lol"]?.sourceRevision,
+    ).toHaveLength(40);
+    expect(selectedVersion.components["image:scout-for-lol"]?.digest).toMatch(
+      /^sha256:/u,
+    );
+    expect(sent.map((entry) => `${entry.method} ${entry.path}`)).toEqual([
+      `GET /environments/${prod}/selection`,
+      `GET /versions/${encodeURIComponent(selectedVersion.id)}`,
+    ]);
+  });
+
+  test("selected returns versionSet null when no selection has been accepted yet", async () => {
+    const unaccepted = {
+      ...fixtures.selections.prod,
+      accepted: null,
+      acceptedDeploymentId: null,
+    };
+    const { client, sent } = delivery({
+      [`GET /environments/${prod}/selection`]: unaccepted,
+    });
+    expect(await run(client, "selected", [fixtures.PROD])).toEqual({
+      result: {
+        environmentId: fixtures.PROD,
+        selection: unaccepted,
+        versionSet: null,
+      },
+      exitCode: 0,
+    });
+    expect(sent).toHaveLength(1);
+  });
 });
 
 describe("admin and operator verbs", () => {
@@ -318,6 +373,147 @@ describe("admin and operator verbs", () => {
     ]);
     expect(result).toEqual({ result: fixtures.attestedStage, exitCode: 0 });
     expect(sent[0]?.body).toEqual({ stage: "canary", evidence });
+  });
+});
+
+describe("attest target claim wait", () => {
+  test("attest waits for a queued operator-run deployment to claim its target before retrying", async () => {
+    const baseDetail = fixtures.deploymentDetails[0];
+    if (baseDetail === undefined) {
+      throw new Error("Expected deployment detail fixture");
+    }
+    const evidence = [
+      { kind: "attestation" as const, summary: "apply-safety passed" },
+    ];
+    let postCalls = 0;
+    let getCalls = 0;
+    const client = createDeliveryClient({
+      baseUrl: "https://delivery.invalid",
+      fetch: (_input, init) => {
+        if ((init?.method ?? "GET") === "POST") {
+          postCalls++;
+          if (postCalls === 1) {
+            return Promise.resolve(
+              Response.json(
+                {
+                  error: {
+                    code: "CONFLICT",
+                    message:
+                      "Deployment must own the target before recording stages",
+                    requestId: "r:claim",
+                  },
+                },
+                { status: 409 },
+              ),
+            );
+          }
+          return Promise.resolve(Response.json(fixtures.attestedStage));
+        }
+        getCalls++;
+        const status = getCalls === 1 ? "queued" : "running";
+        return Promise.resolve(
+          Response.json({
+            ...baseDetail,
+            deployment: {
+              ...baseDetail.deployment,
+              id: "cluster-admission-prod-4",
+              status,
+            },
+          }),
+        );
+      },
+    });
+
+    let now = 0;
+    const stage = await attestWhenOwned(
+      client,
+      "cluster-admission-prod-4",
+      { stage: "apply-safety", evidence },
+      {
+        timeoutMs: 10_000,
+        intervalMs: 2000,
+        now: () => now,
+        sleep: (duration) => {
+          now += duration;
+          return Promise.resolve();
+        },
+      },
+    );
+    expect(stage).toEqual(fixtures.attestedStage);
+    expect(postCalls).toBe(2);
+    expect(getCalls).toBe(2);
+    expect(now).toBe(2000);
+  });
+
+  test("attest reports blocking queued status at timeout and fails fast on non-queued status", async () => {
+    const baseDetail = fixtures.deploymentDetails[0];
+    if (baseDetail === undefined) {
+      throw new Error("Expected deployment detail fixture");
+    }
+    const evidence = [
+      { kind: "attestation" as const, summary: "apply-safety passed" },
+    ];
+    let currentStatus: "queued" | "canceled" = "queued";
+    const client = createDeliveryClient({
+      baseUrl: "https://delivery.invalid",
+      fetch: (_input, init) => {
+        if ((init?.method ?? "GET") === "POST") {
+          return Promise.resolve(
+            Response.json(
+              {
+                error: {
+                  code: "CONFLICT",
+                  message:
+                    "Deployment must own the target before recording stages",
+                  requestId: "r:claim",
+                },
+              },
+              { status: 409 },
+            ),
+          );
+        }
+        return Promise.resolve(
+          Response.json({
+            ...baseDetail,
+            deployment: {
+              ...baseDetail.deployment,
+              id: "cluster-admission-prod-5",
+              status: currentStatus,
+            },
+          }),
+        );
+      },
+    });
+
+    let now = 0;
+    await expect(
+      attestWhenOwned(
+        client,
+        "cluster-admission-prod-5",
+        { stage: "apply-safety", evidence },
+        {
+          timeoutMs: 4000,
+          intervalMs: 2000,
+          now: () => now,
+          sleep: (duration) => {
+            now += duration;
+            return Promise.resolve();
+          },
+        },
+      ),
+    ).rejects.toThrow(/Timed out waiting.*still status "queued"/u);
+
+    currentStatus = "canceled";
+    await expect(
+      attestWhenOwned(
+        client,
+        "cluster-admission-prod-5",
+        { stage: "apply-safety", evidence },
+        { timeoutMs: 4000, intervalMs: 2000 },
+      ),
+    ).rejects.toThrow(
+      /cannot record stage attestations while status is "canceled"/u,
+    );
   });
 });
 

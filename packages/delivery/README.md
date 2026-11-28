@@ -883,7 +883,9 @@ cannot, the deployment ends recovery-required with its locks and barrier held.
 A recipe's oracle may declare a monitor: one image component, alarm matchers
 that include an `environment` label, evidence queries with thresholds, and an
 `automatic` or `hold` policy ([4.19](docs/model.md#419-monitor)). Queries may
-use only `$window`, `$version` and `$gitSha`.
+use only `$window`, `$version`, `$gitSha` and `$acceptedAt`. The latter is the
+deployment's acceptance time as an unquoted Unix timestamp in seconds, with
+millisecond precision.
 
 Acceptance starts the monitor: `watching` when the frozen recipe declares one,
 otherwise `unmonitored`. The dispatch workflow lists `GET /monitors/watching`,
@@ -990,8 +992,11 @@ environments without required approval, and their live, unreferenced hosts
 other than the accepted candidate. For each environment it runs the read-only
 retirement proof below and proposes the first host that passes through
 `POST /api/v1/workers/:id/auto-retire`. Delivery then requests the same
-`retire-host` deployment as `delivery/auto-retire`. A host whose retirement
-ever failed or was canceled is never offered again, so an operator decides it.
+`retire-host` deployment as `delivery/auto-retire`. A newer eligible automatic
+worker release may supersede a queued automated retirement before it claims.
+The same host can be offered again with fresh proof after a different set
+revision is accepted. A failed retirement or an operator cancellation leaves
+that host to an operator.
 
 The executor supplies fresh proof when claiming retirement and again immediately
 before effects. Every served namespace/queue must exclude the retired build from

@@ -1,0 +1,44 @@
+/*
+ * Underlined tabs: `Tabs` (a radio group filtering one view) and `NavTabs`
+ * (links between routes) share this look. In a header bar the underline sits
+ * on the bar's bottom edge; in a toolbar the tabs are control height.
+ */
+@layer ui.components {
+  .ui-tabs {
+    display: flex;
+    align-self: stretch;
+    gap: 18px;
+    margin-left: var(--ui-space-2);
+  }
+  .ui-tab {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 5px;
+    color: var(--ui-muted);
+    font-weight: var(--ui-weight-medium);
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: inset 0 -2px 0 transparent;
+    cursor: pointer;
+  }
+  .ui-tab:hover {
+    color: var(--ui-ink);
+  }
+  .ui-tab[aria-checked="true"],
+  .ui-tab[aria-current] {
+    color: var(--ui-ink);
+    font-weight: var(--ui-weight-strong);
+    box-shadow: inset 0 -2px 0 var(--ui-accent);
+  }
+  .ui-tab-count {
+    color: var(--ui-faint);
+    font-weight: var(--ui-weight-regular);
+    font-variant-numeric: tabular-nums;
+  }
+  .ui-toolbar .ui-tabs {
+    align-self: auto;
+    height: var(--ui-control);
+    margin-left: 0;
+  }
+}

@@ -72,7 +72,15 @@
         ]
       },
       "resolvedDescription": "Twisted Fate throws three cards that deal 60/105/150/195/240 (+50% bonus AD) (+85% AP) magic damage each.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 1450.4,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Pick a Card",
@@ -176,7 +184,15 @@
         "bluedamage",
         "reddamage",
         "golddamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Stacked Deck",
@@ -241,7 +257,15 @@
         ]
       },
       "resolvedDescription": "Passive: Twisted Fate gains 15/25/35/45/55% Attack Speed and every 4th Attack deals an additional 65/90/115/140/165 (+20% bonus AD) (+40% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Destiny",
@@ -270,7 +294,15 @@
         ]
       },
       "resolvedDescription": "Twisted Fate focuses on his cards, granting True Sight of all enemy champions on the map for 6/8/10 seconds and allowing him to Recast. Recast: Twisted Fate teleports up to 5500 units away.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 25000,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     }
   }
 }

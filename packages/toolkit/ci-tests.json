@@ -7,7 +7,6 @@
       "args": [
         "test/commands",
         "test/lib",
-        "test/bugsink",
         "test/s3",
         "test/deployed",
         "test/screenshot",
@@ -17,6 +16,18 @@
         "test/promotion",
         "scripts",
         "test-integration/catalog.integration.test.ts"
+      ]
+    },
+    {
+      "runner": "vitest",
+      "name": "artifacts-contract",
+      "tier": "extended",
+      "args": [
+        "test-integration/artifacts.contract.integration.test.ts",
+        "--testTimeout",
+        "60000",
+        "--hookTimeout",
+        "60000"
       ]
     },
     {

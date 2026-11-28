@@ -36,6 +36,7 @@ export const layers = [
   "match-receipts",
   "notification-suppression-result",
   "pipeline-contracts",
+  "rank-refresh-contracts",
   "signals",
   "silent-postmatch-backfill",
   "workflow-contracts",
@@ -60,6 +61,13 @@ export default defineArchitecture({
         "Persisted Customs operations and publication inputs are shared with clients and Activities; they must not depend on the Workflow sandbox.",
       from: "customs-contracts",
       to: everythingExcept("customs-contracts", "contracts"),
+    },
+    {
+      name: "rank-refresh-contracts-is-contracts-only",
+      comment:
+        "The rank-refresh Workflow, Activity and Schedule share these schemas, so they may depend on the contracts only.",
+      from: "rank-refresh-contracts",
+      to: everythingExcept("rank-refresh-contracts", "contracts"),
     },
     {
       name: "contracts-is-a-leaf",

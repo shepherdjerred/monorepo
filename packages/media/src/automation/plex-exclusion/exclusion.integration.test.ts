@@ -722,6 +722,7 @@ async function resumeAndPublishBlockedMovie(
   const continuationOp = await db.operation.findFirstOrThrow({
     where: {
       idempotencyKey: { startsWith: `movie-retry-recover-v4:${attemptId}:` },
+      status: "queued",
     },
     include: { outbox: true },
   });
@@ -796,54 +797,10 @@ test("revoked scanner proof blocks staging and new readiness, then resumes persi
   });
   try {
     const { db } = f.source;
-    const ownerUser = await db.mediaUser.findFirstOrThrow({
-      where: { role: "owner" },
-    });
-    const ownerActor: MediaActor = { ...ownerUser, role: "owner" };
-
-    const reserved = await f.movie.reconcileMovieIntentV4(
-      f.input,
-      testPlexBindingExecution(),
-    );
-    expect(reserved.status).toBe("acquire");
-    const attemptId = z.uuid().parse(reserved.attemptId);
-    const attemptInput = {
-      schemaVersion: 4 as const,
-      operationId: f.input.operationId,
-      attemptId,
-      scope: f.input.scope,
-    };
-    expect(
-      await f.movie.submitMovieTorrentV4(
-        attemptInput,
-        testPlexBindingExecution(),
-      ),
-    ).toEqual({
-      status: "submitted",
-      reason: null,
-    });
-    expect(
-      await f.movie.observeMovieAcquisitionV4(
-        attemptInput,
-        testPlexBindingExecution(),
-      ),
-    ).toEqual({ status: "ready", reason: null });
+    const { ownerActor, attemptId, harness } =
+      await acquireBlockedDefaultMovie(f);
     const initialEvidence = await f.evidence();
     expect(initialEvidence.adds).toBe(1);
-
-    const harness = createUpgradedExclusionPlex();
-    await refreshPlexExclusionProofs(db, harness.plex, {
-      machineId: "fixture-server",
-      movieSectionId: "1",
-      tvSectionId: "2",
-    });
-
-    expect(
-      await f.fileMovie.inspectAndStageMovieV4(
-        attemptInput,
-        testPublicationExecution(),
-      ),
-    ).toEqual({ status: "blocked", reason: PLEX_EXCLUSION_PROOF_REQUIRED });
     const blockedAttempt = await db.acquisitionAttempt.findUniqueOrThrow({
       where: { id: attemptId },
     });
@@ -955,6 +912,203 @@ test("revoked scanner proof blocks staging and new readiness, then resumes persi
     expect(after.binding).toMatchObject({
       mediaId: f.input.mediaId,
       edition: "default",
+    });
+  } finally {
+    await f.close();
+  }
+}, 60_000);
+
+async function activateMoviesAfterExclusionProof(
+  f: WorkflowFixture,
+  ownerActor: MediaActor,
+  harness: ReturnType<typeof createUpgradedExclusionPlex>,
+) {
+  const { db } = f.source;
+  const runId = await verifyMoviesExclusionInObserveMode(
+    f,
+    ownerActor,
+    harness,
+  );
+  await db.mediaRuntimeState.update({
+    where: { id: "singleton" },
+    data: {
+      mode: "active",
+      ownershipConfirmed: true,
+      version: { increment: 1 },
+    },
+  });
+  return runId;
+}
+
+async function runDownloadsSweepForRetry(
+  sweepContext: WorkflowFixture["source"]["context"],
+  sweepId: string,
+) {
+  await createSweepActivities({
+    ...sweepContext,
+    movieManagement: {
+      execution: testPlexBindingExecution(),
+      budget: new PublicationAuthorityReadBudget(),
+    },
+  }).sweepMediaWork({
+    kind: "downloads",
+    cursor: "00000000-0000-0000-0000-000000000000",
+    sweepId,
+  });
+}
+
+async function acquireBlockedDefaultMovie(f: WorkflowFixture) {
+  const { db } = f.source;
+  const ownerUser = await db.mediaUser.findFirstOrThrow({
+    where: { role: "owner" },
+  });
+  const ownerActor: MediaActor = { ...ownerUser, role: "owner" };
+  const reserved = await f.movie.reconcileMovieIntentV4(
+    f.input,
+    testPlexBindingExecution(),
+  );
+  expect(reserved.status).toBe("acquire");
+  const attemptId = z.uuid().parse(reserved.attemptId);
+  const attemptInput = {
+    schemaVersion: 4 as const,
+    operationId: f.input.operationId,
+    attemptId,
+    scope: f.input.scope,
+  };
+  expect(
+    await f.movie.submitMovieTorrentV4(
+      attemptInput,
+      testPlexBindingExecution(),
+    ),
+  ).toEqual({ status: "submitted", reason: null });
+  expect(
+    await f.movie.observeMovieAcquisitionV4(
+      attemptInput,
+      testPlexBindingExecution(),
+    ),
+  ).toEqual({ status: "ready", reason: null });
+  const harness = createUpgradedExclusionPlex();
+  await refreshPlexExclusionProofs(db, harness.plex, {
+    machineId: "fixture-server",
+    movieSectionId: "1",
+    tvSectionId: "2",
+  });
+  expect(
+    await f.fileMovie.inspectAndStageMovieV4(
+      attemptInput,
+      testPublicationExecution(),
+    ),
+  ).toEqual({ status: "blocked", reason: PLEX_EXCLUSION_PROOF_REQUIRED });
+  return { ownerActor, attemptId, harness };
+}
+
+test("pre-renewal movie retry blocked by revoked exclusion proof recovers via a fresh sweep retry once proof is restored", async () => {
+  const f = await createMovieWorkflowFixture("default", {
+    bytes: await videoOnlyMovieBytes(),
+  });
+  try {
+    const { db } = f.source;
+    const { ownerActor, attemptId, harness } =
+      await acquireBlockedDefaultMovie(f);
+    await f.finishMediaOperation({
+      operationId: f.input.operationId,
+      status: "reconciling",
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
+    });
+
+    const sweepContext = {
+      ...f.source.context,
+      describeWorkflow: (id: string) =>
+        Promise.resolve({
+          status: "COMPLETED" as const,
+          runId: `closed:${id}`,
+        }),
+    };
+
+    await activateMoviesAfterExclusionProof(f, ownerActor, harness);
+    await runDownloadsSweepForRetry(sweepContext, "queue-pre-renewal-retry");
+
+    const firstRetryOp = await db.operation.findFirstOrThrow({
+      where: {
+        idempotencyKey: { startsWith: `movie-retry-recover-v4:${attemptId}:` },
+      },
+      include: { outbox: true },
+    });
+    await db.outboxCommand.update({
+      where: { operationId: firstRetryOp.id },
+      data: { dispatchedAt: new Date(), attempts: 1 },
+    });
+
+    // Revoke exclusion proof in the narrow window after queueing and before renewal.
+    await db.plexExclusionProof.updateMany({
+      where: { revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    const firstRetryInput = MovieOperationV4Schema.parse(
+      z.object(MovieOperationV4Schema.shape).parse(firstRetryOp.payload),
+    );
+    expect(
+      await createMovieNetworkFacetV4(sweepContext).reconcileMovieIntentV4(
+        firstRetryInput,
+        testPlexBindingExecution(),
+      ),
+    ).toEqual({
+      status: "blocked",
+      attemptId: null,
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
+    });
+    await f.finishMediaOperation({
+      operationId: firstRetryOp.id,
+      status: "reconciling",
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
+    });
+
+    const unrenewedAttempt = await db.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: attemptId },
+    });
+    expect(unrenewedAttempt.coordinatorOperationId).toBe(f.input.operationId);
+
+    // Sweep while proof remains revoked must not schedule another retry.
+    await runDownloadsSweepForRetry(sweepContext, "still-revoked-sweep");
+    expect(
+      await db.operation.count({
+        where: {
+          idempotencyKey: {
+            startsWith: `movie-retry-recover-v4:${attemptId}:`,
+          },
+        },
+      }),
+    ).toBe(1);
+
+    // Restore proof: wake skips unrenewed retry payloads, then sweep schedules a fresh retry.
+    await activateMoviesAfterExclusionProof(
+      f,
+      ownerActor,
+      createUpgradedExclusionPlex(),
+    );
+    expect(
+      await db.operation.findUniqueOrThrow({ where: { id: firstRetryOp.id } }),
+    ).toMatchObject({ status: "reconciling" });
+
+    const recoveredOperationId = await resumeAndPublishBlockedMovie(
+      f,
+      sweepContext,
+      attemptId,
+    );
+    expect(recoveredOperationId).not.toBe(firstRetryOp.id);
+    const firstRetryKey = z.string().parse(firstRetryOp.idempotencyKey);
+    const recoveredOp = await db.operation.findUniqueOrThrow({
+      where: { id: recoveredOperationId },
+    });
+    expect(recoveredOp.idempotencyKey).toBe(`${firstRetryKey}:blocked:1`);
+    const supersededFirst = await db.operation.findUniqueOrThrow({
+      where: { id: firstRetryOp.id },
+    });
+    expect(supersededFirst.status).toBe("completed");
+    expect(supersededFirst.result).toMatchObject({
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
+      supersededByOperationId: recoveredOperationId,
     });
   } finally {
     await f.close();

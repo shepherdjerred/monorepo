@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import * as Timers from "node:timers/promises";
 import path from "node:path";
 import { Context } from "@temporalio/activity";
 import {
@@ -10,10 +11,12 @@ import { createStaticArchive } from "@shepherdjerred/root-scripts/lib/static-sit
 import type { RunOptions } from "@shepherdjerred/root-scripts/lib/run.ts";
 import type * as RunModule from "@shepherdjerred/root-scripts/lib/run.ts";
 import type * as S3Module from "@shepherdjerred/root-scripts/lib/s3-static-site.ts";
-import type * as SelectionModule from "./static-site-selection.ts";
+import * as SelectionModule from "./static-site-selection.ts";
 import type { StaticActivationReceipt } from "./static-site-effects.ts";
 import {
+  activateStaticSelection,
   applyStaticSiteDetail,
+  LIVE_STATIC_SITE_IO,
   verifyStaticSiteDetail,
 } from "./static-site.ts";
 
@@ -28,6 +31,10 @@ vi.mock("@shepherdjerred/root-scripts/lib/run.ts", async (original) => ({
   run: io.run,
   runAllowExit: io.read,
 }));
+vi.mock("node:timers/promises", async (original) => {
+  const timers = await original<typeof Timers>();
+  return { ...timers, setTimeout: vi.fn(timers.setTimeout) };
+});
 vi.mock(
   "@shepherdjerred/root-scripts/lib/s3-static-site.ts",
   async (original) => ({
@@ -53,8 +60,9 @@ let archivePath: string;
 let receipt: StaticActivationReceipt | null;
 let publicHtml: string | undefined;
 const remote = new Map<string, string>();
-const controller = new AbortController();
-const runtime = { signal: controller.signal, heartbeat: vi.fn() };
+const cloudflarePurge = vi.fn<(init: RequestInit) => Response>();
+const retryWait = vi.mocked(Timers.setTimeout);
+const runtime = { signal: new AbortController().signal, heartbeat: vi.fn() };
 
 beforeEach(async () => {
   directory = await mkdtemp("/tmp/static-native-runtime-");
@@ -63,7 +71,12 @@ beforeEach(async () => {
   publicHtml = undefined;
   remote.clear();
   for (const mock of Object.values(io)) mock.mockReset();
+  retryWait.mockClear();
+  cloudflarePurge
+    .mockReset()
+    .mockImplementation(() => Response.json({ success: true }));
   runtime.heartbeat.mockClear();
+  runtime.signal = new AbortController().signal;
   vi.stubEnv("DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID", "test-static-reader");
   vi.stubEnv("DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY", "test-static-secret");
   vi.stubEnv("CLOUDFLARE_API_TOKEN", "test-purge-only");
@@ -98,10 +111,8 @@ beforeEach(async () => {
     }) => {
       expect(input.forceMutableUpload).toBe(true);
       expect(input.signal).toBe(runtime.signal);
-      remote.set(
-        "index.html",
-        await Bun.file(path.join(input.source, "index.html")).text(),
-      );
+      for (const file of await readdir(input.source))
+        remote.set(file, await Bun.file(path.join(input.source, file)).text());
     },
   );
   io.mismatch.mockImplementation(
@@ -126,7 +137,7 @@ beforeEach(async () => {
         expect(url.href).toBe(
           `https://api.cloudflare.com/client/v4/zones/${"1".repeat(32)}/purge_cache`,
         );
-        return Promise.resolve(Response.json({ success: true }));
+        return Promise.resolve(cloudflarePurge(init));
       }
       return Promise.resolve(
         url.pathname === "/.delivery-release.json"
@@ -145,11 +156,19 @@ afterEach(async () => {
   await rm(directory, { recursive: true, force: true });
 });
 
-async function fixture() {
+async function fixture(extraFiles = 0) {
   const source = path.join(directory, "source");
   await Bun.write(
     path.join(source, "index.html"),
     "<html>exact selected release</html>",
+  );
+  await Promise.all(
+    Array.from({ length: extraFiles }, (_, index) =>
+      Bun.write(
+        path.join(source, `asset-${String(index)}.js`),
+        "selected asset",
+      ),
+    ),
   );
   const { digest } = await createStaticArchive(source, archivePath);
   const archive = ArtifactVersionSchema.parse({
@@ -193,6 +212,17 @@ test("native activation and public verification use the explicit runtime without
     runtime.heartbeat.mock.calls.map(([progress]) => progress.phase),
   ).toEqual(["archive", "activate", "archive"]);
   expect(io.sync).toHaveBeenCalledTimes(1);
+  expect(cloudflarePurge).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({
+      body: JSON.stringify({
+        files: [
+          "https://wiki.sjer.red/",
+          "https://wiki.sjer.red/index.html",
+          "https://wiki.sjer.red/.delivery-release.json",
+        ],
+      }),
+    }),
+  );
   expect(receipt).toMatchObject({
     deploymentId: detail.deployment.id,
     versionSetRevisionId: detail.versionSet.id,
@@ -200,6 +230,215 @@ test("native activation and public verification use the explicit runtime without
   });
   expect(evidence.map((entry) => entry.kind)).toContain("reconciliation");
   expect(evidence.map((entry) => entry.kind)).toContain("acceptance");
+});
+
+test.each([
+  {
+    name: "an HTTP refusal with provider codes",
+    response: () =>
+      Response.json(
+        {
+          success: true,
+          errors: [
+            { code: "sensitive text", message: "private input" },
+            { code: 10_000, message: "private input" },
+            { code: 1134 },
+          ],
+        },
+        { status: 403 },
+      ),
+    details: "HTTP 403, Cloudflare codes 10000, 1134",
+  },
+  {
+    name: "a negative acknowledgement on HTTP success",
+    response: () =>
+      Response.json({
+        success: false,
+        errors: Array.from({ length: 10 }, (_, index) => ({
+          code: 1140 + index,
+        })),
+      }),
+    details:
+      "HTTP 200, Cloudflare codes 1140, 1141, 1142, 1143, 1144, 1145, 1146, 1147",
+  },
+  {
+    name: "an authorization refusal even when it includes a throttle code",
+    response: () =>
+      Response.json(
+        { success: false, errors: [{ code: 1134 }] },
+        { status: 401 },
+      ),
+    details: "HTTP 401, Cloudflare codes 1134",
+  },
+  {
+    name: "invalid JSON after an HTTP failure",
+    response: () => new Response("private provider body", { status: 429 }),
+    details: "HTTP 429, invalid JSON response",
+  },
+  {
+    name: "a malformed acknowledgement on HTTP success",
+    response: () => Response.json({ success: "private provider body" }),
+    details: "HTTP 200, invalid response envelope",
+  },
+])(
+  "activation refuses $name with bounded purge diagnostics",
+  async ({ response, details }) => {
+    const detail = await fixture();
+    cloudflarePurge.mockImplementationOnce(response);
+    await expect(applyStaticSiteDetail(detail, runtime)).rejects.toMatchObject({
+      message: `Selected static-site URL cache purge failed (batch 1/1, URL count 3, ${details})`,
+    });
+    expect(cloudflarePurge).toHaveBeenCalledTimes(1);
+    expect(retryWait).not.toHaveBeenCalled();
+  },
+);
+
+test("a later failed purge reports its batch and preserves the exact URL requests", async () => {
+  const detail = await fixture(28);
+  cloudflarePurge
+    .mockImplementationOnce(() => Response.json({ success: true }))
+    .mockImplementationOnce(() =>
+      Response.json(
+        { success: false, errors: [{ code: 1092 }] },
+        { status: 400 },
+      ),
+    );
+  await expect(applyStaticSiteDetail(detail, runtime)).rejects.toMatchObject({
+    message:
+      "Selected static-site URL cache purge failed (batch 2/2, URL count 1, HTTP 400, Cloudflare codes 1092)",
+  });
+  expect(cloudflarePurge).toHaveBeenCalledTimes(2);
+  expect(cloudflarePurge).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      body: JSON.stringify({
+        files: ["https://wiki.sjer.red/.delivery-release.json"],
+      }),
+    }),
+  );
+});
+
+function throttled(status: number, retryAfter?: string) {
+  return Response.json(
+    { success: false, errors: status === 429 ? [] : [{ code: 1134 }] },
+    {
+      status,
+      ...(retryAfter === undefined
+        ? {}
+        : { headers: { "Retry-After": retryAfter } }),
+    },
+  );
+}
+
+test.each([
+  { status: 429, retryAfter: "3", milliseconds: 3000 },
+  { status: 400, retryAfter: undefined, milliseconds: 1000 },
+])(
+  "activation retries throttling with a fresh ownership proof (HTTP $status)",
+  async ({ status, retryAfter, milliseconds }) => {
+    const detail = await fixture(28);
+    const fence = vi.fn(() => Promise.resolve());
+    const proofCounts: number[] = [];
+    retryWait.mockResolvedValueOnce(undefined);
+    cloudflarePurge.mockImplementation(() => {
+      proofCounts.push(fence.mock.calls.length);
+      return proofCounts.length === 1
+        ? throttled(status, retryAfter)
+        : Response.json({ success: true });
+    });
+    const evidence = await activateStaticSelection(
+      SelectionModule.staticSiteSelection(detail),
+      runtime,
+      LIVE_STATIC_SITE_IO,
+      fence,
+    );
+    expect(proofCounts).toEqual([3, 4, 5]);
+    expect(cloudflarePurge.mock.calls[0]?.[0].body).toBe(
+      cloudflarePurge.mock.calls[1]?.[0].body,
+    );
+    expect(retryWait).toHaveBeenCalledExactlyOnceWith(milliseconds, undefined, {
+      signal: runtime.signal,
+    });
+    expect(evidence.map(({ kind }) => kind)).toContain("acceptance");
+  },
+);
+
+test("persistent throttling stops after two retries for the same batch", async () => {
+  const detail = await fixture();
+  retryWait.mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
+  cloudflarePurge.mockImplementation(() => throttled(429));
+  await expect(applyStaticSiteDetail(detail, runtime)).rejects.toThrow(
+    "HTTP 429",
+  );
+  expect(cloudflarePurge).toHaveBeenCalledTimes(3);
+  expect(retryWait.mock.calls.map(([milliseconds]) => milliseconds)).toEqual([
+    1000, 2000,
+  ]);
+});
+
+test("throttling cannot exhaust more than six retries across an archive", async () => {
+  const detail = await fixture(105);
+  for (let retry = 0; retry < 6; retry++)
+    retryWait.mockResolvedValueOnce(undefined);
+  cloudflarePurge.mockImplementation(() =>
+    cloudflarePurge.mock.calls.length % 3 === 0
+      ? Response.json({ success: true })
+      : throttled(429),
+  );
+  await expect(applyStaticSiteDetail(detail, runtime)).rejects.toThrow(
+    "batch 4/4, URL count 18, HTTP 429",
+  );
+  expect(cloudflarePurge).toHaveBeenCalledTimes(10);
+  expect(retryWait).toHaveBeenCalledTimes(6);
+});
+
+test("a provider delay beyond the retry bound does not trigger an early POST", async () => {
+  const detail = await fixture();
+  cloudflarePurge.mockImplementationOnce(() => throttled(429, "6"));
+  await expect(applyStaticSiteDetail(detail, runtime)).rejects.toThrow(
+    "HTTP 429",
+  );
+  expect(cloudflarePurge).toHaveBeenCalledTimes(1);
+  expect(retryWait).not.toHaveBeenCalled();
+});
+
+test("a lost ownership fence prevents a throttled request from being retried", async () => {
+  const detail = await fixture();
+  const fence = vi.fn(() => Promise.resolve());
+  cloudflarePurge.mockImplementationOnce(() => throttled(429));
+  retryWait.mockImplementationOnce(async () => {
+    fence.mockRejectedValueOnce(new Error("Ownership lost"));
+    await Promise.resolve();
+  });
+  await expect(
+    activateStaticSelection(
+      SelectionModule.staticSiteSelection(detail),
+      runtime,
+      LIVE_STATIC_SITE_IO,
+      fence,
+    ),
+  ).rejects.toThrow("Ownership lost");
+  expect(fence).toHaveBeenCalledTimes(4);
+  expect(cloudflarePurge).toHaveBeenCalledTimes(1);
+});
+
+test("cancellation during purge backoff prevents a retry", async () => {
+  const detail = await fixture();
+  const canceled = new AbortController();
+  runtime.signal = canceled.signal;
+  const waiting = Promise.withResolvers<undefined>();
+  const timers = await vi.importActual<typeof Timers>("node:timers/promises");
+  retryWait.mockImplementationOnce((milliseconds, value, options) => {
+    waiting.resolve(undefined);
+    return timers.setTimeout(milliseconds, value, options);
+  });
+  cloudflarePurge.mockImplementationOnce(() => throttled(429, "5"));
+  const outcome = expect(
+    applyStaticSiteDetail(detail, runtime),
+  ).rejects.toMatchObject({ name: "AbortError" });
+  await waiting.promise;
+  canceled.abort();
+  await outcome;
+  expect(cloudflarePurge).toHaveBeenCalledTimes(1);
 });
 
 test("a corrupted original archive cannot write a receipt or synchronize the site", async () => {

@@ -12,6 +12,7 @@ import {
   hallBreakRecords,
   hallGuildId,
   hallRiotMatchId,
+  legacyHallAnnouncementEnvelope,
 } from "#src/temporal/notification/hall-record-break.test-fixtures.ts";
 
 /**
@@ -94,7 +95,7 @@ beforeEach(() => {
 });
 
 describe("the hall record-break message", () => {
-  test("is one embed for the records, with mentions disabled", () => {
+  test("shows the previous and top three scores in one embed with mentions disabled", () => {
     const message = buildHallRecordBreakNotificationMessage(hallRecord());
 
     expect(message.allowedMentions).toEqual({ parse: [] });
@@ -103,6 +104,43 @@ describe("the hall record-break message", () => {
     );
     expect(embeds).toHaveLength(1);
     expect(embeds).toMatchSnapshot();
+  });
+
+  test("renders a previously queued v1 announcement with its original content", () => {
+    const message = buildHallRecordBreakNotificationMessage(
+      hallRecord(legacyHallAnnouncementEnvelope()),
+    );
+    expect(message.allowedMentions).toEqual({ parse: [] });
+    expect(
+      (message.embeds ?? []).map((embed) =>
+        "toJSON" in embed ? embed.toJSON() : embed,
+      ),
+    ).toMatchSnapshot();
+  });
+
+  test("uses catalog precision and includes only ranks with scores", () => {
+    const [record] = hallBreakRecords(1);
+    if (record === undefined) throw new Error("Missing Hall record fixture");
+    const previous = { ...record.previous, value: 600.25 };
+    const message = buildHallRecordBreakNotificationMessage(
+      hallRecord(
+        withRecords([
+          {
+            ...record,
+            recordId: "champion_damage_per_minute",
+            value: 610.5,
+            previous,
+            standings: [{ value: 610.5, holders: record.holders }, previous],
+          },
+        ]),
+      ),
+    );
+    const [embed] = (message.embeds ?? []).map((candidate) =>
+      "toJSON" in candidate ? candidate.toJSON() : candidate,
+    );
+    expect(embed?.fields?.[0]?.value).toEqual(
+      "Previous #1 · 600.25 — Bob\\_\n#1 · 610.50 — Alice \\*the\\* Great, Bob\\_\n#2 · 600.25 — Bob\\_",
+    );
   });
 
   test("bounds tied holder names within Discord embed limits", () => {
@@ -118,6 +156,8 @@ describe("the hall record-break message", () => {
       puuid:
         "hall-test-puuid000000000000000000000000000000000000000000000000000000000000000",
     };
+    const holders = Array.from({ length: 20 }, () => holder);
+    const previous = { value: 12_340, holders };
     const records = COMPETITIVE_PROGRESSION_CATALOG.hall.records.map(
       (record) => ({
         matchId: hallRiotMatchId,
@@ -126,7 +166,13 @@ describe("the hall record-break message", () => {
         holder,
         queueFamilyId: queueFamily.id,
         recordId: record.id,
-        holders: Array.from({ length: 20 }, () => holder),
+        holders,
+        previous,
+        standings: [
+          { value: 12_345, holders },
+          previous,
+          { value: 12_335, holders },
+        ],
       }),
     );
 
@@ -149,6 +195,11 @@ describe("the hall record-break message", () => {
 
     expect(fields).toHaveLength(records.length);
     expect(fields.every((field) => field.value.length <= 1024)).toBe(true);
+    for (const field of fields) {
+      expect(field.value).toMatch(
+        /^Previous #1 · [^\n]+\n#1 · [^\n]+\n#2 · [^\n]+\n#3 · [^\n]+$/u,
+      );
+    }
     expect(totalLength).toBeLessThanOrEqual(5800);
   });
 

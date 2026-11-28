@@ -18,6 +18,19 @@ import {
   type DeliveryJobRequest,
   type DeliveryJobReceipt,
 } from "#shared/delivery-job.ts";
+import { redactSecrets } from "#shared/redact.ts";
+
+const FAILED_STAGE_LOG_TAIL_LIMIT = 1500;
+
+function secretEnvTokens(): string[] {
+  return Object.entries(Bun.env)
+    .filter(
+      ([key, value]) =>
+        value !== undefined &&
+        /TOKEN|SECRET|PASSWORD|KEY|CREDENTIAL|AUTH/iu.test(key),
+    )
+    .map(([, value = ""]) => value);
+}
 
 function statusCode(error: unknown) {
   return z.object({ code: z.number() }).safeParse(error).data?.code;
@@ -94,12 +107,49 @@ export class DeliveryJobFailedError extends Error {
   override readonly name = "DeliveryJobFailedError";
 }
 
+async function readFailedStageLogTail(
+  pods: Pick<CoreV1Api, "listNamespacedPod" | "readNamespacedPodLog">,
+  receipt: DeliveryJobReceipt,
+): Promise<string> {
+  try {
+    const listed = await pods.listNamespacedPod({
+      namespace: receipt.namespace,
+      labelSelector: `job-name=${receipt.name}`,
+    });
+    const owned = listed.items.find(
+      (pod) =>
+        pod.metadata?.ownerReferences?.some(
+          (owner) => owner.kind === "Job" && owner.uid === receipt.uid,
+        ) === true,
+    );
+    const podName = owned?.metadata?.name;
+    if (podName === undefined) return "";
+    const raw = await pods.readNamespacedPodLog({
+      namespace: receipt.namespace,
+      name: podName,
+      container: "stage",
+      tailLines: 40,
+      limitBytes: 8192,
+    });
+    const cleaned = raw
+      .split("\n")
+      .filter((line) => !line.startsWith(DELIVERY_JOB_RESULT_PREFIX))
+      .join("\n")
+      .trim()
+      .slice(-FAILED_STAGE_LOG_TAIL_LIMIT);
+    return redactSecrets(cleaned, secretEnvTokens());
+  } catch {
+    return "";
+  }
+}
+
 async function waitForJob(
-  jobs: BatchV1Api,
+  clients: { jobs: BatchV1Api; pods: CoreV1Api },
   expected: V1Job,
   receipt: DeliveryJobReceipt,
   runtime: DeliveryJobRuntime,
 ): Promise<void> {
+  const { jobs, pods } = clients;
   const deadline = Date.now() + 2 * 60 * 60 * 1000;
   for (;;) {
     runtime.heartbeat(receipt);
@@ -121,10 +171,13 @@ async function waitForJob(
         (condition) =>
           condition.type === "Failed" && condition.status === "True",
       ) === true
-    )
+    ) {
+      const logTail = await readFailedStageLogTail(pods, receipt);
+      const suffix = logTail === "" ? "" : `\n${logTail}`;
       throw new DeliveryJobFailedError(
-        "Delivery Job failed; inspect its recorded UID and bounded stage logs",
+        `Delivery Job failed; inspect its recorded UID and bounded stage logs${suffix}`,
       );
+    }
     if (
       job.status?.conditions?.some(
         (condition) =>
@@ -190,7 +243,7 @@ export async function runDeliveryJob(
     requestId: input.deploymentId,
   });
   await onReceipt(receipt);
-  await waitForJob(jobs, expected, receipt, runtime);
+  await waitForJob({ jobs, pods }, expected, receipt, runtime);
   const listed = await pods.listNamespacedPod({
     namespace,
     labelSelector: `job-name=${name}`,

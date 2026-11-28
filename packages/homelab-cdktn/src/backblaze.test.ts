@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
 import { HOMELAB_VAULT_ID } from "#src/onepassword.ts";
+import { useSynthesizedApp } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
   terraform: z.looseObject({
@@ -18,20 +18,16 @@ const ConfigurationSchema = z.looseObject({
   output: z.record(z.string(), z.unknown()),
 });
 
-async function backblaze() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("backblaze") ?? ""),
-  );
-}
+const readStack = useSynthesizedApp();
+const backblaze = () => readStack("backblaze", ConfigurationSchema);
 
 const KEYS = ["postgres_wal", "seaweedfs_backups", "velero"];
 
 const KEY_ID = "${b2_application_key.backup[each.key].application_key_id}";
 const SECRET = "${b2_application_key.backup[each.key].application_key}";
 
-test("backblaze keeps the bucket, key and item addresses of its state", async () => {
-  const { resource, output, locals } = await backblaze();
+test("backblaze keeps the bucket, key and item addresses of its state", () => {
+  const { resource, output, locals } = backblaze();
   expect(Object.keys(resource).toSorted()).toEqual([
     "b2_application_key",
     "b2_bucket",
@@ -52,8 +48,8 @@ test("backblaze keeps the bucket, key and item addresses of its state", async ()
   });
 });
 
-test("every bucket is private, protected and expires only hidden versions", async () => {
-  const { resource } = await backblaze();
+test("every bucket is private, protected and expires only hidden versions", () => {
+  const { resource } = backblaze();
   const buckets = resource["b2_bucket"] ?? {};
   for (const key of KEYS) {
     expect(buckets[key], key).toMatchObject({
@@ -76,8 +72,8 @@ test("every bucket is private, protected and expires only hidden versions", asyn
   expect(buckets["postgres_wal"]).not.toHaveProperty("file_lock_configuration");
 });
 
-test("each scoped key is written to its own item, with Velero's credentials file after the key fields", async () => {
-  const { resource } = await backblaze();
+test("each scoped key is written to its own item, with Velero's credentials file after the key fields", () => {
+  const { resource } = backblaze();
   const key = z
     .looseObject({ for_each: z.record(z.string(), z.unknown()) })
     .parse(resource["b2_application_key"]?.["backup"]);
@@ -130,8 +126,8 @@ test("each scoped key is written to its own item, with Velero's credentials file
   });
 });
 
-test("backblaze encrypts state and plans and keeps its lock constraints", async () => {
-  const { terraform, variable, ...rest } = await backblaze();
+test("backblaze encrypts state and plans and keeps its lock constraints", () => {
+  const { terraform, variable, ...rest } = backblaze();
   expect(Object.keys(variable)).toEqual(["tofu_state_encryption_passphrase"]);
   expect(variable["tofu_state_encryption_passphrase"]).toMatchObject({
     description: "Passphrase encrypting Backblaze state and plans.",

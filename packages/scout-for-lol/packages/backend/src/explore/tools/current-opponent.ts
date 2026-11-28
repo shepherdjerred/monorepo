@@ -3,15 +3,14 @@ import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.
 import {
   LeaguePuuidSchema,
   RegionSchema,
-  inferStandardLanesWithCurrentPriors,
   type Lane,
   type RawCurrentGameInfo,
-  type RawCurrentGameParticipant,
   type Region,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
+import { inferSpectatorLanes } from "#src/league/tasks/prematch/spectator-lanes.ts";
 
 export type CurrentLaneOpponentResult =
   | {
@@ -27,7 +26,6 @@ export type CurrentLaneOpponentResult =
     };
 
 type LinkedAccount = { puuid: LeaguePuuid; region: Region };
-const MIN_LANE_INFERENCE_MARGIN = 2;
 
 function linkedAccounts(
   rows: { accounts: { puuid: LeaguePuuid; region: string }[] }[],
@@ -43,41 +41,6 @@ function linkedAccounts(
     }
   }
   return [...unique.values()];
-}
-
-function laneAssignments(
-  participants: RawCurrentGameParticipant[],
-): Map<number, Lane> | null {
-  if (participants.length !== 10) return null;
-  const result = new Map<number, Lane>();
-  for (const teamId of [100, 200]) {
-    const team = participants
-      .map((participant, index) => ({ participant, index }))
-      .filter((entry) => entry.participant.teamId === teamId);
-    if (team.length !== 5) return null;
-    const inferred = inferStandardLanesWithCurrentPriors(
-      team.map((entry) => ({
-        participantKey: `participant:${entry.index.toString()}`,
-        championId: entry.participant.championId,
-        spell1Id: entry.participant.spell1Id,
-        spell2Id: entry.participant.spell2Id,
-      })),
-    );
-    if (
-      inferred.secondBestScore !== null &&
-      inferred.bestScore - inferred.secondBestScore <= MIN_LANE_INFERENCE_MARGIN
-    ) {
-      return null;
-    }
-    for (const assignment of inferred.assignments) {
-      const index = Number(
-        assignment.participantKey.replace("participant:", ""),
-      );
-      if (!Number.isInteger(index)) return null;
-      result.set(index, assignment.lane);
-    }
-  }
-  return result;
 }
 
 export function findCurrentLaneOpponentInGame(
@@ -100,7 +63,7 @@ export function findCurrentLaneOpponentInGame(
       message: "Riot's live game did not identify your linked account.",
     };
   }
-  const assignments = laneAssignments(game.participants);
+  const assignments = inferSpectatorLanes(game.participants);
   if (assignments === null) {
     return {
       kind: "unavailable",

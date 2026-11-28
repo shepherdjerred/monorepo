@@ -1,4 +1,4 @@
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, stat } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
@@ -13,6 +13,17 @@ import { stopPrism } from "./prism-process.ts";
 
 export function caffeinateArgs(watchdogPid: number = process.pid): string[] {
   return ["/usr/bin/caffeinate", "-du", "-w", String(watchdogPid)];
+}
+
+async function prismLogOffset(logPath: string): Promise<number> {
+  try {
+    const info = await stat(logPath);
+    return info.size;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return 0;
+    throw error;
+  }
 }
 
 export async function cleanupPrismCaptureInstance(options: {
@@ -116,6 +127,11 @@ export const prismLauncher: ClientLauncher = async (spec) => {
       path.join(instance, "minecraft/options.txt"),
       AUTOMATED_CLIENT_OPTIONS_TXT,
     );
+    const prismLogPath = path.join(
+      path.dirname(instances),
+      "logs/PrismLauncher-0.log",
+    );
+    const launchOffset = await prismLogOffset(prismLogPath);
     const child = Bun.spawn(
       [
         "/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher",
@@ -154,6 +170,7 @@ export const prismLauncher: ClientLauncher = async (spec) => {
           bootstrapPath: spec.bootstrapPath,
         });
       },
+      { prismLogPath, prismLogOffset: launchOffset },
     );
   } catch (error) {
     awake.kill();

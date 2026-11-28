@@ -225,6 +225,20 @@ const documents: Readonly<
       { type: "variant", key: "delivery-executor-concurrency", value: "8" },
     ],
   },
+  "birmel/prod": {
+    id: "birmel/prod",
+    revision: 3,
+    flags: [
+      { type: "variant", key: "birmel-llm-model", value: "gpt-6.1-sol" },
+      { type: "variant", key: "birmel-llm-classifier-model", value: "gpt-5.5" },
+      {
+        type: "variant",
+        key: "birmel-llm-memory-model",
+        value: "my-local-model",
+      },
+      { type: "variant", key: "birmel-llm-reasoning-effort", value: "medium" },
+    ],
+  },
 };
 
 afterEach(() => {
@@ -793,4 +807,126 @@ test("an unmanaged variant is shown as plain text with a notice", async () => {
   expect(jsonEditor(page).value).toBe('"luna"');
   await typeInto(jsonEditor(page), "42");
   expect(issueText(page)).toContain("Expected a JSON string");
+});
+
+// ---- Picking enum values and catalog models ----
+
+/** The model picker's "Custom…" option value. */
+const CUSTOM = " custom";
+
+async function choose(select: HTMLSelectElement, value: string) {
+  await act(async () => {
+    Reflect.set(HTMLSelectElement.prototype, "value", value, select);
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await Promise.resolve();
+  });
+  await settle();
+}
+
+const optionValues = (select: HTMLSelectElement) =>
+  [...select.options].map((option) => option.value);
+const valueSelect = (page: Page) => page.select(".fl-form select");
+const customInput = (page: Page) =>
+  page.container.querySelector<HTMLInputElement>(".fl-choice input");
+const modelNotice = (page: Page) =>
+  page.container.querySelector('.fl-notice[data-tone="warning"]');
+
+test("an enum value is picked from a closed select", async () => {
+  stubApi();
+  const page = await mount("/birmel/prod/birmel-llm-reasoning-effort");
+  const select = valueSelect(page);
+  expect(optionValues(select)).toEqual(["minimal", "low", "medium", "high"]);
+  expect(select.value).toBe("medium");
+  expect(page.container.querySelector(".fl-form input")).toBeNull();
+
+  await choose(select, "high");
+  expect(valueSelect(page).value).toBe("high");
+  expect(review(page).disabled).toBe(false);
+  await click(modeButton(page, "JSON"));
+  expect(jsonEditor(page).value).toBe('"high"');
+});
+
+test("a model flag picks a routable catalog model from a grouped select", async () => {
+  stubApi();
+  const page = await mount("/birmel/prod/birmel-llm-model");
+  const select = valueSelect(page);
+  expect(select.value).toBe("gpt-6.1-sol");
+  expect(
+    [...select.querySelectorAll("optgroup")].map((group) => group.label),
+  ).toEqual(["Current", "Deprecated"]);
+  expect(optionValues(select)).not.toContain("text-embedding-3-small");
+  expect(optionValues(select)).not.toContain("kimi-k3.1-pro");
+  expect(select.options[select.selectedIndex]?.textContent).toBe(
+    "GPT-6.1 Sol · gpt-6.1-sol",
+  );
+  expect(optionValues(select).at(-1)).toBe(CUSTOM);
+  expect(customInput(page)).toBeNull();
+  expect(modelNotice(page)).toBeNull();
+
+  await choose(select, "claude-opus-5");
+  expect(valueSelect(page).value).toBe("claude-opus-5");
+  await click(modeButton(page, "JSON"));
+  expect(jsonEditor(page).value).toBe('"claude-opus-5"');
+  // JSON mode completes from the same catalog models.
+  expect(JSON.parse(jsonEditor(page).dataset["schema"] ?? "")).toMatchObject({
+    examples: optionValues(select).filter((value) => value !== CUSTOM),
+  });
+});
+
+test("Custom reveals a model id field and warns about models the catalog lacks", async () => {
+  stubApi();
+  const page = await mount("/birmel/prod/birmel-llm-model");
+  await choose(valueSelect(page), CUSTOM);
+  const input = customInput(page);
+  if (input === null) throw new Error("Custom did not reveal the id field");
+  expect(input.value).toBe("gpt-6.1-sol");
+  expect(document.activeElement).toBe(input);
+  expect(modelNotice(page)).toBeNull();
+
+  await typeInto(input, "gpt-7-preview-local");
+  expect(valueSelect(page).value).toBe(CUSTOM);
+  const notice = modelNotice(page);
+  expect(notice?.textContent).toBe(
+    "Not in the shared model catalog — consumers reject unknown models (storm-brain fails at startup). Add it to @shepherdjerred/llm-models first.",
+  );
+  expect(input.getAttribute("aria-describedby")).toContain(notice?.id);
+  // The registry accepts any model id; the notice warns, it does not block.
+  expect(review(page).disabled).toBe(false);
+
+  // Typing a listed id keeps the field rather than swapping it for the select.
+  await typeInto(input, "gpt-6-luna");
+  expect(customInput(page)).toBe(input);
+  expect(modelNotice(page)).toBeNull();
+
+  await typeInto(input, "");
+  expect(review(page).disabled).toBe(true);
+  expect(input.getAttribute("aria-invalid")).toBe("true");
+  expect(input.getAttribute("aria-describedby")).toContain(
+    page.query(".fl-issues").id,
+  );
+
+  await choose(valueSelect(page), "gpt-6-sol");
+  expect(customInput(page)).toBeNull();
+  expect(valueSelect(page).value).toBe("gpt-6-sol");
+});
+
+test("a stored model outside the catalog opens on Custom with a notice", async () => {
+  stubApi();
+  const page = await mount("/birmel/prod/birmel-llm-memory-model");
+  expect(valueSelect(page).value).toBe(CUSTOM);
+  expect(customInput(page)?.value).toBe("my-local-model");
+  expect(modelNotice(page)?.textContent).toContain(
+    "Not in the shared model catalog",
+  );
+});
+
+test("a deprecated catalog model is selected with a deprecation notice", async () => {
+  stubApi();
+  const page = await mount("/birmel/prod/birmel-llm-classifier-model");
+  expect(valueSelect(page).value).toBe("gpt-5.5");
+  expect(customInput(page)).toBeNull();
+  expect(modelNotice(page)?.textContent).toMatch(/^Deprecated in the catalog/u);
+  expect(valueSelect(page).getAttribute("aria-describedby")).toContain(
+    modelNotice(page)?.id,
+  );
 });

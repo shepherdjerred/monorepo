@@ -17,6 +17,7 @@
         "src/*.ts",
         "src/*.json",
         "src/tofu/discord/desired-state.json",
+        "src/tofu/provider-versions.json",
         "src/talos/seccomp/promotion-policy.json",
         // platform-model.ts derives scoped credentials from these.
         "src/tofu/anthropic-federation/desired-state.json",

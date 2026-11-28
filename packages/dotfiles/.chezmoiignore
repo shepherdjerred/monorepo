@@ -120,6 +120,7 @@ install-claude-managed-settings.sh
 # Toolchains: mise runs in shims mode for the shell, with no runtimes installed.
 .bunfig.toml
 .default-cargo-crates
+.default-go-packages
 .default-npm-packages
 .default-python-packages
 # Homelab and infrastructure CLIs and credentials.

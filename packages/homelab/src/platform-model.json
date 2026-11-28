@@ -48,8 +48,8 @@
     },
     {
       "hostname": "bugsink.sjer.red",
-      "namespace": "bugsink",
-      "service": "bugsink-bugsink-service"
+      "namespace": "errors",
+      "service": "errors-ingest"
     },
     {
       "hostname": "feeds.sjer.red",
@@ -244,11 +244,6 @@
     {
       "host": "bazarr",
       "namespace": "media",
-      "exposure": "ingress"
-    },
-    {
-      "host": "bugsink",
-      "namespace": "bugsink",
       "exposure": "ingress"
     },
     {

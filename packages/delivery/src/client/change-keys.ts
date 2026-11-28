@@ -40,7 +40,7 @@ const BY_DOMAIN: Record<ChangeDomain, (change: ChangeEvent) => QueryKey[]> = {
   environment: () => [["commits"], ["environment"], ["service"], ["overview"]],
   pipeline: () => [["environment"], ["service"], ["overview"]],
   worker: () => [["workers"], ...INTENT],
-  platform: () => [...INTENT, ["commits"], ["service"]],
+  platform: () => [...INTENT, ["approvals"], ["commits"], ["service"]],
   content: () => INTENT,
   minecraft: () => INTENT,
   forum: () => INTENT,

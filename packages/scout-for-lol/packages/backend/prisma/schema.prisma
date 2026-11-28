@@ -162,6 +162,36 @@ model CurrentRankSnapshot {
   updatedAt    DateTime @updatedAt
 }
 
+/// The ten players of one live game, written when prematch detection archives
+/// its spectator snapshot and read by the consumer Live game page, which never
+/// calls Riot or S3. `participants` and `recentForm` are validated by
+/// `live-roster-schema.ts` on every read. `recentForm` holds the short
+/// ranked-form summary of each untracked participant (never their matches),
+/// keyed by PUUID, and is filled in by a follow-up Activity.
+///
+/// Rows are transient by design: `expiresAt` is the hard cap, and a game that
+/// ended is purged an hour after its match was recorded, whichever is first
+/// (`live-roster-retention.ts`).
+model LiveGameRoster {
+  riotMatchId           String    @id
+  platform              String
+  gameId                String
+  queueId               Int
+  gameMode              String
+  gameStartedAt         DateTime?
+  detectedAt            DateTime
+  expiresAt             DateTime
+  participants          Json
+  trackedPuuids         String[]
+  recentForm            Json      @default("{}")
+  recentFormCompletedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([detectedAt])
+  @@index([expiresAt])
+}
+
 // Clash-v1 current snapshot. Riot returns empty registrations when Clash is
 // inactive; rows are replaced on each poll rather than accumulated.
 model ClashTournament {
@@ -1888,6 +1918,7 @@ model HallRecordCell {
   currentValue        Float?
   holdersJson         String    @default("[]")
   evidenceJson        String    @default("[]")
+  rankingsJson        String?
   errorMessage        String?
   baselineStartedAt   DateTime?
   baselineCompletedAt DateTime?
@@ -2555,11 +2586,13 @@ model MatchProcessingReceipt {
   scopeAccountId Int?
   scopeKey       String // receiptScopeKey(scope), e.g. "guild:123"
   evidence       String? // JSON, opaque to SQL
+  writerGitSha   String? // First inserting build. Unknown and legacy writers leave it null.
   recordedAt     DateTime
   createdAt      DateTime @default(now())
 
   @@unique([riotMatchId, kind, version, scopeKey])
   @@index([kind, recordedAt])
+  @@index([writerGitSha, createdAt(sort: Desc), id(sort: Desc)])
 }
 
 /// One durable notification intent (domain NotificationIntent). The state
@@ -2904,28 +2937,17 @@ model DareNotificationPreference {
 /// unvisited backlog. The claim order is the index order: depth, then
 /// `nextEligibleAt`. Crawled matches, not frontier rows, are the permanent
 /// record; a pruned player is admitted again when a later match names them.
-///
-/// `seedMatchId`, `visitCount`, `createdAt` and `updatedAt` are retired: no code
-/// reads or writes them, and their defaults let a row insert without them. A
-/// later migration drops them once no running pod writes them.
 model CrawlFrontier {
   puuid          String    @id
   platformRoute  String
   depth          Int
-  seedMatchId    String    @default("")
   rankTier       String?
   rankDivision   String?
   rankedAt       DateTime?
   lastVisitedAt  DateTime?
   nextEligibleAt DateTime
-  visitCount     Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now())
 
-  /// The claim and the pruner walk this order. The older
-  /// (nextEligibleAt, depth) index below is retired with the columns above.
   @@index([depth, nextEligibleAt])
-  @@index([nextEligibleAt, depth])
 }
 
 /// One crawled match: the dedupe key and the daily-budget ledger. It is not a

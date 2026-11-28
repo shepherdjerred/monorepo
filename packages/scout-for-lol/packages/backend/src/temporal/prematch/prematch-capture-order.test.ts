@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   live: vi.fn(),
   stage: vi.fn(),
   intents: vi.fn(),
+  roster: vi.fn(),
 }));
 
 vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
@@ -47,6 +48,9 @@ vi.mock("#src/report-lake/receipted-staging.ts", () => ({
 }));
 vi.mock("#src/temporal/prematch/prematch-intents.ts", () => ({
   recordPrematchDeliveryIntents: mocks.intents,
+}));
+vi.mock("#src/live-roster/live-roster-record.ts", () => ({
+  recordLiveGameRosterOrReport: mocks.roster,
 }));
 vi.mock("#src/league/clash/sighting.ts", () => ({
   recordClashPrematchSightings: () => Promise.resolve(),
@@ -81,6 +85,33 @@ afterEach(() => {
 });
 
 describe("the V2 prematch capture", () => {
+  test("writes the live roster after the notification intents, from the context it captured", async () => {
+    const context = archivedContext();
+    mocks.resume.mockResolvedValue(context);
+    mocks.stage.mockResolvedValue({ files: [], receipt: "recorded" });
+    mocks.intents.mockResolvedValue({ minted: 2, existing: 0, conflicts: 0 });
+    mocks.roster.mockResolvedValue("recorded");
+
+    await archivePrematchSnapshot({ stage: "dev", gameRef: GAME_REF });
+
+    // After the intents, so the roster can never hold up the announcement.
+    expect(mocks.roster).toHaveBeenCalledOnce();
+    expect(mocks.roster.mock.calls[0]?.[0]).toBe(context);
+    expect(mocks.roster.mock.calls[0]?.[1]).toBeInstanceOf(Date);
+    expect(mocks.roster.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mocks.intents.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    );
+  });
+
+  test("a game no longer live writes no roster", async () => {
+    mocks.resume.mockResolvedValue(null);
+    mocks.live.mockResolvedValue(null);
+
+    await archivePrematchSnapshot({ stage: "dev", gameRef: GAME_REF });
+
+    expect(mocks.roster).not.toHaveBeenCalled();
+  });
+
   test("resumes from the archive without ever asking Riot", async () => {
     mocks.resume.mockResolvedValue(archivedContext());
     mocks.live.mockRejectedValue(

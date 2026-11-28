@@ -1,6 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
-import { composeAutomatic } from "./automatic.ts";
+import { composeAutomatic, pipelineOriginSelect } from "./automatic.ts";
 
 type BuildRow = Prisma.BuildGetPayload<object>;
 
@@ -8,10 +8,24 @@ type BuildRow = Prisma.BuildGetPayload<object>;
 async function ciOutputs(tx: Transaction, build: BuildRow) {
   const outputs = await tx.buildArtifactSelection.findMany({
     where: { buildId: build.id },
+    select: {
+      component: true,
+      artifactId: true,
+      artifact: {
+        select: { buildId: true, build: { select: pipelineOriginSelect } },
+      },
+    },
   });
-  return Object.fromEntries(
-    outputs.map((entry) => [entry.component, entry.artifactId]),
-  );
+  return {
+    outputs: Object.fromEntries(
+      outputs.map((entry) => [entry.component, entry.artifactId]),
+    ),
+    retainedOrigins: Object.fromEntries(
+      outputs
+        .filter(({ artifact }) => artifact.buildId !== build.id)
+        .map(({ component, artifact }) => [component, artifact.build]),
+    ),
+  };
 }
 
 /** Outputs of an acquisition or attested build: the artifacts it registered. */
@@ -68,7 +82,7 @@ export async function composeVerifiedBuild(tx: Transaction, build: BuildRow) {
       if (await supersededInPipeline(tx, build)) return null;
       return composeAutomatic(tx, {
         serviceId: build.serviceId,
-        outputs: await ciOutputs(tx, build),
+        ...(await ciOutputs(tx, build)),
         orderKey: pipelineKey(build, build.pipelineNumber),
         qualifiedBuildId: build.id,
       });

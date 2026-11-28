@@ -200,6 +200,8 @@ describe("e2e: /goal pipeline (T1–T7 integration)", () => {
       controlToken: "stub-token",
       spawner,
       sendMessage: async (m) => {
+        // Let the process finish while the progress send is still in flight.
+        if (m.allowedUserIds.length === 0) await Bun.sleep(250);
         messages.push(m);
       },
       snapshotProvider: () => emerald1BadgeSnapshot(),

@@ -16,11 +16,12 @@
 export const TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS = 900;
 
 /**
- * Minimum Argo sync wait budget for the temporal child in `release-root`. The
- * waiter must outlast the migration hook it waits for: with the default 300 s
- * child budget, builds 16963 and 16977 failed the temporal sync while the
- * v1.14 migration was still legitimately running, and each retry replaced the
- * in-flight hook mid-DDL. 900 s of hook deadline plus 300 s for the wave-0
- * rollout and Argo apply latency.
+ * Minimum Argo sync wait budget for the temporal child in `release-root` and
+ * Delivery's `temporal/prod` readback waiter. The waiter must outlast both:
+ * - the 900 s `schema-migration` Sync hook (builds 16963 and 16977 timed out
+ *   at 300 s while the v1.14 DDL migration was still running), and
+ * - `temporal-temporal-promotion-worker`'s 1080 s `Recreate` pod drain
+ *   (`PROMOTION_POD_TERMINATION_SECONDS`) plus its 1380 s
+ *   `progressDeadlineSeconds` and rollout/Argo apply headroom.
  */
-export const TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS = 1200;
+export const TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS = 1500;

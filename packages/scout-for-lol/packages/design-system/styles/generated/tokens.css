@@ -20,6 +20,7 @@
   --scout-color-success-on-surface: #176b45;
   --scout-color-warning: #8a4b00;
   --scout-color-warning-text: #ffffff;
+  --scout-color-warning-on-surface: #8a4b00;
   --scout-color-danger: #992e1e;
   --scout-color-danger-text: #ffffff;
   --scout-color-danger-on-surface: #992e1e;
@@ -73,6 +74,7 @@
   --scout-color-success-on-surface: #5fbe8c;
   --scout-color-warning: #8a4b00;
   --scout-color-warning-text: #ffffff;
+  --scout-color-warning-on-surface: #e0a24f;
   --scout-color-danger: #a83832;
   --scout-color-danger-text: #ffffff;
   --scout-color-danger-on-surface: #e8756b;
@@ -126,6 +128,7 @@
   --scout-color-success-on-surface: #32633d;
   --scout-color-warning: #7a4700;
   --scout-color-warning-text: #ffffff;
+  --scout-color-warning-on-surface: #7a4700;
   --scout-color-danger: #84271b;
   --scout-color-danger-text: #ffffff;
   --scout-color-danger-on-surface: #84271b;
@@ -179,6 +182,7 @@
   --scout-color-success-on-surface: #5fbe8c;
   --scout-color-warning: #9a5c16;
   --scout-color-warning-text: #ffffff;
+  --scout-color-warning-on-surface: #d9a04f;
   --scout-color-danger: #96382a;
   --scout-color-danger-text: #ffffff;
   --scout-color-danger-on-surface: #e8756b;

@@ -7,7 +7,7 @@ import {
   SOURCE_CACHE_PREPARATION_IMAGE,
   ORDINARY_CLONE_IMAGE,
 } from "#src/pipeline/source-cache.ts";
-import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
+import { CHECKOUT_TIER, LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import type {
   CiCommandStep,
   CiStep,
@@ -367,7 +367,7 @@ function ordinaryCloneConfiguration(
           ...(identity.event === "tag" ? { tags: true } : {}),
         },
         backend_options: {
-          kubernetes: podOptions(step, identity, LIGHT_TIER),
+          kubernetes: podOptions(step, identity, CHECKOUT_TIER),
         },
       },
       finalizeCloneStep(step, identity),
@@ -478,7 +478,7 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
               ],
               backend_options: {
                 kubernetes: {
-                  ...podOptions(step, identity, LIGHT_TIER),
+                  ...podOptions(step, identity, CHECKOUT_TIER),
                   securityContext: {
                     // Ownership was prepared before the non-root helper starts.
                     runAsUser: 1000,

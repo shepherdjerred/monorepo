@@ -12,7 +12,7 @@ import { B2Provider } from "#generated/providers/b2/provider/index.ts";
 import { Item } from "#generated/providers/onepassword/item/index.ts";
 import { OnepasswordProvider } from "#generated/providers/onepassword/provider/index.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 import { HOMELAB_VAULT_ID } from "#src/onepassword.ts";
 
 // Account region is chosen when the Backblaze account is created.
@@ -77,7 +77,10 @@ export class BackblazeStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "backblaze", {
       requiredVersion: ">= 1.11.0",
-      providerConstraints: { b2: "0.14.1", onepassword: "~> 3.0" },
+      providerConstraints: {
+        b2: pinnedProviderVersion("registry.opentofu.org/backblaze/b2"),
+        onepassword: "~> 3.0",
+      },
     });
     encryptStateAndPlans(this, {
       description: "Passphrase encrypting Backblaze state and plans.",

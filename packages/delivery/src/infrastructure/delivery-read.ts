@@ -29,7 +29,7 @@ import {
   qualifiedBuildWhere,
   configurationRevision,
 } from "./delivery-data.ts";
-import { liveSet } from "./composition/automatic.ts";
+import { liveSet, precedesPipelineOrigin } from "./composition/automatic.ts";
 import { doomed } from "./delivery-qualification.ts";
 
 const RETAINABLE_PAGE = 20;
@@ -102,6 +102,8 @@ export async function latestQualifiedArtifact(
  * (section 7) is a qualified base. A build that failed, or that reaches a
  * failed build through its pending references, is never a base. Retaining a
  * pending base defers the retaining build's qualification until it settles.
+ * A retention whose original producer precedes the live entry's producer
+ * also cannot serve as a base (R2).
  */
 export async function latestRetainableArtifact(
   this: Delivery,
@@ -111,6 +113,10 @@ export async function latestRetainableArtifact(
   const input = LatestRetainableArtifactQuerySchema.parse(rawInput);
   await ensureService(this.database, input.serviceId);
   const live = await liveSet(this.database, input.serviceId);
+  const liveEntry =
+    live === null
+      ? null
+      : await qualifiedEntry(this.database, live.id, input, repositoryId);
   const where = {
     component: input.component,
     artifact: { kind: input.kind },
@@ -136,16 +142,24 @@ export async function latestRetainableArtifact(
       skip,
       take: RETAINABLE_PAGE,
     });
-    // The qualifier will fail a doomed build, so it is no base.
-    for (const candidate of page)
+    for (const candidate of page) {
+      if (
+        liveEntry !== null &&
+        candidate.artifact.buildId !== candidate.buildId &&
+        precedesPipelineOrigin(
+          candidate.artifact.build,
+          liveEntry.artifact.build,
+        )
+      )
+        continue;
+      // The qualifier will fail a doomed build, so it is no base.
       if (!(await doomed(this.database, candidate.build)))
         return artifactView(candidate.artifact);
+    }
     if (page.length < RETAINABLE_PAGE) break;
   }
   const row = required(
-    live === null
-      ? null
-      : await qualifiedEntry(this.database, live.id, input, repositoryId),
+    liveEntry,
     `Retainable ${input.kind} artifact ${input.serviceId}/${input.component}`,
   );
   return artifactView(row.artifact);

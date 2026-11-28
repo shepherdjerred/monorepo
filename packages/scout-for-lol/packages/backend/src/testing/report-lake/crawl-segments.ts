@@ -58,6 +58,13 @@ export type CrawlRecordOptions = {
   crawledAt?: string;
   withTimeline?: boolean;
   /**
+   * The checkpoints the timeline kept; a game that ended before a checkpoint
+   * keeps none for it. Defaults to the 10:00 and 15:00 pair.
+   */
+  checkpoints?: readonly { atMs: number; frameMs: number }[];
+  /** A participant's total gold at a checkpoint; the default grows with the participant id. */
+  goldAt?: (participantId: number, atMs: number) => number;
+  /**
    * Swap the last participant for this PUUID everywhere the record names
    * them, so a test can erase one match's player without touching the rest.
    */
@@ -127,16 +134,20 @@ export async function crawlRecord(
                 levelUpType: "NORMAL",
               },
             ],
-            checkpoints: CHECKPOINTS.map(({ atMs, frameMs }) => ({
-              atMs,
-              frameMs,
-              participants: participants.map(({ participantId }) => ({
-                participantId,
-                totalGold: atMs / 100 + participantId * 50,
-                xp: atMs / 50 + participantId * 20,
-                minions: atMs / 5000 + participantId,
-              })),
-            })),
+            checkpoints: (options.checkpoints ?? CHECKPOINTS).map(
+              ({ atMs, frameMs }) => ({
+                atMs,
+                frameMs,
+                participants: participants.map(({ participantId }) => ({
+                  participantId,
+                  totalGold:
+                    options.goldAt?.(participantId, atMs) ??
+                    atMs / 100 + participantId * 50,
+                  xp: atMs / 50 + participantId * 20,
+                  minions: atMs / 5000 + participantId,
+                })),
+              }),
+            ),
           },
   };
 }
@@ -144,7 +155,7 @@ export async function crawlRecord(
 export async function crawlSegment(
   dt: string,
   matchIds: readonly string[],
-  options: { withTimeline?: boolean } = {},
+  options: CrawlRecordOptions = {},
 ): Promise<EncodedSegment> {
   const records = await Promise.all(
     matchIds.map(async (matchId) => await crawlRecord(matchId, options)),

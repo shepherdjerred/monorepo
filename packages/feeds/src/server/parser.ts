@@ -31,8 +31,8 @@ const XML_PARSER = new XMLParser({
   cdataPropName: false,
   processEntities: {
     enabled: true,
-    maxTotalExpansions: 100_000,
-    maxExpandedLength: 10_000_000,
+    maxTotalExpansions: 1_000_000,
+    maxExpandedLength: 25_000_000,
   },
 });
 
@@ -274,6 +274,32 @@ function extractItemExplicitUrl(
     : resolveHttpUrl(extractRawString(guidNode), baseUrl);
 }
 
+function extractItemCategories(entry: XmlRecord): readonly string[] {
+  const rawNodes = [
+    ...toArray(entry["category"]),
+    ...toArray(entry["atom:category"]),
+    ...toArray(entry["dc:subject"]),
+  ];
+  const seen = new Set<string>();
+  const addClean = (candidate: string): void => {
+    const clean = stripHtmlToPlainText(candidate).trim();
+    if (clean.length > 0) {
+      seen.add(clean);
+    }
+  };
+  for (const raw of rawNodes) {
+    const rec = asRecord(raw);
+    if (rec === undefined) {
+      addClean(extractRawString(raw));
+      continue;
+    }
+    addClean(extractRawString(rec["#text"]));
+    addClean(extractRawString(rec["@_term"]));
+    addClean(extractRawString(rec["@_label"]));
+  }
+  return [...seen];
+}
+
 function parseEntryRecord(
   entry: XmlRecord,
   baseUrl: string,
@@ -322,6 +348,7 @@ function parseEntryRecord(
     contentHtml: sanitizeEntryHtml(rawContent, baseUrl),
     publishedAt: parsePublishedTimestamp(publishedRaw, fallbackNow),
     enclosures: extractEnclosures(entry, baseUrl),
+    categories: extractItemCategories(entry),
   };
 }
 
@@ -377,14 +404,47 @@ function defaultTitleFromUrl(feedUrl: string): string {
   }
 }
 
+const CLOSING_FEED_ROOT_PATTERN =
+  /<\/(?:rss|feed|atom:feed|rdf:RDF|RDF)\s*>$/iu;
+
+function trailingXmlMiscStart(xml: string, end: number): number | undefined {
+  if (xml.endsWith("-->", end)) {
+    const start = xml.lastIndexOf("<!--", end - 3);
+    return start === -1 ? undefined : start;
+  }
+  if (xml.endsWith("?>", end)) {
+    const start = xml.lastIndexOf("<?", end - 2);
+    return start === -1 ? undefined : start;
+  }
+  return undefined;
+}
+
+function stripTrailingXmlMisc(xml: string): string {
+  let end = xml.length;
+  while (end > 0) {
+    while (end > 0 && /\s/u.test(xml.charAt(end - 1))) {
+      end -= 1;
+    }
+    const nextEnd = trailingXmlMiscStart(xml, end);
+    if (nextEnd === undefined) {
+      break;
+    }
+    end = nextEnd;
+  }
+  return xml.slice(0, end);
+}
+
 export function parseFeedXml(
   xml: string,
   feedUrl: string,
   fallbackNowSeconds?: number,
 ): ParsedFeedDocument {
-  const cleaned = xml.replace(/^\u{FEFF}/u, "").trim();
+  const cleaned = stripTrailingXmlMisc(xml.replace(/^\u{FEFF}/u, "").trim());
   if (cleaned.length === 0) {
     throw new Error("Feed XML body is empty");
+  }
+  if (!CLOSING_FEED_ROOT_PATTERN.test(cleaned)) {
+    throw new Error("Feed XML body is truncated or missing closing root tag");
   }
   const doc = asRecord(XML_PARSER.parse(cleaned));
   if (doc === undefined) {

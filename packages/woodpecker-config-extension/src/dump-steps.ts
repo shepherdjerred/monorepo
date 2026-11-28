@@ -18,6 +18,10 @@ import { routeSteps } from "#src/pipeline/routing.ts";
 import { draftPreflightStep } from "#src/pipeline/draft.ts";
 import { benchmarkSteps } from "#src/pipeline/benchmark.ts";
 import { extendedSteps } from "#src/pipeline/extended.ts";
+import {
+  MaintenanceKindSchema,
+  maintenanceSteps,
+} from "#src/pipeline/maintenance.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { performanceSteps } from "#src/pipeline/performance.ts";
 import { ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
@@ -85,6 +89,24 @@ routed.push(
     gateImage,
   ),
 );
+// Temporal-dispatched maintenance has its own agent pool. Every kind's
+// workflow meets the same grant contract and admission budget, and the
+// budget check proves each routed pool has an agent.
+routed.push(
+  ...MaintenanceKindSchema.options.flatMap((kind) =>
+    routeSteps(
+      maintenanceSteps(PLACEHOLDER_IMAGES, kind),
+      {
+        event: "manual",
+        branch: "main",
+        defaultBranch: "main",
+        draft: false,
+        maintenance: true,
+      },
+      gateImage,
+    ),
+  ),
+);
 // Admission must cover the larger manual canary alongside ordinary workflows.
 if (Bun.argv.includes("--include-canaries")) {
   routed.push(
@@ -98,6 +120,7 @@ if (Bun.argv.includes("--include-canaries")) {
           source: "0".repeat(40),
           feature: "scratch",
           main: false,
+          trustDomain: "trusted",
         },
         { ...DISABLED_PERFORMANCE, scratch: true },
         gateImage,
@@ -107,7 +130,7 @@ if (Bun.argv.includes("--include-canaries")) {
         branch: "ci-canary/admission-proof",
         defaultBranch: "main",
         draft: false,
-        maintenance: true,
+        canary: true,
       },
     ),
     // Ordinary verify and browser lanes reserve their scratch profiles when
@@ -116,7 +139,7 @@ if (Bun.argv.includes("--include-canaries")) {
       performanceSteps(
         steps.filter((step) => ramScratchProfile(step.key) !== undefined),
         { ...DISABLED_PERFORMANCE, scratch: true },
-        false,
+        "pr",
         false,
       ),
       {
@@ -132,7 +155,7 @@ if (Bun.argv.includes("--include-canaries")) {
       performanceSteps(
         extendedSteps(PLACEHOLDER_IMAGES, EXTENDED_REQUEST),
         { ...DISABLED_PERFORMANCE, scratch: true },
-        true,
+        "main",
         false,
       ),
       extendedContext,

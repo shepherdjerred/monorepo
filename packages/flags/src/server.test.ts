@@ -47,7 +47,7 @@ test("serves the operator client without covering evaluation", async () => {
     await mkdir(path.join(root, "assets"));
     await Bun.write(path.join(root, "assets", "app.js"), "console.log(1)");
     const store = FlagStore.open(":memory:");
-    store.seedFromInventory();
+    store.seedFromInventory({ kind: "system", id: "seed" });
     const app = createFlagsApp({
       store,
       auth: {
@@ -201,22 +201,25 @@ test("seeds missing deployments from the managed inventory without overwriting e
   const existingDeployments = seededStore
     .missingDeployments()
     .filter((deployment) => deployment.id !== "scout/prod");
-  seededStore.seedDocuments([
-    {
-      id: "scout/beta",
-      flags: [
-        {
-          type: "boolean",
-          key: "dares_enabled",
-          default: false,
-          rollouts: [],
-        },
-      ],
-    },
-    ...existingDeployments
-      .filter((deployment) => deployment.id !== "scout/beta")
-      .map((deployment) => ({ id: deployment.id, flags: [] })),
-  ]);
+  seededStore.seedDocuments(
+    [
+      {
+        id: "scout/beta",
+        flags: [
+          {
+            type: "boolean",
+            key: "dares_enabled",
+            default: false,
+            rollouts: [],
+          },
+        ],
+      },
+      ...existingDeployments
+        .filter((deployment) => deployment.id !== "scout/beta")
+        .map((deployment) => ({ id: deployment.id, flags: [] })),
+    ],
+    { kind: "system", id: "seed" },
+  );
   expect(seededStore.missingDeployments().map((d) => d.id)).toEqual([
     "scout/prod",
   ]);

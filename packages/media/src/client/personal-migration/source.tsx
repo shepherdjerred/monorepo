@@ -1,15 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { z } from "zod";
 import {
+  AttachImportedRequestsSchema,
   ImportedPersonalClaimsSchema,
   type ImportedPersonalClaim,
 } from "#shared/personal-migration/contract.ts";
 import { readApi, sessionBoundary, writeApi } from "#client/api.ts";
-
-const AttachImportedRequestsSchema = z.object({
-  attached: z.int().nonnegative(),
-});
 
 function useAttachImportedRequests(viewerUserId: string) {
   const client = useQueryClient();

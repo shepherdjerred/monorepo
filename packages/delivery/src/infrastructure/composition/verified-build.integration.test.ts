@@ -124,4 +124,28 @@ describe("order keys within one pipeline (B4, R4)", () => {
     );
     expect(live?.id).toBe(published?.id);
   });
+
+  test("a retention cannot undo a newer acquisition registered in the same pipeline", async () => {
+    const component = "chart:velero";
+    const original = await verifiedBuild("first-chart", "upstream", [
+      component,
+    ]);
+    const current = await verifiedBuild("replacement-chart", "upstream", [
+      component,
+    ]);
+    const retained = await verifiedBuild("grouped-ci", "ci", [], {
+      [component]: `${original.id}/${component}`,
+    });
+
+    await compose(original);
+    const currentSet = await compose(current);
+    expect(currentSet).not.toBeNull();
+    expect(await compose(retained)).toBeNull();
+    expect(
+      await liveSet(
+        context.cluster.database,
+        context.fixture.environment.serviceId,
+      ),
+    ).toMatchObject({ id: currentSet?.id });
+  });
 });

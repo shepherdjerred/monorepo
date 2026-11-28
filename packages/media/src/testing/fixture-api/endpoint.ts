@@ -15,6 +15,8 @@ export type FixtureRequest = {
 };
 
 export type FixtureEndpoint = {
+  /** HTTP method; `POST` is reserved for idempotent mount-time checks. */
+  method: "GET" | "POST";
   /** The `/api/v<version>` prefix the client reads this path under. */
   version: 1 | 2 | 3 | 4;
   /** Path below the version prefix; `:name` matches one segment. */
@@ -35,6 +37,7 @@ export type FixtureEndpoint = {
 };
 
 type Definition<S extends z.ZodType> = {
+  method?: FixtureEndpoint["method"];
   version?: FixtureEndpoint["version"];
   path: string;
   access?: FixtureEndpoint["access"];
@@ -51,6 +54,7 @@ export function endpoint<S extends z.ZodType>(
 ): FixtureEndpoint {
   const { schema, belongsToRequest } = definition;
   return {
+    method: definition.method ?? "GET",
     version: definition.version ?? 1,
     path: definition.path,
     access: definition.access ?? "household",

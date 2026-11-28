@@ -1,6 +1,7 @@
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { createInMemoryManualLinkRepository } from "#infrastructure/db.ts";
 import { extractTailscaleHostsFromK8sResources } from "#infrastructure/k8s-discovery.ts";
 import { createGolinkMetrics } from "#infrastructure/telemetry.ts";
@@ -8,9 +9,12 @@ import {
   LinkItemSchema,
   LinksDirectoryResponseSchema,
 } from "#shared/contract.ts";
-import { createGolinkApp } from "./app.ts";
+import { createGolinkServer } from "./app.ts";
 
 const TAILNET = "tailnet-1a49.ts.net";
+const TrpcResultSchema = z.object({ result: z.object({ data: z.unknown() }) });
+/** The Tailscale sidecar proxies from loopback inside the Pod. */
+const VIA_SIDECAR = { peerAddress: "127.0.0.1" };
 
 function createTestHarness(options?: {
   readonly dynamicAliasesEnabled?: boolean;
@@ -30,7 +34,7 @@ function createTestHarness(options?: {
     healthy: () => healthy,
   });
   const metrics = createGolinkMetrics();
-  const app = createGolinkApp({
+  const { app } = createGolinkServer({
     repo,
     getIngressHosts: () => [`grafana.${TAILNET}`, `temporal-ui.${TAILNET}`],
     platformSites: [
@@ -85,12 +89,16 @@ describe("createGolinkApp HTTP routes", () => {
   it("returns directory catalog and viewer identity from Tailscale headers", async () => {
     const { app } = createTestHarness();
 
-    const response = await app.request("http://go.local/api/links", {
-      headers: {
-        "Tailscale-User-Login": "jerred@sjer.red",
-        "Tailscale-User-Name": "Jerred Shepherd",
+    const response = await app.request(
+      "http://go.local/api/links",
+      {
+        headers: {
+          "Tailscale-User-Login": "jerred@sjer.red",
+          "Tailscale-User-Name": "Jerred Shepherd",
+        },
       },
-    });
+      VIA_SIDECAR,
+    );
     expect(response.status).toBe(200);
     const body = LinksDirectoryResponseSchema.parse(await response.json());
 
@@ -155,17 +163,21 @@ describe("createGolinkApp HTTP routes", () => {
     });
     expect(reservedSlug.status).toBe(400);
 
-    const createShadowing = await app.request("http://go.local/api/links", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Tailscale-User-Login": "jerred@sjer.red",
+    const createShadowing = await app.request(
+      "http://go.local/api/links",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Tailscale-User-Login": "jerred@sjer.red",
+        },
+        body: JSON.stringify({
+          short: "Grafana",
+          targetUrl: "https://grafana.tailnet-1a49.ts.net/d/homelab",
+        }),
       },
-      body: JSON.stringify({
-        short: "Grafana",
-        targetUrl: "https://grafana.tailnet-1a49.ts.net/d/homelab",
-      }),
-    });
+      VIA_SIDECAR,
+    );
     expect(createShadowing.status).toBe(200);
     const createdItem = LinkItemSchema.parse(await createShadowing.json());
     expect(createdItem.short).toBe("grafana");
@@ -243,7 +255,9 @@ describe("createGolinkApp HTTP routes", () => {
     );
     expect(metricsText).toContain("golink_links_configured");
   });
+});
 
+describe("createGolinkApp client shell", () => {
   it("serves SPA index.html with 404 for browser misses and JSON 404 for API/CLI misses", async () => {
     const clientRoot = path.join(
       tmpdir(),
@@ -284,6 +298,122 @@ describe("createGolinkApp HTTP routes", () => {
       error: "Link not found",
       short: "new-slug",
     });
+  });
+});
+
+async function trpcBody(response: Response): Promise<unknown> {
+  const body: unknown = await response.json();
+  return TrpcResultSchema.parse(body).result.data;
+}
+
+describe("Go link on the console server kit", () => {
+  it("ignores spoofed Tailscale headers that did not come through the sidecar", async () => {
+    const { app } = createTestHarness();
+    const spoofed = await app.request(
+      "http://go.local/api/links",
+      { headers: { "Tailscale-User-Login": "mallory@example.com" } },
+      { peerAddress: "10.42.0.7" },
+    );
+    const body = LinksDirectoryResponseSchema.parse(await spoofed.json());
+    expect(body.viewer).toEqual({ login: null, displayName: null });
+
+    const created = await app.request(
+      "http://go.local/api/links",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Tailscale-User-Login": "mallory@example.com",
+        },
+        body: JSON.stringify({
+          short: "spoof",
+          targetUrl: "https://e.example/",
+        }),
+      },
+      { peerAddress: "10.42.0.7" },
+    );
+    expect(LinkItemSchema.parse(await created.json()).createdBy).toBe("manual");
+  });
+
+  it("serves the directory, upsert and delete as tRPC procedures beside REST", async () => {
+    const { app, repo } = createTestHarness();
+    const list = await app.request(
+      "http://go.local/trpc/links.list",
+      { headers: { "Tailscale-User-Login": "jerred@sjer.red" } },
+      VIA_SIDECAR,
+    );
+    const directory = LinksDirectoryResponseSchema.parse(await trpcBody(list));
+    expect(directory.viewer.login).toBe("jerred@sjer.red");
+    expect(directory.links.some((item) => item.short === "ha")).toBe(true);
+
+    const upsert = await app.request(
+      "http://go.local/trpc/links.upsert",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Tailscale-User-Login": "jerred@sjer.red",
+        },
+        body: JSON.stringify({
+          short: " Docs ",
+          targetUrl: "https://d.example/",
+        }),
+      },
+      VIA_SIDECAR,
+    );
+    const item = LinkItemSchema.parse(await trpcBody(upsert));
+    expect([item.short, item.createdBy]).toEqual(["docs", "jerred@sjer.red"]);
+
+    const invalid = await app.request("http://go.local/trpc/links.upsert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        short: "metrics",
+        targetUrl: "javascript:alert(1)",
+      }),
+    });
+    expect(invalid.status).toBe(400);
+
+    const deleted = await app.request("http://go.local/trpc/links.delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ short: "docs" }),
+    });
+    expect(await trpcBody(deleted)).toEqual({ deleted: true });
+    expect(await repo.findByShort("docs")).toBeNull();
+  });
+
+  it("refuses tRPC writes while writes are disabled", async () => {
+    const { app } = createTestHarness({ writesEnabled: false });
+    const response = await app.request("http://go.local/trpc/links.delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ short: "ha" }),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it("labels request metrics by route so REST callers can be counted", async () => {
+    const { app } = createTestHarness();
+    await app.request("http://go.local/api/links");
+    await app.request("http://go.local/ha");
+    const metricsRes = await app.request("http://go.local/metrics");
+    const text = await metricsRes.text();
+    expect(text).toContain(
+      'golink_http_request_duration_seconds_count{service="golink",method="GET",route="/api/links",status="200"} 1',
+    );
+    expect(text).toContain(
+      'golink_http_request_duration_seconds_count{service="golink",method="GET",route="/:short",status="302"} 1',
+    );
+    expect(text).toContain("golink_process_cpu_seconds_total");
+  });
+
+  it("never redirects the reserved tRPC path", async () => {
+    const { app } = createTestHarness();
+    const response = await app.request("http://go.local/trpc", {
+      headers: { Accept: "application/json" },
+    });
+    expect(response.status).not.toBe(302);
   });
 });
 

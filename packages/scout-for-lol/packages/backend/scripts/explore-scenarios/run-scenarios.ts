@@ -24,8 +24,12 @@ import { mkdir, open, readFile, rm, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { parseScenarioArgs, SCENARIO_USAGE } from "./scenario-args.ts";
 
-/** Dropped and re-created from the migrated test template on every run. */
-const SCENARIO_DATABASE = "scout_scenarios";
+/** Per-process throwaway database cloned from the migrated test template. */
+const SCENARIO_DATABASE =
+  `scout_test_scenarios_${process.pid.toString()}_${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`.slice(
+    0,
+    63,
+  );
 
 function fail(message: string): never {
   process.stderr.write(`${message}\n`);
@@ -184,13 +188,18 @@ async function main(): Promise<void> {
       `The dev Postgres helper resolves ${devDatabaseUrl(SCENARIO_DATABASE)}, not ${databaseUrl}.`,
     );
   }
+  const { currentDatabaseOwner, ownerCommentSql } =
+    await import("#src/testing/test-database-owner.ts");
   const { ensureTestTemplate, getTestTemplateDatabase } =
     await import("#src/testing/test-template.ts");
   await ensureTestTemplate();
-  psqlMaintenance(`DROP DATABASE IF EXISTS ${SCENARIO_DATABASE} WITH (FORCE)`);
   psqlMaintenance(
-    `CREATE DATABASE ${SCENARIO_DATABASE} TEMPLATE "${getTestTemplateDatabase()}"`,
+    `DROP DATABASE IF EXISTS "${SCENARIO_DATABASE}" WITH (FORCE)`,
   );
+  psqlMaintenance(
+    `CREATE DATABASE "${SCENARIO_DATABASE}" TEMPLATE "${getTestTemplateDatabase()}"`,
+  );
+  psqlMaintenance(ownerCommentSql(SCENARIO_DATABASE, currentDatabaseOwner()));
 
   const { runScenarios } = await import("./scenario-run.ts");
   try {
@@ -203,6 +212,13 @@ async function main(): Promise<void> {
     });
     if (!outcome.passed) process.exitCode = 1;
   } finally {
+    try {
+      psqlMaintenance(
+        `DROP DATABASE IF EXISTS "${SCENARIO_DATABASE}" WITH (FORCE)`,
+      );
+    } catch {
+      // Stale-database sweep reaps owned scout_test_* databases if teardown fails.
+    }
     // A run that dies before here leaves the lock; the next run sees its pid
     // is gone and takes it over.
     await rm(lockPath, { force: true });

@@ -67,7 +67,7 @@ describe("bugsink", () => {
       ["bugsink:issue:old", "info", "birmel"],
     ]);
     expect(result.signals[0]?.links?.[0]?.url).toBe(
-      "https://bugsink.sjer.red/issues/issue/new/event/last/",
+      "https://errors.tailnet-1a49.ts.net/issues/new",
     );
     expect(result.metrics[0]?.value).toBe(3);
     expect(unresolvedByProject(projects).get("birmel")).toBe(3);

@@ -20,11 +20,20 @@ import { normalizeRiotIdPart } from "#src/explore-match/match-view.ts";
 import {
   fetchFullMatch,
   fetchTimelineChartFrames,
-  fetchTimelineCoverage,
-  fetchTimelineEventPage,
-  fetchTimelineCheckpointFrames,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import { fetchMatchDetailRead } from "#src/reports/duckdb/consumer/match-detail-reads.ts";
+import { fetchMatchStoryRead } from "#src/reports/duckdb/consumer/match-story-reads.ts";
+import { buildGoldLead } from "#src/trpc/router/consumer/match-gold-lead.ts";
+import {
+  loadMatchLpDeltas,
+  type MatchLpDelta,
+} from "#src/trpc/router/consumer/match-lp-delta.ts";
+import {
+  buildMatchStory,
+  matchWasRemade,
+} from "#src/trpc/router/consumer/consumer-match-story.ts";
+import { teamObjectives } from "#src/trpc/router/consumer/match-team-objectives.ts";
 import {
   buildRoleMatchups,
   LANE_DELTA_CHECKPOINT_MS,
@@ -60,24 +69,43 @@ type AuthorizedMatch = {
   >;
 };
 
-async function authorizeMatch(
+type ScopedPlayer = {
+  guilds: Awaited<ReturnType<typeof assertConsumerPlayerScope>>;
+  player: { id: number; puuids: Set<string> };
+};
+
+/** The viewer's guilds and the named player, before any lake read. */
+async function findScopedPlayer(
   user: User,
   input: z.infer<typeof MatchInput>,
-): Promise<AuthorizedMatch> {
+): Promise<ScopedPlayer> {
   const guilds = await assertConsumerPlayerScope(user);
-  const guildIds = guilds.map((guild) => guild.id);
   const player = await prisma.player.findFirst({
-    where: { id: input.playerId, serverId: { in: guildIds } },
+    where: {
+      id: input.playerId,
+      serverId: { in: guilds.map((guild) => guild.id) },
+    },
     select: { id: true, accounts: { select: { puuid: true } } },
   });
   if (player === null) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Match was not found" });
   }
-  const rows = await fetchFullMatch({ matchId: input.matchId });
-  const playerPuuids = new Set<string>(
-    player.accounts.map((account) => account.puuid),
-  );
-  if (!rows.some((row) => isPlayerRow(row, playerPuuids))) {
+  return {
+    guilds,
+    player: {
+      id: player.id,
+      puuids: new Set<string>(player.accounts.map((account) => account.puuid)),
+    },
+  };
+}
+
+/** Confirms the player was in the match and names the tracked participants. */
+async function completeAuthorization(
+  scoped: ScopedPlayer,
+  rows: LakeMatchParticipantRow[],
+): Promise<AuthorizedMatch> {
+  const { guilds, player } = scoped;
+  if (!rows.some((row) => isPlayerRow(row, player.puuids))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Match was not found" });
   }
   const trackedAccounts = await prisma.account.findMany({
@@ -85,7 +113,7 @@ async function authorizeMatch(
       puuid: {
         in: rows.flatMap((row) => (row.puuid === null ? [] : [row.puuid])),
       },
-      player: { serverId: { in: guildIds } },
+      player: { serverId: { in: guilds.map((guild) => guild.id) } },
     },
     select: {
       puuid: true,
@@ -112,11 +140,16 @@ async function authorizeMatch(
     });
     aliasesByPuuid.set(account.puuid, aliases);
   }
-  return {
-    player: { id: player.id, puuids: playerPuuids },
-    rows,
-    aliasesByPuuid,
-  };
+  return { player, rows, aliasesByPuuid };
+}
+
+async function authorizeMatch(
+  user: User,
+  input: z.infer<typeof MatchInput>,
+): Promise<AuthorizedMatch> {
+  const scoped = await findScopedPlayer(user, input);
+  const rows = await fetchFullMatch({ matchId: input.matchId });
+  return await completeAuthorization(scoped, rows);
 }
 
 /** Whether a roster row is one of these accounts; a non-player row never is. */
@@ -142,35 +175,10 @@ function ratio(part: number, total: number): number | null {
   return total > 0 ? part / total : null;
 }
 
-type ParticipantObjectives = {
-  readonly turrets: number;
-  readonly inhibitors: number;
-  readonly barons: number | null;
-  readonly dragons: number | null;
-};
-
-/**
- * A team's objectives, summed from its players, or `null` when a player's
- * record does not state them: a history record (a game known only from the
- * League client's match history) states no per-player baron or dragon kills.
- */
-function teamObjectives(
-  participants: readonly { readonly objectives: ParticipantObjectives }[],
+function matchView(
+  match: AuthorizedMatch,
+  lpByPuuid: ReadonlyMap<string, MatchLpDelta>,
 ) {
-  let totals = { turrets: 0, inhibitors: 0, barons: 0, dragons: 0 };
-  for (const { objectives } of participants) {
-    if (objectives.barons === null || objectives.dragons === null) return null;
-    totals = {
-      turrets: totals.turrets + objectives.turrets,
-      inhibitors: totals.inhibitors + objectives.inhibitors,
-      barons: totals.barons + objectives.barons,
-      dragons: totals.dragons + objectives.dragons,
-    };
-  }
-  return totals;
-}
-
-function matchView(match: AuthorizedMatch) {
   const first = match.rows[0];
   if (first === undefined) {
     throw new Error("Authorized match has no participants");
@@ -214,6 +222,7 @@ function matchView(match: AuthorizedMatch) {
       loadout: matchRowLoadout(row),
       scoutAliases:
         row.puuid === null ? [] : (match.aliasesByPuuid.get(row.puuid) ?? []),
+      lpDelta: row.puuid === null ? null : (lpByPuuid.get(row.puuid) ?? null),
     };
   });
   const arenaSubteamIds = isArenaQueueOrMode(first.queue_id, first.game_mode)
@@ -249,6 +258,7 @@ function matchView(match: AuthorizedMatch) {
     gameDurationSeconds: first.game_duration_seconds,
     queue: first.queue,
     queueId: first.queue_id,
+    remake: matchWasRemade(match.rows),
     gameMode: first.game_mode,
     gameType: first.game_type,
     gameVersion: first.game_version,
@@ -274,29 +284,34 @@ function matchView(match: AuthorizedMatch) {
 
 export const consumerMatchRouter = router({
   detail: protectedProcedure.input(MatchInput).query(async ({ ctx, input }) => {
-    const authorized = await authorizeMatch(ctx.user, input);
-    const [coverage, keyEvents, laneDeltaFrames] = await Promise.all([
-      fetchTimelineCoverage({ matchId: input.matchId }),
-      fetchTimelineEventPage({
-        matchId: input.matchId,
-        offset: 0,
-        limit: 40,
-        eventTypes: MATCH_KEY_EVENT_TYPES,
-      }),
-      fetchTimelineCheckpointFrames({
-        matchId: input.matchId,
-        checkpointMs: LANE_DELTA_CHECKPOINT_MS,
-      }),
-    ]);
+    const scoped = await findScopedPlayer(ctx.user, input);
+    // One lake slot for the roster and the timeline reads. Nothing read here
+    // reaches the caller until the roster confirms the viewer's player played.
+    const read = await fetchMatchDetailRead({
+      matchId: input.matchId,
+      checkpointMs: LANE_DELTA_CHECKPOINT_MS,
+      keyEventTypes: MATCH_KEY_EVENT_TYPES,
+    });
+    const authorized = await completeAuthorization(scoped, read.rows);
+    const first = authorized.rows[0];
+    if (first === undefined) {
+      throw new Error("Authorized match has no participants");
+    }
+    const lpByPuuid = await loadMatchLpDeltas({
+      matchId: input.matchId,
+      queueId: first.queue_id,
+      remake: matchWasRemade(authorized.rows),
+      puuids: [...authorized.aliasesByPuuid.keys()],
+    });
     return {
       match: {
-        ...matchView(authorized),
+        ...matchView(authorized, lpByPuuid),
         roleMatchups: buildRoleMatchups({
           rows: authorized.rows,
-          frames: laneDeltaFrames,
+          frames: read.laneDeltaFrames,
         }),
       },
-      timeline: { coverage, keyEvents },
+      timeline: { coverage: read.coverage, keyEvents: read.keyEvents },
     };
   }),
 
@@ -366,7 +381,22 @@ export const consumerMatchRouter = router({
         }
         points.set(frame.frame_timestamp_ms, point);
       }
+      const viewerTeamId = authorized.rows.find((row) =>
+        isPlayerRow(row, authorized.player.puuids),
+      )?.team_id;
       return {
+        goldLead:
+          viewerTeamId === undefined
+            ? null
+            : buildGoldLead({
+                frames,
+                teamByParticipant: new Map(
+                  [...teamByParticipant].flatMap(([id, teamId]) =>
+                    id === null ? [] : [[id, teamId] as const],
+                  ),
+                ),
+                viewerTeamId,
+              }),
         points: [...points.entries()]
           .toSorted(([left], [right]) => left - right)
           .map(([timestampMs, point]) => ({
@@ -379,4 +409,17 @@ export const consumerMatchRouter = router({
           })),
       };
     }),
+
+  story: protectedProcedure.input(MatchInput).query(async ({ ctx, input }) => {
+    const scoped = await findScopedPlayer(ctx.user, input);
+    // One lake slot for the roster and the whole timeline. Nothing read here
+    // reaches the caller until the roster confirms the viewer's player played.
+    const read = await fetchMatchStoryRead({ matchId: input.matchId });
+    const authorized = await completeAuthorization(scoped, read.rows);
+    return buildMatchStory({
+      read,
+      aliasesByPuuid: authorized.aliasesByPuuid,
+      viewerPuuids: authorized.player.puuids,
+    });
+  }),
 });

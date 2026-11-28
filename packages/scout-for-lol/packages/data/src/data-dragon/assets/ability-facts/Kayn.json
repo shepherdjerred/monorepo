@@ -42,7 +42,15 @@
         ]
       },
       "resolvedDescription": "Kayn wields an ancient weapon and fights Rhaast, the darkin within it, for control. Either the Darkin will triumph, or Kayn will master Rhaast and become the Shadow Assassin. Darkin: Heal for a percentage of spell damage dealt to champions. Shadow Assassin: For the first few seconds in combat with enemy champions, deal bonus damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Reaping Slash",
@@ -137,7 +145,15 @@
       "resolvedDescription": "Kayn dashes then spins his scythe, dealing 75/105/135/165/195 (+85% bonus AD) physical damage to enemies he passes through, then deals the damage again to nearby enemies. Darkin Slayer: Instead deal 65% AD plus {{ darkinpercentdamage }} max Health physical damage.",
       "unresolved": [
         "darkinpercentdamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.15,
+        "radius": null,
+        "lineWidth": 100,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Blade's Reach",
@@ -209,7 +225,15 @@
         ]
       },
       "resolvedDescription": "Kayn swipes his scythe upward, dealing 85/130/175/220/265 (+110% bonus AD) physical damage and Slowing enemies hit by 90%, decaying over 1.5 seconds. Shadow Assassin: Kayn can move while using this Ability and increases its range. Darkin Slayer: Additionally Knocks Up enemies hit for 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "AreaClamped",
+        "castTime": 0.55,
+        "radius": null,
+        "lineWidth": 175,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Shadow Step",
@@ -302,7 +326,15 @@
         ]
       },
       "resolvedDescription": "Kayn gains 40% Move Speed, becomes Ghosted, and can move through Terrain for 7/7.5/8/8.5/9 seconds. When he first enters terrain, he restores 90/100/110/120/130 (+45% bonus AD) Health. Being Immobilized and spending more than 1.5 consecutive seconds outside of Terrain ends this Ability early. Shadow Assassin: Gain 70% Move Speed, Slow immunity, and reduce the Cooldown to 10 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Umbral Trespass",
@@ -384,7 +416,15 @@
       "unresolved": [
         "slayerdamage",
         "healvalue"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.1,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

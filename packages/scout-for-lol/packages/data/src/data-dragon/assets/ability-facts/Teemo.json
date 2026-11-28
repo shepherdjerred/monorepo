@@ -18,7 +18,15 @@
         ]
       },
       "resolvedDescription": "If Teemo stands still and takes no actions for a short duration, he becomes Invisible indefinitely. If he's in brush, Teemo can enter and maintain his Invisibility while moving. After leaving Invisibility, Teemo gains the Element of Surprise, increasing his Attack Speed for a few seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Blinding Dart",
@@ -83,7 +91,15 @@
         ]
       },
       "resolvedDescription": "Teemo fires a dart, Blinding the target for 2/2.25/2.5/2.75/3 seconds and dealing 80/125/170/215/260 (+70% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 2500,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Move Quick",
@@ -141,7 +157,15 @@
         ]
       },
       "resolvedDescription": "Passive: Teemo gains 12/16/20/24/28% Move Speed while he hasn't been damaged by a champion or turret in the last 5 seconds. Active: Teemo sprints, gaining 24/32/40/48/56% Move Speed that is not lost when struck for 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Toxic Shot",
@@ -234,7 +258,58 @@
         ]
       },
       "resolvedDescription": "Passive: Teemo's Attacks apply poison On-Hit, dealing an additional 9/23/37/51/65 (+30% AP) (+5% bonus AD) magic damage plus 24/48/72/96/120 (+40% AP) (+10% bonus AD) magic damage over 4 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "teemoeattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "teemoecrit",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "teemoedot",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Noxious Trap",
@@ -325,7 +400,30 @@
       "resolvedDescription": "Teemo tosses a mushroom trap that detonates when stepped on. The traps Slow by 30/40/50% and deal 200/325/450 (+50% AP) magic damage over 4 seconds. Enemies are revealed for the same duration. Traps last 5 minutes and are stealthed. A mushroom tossed onto another mushroom bounces before landing at its position. This Ability has 3/4/5 charges ({{ ammorechargetime }} second refresh).",
       "unresolved": [
         "ammorechargetime"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 135,
+        "lineWidth": 120,
+        "missileSpeed": 1000,
+        "missiles": [
+          {
+            "name": "teemortrap",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

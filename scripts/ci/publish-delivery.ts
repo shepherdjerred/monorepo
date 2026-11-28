@@ -24,10 +24,10 @@ import {
 } from "@shepherdjerred/ops-model/chart-publication.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import {
-  createRetryingDeliveryFetch,
   readPublicationHandoffs,
   SitePublicationSchema,
 } from "../lib/ci/delivery-publication-handoffs.ts";
+import { createRetryingDeliveryFetch } from "../lib/delivery/retry-fetch.ts";
 import { requireEnv, run } from "../lib/run.ts";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { parseVersionCatalog } from "@shepherdjerred/version-catalog";

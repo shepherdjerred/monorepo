@@ -1,6 +1,19 @@
 import type { PipelineIdentity } from "#src/pipeline/emit.ts";
 import type { CiImages } from "#src/images.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import type { AuthorizationResult } from "#src/authorization.ts";
+
+/** `authorizePipeline`'s result for the owner, for tests that start past it. */
+export const OWNER_AUTHORIZATION = {
+  allowed: true,
+  actorClass: "owner-controlled",
+} as const satisfies AuthorizationResult;
+
+/** `authorizePipeline`'s result for Renovate. */
+export const HOSTED_AUTOMATION_AUTHORIZATION = {
+  allowed: true,
+  actorClass: "hosted-automation",
+} as const satisfies AuthorizationResult;
 
 /**
  * Pipeline identity used by emitter tests.

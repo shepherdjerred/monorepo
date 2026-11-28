@@ -1,5 +1,6 @@
 import type { Db } from "#src/database/index.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import configuration from "#src/configuration.ts";
 import {
   matchProcessingReceiptRecordToRow,
   matchProcessingReceiptRowToRecord,
@@ -31,6 +32,11 @@ export type RecordReceiptResult =
   | { outcome: "applied" }
   | { outcome: "already-applied" }
   | { outcome: "conflict"; reason: "receipt-evidence-mismatch" };
+
+function receiptWriterGitSha(): string | null {
+  const { gitSha } = configuration;
+  return /^[a-f0-9]{40}$/u.test(gitSha) ? gitSha : null;
+}
 
 /**
  * Record a receipt, and count what the table said about it.
@@ -64,7 +70,7 @@ async function applyReceipt(
 ): Promise<RecordReceiptResult> {
   const row = matchProcessingReceiptRecordToRow(record);
   const created = await db.matchProcessingReceipt.createMany({
-    data: [row],
+    data: [{ ...row, writerGitSha: receiptWriterGitSha() }],
     skipDuplicates: true,
   });
   if (created.count === 1) {
@@ -89,6 +95,19 @@ async function applyReceipt(
   return sameEvidence
     ? { outcome: "already-applied" }
     : { outcome: "conflict", reason: "receipt-evidence-mismatch" };
+}
+
+/** The durable insertion times of up to five receipts first written by this build. */
+export async function listRecentAppliedReceiptTimes(db: Db): Promise<Date[]> {
+  const writerGitSha = receiptWriterGitSha();
+  if (writerGitSha === null) return [];
+  const rows = await db.matchProcessingReceipt.findMany({
+    where: { writerGitSha },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 5,
+    select: { createdAt: true },
+  });
+  return rows.map(({ createdAt }) => createdAt);
 }
 
 export async function listReceipts(

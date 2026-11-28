@@ -116,7 +116,11 @@ export class PrismaMediaApplication
     );
   }
 
-  async getMovieTargetContextV4(actor: MediaActor, scope: MovieEditionScope) {
+  async getMovieTargetContextV4(
+    actor: MediaActor,
+    scope: MovieEditionScope,
+    includeDiscovery = false,
+  ) {
     const budget = new PublicationAuthorityReadBudget();
     const access = await captureMovieActionAccessV4(
       this.settings,
@@ -127,7 +131,12 @@ export class PrismaMediaApplication
       readMovieTargetContextV4(
         tx,
         actor,
-        { scope, access: access.choice, protection: access.protection },
+        {
+          scope,
+          access: access.choice,
+          protection: access.protection,
+          includeDiscovery,
+        },
         budget,
       ),
     );

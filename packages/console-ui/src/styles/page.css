@@ -1,7 +1,14 @@
 /*
- * The page kit: Hub's page layout, shared so every console page reads like a
- * Hub page. Values match Hub's own page styles; every colour is a `--ui-*`
- * token. Rems assume the reset's 16px root.
+ * DEPRECATED: the page kit and the severity badge. They copy the old Hub
+ * look (uppercase eyebrow, big title, summary cards, 36px controls, mono
+ * uppercase tables, pill badges) and stay unchanged only so Go link and the
+ * Flags draft keep their look until they move onto the one vocabulary. The
+ * page kit is deleted in K1. Nothing new may use these classes; the
+ * vocabulary test holds this file to a frozen allowlist.
+ *
+ * Banners, states and the search field now have components with the new
+ * look. The old look survives only inside a `PageBody` (`.ui-page`) and on
+ * raw `<p class="ui-banner">` markup. Rems assume the reset's 16px root.
  */
 @layer ui.components {
   /* Page body and heading */
@@ -90,7 +97,8 @@
     padding: 14px;
     border-bottom: 1px solid var(--ui-line);
   }
-  .ui-state {
+  .ui-page .ui-state {
+    display: block;
     padding: 56px 24px;
     color: var(--ui-muted);
     text-align: center;
@@ -142,34 +150,23 @@
   .ui-input::placeholder {
     color: var(--ui-faint);
   }
-  .ui-btn[data-size="page"]:focus-visible,
-  .ui-input:focus-visible,
-  .ui-select:focus-visible,
-  .ui-page a:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
-    outline-offset: 2px;
-  }
-  .ui-search {
-    position: relative;
+
+  /* The search field inside a page-kit page keeps the 36px page look. */
+  .ui-page .ui-search {
+    display: block;
     flex: 1 1 240px;
-    min-width: 0;
   }
-  .ui-search svg {
-    position: absolute;
-    top: 50%;
+  .ui-page .ui-search > svg {
     left: 0.65rem;
     width: 1rem;
     height: 1rem;
-    color: var(--ui-muted);
-    transform: translateY(-50%);
-    pointer-events: none;
   }
-  .ui-search .ui-input {
-    width: 100%;
-    padding-left: 2rem;
-  }
-  .ui-search .ui-input::-webkit-search-cancel-button {
-    cursor: pointer;
+  .ui-page .ui-search-input {
+    height: 36px;
+    padding: 0 0.7rem 0 2rem;
+    border-color: var(--ui-line);
+    border-radius: 7px;
+    font-size: 13px;
   }
 
   /* Segmented filter */
@@ -197,10 +194,6 @@
     background: var(--ui-track);
     color: var(--ui-ink);
   }
-  .ui-segmented button:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
-    outline-offset: 0;
-  }
   .ui-segmented-count {
     margin-left: 0.15rem;
     font-weight: 500;
@@ -227,12 +220,13 @@
     height: 0.7rem;
   }
 
-  /* Banner */
-  .ui-banner {
+  /* Banner (page-kit markup) */
+  :is(.ui-page .ui-banner, p.ui-banner) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 16px;
+    min-height: 0;
     margin: 0 0 14px;
     padding: 14px 18px;
     border: 1px solid var(--ui-line);
@@ -240,6 +234,38 @@
     border-radius: 12px;
     background: var(--ui-panel);
     color: var(--ui-ink);
+  }
+
+  /* Severity badge */
+  .ui-badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.3rem;
+    width: fit-content;
+    height: 22px;
+    padding: 0 0.5rem 0 0.4rem;
+    border-radius: 999px;
+    background: var(--ui-sev-soft);
+    color: var(--ui-sev-ink);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ui-badge-icon {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  .ui-badge-large {
+    height: 30px;
+    padding: 0 0.75rem 0 0.6rem;
+    font-size: 0.8rem;
+  }
+  .ui-badge-large .ui-badge-icon {
+    width: 1.05rem;
+    height: 1.05rem;
   }
 
   /* Data tables: mono, uppercase headers, roomy cells */
@@ -283,110 +309,6 @@
   /* Controls in a row keep the page's sans face, not the table's mono. */
   .ui-data .ui-btn {
     font-family: var(--ui-font-sans);
-  }
-
-  /* Phone navigation: the top bar and its drawer replace the sidebar. */
-  .ui-topbar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    display: none;
-    align-items: center;
-    gap: 2px;
-    height: 52px;
-    padding: 0 6px;
-    border-bottom: 1px solid var(--ui-line);
-    background: color-mix(in srgb, var(--ui-bg) 92%, transparent);
-    backdrop-filter: blur(12px);
-  }
-  .ui-topbar .ui-workspace {
-    flex: 0 1 auto;
-    margin-right: auto;
-  }
-  /* The bar's and drawer's icon buttons keep a 44px touch target. */
-  .ui-topbar-btn {
-    display: inline-grid;
-    flex: none;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    color: var(--ui-ink-2);
-    cursor: pointer;
-  }
-  .ui-topbar-btn svg {
-    width: 1rem;
-    height: 1rem;
-  }
-  .ui-topbar-btn:hover {
-    background: var(--ui-side-hover);
-  }
-  .ui-topbar-btn:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
-    outline-offset: 2px;
-  }
-  .ui-drawer-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    background: rgb(10 12 10 / 0.45);
-  }
-  .ui-drawer {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 21;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: min(300px, calc(100vw - 56px));
-    padding: 4px 8px 12px;
-    overflow-y: auto;
-    border-right: 1px solid var(--ui-line);
-    background: var(--ui-bg);
-    box-shadow: 0 24px 60px rgb(0 0 0 / 0.28);
-  }
-  .ui-drawer:focus-visible {
-    outline: none;
-  }
-  .ui-drawer-head {
-    display: flex;
-    flex: none;
-    align-items: center;
-    justify-content: space-between;
-    height: 44px;
-    margin-right: -4px;
-    padding-left: 8px;
-  }
-  .ui-drawer-brand {
-    font-size: 1rem;
-    font-weight: 650;
-  }
-  .ui-drawer .ui-nav {
-    flex: none;
-  }
-  .ui-drawer .ui-nav-item {
-    height: 38px;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .ui-drawer {
-      transition: transform 180ms ease-out;
-    }
-    .ui-drawer-backdrop {
-      transition: opacity 180ms ease-out;
-    }
-    .ui-drawer[data-starting-style],
-    .ui-drawer[data-ending-style] {
-      transform: translateX(-100%);
-    }
-    .ui-drawer-backdrop[data-starting-style],
-    .ui-drawer-backdrop[data-ending-style] {
-      opacity: 0;
-    }
-  }
-  @media (max-width: 900px) {
-    .ui-topbar {
-      display: flex;
-    }
   }
 
   @container ui-page (max-width: 900px) {

@@ -110,7 +110,8 @@ async function readErrorDetail(response: Response): Promise<string> {
   }
 }
 
-function retiredKeysForDeployment(deployment: FlagDeployment): string[] {
+/** Keys `retiredFlagDeclarations` retires from this deployment's document. */
+export function retiredKeysForDeployment(deployment: FlagDeployment): string[] {
   return [
     ...new Set(
       retiredFlagDeclarations

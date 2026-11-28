@@ -355,6 +355,24 @@ describe("agent guidance edge cases", () => {
     );
     expect(rules(entries)).toContain("source-adapter-target");
   });
+
+  test("rejects hardcoded shared /tmp scratch paths in repository skills and AGENTS.md", () => {
+    const skillEntries = validFixture();
+    skillEntries.push(
+      file(
+        ".agents/skills/pr-submit/SKILL.md",
+        "---\nname: pr-submit\ndescription: Submit PR.\n---\n\ntoolkit git-spice branch submit --body-file /tmp/pr-body.md\n",
+      ),
+    );
+    expect(rules(skillEntries)).toContain("shared-tmp-scratch-path");
+
+    const agentEntries = validFixture().map((entry) =>
+      entry.path === "AGENTS.md"
+        ? file("AGENTS.md", "# Repository\nCapture /tmp/scout-app.png\n")
+        : entry,
+    );
+    expect(rules(agentEntries)).toContain("shared-tmp-scratch-path");
+  });
 });
 
 describe("agent guidance compatibility", () => {

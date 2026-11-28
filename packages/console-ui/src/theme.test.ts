@@ -3,8 +3,10 @@ import {
   createThemeStore,
   nextThemePreference,
   parseThemePreference,
+  THEME_STORAGE_KEY,
   type ThemeEnvironment,
 } from "@shepherdjerred/console-ui/theme.ts";
+import { tokens } from "@shepherdjerred/console-ui/tokens.ts";
 
 type Fake = {
   environment: ThemeEnvironment;
@@ -132,5 +134,38 @@ describe("createThemeStore", () => {
     fake.emitStorage("ops-theme", "dark");
     expect(store.getPreference()).toBe("dark");
     expect(fake.dataset["theme"]).toBe("dark");
+  });
+
+  test("defaults to the shared key and works without a DOM", () => {
+    const store = createThemeStore();
+    expect(store.getPreference()).toBe("system");
+    store.setThemePreference("dark");
+    expect(store.getResolvedTheme()).toBe("dark");
+  });
+
+  test("keeps theme-color metas equal to the bg token on screen", () => {
+    const fake = fakeEnvironment();
+    const metas = [
+      { content: "", media: "(prefers-color-scheme: light)" },
+      { content: "", media: "(prefers-color-scheme: dark)" },
+    ];
+    const store = createThemeStore(THEME_STORAGE_KEY, {
+      ...fake.environment,
+      themeColorMetas: () => metas,
+    });
+    expect(metas.map((meta) => meta.content)).toEqual([
+      tokens.light.bg,
+      tokens.dark.bg,
+    ]);
+    store.setThemePreference("dark");
+    expect(metas.map((meta) => meta.content)).toEqual([
+      tokens.dark.bg,
+      tokens.dark.bg,
+    ]);
+    store.setThemePreference("light");
+    expect(metas.map((meta) => meta.content)).toEqual([
+      tokens.light.bg,
+      tokens.light.bg,
+    ]);
   });
 });

@@ -14,10 +14,8 @@ import {
   downloadChartArtifact,
   resolvePublishedChartArtifact,
 } from "../lib/artifacts/published-chart-artifact.ts";
-import {
-  createRetryingDeliveryFetch,
-  readPublicationHandoffs as readProducerHandoffs,
-} from "../lib/ci/delivery-publication-handoffs.ts";
+import { readPublicationHandoffs as readProducerHandoffs } from "../lib/ci/delivery-publication-handoffs.ts";
+import { createRetryingDeliveryFetch } from "../lib/delivery/retry-fetch.ts";
 import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
 
@@ -335,7 +333,7 @@ test("the full catalog publication preserves the smaller coordinated root invent
     ["delivery-data", "temporal-data"].includes(name),
   ).length;
   expect([0, 2]).toContain(dataLayers);
-  expect(rootInventory).toHaveLength(12 + dataLayers);
+  expect(rootInventory).toHaveLength(11 + dataLayers);
   expect(result.charts).toEqual(charts);
   expect(result.rootInventory).toEqual(rootInventory);
 });

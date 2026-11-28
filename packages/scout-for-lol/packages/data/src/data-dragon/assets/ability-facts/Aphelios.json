@@ -24,7 +24,30 @@
         ]
       },
       "resolvedDescription": "Aphelios wields 5 Lunari Weapons made by his sister Alune. He has access to two at a time: one main-hand and one off-hand. Each weapon has a unique Basic Attack and Ability. Attacks and abilities consume a weapon's ammo. When out of ammo, Aphelios discards the weapon and Alune summons the next of the 5.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "apheliosoffhandorbitmissile",
+            "width": 50,
+            "movement": "SyncCircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Weapon Abilites",
@@ -56,7 +79,379 @@
       ],
       "dataValues": {},
       "resolvedDescription": "",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.35,
+        "radius": 175,
+        "lineWidth": 60,
+        "missileSpeed": 1850,
+        "missiles": [
+          {
+            "name": "apheliosattackmismini2",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmischain",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "CastOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmismini",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmismini2",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumlineattack",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumq",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumspotlightmis",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisin",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisinmini",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisout",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 5000,
+            "minSpeed": 1700,
+            "maxSpeed": 5000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisoutmini",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 5000,
+            "minSpeed": 1700,
+            "maxSpeed": 5000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumlineattack",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumq",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumturretmis",
+            "width": 90,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosgravitumattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosgravitumlineattack",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumattack",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumlineattack",
+            "width": 100,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumqmis",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 3400,
+            "minSpeed": 1200,
+            "maxSpeed": 20000,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumsplashmis",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 4000,
+            "minSpeed": 700,
+            "maxSpeed": 20000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosoffhandorbitmissile",
+            "width": 50,
+            "movement": "SyncCircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosrmis",
+            "width": 125,
+            "movement": "FixedSpeedMovement",
+            "speed": 2050,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit",
+              "DelayStart"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosseverumattackmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 92400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosseverumlineattack",
+            "width": 80,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Phase",
@@ -88,7 +483,15 @@
       ],
       "dataValues": {},
       "resolvedDescription": "Swap main-hand and off-hand weapons, equipping Gravitum.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Weapon Queue System",
@@ -120,7 +523,379 @@
       ],
       "dataValues": {},
       "resolvedDescription": "",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.5,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "apheliosattackmismini2",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmischain",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "CastOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmismini",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumattackmismini2",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumlineattack",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumq",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscalibrumspotlightmis",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisin",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisinmini",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisout",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 5000,
+            "minSpeed": 1700,
+            "maxSpeed": 5000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumattackmisoutmini",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 5000,
+            "minSpeed": 1700,
+            "maxSpeed": 5000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumlineattack",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumq",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "aphelioscrescendumturretmis",
+            "width": 90,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosgravitumattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosgravitumlineattack",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumattack",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumlineattack",
+            "width": 100,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumqmis",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 3400,
+            "minSpeed": 1200,
+            "maxSpeed": 20000,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosinfernumsplashmis",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 4000,
+            "minSpeed": 700,
+            "maxSpeed": 20000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosoffhandorbitmissile",
+            "width": 50,
+            "movement": "SyncCircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosrmis",
+            "width": 125,
+            "movement": "FixedSpeedMovement",
+            "speed": 2050,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit",
+              "DelayStart"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosseverumattackmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 92400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "apheliosseverumlineattack",
+            "width": 80,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Moonlight Vigil",
@@ -186,7 +961,31 @@
       "resolvedDescription": "Aphelios fires a concentrated blast of moonlight that explodes when it hits a champion, dealing 125/175/225 (+20% bonus AD) (+100% AP) physical damage to surrounding enemies. Then, Aphelios attacks all champions hit with his main-hand weapon. {{ Spell_ApheliosR_WeaponMod_{{ f1 }} }}",
       "unresolved": [
         "Spell_ApheliosR_WeaponMod_{{ f1"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.5,
+        "radius": 210,
+        "lineWidth": 110,
+        "missileSpeed": 1000,
+        "missiles": [
+          {
+            "name": "apheliosrmis",
+            "width": 125,
+            "movement": "FixedSpeedMovement",
+            "speed": 2050,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit",
+              "DelayStart"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

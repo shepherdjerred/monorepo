@@ -77,26 +77,42 @@ const Cleanup = z.object({
   status: z.string(),
   summary: z.string().optional(),
 });
+type CleanupRow = Awaited<ReturnType<PromotionStore["read"]>> & {
+  value: z.infer<typeof Cleanup>;
+};
+const settledCleanups = new WeakMap<PromotionStore, Map<string, CleanupRow>>();
 
 async function readCleanups(store: PromotionStore, batches: Batch[]) {
-  const ids = new Set(
-    batches.flatMap((batch) =>
-      batch.entries.flatMap((entry) =>
-        entry.targetId === "disboard-native-bump" && entry.occurrenceId !== null
-          ? [entry.occurrenceId]
-          : [],
-      ),
-    ),
-  );
+  const cached = settledCleanups.get(store) ?? new Map<string, CleanupRow>();
+  settledCleanups.set(store, cached);
+  const settledIds = new Set<string>();
+  const ids = new Set<string>();
+  for (const batch of batches) {
+    for (const entry of batch.entries) {
+      if (
+        entry.targetId === "disboard-native-bump" &&
+        entry.occurrenceId !== null
+      ) {
+        ids.add(entry.occurrenceId);
+        if (batch.finishedAt !== null) settledIds.add(entry.occurrenceId);
+      }
+    }
+  }
+  for (const id of cached.keys()) {
+    if (!settledIds.has(id)) cached.delete(id);
+  }
   return new Map(
     await Promise.all(
-      [...ids].map(
-        async (id) =>
-          [
-            id,
-            await store.read(`cleanup/${encodeURIComponent(id)}.json`, Cleanup),
-          ] as const,
-      ),
+      [...ids].map(async (id) => {
+        const hit = cached.get(id);
+        if (hit !== undefined) return [id, hit] as const;
+        const row = await store.read(
+          `cleanup/${encodeURIComponent(id)}.json`,
+          Cleanup,
+        );
+        if (row !== undefined && settledIds.has(id)) cached.set(id, row);
+        return [id, row] as const;
+      }),
     ),
   );
 }
@@ -150,10 +166,20 @@ export async function readProductionPromotionStatus(
 ) {
   const now = options.now ?? Date.now();
   const outreach = readOutreachSafely(options.readRedditOutreach, store, now);
-  const states = await readStates(store);
-  const planning = await options.readPlanning?.(states, now);
-  const batches = await readBatches(store);
-  const cleanups = await readCleanups(store, batches);
+  const [{ states, planning }, { batches, cleanups }, spend] =
+    await Promise.all([
+      (async () => {
+        const loadedStates = await readStates(store);
+        const loadedPlanning = await options.readPlanning?.(loadedStates, now);
+        return { states: loadedStates, planning: loadedPlanning };
+      })(),
+      (async () => {
+        const loadedBatches = await readBatches(store);
+        const loadedCleanups = await readCleanups(store, loadedBatches);
+        return { batches: loadedBatches, cleanups: loadedCleanups };
+      })(),
+      readPromotionSpend(store),
+    ]);
   const evidence = new Map<string, string>();
   const evidenceId = (key: string | null) => {
     if (key === null) return null;
@@ -262,7 +288,6 @@ export async function readProductionPromotionStatus(
       };
     },
   );
-  const spend = await readPromotionSpend(store);
   const presentation = batches.map((batch) => ({
     ...batch,
     interrupted: batch.interrupted ?? false,
@@ -284,12 +309,11 @@ export async function readPromotionSpend(
   store: PromotionStore = promotionStore(),
 ) {
   const day = promotionSpendDay();
-  const ledger = await store.read(
-    `ai/daily/${day}.json`,
-    PromotionAiLedgerSchema,
-  );
+  const [ledger, solverCharges] = await Promise.all([
+    store.read(`ai/daily/${day}.json`, PromotionAiLedgerSchema),
+    dailyPromotionSolverCharges(store),
+  ]);
   const charges = Object.values(ledger?.value ?? {});
-  const solverCharges = await dailyPromotionSolverCharges(store);
   return {
     day,
     ...promotionAiAccounting(charges),

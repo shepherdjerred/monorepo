@@ -24,6 +24,12 @@ const EnvironmentSchema = z
       .min(1)
       .default("prometheus.tailnet-1a49.ts.net"),
     HOST: z.string().min(1).default("0.0.0.0"),
+    // Incidents keeps its own PostgreSQL database (`incidents_db`). It has no
+    // default: a production Hub without it must refuse to boot, not run the
+    // incidents module against nothing.
+    INCIDENTS_DATABASE_URL: z
+      .string()
+      .regex(/^postgres(?:ql)?:\/\//u, "must be a postgres:// URL"),
     OPS_INGEST_TOKEN: z.string().min(32),
     PROMOTION_STATUS_URL: z
       .url()

@@ -149,7 +149,15 @@
       "resolvedDescription": "Passive: Shyvana's Attacks deal {{ calc_max_health_damage }} max Health magic damage On-Hit and reduce this Ability's Cooldown by 0.5 seconds. Active: Shyvana's next Attack strikes the target and the surrounding area dealing 10/15/20/25/30 (+110% AD) (+30% AP) physical damage. This Ability may be Recast after an Attack or short delay within the next 4 seconds. Dragon Form: Shyvana gains an additional Recast, causing her to bite the target of her next Attack dealing 15/22.5/30/37.5/45 (+165% AD) (+45% AP) true damage.",
       "unresolved": [
         "calc_max_health_damage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Inferno Aegis",
@@ -242,7 +250,15 @@
         ]
       },
       "resolvedDescription": "Shyvana wraps herself in flames for 2.5 seconds, gaining 60/80/100/120/140 (+12% bonus Health) Shield, increased by 18/24/30/36/42 (+3.6% bonus Health) per nearby enemy champion and 25% Move Speed, increased to 43.75% when moving towards enemy champions. When the effect ends, the Shield is broken, or upon Recast the area around her detonates, dealing 80/100/120/140/160 (+65% AP) magic damage. Dragon Form: If the detonation hits an enemy champion Shyvana heals for 60-100 (based on level) + 4-8% (based on level) Missing Health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Molten Burst",
@@ -370,7 +386,31 @@
         ]
       },
       "resolvedDescription": "Shyvana launches a fireball at the target location dealing 50/65/80/95/110 (+60/65/70/75/80% AP) + 5% Max health magic damage and Slowing by 30% for 2 seconds. It explodes upon striking an enemy or reaching its terminus. Dragon Form: Shyvana's fireball is larger and pierces through enemies. Upon striking a champion, large monster, or reaching its terminus it triggers a pulse of fire that deals 62.5/81.25/100/118.75/137.5 (+75/81.25/87.5/93.75/100% AP) + 6.25% Max Health magic damage and Slows by 30% for 2 seconds. The fireball leaves behind a trail for 2 seconds that deals 15-25 (based on level) (+5% AP) magic damage per second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "shyvanaedragon",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Dragon's Descent",
@@ -481,7 +521,15 @@
       "resolvedDescription": "Passive: Shyvana generates 1.25 Dragon Fury by striking enemies with Attacks and Abilities, increased by 300% (-100%) while in Dragon Form, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions. Active: Shyvana transforms into her Dragon Form, becoming Unstoppable, and flying to the target location breathing fire on enemies below dealing 150/250/350 (+100% AP) magic damage and causing them Flee for 0.75 seconds. While transformed, Shyvana's basic Abilities are upgraded, she gains 150/250/350 bonus Health, size, and Attack Range. Shyvana loses Dragon Fury over time and her transformation ends when she has no Dragon Fury remaining.",
       "unresolved": [
         "tt_fury_aoe_penalty"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

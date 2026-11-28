@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { matchesAutoReadRule } from "./auto-read.ts";
 import { createFeedsPoller } from "./poller.ts";
 import type { SafeFetchOptions, SafeFetchResult } from "./ssrf.ts";
 import {
@@ -55,13 +56,8 @@ function createFakeStore(initialFeeds: readonly StoredFeed[] = []) {
       const existing = feeds.get(input.feedId);
       let autoRead = 0;
       if (existing?.autoRead !== null && existing?.autoRead !== undefined) {
-        const regex = new RegExp(
-          existing.autoRead.pattern,
-          existing.autoRead.flags,
-        );
         for (const entry of input.entries) {
-          const matched = regex.test(entry.title);
-          if (existing.autoRead.negate === true ? !matched : matched) {
+          if (matchesAutoReadRule(existing.autoRead, entry)) {
             autoRead += 1;
           }
         }
@@ -225,8 +221,11 @@ describe("createFeedsPoller refreshAll", () => {
           };
         }
         return {
-          status: 200,
-          headers: new Headers({ etag: '"etag-v2"' }),
+          status: 206,
+          headers: new Headers({
+            etag: '"etag-v2"',
+            "content-range": "bytes 0-199/200",
+          }),
           body: `<rss version="2.0"><channel><title>Rel</title>
             <item><guid>1</guid><title>v2.0.0-canary.1</title></item>
             <item><guid>2</guid><title>v2.0.0</title></item>

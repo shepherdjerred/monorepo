@@ -30,6 +30,12 @@ type RetiredRouteRuleBase = {
   environmentId: string;
   label: string;
   resourceNoun?: string;
+  /**
+   * Allow obsolete resources outside `rule.namespace` when the Application's
+   * destination is a control namespace (such as `argocd` for
+   * `cluster-observability`) while its owned CRs live in workload namespaces.
+   */
+  allowAnyResourceNamespace?: boolean;
 };
 
 export type RetiredRouteRule =
@@ -116,10 +122,11 @@ function assertOwnedRoute(
   context: {
     rule: RetiredRouteRule;
     resource: ManagedResource;
+    resourceNamespace: string;
     seen: Set<string>;
   },
 ) {
-  const { rule, resource, seen } = context;
+  const { rule, resource, resourceNamespace, seen } = context;
   const group = resource.group ?? "";
   const noun = rule.resourceNoun ?? "route";
   const uid = native.metadata.uid;
@@ -133,17 +140,97 @@ function assertOwnedRoute(
     cached.kind !== resource.kind ||
     native.metadata.name !== resource.name ||
     cached.metadata.name !== resource.name ||
-    native.metadata.namespace !== rule.namespace ||
-    cached.metadata.namespace !== rule.namespace ||
+    native.metadata.namespace !== resourceNamespace ||
+    cached.metadata.namespace !== resourceNamespace ||
     native.metadata.deletionTimestamp !== undefined ||
     native.metadata.annotations?.["argocd.argoproj.io/hook"] !== undefined ||
     native.metadata.annotations?.["argocd.argoproj.io/tracking-id"] !==
-      `${rule.application}:${group}/${resource.kind}:${rule.namespace}/${resource.name}`
+      `${rule.application}:${group}/${resource.kind}:${resourceNamespace}/${resource.name}`
   )
     throw new Error(
       `Retired ${rule.label} ${noun} is not the exact owned resource`,
     );
   seen.add(uid);
+}
+
+function resolveObsoleteRouteNamespace(
+  rule: RetiredRouteRule,
+  resource: ManagedResource,
+): string | undefined {
+  if (rule.allowAnyResourceNamespace === true) {
+    return resource.namespace === undefined || resource.namespace === ""
+      ? undefined
+      : resource.namespace;
+  }
+  return resource.namespace === rule.namespace ? rule.namespace : undefined;
+}
+
+async function verifyObsoleteManagedResource(
+  resource: ManagedResource,
+  context: {
+    rule: RetiredRouteRule;
+    app: string;
+    desired: readonly z.infer<typeof Resource>[];
+    read: (path: string) => Promise<unknown>;
+    seen: Set<string>;
+  },
+): Promise<void> {
+  const { rule, app, desired, read, seen } = context;
+  const stagingNamespace =
+    "routes" in rule
+      ? enforcementStagingNamespace(resource, rule.namespace)
+      : null;
+  if (stagingNamespace !== null) {
+    await assertRetiredEnforcementStagingPolicy({
+      application: rule.application,
+      resource: { ...resource, namespace: stagingNamespace },
+      desired: [...desired],
+      defaultNamespace: rule.namespace,
+      read,
+      seen,
+    });
+    return;
+  }
+  const group = resource.group ?? "";
+  const allowed =
+    "routes" in rule
+      ? rule.routes.has(`${group}/${resource.kind}/${resource.name}`)
+      : rule.matches({ group, kind: resource.kind, name: resource.name });
+  const resourceNamespace = resolveObsoleteRouteNamespace(rule, resource);
+  if (!allowed || resourceNamespace === undefined)
+    throw new Error(`${rule.label} sync refuses unrelated or storage pruning`);
+  if (
+    desired.some(
+      (target) =>
+        apiGroup(target.apiVersion) === group &&
+        target.kind === resource.kind &&
+        target.metadata.name === resource.name &&
+        (target.metadata.namespace ?? rule.namespace) === resourceNamespace,
+    )
+  )
+    throw new Error(
+      `${rule.label} prune candidate remains in the selected render`,
+    );
+  const cached = Resource.parse(
+    parseObject(resource.liveState, resource, "liveState"),
+  );
+  const query = new URLSearchParams({
+    namespace: resourceNamespace,
+    resourceName: resource.name,
+    group,
+    version: cached.apiVersion.slice(cached.apiVersion.lastIndexOf("/") + 1),
+    kind: resource.kind,
+  });
+  const result = z
+    .object({ manifest: z.string() })
+    .parse(await read(`${app}/resource?${query.toString()}`));
+  const native = Resource.parse(JSON.parse(result.manifest));
+  assertOwnedRoute(native, cached, {
+    rule,
+    resource,
+    resourceNamespace,
+    seen,
+  });
 }
 
 /**
@@ -195,57 +282,13 @@ export async function retiredRouteSyncPrunes(
   );
   const seen = new Set<string>();
   for (const resource of obsolete) {
-    const stagingNamespace =
-      "routes" in rule
-        ? enforcementStagingNamespace(resource, rule.namespace)
-        : null;
-    if (stagingNamespace !== null) {
-      await assertRetiredEnforcementStagingPolicy({
-        application: rule.application,
-        resource: { ...resource, namespace: stagingNamespace },
-        desired,
-        defaultNamespace: rule.namespace,
-        read,
-        seen,
-      });
-      continue;
-    }
-    const group = resource.group ?? "";
-    const allowed =
-      "routes" in rule
-        ? rule.routes.has(`${group}/${resource.kind}/${resource.name}`)
-        : rule.matches({ group, kind: resource.kind, name: resource.name });
-    if (!allowed || resource.namespace !== rule.namespace)
-      throw new Error(
-        `${rule.label} sync refuses unrelated or storage pruning`,
-      );
-    if (
-      desired.some(
-        (target) =>
-          apiGroup(target.apiVersion) === group &&
-          target.kind === resource.kind &&
-          target.metadata.name === resource.name &&
-          (target.metadata.namespace ?? rule.namespace) === rule.namespace,
-      )
-    )
-      throw new Error(
-        `${rule.label} prune candidate remains in the selected render`,
-      );
-    const cached = Resource.parse(
-      parseObject(resource.liveState, resource, "liveState"),
-    );
-    const query = new URLSearchParams({
-      namespace: rule.namespace,
-      resourceName: resource.name,
-      group,
-      version: cached.apiVersion.slice(cached.apiVersion.lastIndexOf("/") + 1),
-      kind: resource.kind,
+    await verifyObsoleteManagedResource(resource, {
+      rule,
+      app,
+      desired,
+      read,
+      seen,
     });
-    const result = z
-      .object({ manifest: z.string() })
-      .parse(await read(`${app}/resource?${query.toString()}`));
-    const native = Resource.parse(JSON.parse(result.manifest));
-    assertOwnedRoute(native, cached, { rule, resource, seen });
   }
   const after = await read(app);
   release.source(after);

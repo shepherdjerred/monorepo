@@ -29,8 +29,6 @@
     "@eslint/js": "^10.0.1",
     "@iconify-json/ph": "^1.2.2",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@svgr/core": "^8.1.0",
-    "@svgr/plugin-jsx": "^8.1.0",
     "@tanstack/eslint-plugin-query": "^5.68.0",
     "@types/dom-webcodecs": "^0.1.18",
     "@types/react": "^19.3.0",

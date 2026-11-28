@@ -400,7 +400,6 @@ describe("PostgreSQL restore backup policy", () => {
     const clusters = [
       ["scout-beta", "scout-beta", "scout-beta"],
       ["grafana", "prometheus", "grafana"],
-      ["bugsink", "bugsink", "bugsink"],
       ["scout-prod", "scout-prod", "scout-prod"],
       ["temporal", "temporal", "temporal"],
       ["woodpecker", "woodpecker", "woodpecker"],

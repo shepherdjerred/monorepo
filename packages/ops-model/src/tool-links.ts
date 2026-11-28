@@ -11,7 +11,6 @@ export const TOOL_HOSTS = {
   argocd: "https://argocd.tailnet-1a49.ts.net",
   grafana: "https://grafana.tailnet-1a49.ts.net",
   temporal: "https://temporal-ui.tailnet-1a49.ts.net",
-  bugsink: "https://bugsink.sjer.red",
   posthog: "https://us.posthog.com",
   prometheus: "https://prometheus.tailnet-1a49.ts.net",
   alertmanager: "https://alertmanager.tailnet-1a49.ts.net",
@@ -92,7 +91,6 @@ export const CONSOLE_LINKS: readonly ConsoleLink[] = [
     group: "Tools",
   },
   { id: "github", label: "GitHub", url: TOOL_HOSTS.github, group: "Tools" },
-  { id: "bugsink", label: "Bugsink", url: TOOL_HOSTS.bugsink, group: "Tools" },
   {
     id: "posthog",
     label: "PostHog",
@@ -200,8 +198,8 @@ export function temporalWorkflowLink(workflowId: string): Link {
 export function bugsinkLink(): Link {
   return {
     kind: "bugsink",
-    label: "Bugsink",
-    url: url(TOOL_HOSTS.bugsink, ""),
+    label: "Errors",
+    url: url(APP_HOSTS.errors, ""),
   };
 }
 

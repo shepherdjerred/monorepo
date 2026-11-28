@@ -1,0 +1,32 @@
+{
+  "src/client/app.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 5
+    }
+  },
+  "src/client/directory-sections.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "src/client/link-dialogs.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 6
+    }
+  },
+  "src/client/links-card.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 4
+    }
+  },
+  "src/client/links-table.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 4
+    }
+  },
+  "src/client/shell.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  }
+}

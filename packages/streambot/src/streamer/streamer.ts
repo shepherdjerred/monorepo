@@ -8,6 +8,7 @@ import {
   type VoiceReceiveObserver,
 } from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import { audioProcessingFlags } from "@shepherdjerred/streambot/config/media-features.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
@@ -34,10 +35,9 @@ import {
   STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
+  recordStreamSegmentEnd,
   streamActive,
   streamCrashesTotal,
-  streamSegmentDurationSeconds,
-  streamSegmentsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import type { AssistantAudioPort } from "@shepherdjerred/streambot/streamer/audio-ports.ts";
 import { AssistantTransport } from "@shepherdjerred/streambot/streamer/assistant-transport.ts";
@@ -89,6 +89,7 @@ export class StreambotStreamer implements StreamerLike {
   /** Injectable observer factory so startup and seek races are deterministic in tests. */
   private readonly createObserver: StreamObserverFactory;
   private readonly joinStreamerVoice: typeof joinStreamerVoice;
+  private readonly audioFlags: typeof audioProcessingFlags;
   private player: Player | null = null;
   /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
   private lastPlaybackPositionSeconds = 0;
@@ -139,6 +140,8 @@ export class StreambotStreamer implements StreamerLike {
     this.createObserver = lifecycleDeps.createObserver ?? createStreamObserver;
     this.joinStreamerVoice =
       lifecycleDeps.joinStreamerVoice ?? joinStreamerVoice;
+    this.audioFlags =
+      lifecycleDeps.audioProcessingFlags ?? audioProcessingFlags;
     this.clock = new SegmentClock(this.now);
     this.client = shared?.owner.client ?? new Client();
     this.streamer = shared?.owner.streamer ?? new Streamer(this.client);
@@ -159,6 +162,7 @@ export class StreambotStreamer implements StreamerLike {
       createPlayer: this.createPlayer,
       createObserver: this.createObserver,
       joinStreamerVoice: this.joinStreamerVoice,
+      audioProcessingFlags: this.audioFlags,
       shared: { owner: this, transport },
     });
     this.children.add(child);
@@ -387,12 +391,16 @@ export class StreambotStreamer implements StreamerLike {
     // line as `audioVolume`. Either way the first sample the viewer hears is already at the
     // requested level, rather than at 100% until some later apply() lands.
     this.applyMusicVolume(isMusic, input.volume);
+    // Once per segment (a seek restarts this player with the same options): a flip of any audio
+    // flag lands on the next item, crash retry or hardware fallback, never mid-segment.
+    const audioProcessing = await this.audioFlags(input.voice.guildId);
     const prepareOpts = buildPlaybackPrepareOptions({
       stream,
       resolved: input.resolved,
       startSeconds,
       volumePercent: input.volume,
       pipelineMode,
+      audioProcessing,
     });
     log.info("starting stream", {
       title: input.resolved.title,
@@ -402,6 +410,7 @@ export class StreambotStreamer implements StreamerLike {
       decidedBy: input.resolved.decidedBy,
       spoken: input.resolved.spoken,
       transport,
+      audioProcessing,
     });
     // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
     // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats). The stall
@@ -585,16 +594,9 @@ export class StreambotStreamer implements StreamerLike {
       // Release the outbound track before the next segment (or the next session's userbot) claims
       // it. Closing is what makes the port inert, so a late frame from this pipeline is dropped.
       musicPort?.close();
-      streamActive.dec();
-      const durationSeconds = (this.now() - segmentStartedMs) / 1000;
-      streamSegmentsTotal.inc({
-        transport,
-        hardware: segmentHardware,
-        outcome,
-      });
-      streamSegmentDurationSeconds.observe(
+      recordStreamSegmentEnd(
         { transport, hardware: segmentHardware, outcome },
-        durationSeconds,
+        (this.now() - segmentStartedMs) / 1000,
       );
     }
     log.info("stream ended", { title: input.resolved.title });

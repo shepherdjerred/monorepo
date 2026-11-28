@@ -7,6 +7,7 @@ import {
 import { v5 as uuidv5 } from "uuid";
 import {
   COMPETITIVE_PROGRESSION_CATALOG,
+  hallRecordDefinition,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
@@ -15,7 +16,7 @@ import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { hallRecordBreakIntentKey } from "#src/durable/match/delivery-intents.ts";
 import { getHallOfFameUrl } from "#src/discord/commands/links.ts";
-import type { HallBreakPayload } from "#src/progression/hall/break-payload.ts";
+import type { HallBreakScore } from "#src/progression/hall/break-payload.ts";
 import {
   hallRecordBreakAnnouncementCodec,
   MalformedAnnouncementIntentError,
@@ -43,6 +44,7 @@ import { graphemePrefix, truncateGraphemes } from "@shepherdjerred/text";
 
 const HALL_EMBED_TITLE = "🏛️ Guild Hall of Fame record broken!";
 const HALL_EMBED_SAFE_TOTAL_LENGTH = 5800;
+const HALL_EMBED_FIELD_VALUE_LIMIT = 1024;
 
 function queueLabel(id: string): string {
   const family = COMPETITIVE_PROGRESSION_CATALOG.hall.queueFamilies.find(
@@ -52,19 +54,47 @@ function queueLabel(id: string): string {
   return family.label;
 }
 
-function recordLabel(id: string): string {
-  const record = COMPETITIVE_PROGRESSION_CATALOG.hall.records.find(
-    (candidate) => candidate.id === id,
-  );
-  if (record === undefined) throw new Error(`Unknown Hall record ${id}`);
-  return record.label;
-}
-
 function truncateToLength(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return maxLength <= 3
     ? graphemePrefix(text, Math.max(0, maxLength))
     : truncateGraphemes(text, maxLength, "...");
+}
+
+function scoreLine(label: string, score: HallBreakScore, precision?: number) {
+  const value = score.value.toLocaleString(
+    "en-US",
+    precision === undefined
+      ? undefined
+      : { minimumFractionDigits: precision, maximumFractionDigits: precision },
+  );
+  return {
+    prefix: `${label}${value} — `,
+    holders: score.holders
+      .map((holder) => escapeMarkdown(holder.playerAlias))
+      .join(", "),
+  };
+}
+
+function recordField(record: HallRecordBreakAnnouncement["records"][number]) {
+  const { label, precision } = hallRecordDefinition(record.recordId);
+  const lines =
+    record.standings === undefined
+      ? [scoreLine("", record)]
+      : [
+          scoreLine("Previous #1 · ", record.previous, precision),
+          ...record.standings.map((score, index) =>
+            scoreLine(`#${String(index + 1)} · `, score, precision),
+          ),
+        ];
+  return {
+    name: `${queueLabel(record.queueFamilyId)} · ${label}`,
+    lines,
+    fixedLength: lines.reduce(
+      (length, line) => length + line.prefix.length,
+      lines.length - 1, // Line breaks between the score lines.
+    ),
+  };
 }
 
 /**
@@ -73,21 +103,15 @@ function truncateToLength(text: string, maxLength: number): string {
  * nothing is left worth notifying about.
  */
 function hallBreakEmbed(
-  records: readonly HallBreakPayload[],
+  records: HallRecordBreakAnnouncement["records"],
   matchId: RiotMatchId,
   guildId: DiscordGuildId,
 ): EmbedBuilder | null {
   if (records.length === 0) return null;
   const description = `Match ${escapeMarkdown(matchId)} set new guild records.\n[Open the Hall of Fame](${getHallOfFameUrl(guildId)})`;
-  const rawFields = records.map((record) => ({
-    name: `${queueLabel(record.queueFamilyId)} · ${recordLabel(record.recordId)}`,
-    prefix: `${record.value.toLocaleString("en-US")} — `,
-    holders: record.holders
-      .map((holder) => escapeMarkdown(holder.playerAlias))
-      .join(", "),
-  }));
+  const rawFields = records.map((record) => recordField(record));
   const fixedLength = rawFields.reduce(
-    (total, field) => total + field.name.length + field.prefix.length,
+    (total, field) => total + field.name.length + field.fixedLength,
     HALL_EMBED_TITLE.length + description.length,
   );
   let remainingHolderLength = Math.max(
@@ -101,14 +125,22 @@ function hallBreakEmbed(
   for (const [index, field] of rawFields.entries()) {
     const remainingFields = rawFields.length - index;
     const fairShare = Math.floor(remainingHolderLength / remainingFields);
-    const names = truncateToLength(
-      field.holders,
-      Math.min(1024 - field.prefix.length, fairShare),
+    let holderBudget = Math.min(
+      HALL_EMBED_FIELD_VALUE_LIMIT - field.fixedLength,
+      fairShare,
     );
-    remainingHolderLength -= names.length;
+    const lines = field.lines.map((line, lineIndex) => {
+      const names = truncateToLength(
+        line.holders,
+        Math.floor(holderBudget / (field.lines.length - lineIndex)),
+      );
+      holderBudget -= names.length;
+      remainingHolderLength -= names.length;
+      return `${line.prefix}${names}`;
+    });
     embed.addFields({
       name: field.name,
-      value: `${field.prefix}${names}`,
+      value: lines.join("\n"),
       inline: false,
     });
   }

@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { App, TerraformStack } from "cdktn";
+import { beforeAll } from "vitest";
 import { z } from "zod";
 import { synthesize, withoutGeneratorMetadata } from "#scripts/synth.ts";
 import type { SynthesizedStack } from "#src/app.ts";
@@ -38,13 +39,23 @@ export const VersionedTerraformSchema = TerraformSchema.extend({
   required_version: z.string(),
 });
 
-/** The committed app's configuration for one stack, parsed by the test's schema. */
-export async function synthesizedStack<Schema extends z.ZodType>(
-  stack: SynthesizedStack,
-  schema: Schema,
-): Promise<z.infer<Schema>> {
-  const synthesized = await synthesize();
-  return schema.parse(JSON.parse(synthesized.get(stack) ?? ""));
+/** Synthesize the current app once per test file and parse a fresh copy on each read. */
+export function useSynthesizedApp() {
+  let configuration: ReadonlyMap<SynthesizedStack, string> | undefined;
+  beforeAll(async () => {
+    configuration = await synthesize();
+  });
+
+  return function readStack<Schema extends z.ZodType>(
+    stack: SynthesizedStack,
+    schema: Schema,
+  ): z.infer<Schema> {
+    const raw = configuration?.get(stack);
+    if (raw === undefined) {
+      throw new Error(`No synthesized configuration for ${stack}`);
+    }
+    return schema.parse(JSON.parse(raw));
+  };
 }
 
 /**

@@ -84,6 +84,8 @@ import {
   ManagedResourcesSchema,
   type ManagedResource,
 } from "./argocd-apply-safety.ts";
+import { comparisonFindings } from "./argocd-comparison.ts";
+import { staleFieldManagerResourceFindings } from "./argocd-field-managers.ts";
 import { withIgnoredDifferencesApplied } from "./argocd-ignored-differences.ts";
 import { DELIVERY_ENVIRONMENT_ANNOTATION } from "#delivery-ownership";
 import {
@@ -612,6 +614,13 @@ async function assertApplySafe(
   // every future caller remembering to pre-refresh; this function is also
   // invoked standalone by `sync-managed`.
   const application = await getApplication(appName, token, "hard");
+  // Everything below reads Argo's comparison; a failed one proves nothing.
+  const incomplete = comparisonFindings(appName, application);
+  if (incomplete.length > 0) {
+    throw new Error(
+      `Refusing ${appName} sync because the read-only apply-safety preflight found:\n${incomplete.map((finding) => `- ${finding}`).join("\n")}`,
+    );
+  }
   const url = new URL(
     `/api/v1/applications/${encodeURIComponent(appName)}/managed-resources`,
     serverUrl(),
@@ -630,9 +639,14 @@ async function assertApplySafe(
     revision === undefined
       ? managed
       : await revisionScopedResources(appName, revision, token, managed);
-  const findings = analyzeApplySafety(
-    withIgnoredDifferencesApplied(scoped, application),
-  );
+  const inspected = withIgnoredDifferencesApplied(scoped, application);
+  const findings = [
+    ...analyzeApplySafety(inspected),
+    ...staleFieldManagerResourceFindings(
+      inspected,
+      expectedSyncOptions(application).includes("ServerSideApply=true"),
+    ),
+  ];
   if (findings.length > 0) {
     throw new Error(
       `Refusing ${appName} sync because the read-only apply-safety preflight found:\n${findings.map((finding) => `- ${finding}`).join("\n")}`,

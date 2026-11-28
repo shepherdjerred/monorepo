@@ -847,6 +847,18 @@ describe("Scheduled reports auto-remediation and quiet-clear digest rollout", ()
     );
   });
 
+  test("enables the Hub CI dashboard globally in beta and prod", () => {
+    assertGloballyEnabledBooleanFlag(
+      "alert-dashboard",
+      "alert-dashboard-ci-jobs-enabled",
+      {
+        owner: "alert-dashboard",
+        namespace: "alert-dashboard",
+        source: "alert-dashboard",
+      },
+    );
+  });
+
   test("preserves temporal-daily-report-notifications-enabled prod override and beta exception", () => {
     expect(
       managedBooleanDefault(

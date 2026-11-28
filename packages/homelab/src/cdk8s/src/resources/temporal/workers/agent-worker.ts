@@ -94,6 +94,12 @@ export function createTemporalAgentWorker(
   });
 
   setRevisionHistoryLimit(deployment, 5);
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add(
+      "/spec/progressDeadlineSeconds",
+      Math.max(600, (props.terminationGraceSeconds ?? 0) + 300),
+    ),
+  );
 
   const firewallRunVolume = Volume.fromEmptyDir(
     chart,

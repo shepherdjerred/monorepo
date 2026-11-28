@@ -18,19 +18,31 @@ export function computeLetterbox(
   canvasHeight: number,
 ): Letterbox {
   const ch = even(canvasHeight);
-  const cw = even((ch * 16) / 9);
+  const canvas = { width: even((ch * 16) / 9), height: ch };
+  return { content: fitWithin(displayAspect, canvas), canvas };
+}
 
-  // Fit the display-aspect box inside the canvas: height-limited when the content
-  // is narrower than 16:9 (pillarbox), width-limited when wider (letterbox).
-  let h = ch;
+/**
+ * The largest even-dimensioned box with `displayAspect` (width / height) that fits inside `bounds`:
+ * height-limited when the content is narrower than the bounds (pillarbox shape), width-limited when
+ * wider (letterbox shape). Encode at this size and the picture keeps its shape without padding; a
+ * player that receives a non-16:9 stream letterboxes it itself.
+ */
+export function fitWithin(displayAspect: number, bounds: Box): Box {
+  if (!Number.isFinite(displayAspect) || displayAspect <= 0)
+    throw new RangeError(
+      `displayAspect must be positive, got ${displayAspect}`,
+    );
+  const bw = Math.max(2, Math.floor(bounds.width / 2) * 2);
+  const bh = Math.max(2, Math.floor(bounds.height / 2) * 2);
+  let h = bh;
   let w = even(h * displayAspect);
-  if (w > cw) {
-    w = cw;
+  if (w > bw) {
+    w = bw;
     h = even(w / displayAspect);
   }
-
   return {
-    content: { width: Math.min(w, cw), height: Math.min(h, ch) },
-    canvas: { width: cw, height: ch },
+    width: Math.max(2, Math.min(w, bw)),
+    height: Math.max(2, Math.min(h, bh)),
   };
 }

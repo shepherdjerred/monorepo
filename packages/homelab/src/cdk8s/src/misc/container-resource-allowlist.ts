@@ -11,8 +11,6 @@
  */
 export const BEST_EFFORT_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set([
   // One-shot init containers — run once at pod start, negligible usage.
-  "bugsink/migrate",
-  "bugsink/migrate-snappea",
   "media-recyclarr/render-config",
   // Metrics/sidecar helpers — tiny, lose nothing on eviction.
   // Non-critical apps, evictable by design.

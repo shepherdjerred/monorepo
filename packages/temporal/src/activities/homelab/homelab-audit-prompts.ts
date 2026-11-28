@@ -110,10 +110,10 @@ Available tools (already authenticated in this environment — do not attempt to
 - \`toolkit temporal\` — Temporal CLI. \`TEMPORAL_ADDRESS\` points at the in-cluster frontend service, so toolkit skips external credential lookup. External operator calls receive the API key through toolkit's credential broker. Do not use \`kubectl exec\` or \`kubectl port-forward\` for routine audit checks.
 - \`toolkit\` — local binary at /usr/local/bin/toolkit. Monorepo workflows and observability passthroughs the runbook calls for:
   - \`toolkit alerts list --state open [--json]\` — open Alerts occurrences (§6).
-  - \`toolkit bugsink issues [--json]\` — open Bugsink issues (§9). \`toolkit bugsink issue <ID>\` for details.
+  - \`toolkit errors issues [--json]\` — open Errors issues (§9). \`toolkit errors issue <ID>\` for details.
   - \`toolkit prom query 'ALERTS{alertstate="firing"}'\` is the primary alert truth. \`toolkit grafana alert rules list\` lists Grafana-managed rules only and may correctly return no rules when PrometheusRule/Alertmanager owns alerting.
   - \`toolkit prom query '<promql>'\` / \`toolkit loki query '<logql>' --since 24h --limit 50\` (§6, §10).
-  All required env vars (\`ALERT_DASHBOARD_URL\`, \`BUGSINK_URL\`, \`BUGSINK_TOKEN\`, \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`) are already injected.
+  All required env vars (\`ALERT_DASHBOARD_URL\`, \`ERRORS_URL\`, \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`) are already injected.
 `.trim();
 
 export function buildAuditPrompt(input: BuildAuditPromptInput): string {

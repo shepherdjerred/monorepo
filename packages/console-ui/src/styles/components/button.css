@@ -1,0 +1,72 @@
+/*
+ * The one button: 28px, radius 6, 12.5px/500 with a 2px pressable bottom
+ * edge. Variants: default, primary (accent fill) and danger (error ink).
+ */
+@layer ui.components {
+  .ui-btn {
+    --_edge: var(--ui-btn-edge);
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--ui-control);
+    padding: 0 10px;
+    border: 1px solid var(--_edge);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+    font-weight: var(--ui-weight-medium);
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 0 var(--_edge);
+    cursor: pointer;
+    transition:
+      transform var(--ui-duration-press),
+      box-shadow var(--ui-duration-press);
+  }
+  .ui-btn svg {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--ui-muted);
+  }
+  .ui-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 0 var(--_edge);
+  }
+  .ui-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 var(--_edge);
+  }
+  .ui-btn[data-variant="primary"] {
+    --_edge: var(--ui-accent-edge);
+    background: var(--ui-accent);
+    color: var(--ui-on-accent);
+  }
+  .ui-btn[data-variant="primary"] svg {
+    color: currentcolor;
+  }
+  .ui-btn[data-variant="danger"] {
+    color: var(--ui-sev-error-text);
+  }
+  .ui-btn[data-variant="danger"] svg {
+    color: currentcolor;
+  }
+  .ui-btn:disabled,
+  .ui-btn[data-disabled] {
+    opacity: 0.55;
+    transform: none;
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-btn,
+    .ui-btn:hover,
+    .ui-btn:active {
+      transform: none;
+      transition: none;
+    }
+  }
+}

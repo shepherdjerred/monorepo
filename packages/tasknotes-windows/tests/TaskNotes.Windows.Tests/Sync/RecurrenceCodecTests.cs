@@ -484,6 +484,68 @@ public sealed class RecurrenceCodecTests
         );
     }
 
+    /// <summary>Parses semicolon-delimited DTSTART and DTSTART;VALUE=DATE rules across projection, anchor extraction, and occurrence math.</summary>
+    [TestMethod]
+    public async Task SemicolonDelimitedDtStartRulesProjectAndAdvanceCleanly()
+    {
+        const string monthlyRule = "DTSTART:20260901;FREQ=MONTHLY;BYMONTHDAY=1";
+        const string weeklyValueDateRule = "DTSTART;VALUE=DATE:20260901;FREQ=WEEKLY;BYDAY=MO";
+
+        RecurrenceProjection monthlyProjection = await _editor.ProjectAsync(
+            monthlyRule,
+            null,
+            null,
+            Start,
+            TestContext.CancellationToken
+        );
+        Assert.AreEqual("2026-09-01", monthlyProjection.Start);
+        RecurrenceDraft monthlyDraft = Assert.IsInstanceOfType<RecurrenceDraft>(
+            monthlyProjection.Draft
+        );
+        Assert.AreEqual(new RecurrencePattern.MonthlyDayOfMonth(1), monthlyDraft.Pattern);
+        Assert.AreEqual(new RecurrenceEnd.Never(), monthlyDraft.Ending);
+
+        NextOccurrenceResult monthlyFromDtStart = RecurrenceCodec.ComputeNextOccurrence(
+            monthlyRule,
+            null,
+            new DateOnly(2026, 10, 8)
+        );
+        Assert.IsFalse(monthlyFromDtStart.ShouldComplete);
+        Assert.AreEqual("2026-10-01", monthlyFromDtStart.NextDate);
+        Assert.IsTrue(RecurrenceCodec.OccursOn(monthlyRule, null, new DateOnly(2026, 10, 1)));
+        Assert.IsFalse(RecurrenceCodec.OccursOn(monthlyRule, null, new DateOnly(2026, 8, 1)));
+
+        RecurrenceProjection weeklyProjection = await _editor.ProjectAsync(
+            weeklyValueDateRule,
+            null,
+            null,
+            Start,
+            TestContext.CancellationToken
+        );
+        Assert.AreEqual("2026-09-01", weeklyProjection.Start);
+        RecurrenceDraft weeklyDraft = Assert.IsInstanceOfType<RecurrenceDraft>(
+            weeklyProjection.Draft
+        );
+        RecurrencePattern.Weekly weeklyPattern = Assert.IsInstanceOfType<RecurrencePattern.Weekly>(
+            weeklyDraft.Pattern
+        );
+        Assert.AreSequenceEqual([DayOfWeek.Monday], weeklyPattern.Weekdays);
+
+        NextOccurrenceResult weeklyFromDtStart = RecurrenceCodec.ComputeNextOccurrence(
+            weeklyValueDateRule,
+            null,
+            new DateOnly(2026, 9, 1)
+        );
+        Assert.IsFalse(weeklyFromDtStart.ShouldComplete);
+        Assert.AreEqual("2026-09-07", weeklyFromDtStart.NextDate);
+        Assert.IsTrue(
+            RecurrenceCodec.OccursOn(weeklyValueDateRule, null, new DateOnly(2026, 9, 7))
+        );
+        Assert.IsFalse(
+            RecurrenceCodec.OccursOn(weeklyValueDateRule, null, new DateOnly(2026, 8, 31))
+        );
+    }
+
     private Task<RecurrenceProjection> ProjectAsync(string rule) =>
         _editor.ProjectAsync(rule, Start, null, Start, TestContext.CancellationToken);
 }

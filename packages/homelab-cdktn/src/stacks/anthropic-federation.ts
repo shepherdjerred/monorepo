@@ -9,7 +9,7 @@ import { ServiceAccountWorkspace } from "#generated/providers/anthropic/service-
 import { Workspace } from "#generated/providers/anthropic/workspace/index.ts";
 import { Item } from "#generated/providers/onepassword/item/index.ts";
 import { OnepasswordProvider } from "#generated/providers/onepassword/provider/index.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 import { HOMELAB_VAULT_ID } from "#src/onepassword.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
 
@@ -23,7 +23,12 @@ export class AnthropicFederationStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "anthropic-federation", {
       requiredVersion: ">= 1.9.0",
-      providerConstraints: { anthropic: "1.96.0", onepassword: "~> 3.0" },
+      providerConstraints: {
+        anthropic: pinnedProviderVersion(
+          "registry.terraform.io/ippontech/anthropic",
+        ),
+        onepassword: "~> 3.0",
+      },
     });
     encryptStateAndPlans(this, {
       description:

@@ -1,5 +1,5 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import { afterAll, beforeAll, beforeEach } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect } from "vitest";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
@@ -10,6 +10,7 @@ import {
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import { countReportSlotsTaken } from "#src/reports/duckdb/instance.ts";
 import { resetTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 
 const PLAYER_PROFILE_FLAG = "scout-consumer-player-profiles-enabled";
@@ -81,4 +82,26 @@ export function registerConsumerProfileFeatureTestLifecycle(options: {
       await options.feature.restore();
     }
   });
+}
+
+/**
+ * Run `request` and assert it took exactly `expected` report-pool slots, then
+ * return what it resolved. A page that promises one lake slot per request
+ * wraps its call in this; a request refused before the lake expects none.
+ */
+export async function expectLakeSlots<T>(
+  expected: number,
+  request: () => Promise<T>,
+): Promise<T> {
+  const before = countReportSlotsTaken();
+  const result = await request();
+  expect(countReportSlotsTaken() - before).toBe(expected);
+  return result;
+}
+
+/** A page's whole request took exactly one lake slot. */
+export async function expectOneLakeSlot<T>(
+  request: () => Promise<T>,
+): Promise<T> {
+  return await expectLakeSlots(1, request);
 }

@@ -2,12 +2,19 @@ import {
   deliveryIsHealthy,
   deliveryIsUnhealthy,
 } from "#src/domain/delivery-health.ts";
-import type { Config, PrHealth, TaskState } from "#src/domain/schemas.ts";
+import type {
+  Config,
+  PrHealth,
+  StaleBaseReport,
+  TaskState,
+} from "#src/domain/schemas.ts";
 import { ciOperatorBlocker } from "#src/integrations/ci.ts";
 import type { GitHubClient } from "#src/integrations/github.ts";
 import type { PullRequest } from "#src/integrations/github-pull-request.ts";
 import type { TrackerClient } from "#src/integrations/tracker.ts";
+import type { GitWorkspace } from "#src/host/git-workspace.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
+import type { JustinTelemetry } from "#src/runtime/telemetry.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
 import { AutonomousBlocker } from "#src/domain/autonomy.ts";
 import type { ReviewFindingRef } from "#src/domain/schemas.ts";
@@ -137,6 +144,136 @@ export async function completeNoChangeTurn(input: {
   });
 }
 
+export type RestackStaleMergeCallback = (input: {
+  state: TaskState;
+  pr: PullRequest;
+  health: PrHealth;
+  staleBase: StaleBaseReport;
+  env: Readonly<Record<string, string>>;
+}) => Promise<void>;
+
+export async function restackStaleMergeTask(input: {
+  state: TaskState;
+  pr: PullRequest;
+  health: PrHealth;
+  staleBase: StaleBaseReport;
+  env: Readonly<Record<string, string>>;
+  git: Pick<GitWorkspace, "restack" | "submitUpdate" | "headSha">;
+  telemetry?: JustinTelemetry | undefined;
+  save: Save;
+  writeInfo: (message: string) => void;
+}): Promise<void> {
+  const { state, pr, health, staleBase, env } = input;
+  const conflict = await input.git.restack(state.checkoutPath, env);
+  if (conflict !== null) {
+    input.telemetry?.staleBaseRestack(state, {
+      mergeBaseSha: staleBase.mergeBaseSha,
+      mainHeadSha: staleBase.mainHeadSha,
+      behindBy: staleBase.behindBy,
+      restackedHeadSha: null,
+      conflict: true,
+    });
+    await input.save(state, "implementing", {
+      pendingHealth: health,
+      pendingDiagnostics: conflict,
+      restackInProgress: true,
+      latestHeadSha: pr.headRefOid,
+    });
+    input.writeInfo(
+      `${state.issue.identifier}: stale-base restack stopped with conflicts; queued for repair`,
+    );
+    return;
+  }
+  await input.git.submitUpdate(state, env);
+  const restackedHeadSha = await input.git.headSha(state.checkoutPath);
+  input.telemetry?.staleBaseRestack(state, {
+    mergeBaseSha: staleBase.mergeBaseSha,
+    mainHeadSha: staleBase.mainHeadSha,
+    behindBy: staleBase.behindBy,
+    restackedHeadSha,
+    conflict: false,
+  });
+  await input.save(state, "awaiting_ci", {
+    latestHeadSha: restackedHeadSha,
+    restackInProgress: false,
+  });
+  input.writeInfo(
+    `${state.issue.identifier}: restacked stale base onto current main (${restackedHeadSha.slice(0, 12)})`,
+  );
+}
+
+async function mergeUnmergedPullRequest(input: {
+  state: TaskState;
+  pr: PullRequest;
+  github: GitHubClient;
+  env: Readonly<Record<string, string>>;
+  save: Save;
+  writeInfo: (message: string) => void;
+  ready?: (() => Promise<boolean>) | undefined;
+  mergeCommand?: readonly string[] | undefined;
+  restackTask?: RestackStaleMergeCallback | undefined;
+}): Promise<PullRequest | null> {
+  const { state, pr, github, env } = input;
+  const health = await github.health(pr.number, state.checkoutPath);
+  const approved = await github.hasExactHeadApproval(
+    pr.number,
+    pr.headRefOid,
+    state.previousApprovalIds,
+  );
+  if (!approved || pr.isDraft || !deliveryIsHealthy(health)) {
+    await input.save(state, "awaiting_ci", {
+      latestHeadSha: pr.headRefOid,
+    });
+    return null;
+  }
+  const feedback = await github.feedback(
+    pr.number,
+    new Set(state.seenFeedbackIds),
+  );
+  if (feedback.length > 0) {
+    await input.save(state, "implementing", {
+      pendingFeedback: feedback,
+      pendingHealth: null,
+      pendingDiagnostics: null,
+      latestHeadSha: pr.headRefOid,
+    });
+    input.writeInfo(
+      `${state.issue.identifier}: new owner feedback arrived before merge`,
+    );
+    return null;
+  }
+  if (health.staleBase?.stale === true) {
+    if (input.restackTask === undefined) {
+      await input.save(state, "awaiting_ci", {
+        latestHeadSha: pr.headRefOid,
+      });
+      return null;
+    }
+    await input.restackTask({
+      state,
+      pr,
+      health,
+      staleBase: health.staleBase,
+      env,
+    });
+    return null;
+  }
+  if (input.ready === undefined || input.mergeCommand === undefined) {
+    throw new Error("Merge requires the host readiness hook");
+  }
+  if (!(await input.ready())) {
+    await input.save(state, "awaiting_ci", {
+      latestHeadSha: pr.headRefOid,
+    });
+    return null;
+  }
+  return await github.merge(pr.number, state.latestHeadSha ?? pr.headRefOid, {
+    checkout: state.checkoutPath,
+    branch: state.branch,
+    readyCommand: input.mergeCommand,
+  });
+}
+
 export async function mergeTask(input: {
   state: TaskState;
   withGitHub: WithGitHub;
@@ -147,6 +284,7 @@ export async function mergeTask(input: {
   store: TaskStore;
   ready?: () => Promise<boolean>;
   mergeCommand?: readonly string[];
+  restackTask?: RestackStaleMergeCallback | undefined;
   confirmMerged: (
     sha: string,
     env: Readonly<Record<string, string>>,
@@ -159,8 +297,12 @@ export async function mergeTask(input: {
   const prNumber = state.prNumber;
   await input.withGitHub(async (github, env) => {
     let pr: PullRequest = await github.pullRequest(prNumber);
-    if (pr.baseRefName !== input.baseBranch || pr.headRefName !== state.branch)
+    if (
+      pr.baseRefName !== input.baseBranch ||
+      pr.headRefName !== state.branch
+    ) {
       throw new Error("Merge requires the task's PR base and head branch");
+    }
     if (pr.state === "CLOSED") {
       await pauseTask({
         state,
@@ -171,50 +313,25 @@ export async function mergeTask(input: {
       return;
     }
     if (pr.mergedAt === null) {
-      const health = await github.health(pr.number, state.checkoutPath);
-      const approved = await github.hasExactHeadApproval(
-        pr.number,
-        pr.headRefOid,
-        state.previousApprovalIds,
-      );
-      if (!approved || pr.isDraft || !deliveryIsHealthy(health)) {
-        await input.save(state, "awaiting_ci", {
-          latestHeadSha: pr.headRefOid,
-        });
-        return;
-      }
-      const feedback = await github.feedback(
-        prNumber,
-        new Set(state.seenFeedbackIds),
-      );
-      if (feedback.length > 0) {
-        await input.save(state, "implementing", {
-          pendingFeedback: feedback,
-          pendingHealth: null,
-          pendingDiagnostics: null,
-          latestHeadSha: pr.headRefOid,
-        });
-        input.writeInfo(
-          `${state.issue.identifier}: new owner feedback arrived before merge`,
-        );
-        return;
-      }
-      if (input.ready === undefined || input.mergeCommand === undefined)
-        throw new Error("Merge requires the host readiness hook");
-      if (!(await input.ready())) {
-        await input.save(state, "awaiting_ci", {
-          latestHeadSha: pr.headRefOid,
-        });
-        return;
-      }
-      pr = await github.merge(pr.number, state.latestHeadSha ?? pr.headRefOid, {
-        checkout: state.checkoutPath,
-        branch: state.branch,
-        readyCommand: input.mergeCommand,
+      const mergedPr = await mergeUnmergedPullRequest({
+        state,
+        pr,
+        github,
+        env,
+        save: input.save,
+        writeInfo: input.writeInfo,
+        ready: input.ready,
+        mergeCommand: input.mergeCommand,
+        restackTask: input.restackTask,
       });
+      if (mergedPr === null) {
+        return;
+      }
+      pr = mergedPr;
     }
-    if (pr.mergeCommit === null)
+    if (pr.mergeCommit === null) {
       throw new Error("Merged PR has no merge commit");
+    }
     await input.confirmMerged(pr.mergeCommit.oid, env);
     // Persist the completion phase before cleanup: if any step below
     // fails, the next run retries only completion from "completing"

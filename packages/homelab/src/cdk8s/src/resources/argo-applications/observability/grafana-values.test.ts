@@ -16,10 +16,11 @@ describe("Woodpecker I/O observability Helm values", () => {
     expect(CI_KUBE_STATE_METRICS_VALUES).not.toHaveProperty("prometheus");
   });
 
-  it("allowlists the pod attribution and PVC backup-policy labels", () => {
+  it("allowlists the pod attribution, PVC backup-policy and agent slot-count labels", () => {
     expect(CI_KUBE_STATE_METRICS_VALUES.metricLabelsAllowlist).toEqual([
       "pods=[ci.sjer.red/step-key,ci.sjer.red/commit]",
       "persistentvolumeclaims=[velero.io/backup]",
+      "deployments=[ci.sjer.red/max-workflows]",
     ]);
   });
 

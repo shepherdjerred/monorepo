@@ -1,0 +1,20 @@
+/*
+ * Loading, empty and error states: one muted line at the gutter where the
+ * content would be, with an optional action. Errors lead with their glyph.
+ */
+@layer ui.components {
+  .ui-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2) var(--ui-space-3);
+    padding: var(--ui-space-6) var(--ui-gutter);
+    color: var(--ui-muted);
+  }
+  .ui-state[data-kind="error"] {
+    color: var(--ui-ink);
+  }
+  .ui-state-text {
+    min-width: 0;
+  }
+}

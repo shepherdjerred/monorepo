@@ -1,8 +1,12 @@
-import { run, runAllowExit, requireEnv } from "../run.ts";
+import { withCiObjectStoreRetry } from "../ci/ci-object-store-retry.ts";
+import { runAllowExit, requireEnv } from "../run.ts";
 import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../seaweedfs.ts";
 import { staticArchiveDigest } from "../static-site-archive.ts";
+import { TransientError } from "../transient-error.ts";
 
 const ARCHIVE_SUFFIXES = [".json", ".tar", ".tgz", ".tar.gz"] as const;
+const AWS_TRANSIENT_READBACK =
+  /^(?:fatal error: Could not connect to the endpoint URL:|download failed: .* AWS_ERROR_S3_INTERNAL_ERROR:)/mu;
 
 /**
  * The delivery-artifacts key of an immutable archive URI. The key ends in the
@@ -59,8 +63,8 @@ export async function publishImmutableArchive(input: {
     ],
     options,
   );
-  try {
-    await run(
+  await withCiObjectStoreRetry(async () => {
+    const readback = await runAllowExit(
       [
         "aws",
         "s3",
@@ -72,11 +76,12 @@ export async function publishImmutableArchive(input: {
       ],
       options,
     );
-  } catch {
-    throw new Error(
-      `Immutable archive publication is unconfirmed (upload exit ${String(publication.exitCode)})`,
-    );
-  }
+    if (readback.exitCode === 0) return;
+    const message = `Immutable archive publication is unconfirmed (upload exit ${String(publication.exitCode)}, readback exit ${String(readback.exitCode)})`;
+    if (AWS_TRANSIENT_READBACK.test(readback.stderr))
+      throw new TransientError(message);
+    throw new Error(message);
+  });
   const digest = await staticArchiveDigest(input.readback);
   if (digest !== input.digest)
     throw new Error("Published archive failed immutable byte readback");

@@ -134,16 +134,14 @@ export async function planSubtitleTargetV1(
     kind: "subtitle_maintenance_search",
     payload: { path: ["key"], equals: key },
   };
-  const [first, last] = await Promise.all([
-    tx.applicationEvent.findFirst({
-      where: historyWhere,
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    }),
-    tx.applicationEvent.findFirst({
-      where: historyWhere,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    }),
-  ]);
+  const first = await tx.applicationEvent.findFirst({
+    where: historyWhere,
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  });
+  const last = await tx.applicationEvent.findFirst({
+    where: historyWhere,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+  });
   const previous =
     last === null
       ? null

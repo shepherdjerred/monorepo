@@ -1,4 +1,8 @@
+import { readdir } from "node:fs/promises";
+import nodePath from "node:path";
+import { z } from "zod";
 import { rootCheckEnvironment } from "./ci/root-check-inputs.ts";
+import { prettierChangedEnvironment } from "./ci/run-shard-check.ts";
 
 const turboTasks = [
   "build",
@@ -9,6 +13,7 @@ const turboTasks = [
   "check-suppressions",
   "check-agent-guidance",
   "check-directory-file-counts",
+  "check-flag-usage",
   "check-ai-architecture",
   "check-floating-deps",
   "check-patched-deps",
@@ -110,6 +115,7 @@ export const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/mc-harness/src/pins.ts",
   "packages/the-storm/plugin/dist/build.gradle.kts",
   "packages/the-storm/plugin/settings.gradle.kts",
+  "packages/woodpecker-config-extension/src/images.ts",
   "packages/woodpecker-config-extension/src/pipeline/lanes/storm-e2e.ts",
   "packages/media/scripts/subtitle-requirements.txt",
 ] as const;
@@ -208,6 +214,115 @@ export async function affectedVerifyFilters(
   return filters;
 }
 
+const TurboSummarySchema = z.object({
+  tasks: z.array(
+    z.object({
+      taskId: z.string(),
+      execution: z
+        .object({
+          startTime: z.number(),
+          endTime: z.number().optional(),
+          exitCode: z.number().int().nullable().optional(),
+        })
+        .optional(),
+    }),
+  ),
+});
+
+export async function listTurboSummaryFiles(
+  rootDirectory: string,
+): Promise<Set<string>> {
+  try {
+    const entries = await readdir(
+      nodePath.join(rootDirectory, ".turbo", "runs"),
+    );
+    return new Set(entries.filter((name) => name.endsWith(".json")));
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return new Set();
+    }
+    throw error;
+  }
+}
+
+export async function readNewTurboSummaries(
+  rootDirectory: string,
+  previousFiles: ReadonlySet<string>,
+): Promise<unknown[]> {
+  let currentFiles: Set<string>;
+  try {
+    currentFiles = await listTurboSummaryFiles(rootDirectory);
+  } catch {
+    return [];
+  }
+  const newNames = [...currentFiles]
+    .filter((name) => !previousFiles.has(name))
+    .sort((left, right) => left.localeCompare(right));
+  const summaries: unknown[] = [];
+  for (const name of newNames) {
+    try {
+      summaries.push(
+        await Bun.file(
+          nodePath.join(rootDirectory, ".turbo", "runs", name),
+        ).json(),
+      );
+    } catch {
+      // Best-effort diagnostic: skip unreadable or partially flushed summary files.
+    }
+  }
+  return summaries;
+}
+
+export function formatTurboFailureSummary(
+  summaries: readonly unknown[],
+  nowMs = Date.now(),
+): string[] {
+  const inFlight: string[] = [];
+  const failed: string[] = [];
+  let unstartedCount = 0;
+
+  for (const rawSummary of summaries) {
+    const parsed = TurboSummarySchema.safeParse(rawSummary);
+    if (!parsed.success) continue;
+    for (const task of parsed.data.tasks) {
+      const execution = task.execution;
+      if (execution === undefined) {
+        unstartedCount += 1;
+        continue;
+      }
+      if (
+        execution.endTime === undefined ||
+        execution.exitCode === null ||
+        execution.exitCode === undefined
+      ) {
+        const elapsedSeconds = Math.max(
+          0,
+          Math.round((nowMs - execution.startTime) / 1000),
+        );
+        inFlight.push(`${task.taskId} (running ${String(elapsedSeconds)}s)`);
+      } else if (execution.exitCode !== 0) {
+        failed.push(`${task.taskId} (exit ${String(execution.exitCode)})`);
+      }
+    }
+  }
+
+  const lines: string[] = [];
+  if (inFlight.length > 0) {
+    lines.push(
+      `[verify] Turbo in-flight task(s) (${String(inFlight.length)}): ${inFlight.join(", ")}`,
+    );
+  }
+  if (failed.length > 0) {
+    lines.push(
+      `[verify] Turbo failed task(s) (${String(failed.length)}): ${failed.join(", ")}`,
+    );
+  }
+  if (unstartedCount > 0) {
+    lines.push(`[verify] Turbo unstarted task(s): ${String(unstartedCount)}`);
+  }
+  return lines;
+}
+
 export async function main(
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Promise<number> {
@@ -224,6 +339,10 @@ export async function main(
       argument === "--concurrency" || argument.startsWith("--concurrency="),
   );
   const affectedFilters = await affectedVerifyFilters(environment);
+  const rootDirectory = process.cwd();
+  const previousSummaries = await listTurboSummaryFiles(rootDirectory).catch(
+    () => new Set<string>(),
+  );
   const turbo = Bun.spawn(
     [
       "bun",
@@ -250,14 +369,38 @@ export async function main(
       stderr: "inherit",
       env: {
         ...(await rootCheckEnvironment(environment)),
+        ...(await prettierChangedEnvironment(environment)),
         CI_VITEST_MAX_WORKERS:
           environment["CI_VITEST_MAX_WORKERS"] ??
           String(VERIFY_VITEST_MAX_WORKERS),
       },
     },
   );
-  const turboExitCode = await turbo.exited;
-  if (turboExitCode !== 0) return turboExitCode;
+  const forwardInterrupt = (): void => {
+    turbo.kill("SIGINT");
+  };
+  const forwardTerminate = (): void => {
+    turbo.kill("SIGTERM");
+  };
+  process.on("SIGINT", forwardInterrupt);
+  process.on("SIGTERM", forwardTerminate);
+  let turboExitCode: number;
+  try {
+    turboExitCode = await turbo.exited;
+  } finally {
+    process.off("SIGINT", forwardInterrupt);
+    process.off("SIGTERM", forwardTerminate);
+  }
+  if (turboExitCode !== 0) {
+    const summaries = await readNewTurboSummaries(
+      rootDirectory,
+      previousSummaries,
+    );
+    for (const line of formatTurboFailureSummary(summaries)) {
+      console.error(line);
+    }
+    return turboExitCode;
+  }
 
   const designTokenCheck = Bun.spawn(
     [

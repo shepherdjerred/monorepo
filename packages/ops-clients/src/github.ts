@@ -26,7 +26,10 @@ import {
   RestReleaseSchema,
   RollupStateSchema,
   toAuthor,
+  toGitHubReleaseNote,
 } from "@shepherdjerred/ops-clients/github-schemas.ts";
+
+export type GitHubReleaseNote = ReturnType<typeof toGitHubReleaseNote>;
 
 const GITHUB_API_URL = "https://api.github.com";
 const GITHUB_GRAPHQL_URL = `${GITHUB_API_URL}/graphql`;
@@ -94,13 +97,15 @@ export type PullRequestBody = {
   url: string;
 };
 
-export type GitHubReleaseNote = {
-  tagName: string;
+export type GitHubReleaseHistory = {
+  readonly releases: GitHubReleaseNote[];
+  readonly complete: boolean;
+};
+
+type GitHubReleaseLookup = {
+  owner: string;
   name: string;
-  body: string;
-  url: string;
-  prerelease: boolean;
-  publishedAt: string | null;
+  maxPages?: number;
 };
 
 export type CommitComparison = {
@@ -192,10 +197,19 @@ export class GitHubClient {
   async #restGet<T extends z.ZodType>(
     path: string,
     schema: T,
+    captureHeaders?: (headers: Headers) => void,
   ): Promise<z.infer<T>> {
     const token = await this.#token();
+    const request: Fetch =
+      captureHeaders === undefined
+        ? this.#fetch
+        : async (url, init) => {
+            const response = await this.#fetch(url, init);
+            captureHeaders(response.headers);
+            return response;
+          };
     return await fetchJson(
-      this.#fetch,
+      request,
       {
         upstream: "github",
         url: `${GITHUB_API_URL}${path}`,
@@ -433,37 +447,39 @@ export class GitHubClient {
   }
 
   /** Published releases of an upstream repository, newest pages first. */
-  async releasesBetween(input: {
-    owner: string;
-    name: string;
-    maxPages?: number;
-  }): Promise<GitHubReleaseNote[]> {
+  async releasesBetween(
+    input: GitHubReleaseLookup,
+  ): Promise<GitHubReleaseNote[]> {
+    const history = await this.releasesBetweenWithCoverage(input);
+    return history.releases;
+  }
+
+  async releasesBetweenWithCoverage(
+    input: GitHubReleaseLookup,
+  ): Promise<GitHubReleaseHistory> {
     const maxPages = Math.min(Math.max(input.maxPages ?? 3, 1), MAX_PAGES);
     const PageSchema = z.array(RestReleaseSchema);
     const releases: GitHubReleaseNote[] = [];
     const repoPath = `/repos/${encodeURIComponent(input.owner)}/${encodeURIComponent(input.name)}/releases`;
     for (let page = 1; page <= maxPages; page += 1) {
+      const pagination = { link: "" };
       const items = await this.#restGet(
         `${repoPath}?per_page=${String(RELEASES_PER_PAGE)}&page=${String(page)}`,
         PageSchema,
+        (headers) => {
+          pagination.link = headers.get("link") ?? "";
+        },
       );
-      for (const release of items) {
-        if (!release.draft) {
-          releases.push({
-            tagName: release.tag_name,
-            name: release.name ?? release.tag_name,
-            body: release.body ?? "",
-            url: release.html_url,
-            prerelease: release.prerelease,
-            publishedAt: release.published_at ?? release.created_at,
-          });
-        }
-      }
-      if (items.length < RELEASES_PER_PAGE) {
-        break;
+      releases.push(
+        ...items
+          .filter((release) => !release.draft)
+          .map((release) => toGitHubReleaseNote(release)),
+      );
+      if (!/;\s*rel="next"(?:\s*[,;]|\s*$)/u.test(pagination.link)) {
+        return { releases, complete: true };
       }
     }
-    return releases;
+    return { releases, complete: false };
   }
 
   /** Compare `base...head` commits on an upstream GitHub repository. */

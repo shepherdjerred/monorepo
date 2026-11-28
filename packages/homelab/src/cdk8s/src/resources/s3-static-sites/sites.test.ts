@@ -78,7 +78,7 @@ describe("Scout static sites", () => {
         "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
       );
       expect(csp).toContain(
-        "connect-src 'self' https://j.sjer.red https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
+        "connect-src 'self' https://j.sjer.red https://logging.sjer.red https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
       );
       expect(csp).toContain("frame-src https://ct.pinterest.com");
     });
