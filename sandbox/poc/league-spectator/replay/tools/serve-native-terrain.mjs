@@ -2806,6 +2806,10 @@ const routes = new Map([
     "/native-terrain-actors.mjs",
     [source("native-terrain-actors.mjs"), "text/javascript; charset=utf-8"],
   ],
+  [
+    "/native-terrain-overhead.mjs",
+    [source("native-terrain-overhead.mjs"), "text/javascript; charset=utf-8"],
+  ],
   ["/three.core.js", [Bun.file(threeCore), "text/javascript; charset=utf-8"]],
   ["/map.json", [metadata, "application/json"]],
   ["/map.bin", [mesh, "application/octet-stream"]],

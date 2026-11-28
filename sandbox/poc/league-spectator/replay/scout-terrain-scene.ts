@@ -1206,6 +1206,16 @@ export type RendererModule = {
         ) =>
           | readonly [timeSeconds: number, current: number, max: number]
           | undefined;
+        championNameplateAt?: (
+          participantId: number,
+          timeSeconds: number,
+        ) =>
+          | {
+              name: string;
+              level?: number;
+              resource?: { current: number; max: number };
+            }
+          | undefined;
         width: number;
         height: number;
         devicePixelRatio: number;
@@ -2208,6 +2218,12 @@ export function prepareScene(
           teams.keys(),
           scene.identity.durationMilliseconds,
         );
+  const championNames = new Map(
+    trace.participants.map(({ participantId, championName }) => [
+      participantId,
+      championName,
+    ]),
+  );
   const dragons = new Map<number, string>();
   for (const { timeSeconds, actorContext } of scene.dragonKills ?? []) {
     const killer = trace.participants.find(
@@ -2329,9 +2345,7 @@ export function prepareScene(
       const tracks = resourceTracks?.get(participantId);
       const gold =
         tracks && lastAtOrBefore(tracks.gold, timeSeconds, ([time]) => time);
-      const resource =
-        tracks &&
-        lastAtOrBefore(tracks.resource, timeSeconds, ([time]) => time);
+      const resource = championResourceAt(participantId, timeSeconds);
       const experience = championExperienceAt(participantId, timeSeconds);
       const items = inventoryPoints?.get(participantId);
       const inventory =
@@ -2386,6 +2400,26 @@ export function prepareScene(
   function championHealthAt(participantId: number, timeSeconds: number) {
     const points = healthTracks?.get(participantId)?.points;
     return points && lastAtOrBefore(points, timeSeconds, ([time]) => time);
+  }
+  function championResourceAt(participantId: number, timeSeconds: number) {
+    const points = resourceTracks?.get(participantId)?.resource;
+    return points && lastAtOrBefore(points, timeSeconds, ([time]) => time);
+  }
+  function championNameplateAt(participantId: number, timeSeconds: number) {
+    const name = championNames.get(participantId);
+    if (name === undefined) return;
+    const experience = experienceTracks?.get(participantId)?.points;
+    const level =
+      experience &&
+      lastAtOrBefore(experience, timeSeconds, ([time]) => time)?.[2];
+    const resource = championResourceAt(participantId, timeSeconds);
+    return {
+      name,
+      ...(level === undefined ? {} : { level }),
+      ...(resource === undefined || resource[2] === 0
+        ? {}
+        : { resource: { current: resource[1], max: resource[2] } }),
+    };
   }
   function championExperienceAt(participantId: number, timeSeconds: number) {
     const track = experienceTracks?.get(participantId);
@@ -2555,6 +2589,8 @@ export function prepareScene(
     playerCheckpoints,
     scoreboardAt,
     championHealthAt: healthTracks === null ? undefined : championHealthAt,
+    championNameplateAt:
+      healthTracks === null ? undefined : championNameplateAt,
   };
 }
 

@@ -469,6 +469,9 @@ export const createReplayEngine: ReplayEngineFactory = async ({
               ...(data.championHealthAt === undefined
                 ? {}
                 : { championHealthAt: data.championHealthAt }),
+              ...(data.championNameplateAt === undefined
+                ? {}
+                : { championNameplateAt: data.championNameplateAt }),
               ...(manualView ??
                 (focus === undefined
                   ? {}

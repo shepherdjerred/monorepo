@@ -1,4 +1,8 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
+import {
+  expectChampionOverhead,
+  verifyOverheadTeamVision,
+} from "./proof/champion-overhead.ts";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
 import { replayPath, type readRecordedReplay } from "./recorded-replay-data.ts";
 import { seek } from "./recorded-replay-fixture.ts";
@@ -27,6 +31,7 @@ async function verifyCurrentTeamVision(page: Page, testInfo: TestInfo) {
   await expect(vision).toHaveValue("red");
   await expectActor(page, heimerdinger, false);
   await expectActor(page, illaoi, true);
+  if (expectChampionOverhead) await verifyOverheadTeamVision(page);
   await seek(page, 33);
   await expectActor(page, heimerdinger, true);
   await seek(page, 32.8);

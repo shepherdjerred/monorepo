@@ -556,6 +556,9 @@ the prepared `.8428` scene with SHA-256
 `fc4ac9c2db50c721cb47edec1a402f7c098595d52d0effd76be1abc800cc01e6`.
 Use that format with `replaySha256` and `nexusModels: { instances, terminalLoss }`.
 The browser proof also checks the SHA-256 of the original terminal packet.
+Set `SCOUT_REPLAY_E2E_EXPECT_CHAMPION_OVERHEAD=1` for a package built with the
+champion nameplates. The test checks the recorded name, level, and resource
+gauge when following a champion, after a rewind, and under team visibility.
 The harness also tests announcer playback when the package declares the
 announcer preview. It releases the local backend after the browser test and
 prints the evidence directory under `.cache`.

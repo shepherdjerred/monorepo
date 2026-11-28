@@ -1,6 +1,7 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
 import { seek } from "./recorded-replay-fixture.ts";
+import { verifyChampionOverhead } from "./proof/champion-overhead.ts";
 import {
   createCurrentInventoryVerifier,
   currentInventoryReplaySha256,
@@ -118,6 +119,7 @@ async function verifyCurrentChampionStats(
       await expect(resource).toHaveAttribute("max", "200");
       await expect(gold).toHaveText(held);
     }
+    await verifyChampionOverhead(page, time, energy, testInfo);
     if (time === 120) {
       await roster.screenshot({
         path: testInfo.outputPath("recorded-current-champion-stats.png"),

@@ -1,5 +1,9 @@
 import { PerspectiveCamera, Vector3 } from "/three.core.js";
 import { createChampionModelRenderer } from "./native-terrain-actors.mjs";
+import {
+  createChampionOverhead,
+  projectChampionTop,
+} from "./native-terrain-overhead.mjs";
 
 export {
   closeChampionModelImages,
@@ -44,23 +48,16 @@ function drawChampionHealth(
       if (model === undefined) continue;
       const health = sample(participantId, frame.timeSeconds);
       if (health === undefined) continue;
-      const [x, groundY, z] = position;
-      const y = groundY + model.topY;
-      const clipX = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12];
-      const clipY = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13];
-      const clipZ = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14];
-      const clipW = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
-      if (!(
-        clipW > 0 &&
-        Math.abs(clipX) <= clipW &&
-        Math.abs(clipY) <= clipW &&
-        Math.abs(clipZ) <= clipW
-      ))
-        continue;
-      const left = Math.round(
-        ((clipX / clipW + 1) * width) / 2 - gaugeWidth / 2,
+      const point = projectChampionTop(
+        position,
+        model.topY,
+        matrix,
+        width,
+        height,
       );
-      const bottom = Math.round(((clipY / clipW + 1) * height) / 2) + screenGap;
+      if (point === undefined) continue;
+      const left = Math.round(point[0] - gaugeWidth / 2);
+      const bottom = Math.round(point[1]) + screenGap;
       if (
         left < 0 ||
         left + gaugeWidth > width ||
@@ -452,6 +449,7 @@ export function createTerrainRenderer(
   const worldUp = new Vector3(0, 1, 0);
   let dragView;
   let modelRenderer;
+  let overhead;
   const inactiveInhibitorModels = new Set(
     (scene.inhibitorModels?.bindings ?? []).flatMap(
       ({ participantId, inactiveModelRange }) =>
@@ -462,6 +460,7 @@ export function createTerrainRenderer(
   function dispose() {
     if (disposed) return;
     disposed = true;
+    overhead?.dispose();
     gl.bindVertexArray(null);
     gl.useProgram(null);
     gl.deleteVertexArray(terrain);
@@ -711,6 +710,23 @@ export function createTerrainRenderer(
         ratio,
       );
     }
+    const nameplateAt =
+      options.focus === undefined ? undefined : options.championNameplateAt;
+    if (
+      championModels !== undefined &&
+      nameplateAt !== undefined &&
+      overhead === undefined
+    )
+      overhead = createChampionOverhead(canvas);
+    overhead?.draw(
+      frame,
+      nameplateAt,
+      championModels,
+      viewProjection.elements,
+      width,
+      height,
+      ratio,
+    );
   }
   function dragFocus(deltaX, deltaY) {
     if (dragView === undefined) throw Error("The terrain camera has no view");

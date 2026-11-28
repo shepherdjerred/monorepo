@@ -216,6 +216,9 @@ if (process.argv[2] === "--help") {
     SCOUT_REPLAY_E2E_PORT: port,
     SCOUT_REPLAY_E2E_ROFL: roflPath,
     SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY: oracleDirectory,
+    ...(process.env.SCOUT_REPLAY_E2E_EXPECT_CHAMPION_OVERHEAD === "1"
+      ? { SCOUT_REPLAY_E2E_EXPECT_CHAMPION_OVERHEAD: "1" }
+      : {}),
   };
   const appBuild = await spawnScout(
     "app",
