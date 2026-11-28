@@ -32,6 +32,8 @@ import { ExploreShared } from "#src/routes/explore-shared.tsx";
 import { ConsumerPlayerSearch } from "#src/routes/consumer/consumer-player-search.tsx";
 import { ConsumerPlayerProfile } from "#src/routes/consumer/consumer-player-profile.tsx";
 import { ConsumerChampion } from "#src/routes/consumer/consumer-champion.tsx";
+import { ConsumerLive } from "#src/routes/consumer/consumer-live.tsx";
+import { ConsumerLiveGame } from "#src/routes/consumer/consumer-live-game.tsx";
 import { ConsumerMatch } from "#src/routes/consumer/consumer-match.tsx";
 import { ExploreMatch } from "#src/routes/explore-match.tsx";
 import {
@@ -71,6 +73,8 @@ import {
   competitionDetailLoader,
   daresLoader,
   competitionsLoader,
+  consumerLiveGameLoader,
+  consumerLiveLoader,
   consumerPlayerLoader,
   consumerPlayersLoader,
   exploreLoader,
@@ -266,6 +270,18 @@ export const routes: RouteObject[] = [
               {
                 path: "players/:playerId/matches/:matchId",
                 element: <ConsumerMatch />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "live",
+                element: <ConsumerLive />,
+                loader: consumerLiveLoader,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "live/:riotMatchId",
+                element: <ConsumerLiveGame />,
+                loader: consumerLiveGameLoader,
                 errorElement: <RouteErrorPanel />,
               },
               {

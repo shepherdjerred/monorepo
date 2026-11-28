@@ -21,6 +21,8 @@ const KNOWN_URLS = [
   "/explore/s/some-share-token",
   "/players",
   "/players/42",
+  "/live",
+  "/live/NA1_5500000777",
   "/halls",
   "/halls/1",
   "/challenges",
