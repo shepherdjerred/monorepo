@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Temporal } from "@js-temporal/polyfill";
 import { DigestRunResponseSchema } from "@shepherdjerred/ops-model/digest.ts";
 import { SnapshotResponseSchema } from "@shepherdjerred/ops-model/snapshot.ts";
 
@@ -20,7 +21,10 @@ import { fixedClock } from "#shared/time";
 import { readinessOnlyLedger, unexpected } from "#test-fixtures/alert-ledger";
 import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 import { createOpsFixture } from "#test-fixtures/ops-services";
-import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
+import {
+  buildFixtureIngest,
+  fixtureOpsIngest,
+} from "#test-fixtures/ops-snapshot";
 
 const NOW = "2026-09-24T15:00:00Z";
 const TOKEN = "ops-ingest-token-with-at-least-32-chars";
@@ -196,6 +200,58 @@ describe("ops read routes", () => {
       body: "not json",
     });
     expect(badCursor.status).toBe(400);
+  });
+
+  it("includes experiment reviews only for clients that opt in", async () => {
+    const { app, ingest } = setup();
+    const reviewId = "experiments:due-for-review";
+    const snapshot = buildFixtureIngest({
+      now: Temporal.Instant.from(NOW),
+      changes: [],
+      metrics: [],
+      signals: [
+        {
+          id: reviewId,
+          source: "experiments",
+          section: "work",
+          kind: "experiments-due",
+          severity: "info",
+          needsMe: true,
+          title: "1 experiment due for review",
+        },
+      ],
+    });
+    const ingested = await ingest(JSON.stringify(snapshot));
+    expect(ingested.status).toBe(202);
+
+    const legacy = SnapshotResponseSchema.parse(
+      await readJson(app.request("/api/v1/ops/snapshot")),
+    );
+    expect(legacy.sources.map(({ source }) => source)).not.toContain(
+      "experiments",
+    );
+    expect(legacy).toMatchObject({
+      severity: "ok",
+      summary: "All systems healthy",
+    });
+    expect(legacy.sections.find(({ id }) => id === "work")).toMatchObject({
+      sources: ["tracker"],
+      signals: [],
+      severity: "ok",
+      summary: "All clear",
+    });
+
+    const hub = SnapshotResponseSchema.parse(
+      await readJson(
+        app.request("/api/v1/ops/snapshot?consumer=web&includeExperiments=1"),
+      ),
+    );
+    expect(hub.sources.map(({ source }) => source)).toContain("experiments");
+    expect(hub.sections.find(({ id }) => id === "work")).toMatchObject({
+      sources: ["tracker", "experiments"],
+      signals: [{ id: reviewId }],
+    });
+    expect(hub.newSignalIds).toEqual([reviewId]);
   });
 
   it("filters changes and serves service detail with Pyroscope profile links", async () => {

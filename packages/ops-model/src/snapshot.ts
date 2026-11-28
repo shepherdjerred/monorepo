@@ -18,6 +18,7 @@ export const SOURCE_IDS = [
   "github",
   "renovate",
   "tracker",
+  "experiments",
   "bugsink",
   "posthog",
   "probes",
@@ -35,6 +36,11 @@ export const SourceIdSchema = z
   .transform((source) => (source === "linear" ? ("tracker" as const) : source));
 export type SourceId = z.infer<typeof SourceIdSchema>;
 export type SourceInputId = z.input<typeof SourceIdSchema>;
+
+/** Experiments is registered independently of the snapshot pipeline. */
+export function canOmitSource(source: SourceId): boolean {
+  return source === "experiments";
+}
 
 /**
  * Snapshot sections, one per operational question. The order here is the

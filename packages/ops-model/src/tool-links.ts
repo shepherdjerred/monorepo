@@ -27,6 +27,7 @@ export const APP_HOSTS = {
   delivery: "https://delivery.tailnet-1a49.ts.net",
   errors: "https://errors.tailnet-1a49.ts.net",
   flags: "https://flags.tailnet-1a49.ts.net",
+  experiments: "https://experiments.tailnet-1a49.ts.net",
   golink: "https://go.tailnet-1a49.ts.net",
   feeds: "https://feeds.tailnet-1a49.ts.net",
   media: "https://media.tailnet-1a49.ts.net",
@@ -37,6 +38,8 @@ export const APP_HOSTS = {
 } as const;
 
 const POSTHOG_PROJECT_ID = 549_883;
+
+export const EXPERIMENTS_REVIEW_PATH = "/experiments?view=due";
 
 export type ConsoleLinkGroup = "Apps" | "Tools";
 

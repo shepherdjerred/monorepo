@@ -7,7 +7,7 @@
  * copy: several images intentionally copy only the files they compile.
  */
 import { Glob } from "bun";
-import { stat } from "node:fs/promises";
+import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { loadWorkspaces } from "../../ci/scripts/selectors/select-image-targets-workspaces.ts";
@@ -317,6 +317,21 @@ type Walk = {
   readonly queue: { file: string; allowHop: boolean }[];
 };
 
+function resolvePrivateImport(specifier: string, file: string): string | null {
+  try {
+    return Bun.resolveSync(specifier, path.dirname(file));
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ERR_MODULE_NOT_FOUND"
+    ) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 async function enqueueImport(
   file: string,
   imported: { specifier: string; typeOnly: boolean },
@@ -324,12 +339,15 @@ async function enqueueImport(
   walk: Walk,
 ): Promise<void> {
   if (imported.typeOnly) return;
-  if (imported.specifier.startsWith(".")) {
-    const resolved = await resolveFile(
-      path.resolve(path.dirname(file), imported.specifier),
-    );
-    // Relative imports stay in this compilation. A workspace import is the
-    // one hop, and that hop does not continue into a third package.
+  if (
+    imported.specifier.startsWith(".") ||
+    imported.specifier.startsWith("#")
+  ) {
+    const resolved = imported.specifier.startsWith("#")
+      ? resolvePrivateImport(imported.specifier, file)
+      : await resolveFile(path.resolve(path.dirname(file), imported.specifier));
+    // Relative and private imports stay in this compilation. A workspace
+    // import is the one hop, and that hop does not continue into a third package.
     if (resolved !== null) walk.queue.push({ file: resolved, allowHop });
     return;
   }
@@ -370,16 +388,17 @@ export async function requiredPackageDirs(
   entry: string,
   repoRoot: string,
 ): Promise<string[]> {
-  const loaded = await loadWorkspaces(repoRoot);
+  const root = await realpath(repoRoot);
+  const loaded = await loadWorkspaces(root);
   const packages = [...loaded.entries()].map(([name, pkg]) => ({
     name,
     dir: pkg.dir,
   }));
-  const absolute = path.resolve(repoRoot, entry);
+  const absolute = path.resolve(root, entry);
   const required = new Set<string>();
   const seen = new Set<string>();
   const walk: Walk = {
-    repoRoot,
+    repoRoot: root,
     packages,
     required,
     queue: [{ file: absolute, allowHop: true }],

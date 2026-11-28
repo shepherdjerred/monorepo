@@ -40,6 +40,8 @@ COPY --parents \
   packages/console-ui \
   packages/incidents \
   packages/eslint-config \
+  packages/experiments \
+  packages/flags \
   packages/loaded \
   packages/ops-model \
   packages/ops-clients \
@@ -77,6 +79,8 @@ COPY --from=build --exclude=node_modules /app/packages/alert-dashboard /app/pack
 COPY --parents \
   tsconfig.base.json \
   packages/loaded \
+  packages/experiments/src \
+  packages/flags \
   packages/ops-model \
   packages/ops-clients \
   packages/llm-observability \

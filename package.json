@@ -131,6 +131,7 @@
     "packages/dotfiles",
     "packages/errors",
     "packages/eslint-config",
+    "packages/experiments",
     "packages/feature-flags",
     "packages/feeds",
     "packages/flags",

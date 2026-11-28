@@ -12,7 +12,7 @@
 # Gradle and Corretto majors match .mise.toml's gradle and java pins
 # (minecraft-tsmc.test.ts enforces the Gradle version). Renovate's Dockerfile
 # manager updates every FROM pin in this file.
-FROM gradle:9.9.2-jdk25-corretto@sha256:1539412bc103a39e52bf5db7138e5f1ff30046e2bdbfcdc7d394d1f61dda9f9b AS plugin
+FROM gradle:9.9.2-jdk25-corretto@sha256:655ec9b518f5cacb08484a860e2f9baf5c1f586d484b7209935642ba619c56b4 AS plugin
 WORKDIR /src
 COPY plugin/ plugin/
 COPY public-status.json public-status.json

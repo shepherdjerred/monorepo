@@ -84,6 +84,7 @@ import { createChartsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 import { createCiCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/ci-cache.ts";
 
 import { createArtifactsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/artifacts.ts";
+import { createExperimentsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/experiments/index.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -186,6 +187,7 @@ export async function createAppsChart(app: App) {
   createCiCacheApp(chart);
 
   createArtifactsApp(chart);
+  createExperimentsApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

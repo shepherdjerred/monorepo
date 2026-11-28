@@ -1,11 +1,89 @@
 import { expect, test } from "vitest";
-import { ensureDockerHubAccess } from "./dockerhub-access.ts";
+import {
+  ensureDockerHubAccess,
+  ensurePrivateDockerHubRepositories,
+} from "./dockerhub-access.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 
 const digest = `sha256:${"a".repeat(64)}`;
 const noWait = { attempts: 1, sleeper: async () => 0 };
 const isToken = (url: string | URL) =>
   new URL(url).hostname === "auth.docker.io";
+
+const publisher = {
+  DOCKERHUB_USERNAME: "shepherdjerred",
+  DOCKERHUB_PUBLISH_TOKEN: "publisher-fixture",
+};
+
+test("checks exact private repository metadata with one publisher exchange", async () => {
+  const calls: string[] = [];
+  await ensurePrivateDockerHubRepositories(
+    ["artifacts", "macos-cross-compiler", "birmel"],
+    publisher,
+    async (url, options) => {
+      const { hostname, pathname } = new URL(url);
+      expect(hostname).toBe("hub.docker.com");
+      expect(options?.redirect).toBe("error");
+      calls.push(pathname);
+      if (pathname === "/v2/auth/token") {
+        expect(options?.method).toBe("POST");
+        expect(options?.body).toBe(
+          JSON.stringify({
+            identifier: "shepherdjerred",
+            secret: "publisher-fixture",
+          }),
+        );
+        return Response.json({ access_token: "publisher-access-fixture" });
+      }
+      expect(new Headers(options?.headers).get("authorization")).toBe(
+        "Bearer publisher-access-fixture",
+      );
+      return Response.json({
+        namespace: "shepherdjerred",
+        name: pathname.split("/").at(-1),
+        is_private: true,
+      });
+    },
+  );
+  expect(calls).toEqual([
+    "/v2/auth/token",
+    "/v2/namespaces/shepherdjerred/repositories/artifacts",
+    "/v2/namespaces/shepherdjerred/repositories/birmel",
+  ]);
+});
+
+test.each([
+  ["missing", () => new Response(null, { status: 404 })],
+  [
+    "public",
+    () =>
+      Response.json({
+        namespace: "shepherdjerred",
+        name: "artifacts",
+        is_private: false,
+      }),
+  ],
+  [
+    "different",
+    () =>
+      Response.json({
+        namespace: "shepherdjerred",
+        name: "birmel",
+        is_private: true,
+      }),
+  ],
+])("refuses to push to a %s private repository", async (_reason, response) => {
+  await expect(
+    ensurePrivateDockerHubRepositories(
+      ["artifacts"],
+      publisher,
+      async (_url, options) =>
+        options?.method === "POST"
+          ? Response.json({ access_token: "publisher-access-fixture" })
+          : response(),
+    ),
+  ).rejects.toThrow("shepherdjerred/artifacts is not confirmed private");
+});
 
 test("accepts a private image only when anonymous manifest access is denied", async () => {
   const requested: string[] = [];

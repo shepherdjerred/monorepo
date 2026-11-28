@@ -1,4 +1,5 @@
 import policy from "../../../packages/version-catalog/src/image-registry.json" with { type: "json" };
+import { dockerHubCredentials } from "../../../scripts/lib/dockerhub-credentials.ts";
 import { asRecord } from "../../../scripts/lib/json.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 
@@ -15,6 +16,95 @@ const accept = [
 ].join(", ");
 
 class AccessPolicyError extends Error {}
+
+const dockerHub = "https://hub.docker.com";
+
+async function hubJson(
+  path: string,
+  init: RequestInit,
+  fetcher: Fetcher,
+): Promise<Record<string, unknown> | null> {
+  let response: Response;
+  try {
+    response = await fetcher(new URL(path, dockerHub), {
+      ...init,
+      redirect: "error",
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch {
+    throw new TransientError("Docker Hub repository preflight request failed");
+  }
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const message = `Docker Hub repository preflight returned HTTP ${String(response.status)}`;
+    if (
+      response.status === 408 ||
+      response.status === 429 ||
+      response.status >= 500
+    ) {
+      throw new TransientError(message);
+    }
+    throw new AccessPolicyError(message);
+  }
+  try {
+    const result = asRecord(await response.json());
+    if (result !== null) return result;
+  } catch {
+    // Transport/JSON errors must never include a credential-bearing body.
+  }
+  throw new TransientError(
+    "Docker Hub repository preflight returned invalid JSON",
+  );
+}
+
+/** Docker Hub may implicitly create a public repository for the first push. */
+export async function ensurePrivateDockerHubRepositories(
+  names: readonly string[],
+  environment: Readonly<Record<string, string | undefined>>,
+  fetcher: Fetcher = fetch,
+): Promise<void> {
+  const privateNames = names.filter((name) =>
+    policy.images.some(
+      (image) => image.name === name && image.visibility === "private",
+    ),
+  );
+  if (privateNames.length === 0) return;
+
+  const { username, password } = dockerHubCredentials("publisher", environment);
+  const login = await hubJson(
+    "/v2/auth/token",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: username, secret: password }),
+    },
+    fetcher,
+  );
+  const token = login?.["access_token"];
+  if (typeof token !== "string" || token.length === 0) {
+    throw new TransientError(
+      "Docker Hub repository preflight received no access token",
+    );
+  }
+
+  for (const name of privateNames) {
+    const repository = `${policy.namespace}/${name}`;
+    const metadata = await hubJson(
+      `/v2/namespaces/${policy.namespace}/repositories/${name}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+      fetcher,
+    );
+    if (
+      metadata?.["namespace"] !== policy.namespace ||
+      metadata["name"] !== name ||
+      metadata["is_private"] !== true
+    ) {
+      throw new AccessPolicyError(
+        `Docker Hub repository ${repository} is not confirmed private; wait for tofu-dockerhub/prod before pushing`,
+      );
+    }
+  }
+}
 
 function visibilityFailure(name: string, publicImage: boolean): Error {
   return new AccessPolicyError(

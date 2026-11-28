@@ -111,6 +111,12 @@ export class DockerhubStack extends HomelabStack {
       'docker_hub_repository.image["errors"]',
       "shepherdjerred/errors",
     );
+    // CI created the Artifacts repository before the private declaration applied.
+    importInstance(
+      this,
+      'docker_hub_repository.image["artifacts"]',
+      "shepherdjerred/artifacts",
+    );
 
     // Self-bootstrap OCI Helm chart repository for the first-party `charts`
     // registry: public so anonymous OCI resolution in Delivery and ArgoCD can

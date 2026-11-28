@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["bun", "vite/client"],
+    "noEmit": true
+  },
+  "include": ["src", "eslint.config.ts", "prisma.config.ts", "vite.config.ts"]
+}

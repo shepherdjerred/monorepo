@@ -91,6 +91,11 @@ function spaProbeSmoke(
   return backgroundProbeSmoke(packageDir, "src/server/index.ts", probe);
 }
 
+function healthProbeSmoke(packageDir: string, port: number): string {
+  const probe = `const health = await fetch("http://127.0.0.1:${String(port)}/healthz"); if (!health.ok) process.exit(1);`;
+  return backgroundProbeSmoke(packageDir, "src/index.ts", probe);
+}
+
 const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
@@ -461,11 +466,7 @@ const commands: Record<
     env: {},
   },
   flags: {
-    command: backgroundProbeSmoke(
-      "flags",
-      "src/index.ts",
-      'const health = await fetch("http://127.0.0.1:17360/healthz"); if (!health.ok) process.exit(1);',
-    ),
+    command: healthProbeSmoke("flags", 17_360),
     env: {
       HOST: "127.0.0.1",
       PORT: "17360",
@@ -519,12 +520,26 @@ const commands: Record<
     },
   },
   artifacts: {
-    command: backgroundProbeSmoke(
-      "artifacts",
-      "src/index.ts",
-      'const health = await fetch("http://127.0.0.1:17440/healthz"); if (!health.ok) process.exit(1);',
-    ),
-    env: { HOST: "127.0.0.1", PORT: "17440" },
+    command: healthProbeSmoke("artifacts", 17_440),
+    // Both image smokes boot without backing services. The probe uses the
+    // internal host class, which differs from the app and content origins.
+    env: {
+      HOST: "127.0.0.1",
+      PORT: "17440",
+      DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/artifacts",
+      S3_ENDPOINT: "http://127.0.0.1:19000",
+      AWS_ACCESS_KEY_ID: "smoke",
+      AWS_SECRET_ACCESS_KEY: "smoke",
+      ARTIFACTS_APP_ORIGIN: "http://artifacts.smoke.test",
+      ARTIFACTS_CONTENT_ORIGIN: "http://artifacts-content.smoke.test",
+      ARTIFACTS_OPERATOR_LOGINS: "smoke@example.test",
+      ENVIRONMENT: "test",
+      FEATURE_FLAGS_MODE: "disabled",
+    },
+  },
+  experiments: {
+    command: "cd /app/packages/experiments && bun run smoke",
+    env: {},
   },
 };
 
@@ -547,21 +562,14 @@ if (import.meta.main) {
   }
   if (target === "scout-for-lol") {
     const expectedContractHash = Bun.env["EXPECTED_CONTRACT_HASH"];
-    if (
-      expectedContractHash !== undefined &&
-      expectedContractHash.length > 0 &&
-      Bun.env["CONTRACT_HASH"] !== expectedContractHash
-    ) {
+    const actualContractHash = Bun.env["CONTRACT_HASH"];
+    if (expectedContractHash && actualContractHash !== expectedContractHash) {
       throw new Error(
-        `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(Bun.env["CONTRACT_HASH"])}`,
+        `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(actualContractHash)}`,
       );
     }
   }
-  const command = imageSmokeCommand(target);
-
-  assertPassed(
-    await runShell(command.command, command.env),
-    `${target} in-image smoke`,
-  );
+  const { command, env } = imageSmokeCommand(target);
+  assertPassed(await runShell(command, env), `${target} in-image smoke`);
   console.log(`${target} in-image smoke passed`);
 }

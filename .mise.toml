@@ -24,8 +24,8 @@ python = "3.15.2"
 rust = "1.100.0"
 # Compiler cache for every CI rustc invocation (RUSTC_WRAPPER): CI mounts a
 # shared object store so verify stops rebuilding ~4 GB of target/ per run.
-sccache = "0.19.0"
-"aqua:yonaskolb/XcodeGen" = { version = "2.48.0", os = ["macos"] }
+sccache = "0.20.1"
+"aqua:yonaskolb/XcodeGen" = { version = "2.49.0", os = ["macos"] }
 "cargo:cargo-packager" = "0.11.8"
 # renovate: datasource=dotnet-version depName=dotnet-sdk
 dotnet = "10.0.404"
@@ -42,7 +42,7 @@ hadolint = "2.15.1"
 go = "1.27.4"
 golangci-lint = "2.15.0"
 # Release automation (cooklang publish, release commit-backs) shells out to gh
-gh = "2.105.0"
+gh = "2.106.0"
 # CI scripts (bake-images.ts affected-scoping + digest collection) use jq
 jq = "1.8.2"
 # Link checker for the weekly Temporal link-rot report (root lychee.toml);
@@ -57,11 +57,11 @@ yq = "4.54.3"
 "github:theseus-rs/postgresql-binaries" = { version = "18.7.0", strip_components = 1, bin_path = "bin" }
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4.3.2"
-opentofu = "1.13.9"
+opentofu = "1.13.10"
 # Kubernetes schema validation of the cdk8s synth output (packages/homelab
 # check:kubeconform). Fetches upstream JSON schemas at validation time.
 kubeconform = "0.8.0"
 # Execute monitoring-rule regression cases with Prometheus's real evaluator.
 "aqua:prometheus/prometheus" = "3.16.0"
-argocd = "3.6.2"
-awscli = "2.41.2"
+argocd = "3.6.3"
+awscli = "2.42.4"

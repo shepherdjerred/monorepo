@@ -13,6 +13,7 @@ import { mapAlerts } from "./alerts.ts";
 import { mapArgoApplications } from "./argocd.ts";
 import { mapBugsink } from "./bugsink.ts";
 import { mapCi } from "./ci.ts";
+import { collectExperiments } from "./experiments/collector.ts";
 import { mapGitHub } from "./github.ts";
 import { mapKubernetes } from "./kubernetes.ts";
 import { mapTracker } from "./tracker.ts";
@@ -57,6 +58,9 @@ const openPr = {
 
 /** One problem-bearing fixture per source, run through its real mapper. */
 const COLLECTIONS: Record<SourceId, OpsCollection> = {
+  experiments: await collectExperiments("http://experiments:7408", () =>
+    Promise.resolve(Response.json({ dueCount: 2 })),
+  ),
   alerts: mapAlerts(
     [
       {

@@ -11,7 +11,6 @@ import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 export type LiveGameData = RouterOutputs["consumerLive"]["game"];
 export type LiveListData = RouterOutputs["consumerLive"]["list"];
 export type LiveParticipant = LiveGameData["participants"][number];
-export type LiveFriend = NonNullable<LiveParticipant["friend"]>;
 export type LiveSummary = LiveListData[number];
 
 /** How often a page refreshes while the game it shows is still being played. */
@@ -110,11 +109,6 @@ const LANE_ORDER: readonly (Lane | null)[] = [
 /** The lane the lobby inferred, or none when it could not tell. */
 export function laneOf(participant: LiveParticipant): Lane | null {
   return LaneSchema.nullable().parse(participant.lane);
-}
-
-/** "in top", "in the jungle", "in mid": the lane as the end of a sentence. */
-export function lanePlaying(lane: Lane): string {
-  return LANE_PLAYING[lane];
 }
 
 /** "top laner", "jungler": who a lane's player is. */

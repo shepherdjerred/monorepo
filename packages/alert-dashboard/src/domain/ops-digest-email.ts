@@ -68,6 +68,7 @@ const SOURCE_LABELS: Record<SourceId, string> = {
   github: "GitHub",
   renovate: "Renovate",
   tracker: "Tracker",
+  experiments: "Experiments",
   bugsink: "Bugsink",
   posthog: "PostHog",
   probes: "Probes",

@@ -42,11 +42,14 @@ export async function findTracingSafetyViolations(
 }
 
 async function main(): Promise<void> {
-  const packageRoot = fileURLToPath(new URL("..", import.meta.url));
-  const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
   const roots = [
-    `${packageRoot}src/workflows`,
-    `${repositoryRoot}packages/scout-for-lol/packages/temporal/src/workflows`,
+    fileURLToPath(new URL("../src/workflows/", import.meta.url)),
+    fileURLToPath(
+      new URL(
+        "../../../packages/scout-for-lol/packages/temporal/src/workflows/",
+        import.meta.url,
+      ),
+    ),
   ];
   const violations = await findTracingSafetyViolations(roots);
   if (violations.length === 0) return;

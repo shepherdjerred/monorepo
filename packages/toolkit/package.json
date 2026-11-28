@@ -50,6 +50,7 @@
   "dependencies": {
     "@shepherdjerred/delivery": "workspace:*",
     "@shepherdjerred/errors": "workspace:*",
+    "@shepherdjerred/experiments": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@trpc/client": "^11.17.0",
     "@shepherdjerred/artifacts": "workspace:*",

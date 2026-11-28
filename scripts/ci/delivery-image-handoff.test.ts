@@ -285,10 +285,15 @@ async function publishCandidate(
       executor: async (command, environment) => {
         expect(command).toContain("--push");
         expect(environment?.["GIT_SHA"]).toBe(sourceRevision);
+        expect(verified).toEqual(["private-repository"]);
         return { exitCode: 0, stdout: "", stderr: "" };
       },
       environment: {},
       readRetainableImages: readOriginals,
+      verifyPrivateRepositories: async (targets) => {
+        expect(targets).toEqual(["arcade"]);
+        verified.push("private-repository");
+      },
       getManifestDigest: async (candidate) => {
         expect(candidate).toBe(
           `docker.io/shepherdjerred/arcade:candidate-${sourceRevision}`,
@@ -312,7 +317,12 @@ async function publishCandidate(
       },
       getRuntimeFingerprint: fingerprint,
       writeDeliveryMetadata: async (digests, retained) => {
-        expect(verified).toEqual(["registry", "source", "smoke"]);
+        expect(verified).toEqual([
+          "private-repository",
+          "registry",
+          "source",
+          "smoke",
+        ]);
         delivery.push({ digests, retained });
       },
       writeText: () => Promise.resolve(),

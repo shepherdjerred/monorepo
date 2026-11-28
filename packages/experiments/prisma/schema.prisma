@@ -1,0 +1,44 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ExperimentStatus {
+  draft
+  running
+  decided
+}
+
+model ExperimentRecord {
+  id         String               @id @db.Uuid
+  revision   Int
+  title      String
+  owner      String
+  status     ExperimentStatus
+  reviewDate DateTime?            @map("review_date") @db.Date
+  updatedAt  DateTime             @map("updated_at") @db.Timestamptz(6)
+  state      Json
+  mutations  ExperimentMutation[]
+
+  @@index([status, reviewDate])
+  @@map("experiments")
+}
+
+model ExperimentMutation {
+  requestId    String           @id @map("request_id") @db.Uuid
+  fingerprint  String
+  experimentId String           @map("experiment_id") @db.Uuid
+  revision     Int
+  event        Json
+  result       Json
+  experiment   ExperimentRecord @relation(fields: [experimentId], references: [id])
+
+  @@unique([experimentId, revision])
+  @@map("experiment_mutations")
+}

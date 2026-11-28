@@ -48,6 +48,7 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
   "ci-cache": { owner: "@shepherdjerred/ci-cache" },
   errors: { owner: "@shepherdjerred/errors" },
   artifacts: { owner: "@shepherdjerred/artifacts" },
+  experiments: { owner: "@shepherdjerred/experiments" },
 } as const satisfies Readonly<Record<string, ImageTargetRegistration>>;
 
 export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> =

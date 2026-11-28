@@ -7,6 +7,7 @@ import {
 } from "./severity.ts";
 import {
   OPS_SNAPSHOT_SCHEMA_VERSION,
+  canOmitSource,
   SectionSchema,
   SignalSchema,
   SnapshotSchema,
@@ -39,7 +40,7 @@ export const SECTION_DEFINITIONS: readonly SectionDefinition[] = [
     title: "Delivery",
     sources: ["ci", "github", "renovate"],
   },
-  { id: "work", title: "Work", sources: ["tracker"] },
+  { id: "work", title: "Work", sources: ["tracker", "experiments"] },
   { id: "errors", title: "Errors", sources: ["bugsink"] },
   { id: "product", title: "Sites & product", sources: ["probes", "posthog"] },
   { id: "ai", title: "AI usage & spend", sources: ["ai"] },
@@ -133,7 +134,10 @@ export function assembleSnapshot(input: AssembleInput): Snapshot {
     const metrics = input.metrics
       .filter((metric) => metric.section === definition.id)
       .map(({ section: _section, ...metric }) => metric);
-    const failedSources = definition.sources.filter(
+    const sectionSources = definition.sources.filter(
+      (source) => reported.has(source) || !canOmitSource(source),
+    );
+    const failedSources = sectionSources.filter(
       (source) => failed.has(source) || !reported.has(source),
     );
     const severities: Severity[] = [
@@ -146,7 +150,7 @@ export function assembleSnapshot(input: AssembleInput): Snapshot {
       title: definition.title,
       severity: worstSeverity(severities),
       summary: sectionSummary(sectionSignals, failedSources, metrics),
-      sources: [...definition.sources],
+      sources: sectionSources,
       metrics,
       signals: sectionSignals,
     });

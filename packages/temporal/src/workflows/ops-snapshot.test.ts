@@ -19,6 +19,7 @@ import {
 } from "./ops/ci-dashboard.ts";
 import { runWorkflowWithActivityWorker } from "./test-support.ts";
 
+// Keep the worker entrypoints as URL literals so Knip can follow them.
 const workflowPath = fileURLToPath(new URL("index.ts", import.meta.url));
 
 const summary: OpsPublishSummary = {
@@ -101,6 +102,7 @@ test("replays the pre-Tracker collector command and payload unchanged", async ()
     );
     expect(names).toContain("collectOpsLinear");
     expect(names).not.toContain("collectOpsTracker");
+    expect(names).not.toContain("collectOpsExperiments");
     await Worker.runReplayHistory({ workflowsPath: workflowPath }, history);
   } finally {
     await environment.teardown();
