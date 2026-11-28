@@ -34,12 +34,30 @@ const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
 // runtime workspace lists a tooling helper as a development dependency.
 const NON_IMAGE_WORKSPACE_DIRS = new Set(["scripts/"]);
 
+// ops-model reaches these images only as a manifest in their install closure:
+// their Dockerfiles copy none of its source, so its catalog data
+// (services.json, the catalog document) cannot change their contents.
+const OPS_MODEL_MANIFEST_ONLY = {
+  "packages/ops-model": ["packages/ops-model/package.json"],
+} as const;
+
 // Some images copy only shared contracts from a workspace. Dependency fingerprints
 // still use the entire closure; source selection follows the copied files.
-const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
+// select-image-targets-dockerfiles.test.ts fails if a Dockerfile copies a file
+// these lists leave out.
+export const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
   Record<string, Readonly<Record<string, readonly string[]>>>
 > = {
+  arcade: OPS_MODEL_MANIFEST_ONLY,
+  birmel: OPS_MODEL_MANIFEST_ONLY,
+  "scout-for-lol": OPS_MODEL_MANIFEST_ONLY,
+  "storm-brain": OPS_MODEL_MANIFEST_ONLY,
+  streambot: OPS_MODEL_MANIFEST_ONLY,
   "storm-forum": {
+    "packages/ops-model": [
+      "packages/ops-model/package.json",
+      "packages/ops-model/src/",
+    ],
     "packages/the-storm": [
       "packages/the-storm/package.json",
       "packages/the-storm/public-status.json",
@@ -49,6 +67,7 @@ const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
     "packages/the-storm": [
       "packages/the-storm/package.json",
       "packages/the-storm/maintenance-status.json",
+      "packages/the-storm/promotion/",
       "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
       "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
     ],
@@ -195,19 +214,32 @@ export function targetClosureDirs(
   owner: string,
   packages: ReadonlyMap<string, WorkspacePackage>,
 ): string[] {
+  return targetInstallClosureDirs(target, owner, packages).filter(
+    (dir) => !NON_IMAGE_WORKSPACE_DIRS.has(`${dir}/`),
+  );
+}
+
+/**
+ * Every workspace dir in the target's install closure, including repository
+ * tooling whose manifest the install projects but whose source no image
+ * copies.
+ */
+export function targetInstallClosureDirs(
+  target: string,
+  owner: string,
+  packages: ReadonlyMap<string, WorkspacePackage>,
+): string[] {
   const names = dependencyClosure(owner, packages);
   for (const extra of TARGET_EXTRA_OWNERS[target] ?? []) {
     for (const name of dependencyClosure(extra, packages)) {
       names.add(name);
     }
   }
-  return [...names].flatMap((name) => {
+  return [...names].map((name) => {
     const pkg = packages.get(name);
     if (pkg === undefined) {
       throw new Error(`workspace disappeared while selecting images: ${name}`);
     }
-    return NON_IMAGE_WORKSPACE_DIRS.has(pkg.dir)
-      ? []
-      : [pkg.dir.replace(/\/$/, "")];
+    return pkg.dir.replace(/\/$/, "");
   });
 }

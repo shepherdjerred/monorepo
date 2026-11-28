@@ -9,7 +9,6 @@
  */
 
 import {
-  manifestChangeIsGlobal,
   parseLockfile,
   closureFingerprint,
   closurePackageIds,
@@ -19,6 +18,10 @@ import type {
   FilePair,
   LockfilePair,
 } from "./select-image-targets-lockfile.ts";
+import {
+  manifestReasons,
+  rootManifestChange,
+} from "./select-image-targets-manifests.ts";
 
 import {
   loadWorkspaces,
@@ -63,6 +66,15 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
     "temporal-worker": [
       "packages/toolkit/",
       "ci/scripts/images/harden-codex-launcher.ts",
+      // The runtime copies scripts/lib, and the Delivery Argo CD bundle
+      // imports it, although scripts/ is no image workspace.
+      "scripts/lib/",
+      // The build stage compiles with Scout's TypeScript base config, gates
+      // the Media regex SDK on the .mise.toml pin, and installs 7-Zip from its
+      // mise.lock artifact.
+      "packages/scout-for-lol/tsconfig.base.json",
+      ".mise.toml",
+      "mise.lock",
     ],
     // Arcade's native SpaghettiKart context is the Mario Kart Dockerfile's
     // spaghetti-builder stage, built from the pinned spaghetti-src inputs. Its
@@ -73,7 +85,18 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       "packages/discord-plays-mario-kart/spaghetti-src/",
       "packages/discord-plays-pokemon/Dockerfile",
       "packages/discord-plays-pokemon/wasm-src/",
+      // The Emerald ABI gate (arcade-emerald-abi) builds the Pokemon frontend
+      // and runs vitest with the root config. Only its empty marker enters
+      // the image, but a change that breaks the gate must fail in its own PR.
+      "packages/discord-plays-pokemon/packages/frontend/",
+      "vitest.config.ts",
+      // The Pokemon agent's knowledge root ships in the runtime image.
+      "packages/discord-plays-pokemon/.agents/",
+      "packages/discord-plays-pokemon/AGENTS.md",
+      "packages/discord-plays-pokemon/knowledge/",
     ],
+    // golink's client build and runtime both copy the platform model.
+    golink: ["packages/homelab/src/platform-model.json"],
     infra: [
       "packages/homelab/src/domain-registry.json",
       "packages/homelab/src/domain-registry.ts",
@@ -95,7 +118,9 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       "packages/the-storm/public-status.json",
       // The Dockerfile also reads these named contexts during plugin compilation.
       "packages/feature-flags/src/managed-flag-inventory.json",
+      "packages/mc-harness/src/protocol/evidence-contract.json",
       "packages/storm-brain/contracts/companion-chat.json",
+      "packages/storm-brain/contracts/content-moderation.json",
       // glitter-boys-launcher's context is its package; the image compiles the
       // Cargo workspace there.
       "packages/glitter-boys-launcher/.dockerignore",
@@ -103,6 +128,11 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       "packages/glitter-boys-launcher/Cargo.toml",
       "packages/glitter-boys-launcher/Dockerfile",
       "packages/glitter-boys-launcher/crates/",
+      // launcher-core, which the service links, compiles these in with
+      // include_str!.
+      "packages/glitter-boys-launcher/catalog.json",
+      "packages/glitter-boys-launcher/prerequisites.json",
+      "packages/glitter-boys-launcher/release-profile.json",
     ],
   };
 
@@ -192,30 +222,6 @@ function globalInputReason(changedPaths: readonly string[]): string | null {
     );
     if (prefix !== undefined) {
       return `global image input changed: ${path} (matches ${prefix})`;
-    }
-  }
-  return null;
-}
-
-// Root manifests: global unless the delta is confined to attributable keys
-// (repo tooling). The accompanying bun.lock change — if any — is attributed
-// by the closure fingerprints; the root workspace is in no image closure, so
-// a pure tooling bump correctly selects nothing. A missing pair fails open.
-function manifestGlobalReason(
-  changedPaths: readonly string[],
-  inputs?: SelectorInputs,
-): string | null {
-  const manifestPairs: readonly (readonly [string, FilePair | undefined])[] = [
-    ["package.json", inputs?.rootPackageJson],
-    ["scripts/package.json", inputs?.scriptsPackageJson],
-  ];
-  for (const [path, pair] of manifestPairs) {
-    if (!changedPaths.includes(path)) continue;
-    if (pair === undefined) {
-      return `${path} changed but base/head contents were unavailable (fail-open)`;
-    }
-    if (manifestChangeIsGlobal(pair)) {
-      return `${path} changed outside attributable keys (devDependencies/scripts)`;
     }
   }
   return null;
@@ -374,9 +380,12 @@ export async function selectImageTargetsWithReasons(
     return allTargetsResult(changedPaths, globalReason);
   }
 
-  const manifestReason = manifestGlobalReason(changedPaths, inputs);
-  if (manifestReason !== null) {
-    return allTargetsResult(changedPaths, manifestReason);
+  const rootManifest = rootManifestChange(
+    changedPaths,
+    inputs?.rootPackageJson,
+  );
+  if (rootManifest.globalReason !== null) {
+    return allTargetsResult(changedPaths, rootManifest.globalReason);
   }
 
   const packages = await loadWorkspaces(repoRoot);
@@ -384,6 +393,14 @@ export async function selectImageTargetsWithReasons(
   addClosureReasons(changedPaths, packages, reasons);
   addPrefixReasons(changedPaths, reasons);
   addSharedApplicationReasons(changedPaths, reasons);
+  for (const { target, reason } of manifestReasons({
+    changedPaths,
+    packages,
+    addedWorkspaces: rootManifest.addedWorkspaces,
+    scriptsManifest: inputs?.scriptsPackageJson,
+  })) {
+    addReason(reasons, target, reason);
+  }
 
   const patchPaths = changedPaths.filter((path) => path.startsWith("patches/"));
   if (patchPaths.length > 0) {
