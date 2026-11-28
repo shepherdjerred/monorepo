@@ -44,6 +44,7 @@ packages/tasknotes-windows/scripts/license-texts/publisher-windows-sdk-buildtool
 *.node    binary
 *.wasm    binary
 *.mp4     binary
+*.webm    binary
 *.zip     binary
 *.db      binary
 *.png     binary

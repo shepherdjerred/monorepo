@@ -101,6 +101,7 @@
     "packages/arcade/packages/backend",
     "packages/arcade/packages/common",
     "packages/arcade/packages/frontend",
+    "packages/artifacts",
     "packages/astro-opengraph-images",
     "packages/better-skill-capped",
     "packages/birmel",

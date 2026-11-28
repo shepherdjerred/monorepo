@@ -9,7 +9,8 @@
   "pendingPrivateImages": {},
   "chartsWithoutRecipe": {
     "storm-forum-beta": "inactive chart: the catalog has no storm-forum/beta environment yet, so no recipe exists",
-    "charts": "self-bootstrap: charts/prod deploys charts-bootstrap from Docker Hub OCI so recovering charts never depends on charts"
+    "charts": "self-bootstrap: charts/prod deploys charts-bootstrap from Docker Hub OCI so recovering charts never depends on charts",
+    "artifacts": "prepared service: ARTIFACTS_ACTIVE is false, so no Application renders and no recipe exists until activation"
   },
   "policyOnlyDelegations": {
     "storm-forum-beta": "inactive chart: policy declares storm-forum/beta ahead of the catalog environment and delegation"

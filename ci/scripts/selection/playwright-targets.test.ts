@@ -24,6 +24,10 @@ const workspaces = new Map<string, WorkspacePackage>([
     "tasknotes-server",
     { dir: "packages/tasknotes-server/", workspaceDependencies: [] },
   ],
+  [
+    "@shepherdjerred/artifacts",
+    { dir: "packages/artifacts/", workspaceDependencies: [] },
+  ],
   ["sjer.red", { dir: "packages/sjer.red/", workspaceDependencies: [] }],
   [
     "@shepherdjerred/docs-wiki",

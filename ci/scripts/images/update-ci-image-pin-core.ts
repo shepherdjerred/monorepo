@@ -77,6 +77,11 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     section: "devDependencies",
     dependency: "@playwright/test",
   },
+  {
+    path: "packages/artifacts/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
 ] as const;
 
 export type CiImagePinState = {

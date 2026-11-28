@@ -329,16 +329,16 @@ describe("CI image runtime promotion", () => {
   });
 });
 
-describe("Playwright candidate promotion", () => {
-  const futureVersion = "1.63.0";
-  const futureDockerfile = [
-    "FROM oven/bun:1.4.0@sha256:" + "a".repeat(64) + " AS bun",
-    "",
-    "# renovate: datasource=docker depName=mcr.microsoft.com/playwright",
-    `FROM mcr.microsoft.com/playwright:v${futureVersion}-noble@sha256:${"b".repeat(64)}`,
-    "",
-  ].join("\n");
+const futureVersion = "1.63.0";
+const futureDockerfile = [
+  "FROM oven/bun:1.4.0@sha256:" + "a".repeat(64) + " AS bun",
+  "",
+  "# renovate: datasource=docker depName=mcr.microsoft.com/playwright",
+  `FROM mcr.microsoft.com/playwright:v${futureVersion}-noble@sha256:${"b".repeat(64)}`,
+  "",
+].join("\n");
 
+describe("Playwright candidate promotion", () => {
   test("derives the package version from a future immutable image source", () => {
     expect(playwrightVersionFromDockerfile(futureDockerfile)).toBe(
       futureVersion,
@@ -440,6 +440,7 @@ describe("Playwright candidate promotion", () => {
       "packages/tasknotes-web/package.json",
       "packages/delivery/package.json",
       "packages/media/package.json",
+      "packages/artifacts/package.json",
       "bun.lock",
     ]);
     expect(ciImagePromotionFiles("ci-base")).toEqual([

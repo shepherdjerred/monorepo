@@ -81,6 +81,7 @@ COPY --parents \
   packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/toolkit \
+  packages/artifacts/src/shared \
   packages/errors/src/shared \
   packages/tracker/src/shared \
   packages/unix-socket-daemon/src \

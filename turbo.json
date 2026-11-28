@@ -504,6 +504,7 @@
       "dependsOn": [
         "@homelab/cdktn#generate",
         "@shepherdjerred/alert-dashboard#generate",
+        "@shepherdjerred/artifacts#generate",
         "@shepherdjerred/delivery#generate",
         "@shepherdjerred/errors#generate",
         "@shepherdjerred/golink#generate",

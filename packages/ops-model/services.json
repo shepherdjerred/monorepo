@@ -916,6 +916,17 @@
           "argoApp": "errors"
         }
       ]
+    },
+    {
+      "id": "artifacts",
+      "rootReleaseExclusions": { "artifacts": "inactive" },
+      "images": ["artifacts"],
+      "charts": ["artifacts"],
+      "title": "Artifacts",
+      "kind": "product",
+      "package": "artifacts",
+      "namespaces": ["artifacts"],
+      "argoApps": []
     }
   ]
 }
