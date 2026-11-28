@@ -20,6 +20,7 @@ import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fi
 import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
 import { seedDesignAuditLiveGame } from "#src/testing/design-audit/live-roster.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
+import { designAuditTooltipAhriGames } from "#src/database/design-audit-tooltip-fixture.ts";
 import {
   designAuditMatchFixtures,
   designAuditHistoryFixtures,
@@ -335,6 +336,7 @@ export async function seedDesignAuditDatabase(
       matchFacts: [
         ...champions.tracked,
         ...playerFriends.matchFacts,
+        ...designAuditTooltipAhriGames({ friends, now: new Date() }),
         ...designAuditHistoryFixtures({
           playerId: player.id,
           playerAlias,

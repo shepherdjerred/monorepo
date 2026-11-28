@@ -2,6 +2,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
+import type * as AccessModule from "#src/consumer/access.ts";
 import {
   seedGroup as seedChampionGroup,
   writeLobbies as writeChampionLobbies,
@@ -64,5 +65,25 @@ export async function createChampionPageTestEnv(
       extra?: Parameters<typeof writeChampionLobbies>[3],
     ) =>
       writeChampionLobbies(lakeDir, { guildId, otherGuildId }, lobbies, extra),
+  };
+}
+
+/**
+ * The module replacement for `#src/consumer/access.ts` that lets a suite make
+ * the Discord lookup unavailable. Use from a `vi.mock` factory with a
+ * `vi.hoisted` `{ unavailable: false }` state and the module's actual exports.
+ */
+export function discordAccessMock(
+  state: { unavailable: boolean },
+  actual: typeof AccessModule,
+): typeof AccessModule {
+  return {
+    ...actual,
+    resolveConsumerGuildAccess: (
+      ...args: Parameters<typeof actual.resolveConsumerGuildAccess>
+    ) =>
+      state.unavailable
+        ? Promise.resolve({ kind: "unavailable" as const })
+        : actual.resolveConsumerGuildAccess(...args),
   };
 }
