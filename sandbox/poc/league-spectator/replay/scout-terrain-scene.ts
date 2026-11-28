@@ -1335,6 +1335,19 @@ async function loadTerrainBindings(
   }
 }
 
+const WorkerPlayerNames = z
+  .array(
+    z.strictObject({
+      participantId,
+      gameName: z
+        .string()
+        .min(1)
+        .max(128)
+        .regex(/^[^\u0000-\u001f\u007f]+$/u),
+    }),
+  )
+  .max(10);
+
 const WorkerMotionResponse = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ready"),
@@ -1390,6 +1403,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
         winningTeam: teamId.optional(),
       })
       .optional(),
+    playerNames: WorkerPlayerNames.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -1517,7 +1531,9 @@ async function loadWorkerMotion(
       throw Error("Replay motion worker returned unexpected champion models.");
     if (
       (result.recordedPlayerState !== undefined) !==
-      (workerMotion.decodePlayerState === true)
+        (workerMotion.decodePlayerState === true) ||
+      (result.playerNames !== undefined) !==
+        (workerMotion.decodePlayerState === true)
     )
       throw Error("Replay motion worker returned unexpected player state.");
     const decodeLanes = workerMotion.laneMinionCatalog !== undefined;
@@ -2183,6 +2199,7 @@ export async function loadSceneMotion(
     },
     heights,
     announcerCues: decoded.announcerCues,
+    playerNames: decoded.playerNames,
   };
 }
 
@@ -2190,6 +2207,7 @@ export function prepareScene(
   scene: TerrainScene,
   heights: Float32Array | undefined,
   inventoryPoints?: ReplayInventoryPoints,
+  playerNames?: z.infer<typeof WorkerPlayerNames>,
 ) {
   const teams = new Map(
     scene.participants.map((participant) => [
@@ -2273,6 +2291,14 @@ export function prepareScene(
       championName,
     ]),
   );
+  const names = new Map<number, string>();
+  for (const { participantId, gameName } of playerNames ?? []) {
+    if (!championNames.has(participantId) || names.has(participantId))
+      throw Error(
+        "Replay player name does not identify a unique scene participant.",
+      );
+    names.set(participantId, gameName);
+  }
   const dragons = new Map<number, string>();
   for (const { timeSeconds, actorContext } of scene.dragonKills ?? []) {
     const killer = trace.participants.find(
@@ -2455,7 +2481,7 @@ export function prepareScene(
     return points && lastAtOrBefore(points, timeSeconds, ([time]) => time);
   }
   function championNameplateAt(participantId: number, timeSeconds: number) {
-    const name = championNames.get(participantId);
+    const name = names.get(participantId) ?? championNames.get(participantId);
     if (name === undefined) return;
     const experience = experienceTracks?.get(participantId)?.points;
     const level =

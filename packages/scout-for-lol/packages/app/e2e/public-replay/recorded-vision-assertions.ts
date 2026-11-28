@@ -21,7 +21,11 @@ async function expectActor(
   expect(draw.actorIndexCounts.includes(indexCount)).toBe(visible);
 }
 
-async function verifyCurrentTeamVision(page: Page, testInfo: TestInfo) {
+async function verifyCurrentTeamVision(
+  page: Page,
+  testInfo: TestInfo,
+  replayFile: string,
+) {
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
   const heimerdinger = [1_073_742_161, 16_356] as const;
   const illaoi = [1_073_742_166, 43_938] as const;
@@ -31,7 +35,7 @@ async function verifyCurrentTeamVision(page: Page, testInfo: TestInfo) {
   await expect(vision).toHaveValue("red");
   await expectActor(page, heimerdinger, false);
   await expectActor(page, illaoi, true);
-  if (expectChampionOverhead) await verifyOverheadTeamVision(page);
+  if (expectChampionOverhead) await verifyOverheadTeamVision(page, replayFile);
   await seek(page, 33);
   await expectActor(page, heimerdinger, true);
   await seek(page, 32.8);
@@ -87,7 +91,7 @@ export async function verifyRecordedTeamVision(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
 ) {
   if (fixture.descriptor.gameBuild === "16.23.841.8428") {
-    await verifyCurrentTeamVision(page, testInfo);
+    await verifyCurrentTeamVision(page, testInfo, fixture.roflPath);
     if (fixture.directLaneModels !== undefined)
       await verifyCurrentLaneVision(page, testInfo);
     return;

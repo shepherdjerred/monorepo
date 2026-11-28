@@ -1,7 +1,12 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
 import { seek } from "./recorded-replay-fixture.ts";
-import { verifyChampionOverhead } from "./proof/champion-overhead.ts";
+import {
+  centerChampionHealthFill,
+  expectChampionOverhead,
+  readBlueOverheadName,
+  verifyChampionOverhead,
+} from "./proof/champion-overhead.ts";
 import {
   createCurrentInventoryVerifier,
   currentInventoryReplaySha256,
@@ -91,7 +96,11 @@ async function verifyFixtureInventory(
 
 async function verifyCurrentChampionStats(
   page: Page,
-  capabilities: { championHealth: boolean; championResources: boolean },
+  capabilities: {
+    championHealth: boolean;
+    championResources: boolean;
+    roflPath: string;
+  },
   testInfo: TestInfo,
 ) {
   const roster = page.getByRole("table", { name: "Blue team roster" });
@@ -102,6 +111,9 @@ async function verifyCurrentChampionStats(
   const resource = row.getByRole("meter", { name: "LeeSin resource" });
   const gold = row.getByRole("cell").last();
   const camera = page.getByRole("combobox", { name: "Camera" });
+  const playerName = expectChampionOverhead
+    ? await readBlueOverheadName(capabilities.roflPath, "LeeSin")
+    : undefined;
   await camera.selectOption("player:1073742162");
   // Sample the original replication tracks before and after gains and losses.
   for (const [time, current, max, energy, held] of [
@@ -119,7 +131,11 @@ async function verifyCurrentChampionStats(
       await expect(resource).toHaveAttribute("max", "200");
       await expect(gold).toHaveText(held);
     }
-    await verifyChampionOverhead(page, time, energy, testInfo);
+    await verifyChampionOverhead(
+      page,
+      { time, resourceValue: energy, playerName },
+      testInfo,
+    );
     if (time === 120) {
       await roster.screenshot({
         path: testInfo.outputPath("recorded-current-champion-stats.png"),
@@ -432,44 +448,6 @@ async function verifyRecordedChampionHealth(page: Page, testInfo: TestInfo) {
     path: testInfo.outputPath("recorded-champion-health.png"),
   });
   await page.getByRole("button", { name: "Map overview" }).click();
-}
-
-function centerChampionHealthFill(page: Page, screenshot: Buffer) {
-  return page.evaluate(async (png) => {
-    const frame = new globalThis.Image();
-    frame.src = `data:image/png;base64,${png}`;
-    await frame.decode();
-    const canvas = globalThis.document.createElement("canvas");
-    canvas.width = frame.width;
-    canvas.height = frame.height;
-    const context = canvas.getContext("2d");
-    if (context === null) throw new Error("Cannot inspect the replay frame.");
-    context.drawImage(frame, 0, 0);
-
-    // Following the champion centers its anchor horizontally. Read the blue
-    // gauge fill from the captured WebGL frame, including the one-pixel case.
-    const left = Math.round(frame.width / 2 - 27);
-    const top = Math.floor(frame.height * 0.37);
-    const height = Math.ceil(frame.height * 0.12);
-    const { data } = context.getImageData(left, top, 54, height);
-    const matches = (offset: number, r: number, g: number, b: number) =>
-      data[offset] === r && data[offset + 1] === g && data[offset + 2] === b;
-    for (let row = 0; row < height - 6; row += 1) {
-      const start = row * 54 * 4;
-      const inside = start + 55 * 4;
-      if (
-        !matches(start, 15, 23, 31) ||
-        !matches(start + 53 * 4, 15, 23, 31) ||
-        !matches(inside, 94, 173, 212)
-      )
-        continue;
-      let width = 1;
-      while (width < 52 && matches(inside + width * 4, 94, 173, 212))
-        width += 1;
-      return width;
-    }
-    return 0;
-  }, screenshot.toString("base64"));
 }
 
 export async function verifyRecordedChampionLifecycle(

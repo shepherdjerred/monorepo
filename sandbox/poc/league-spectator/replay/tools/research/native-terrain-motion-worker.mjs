@@ -476,6 +476,19 @@ async function prepareMotion({
           binding,
         )
       : undefined;
+  const playerNames =
+    recordedPlayerState === undefined
+      ? undefined
+      : binding.verified.flatMap(({ context, footerRow }) => {
+          const player = replay.playerIdentities[footerRow - 1];
+          if (player === undefined)
+            throw Error(
+              "Verified participant is missing its replay footer row.",
+            );
+          return player === null
+            ? []
+            : [{ participantId: context, gameName: player.gameName }];
+        });
   const championModels =
     championModelCatalog === undefined
       ? undefined
@@ -711,6 +724,7 @@ async function prepareMotion({
     coverage,
     ...(championStats === undefined ? {} : { championStats }),
     ...(recordedPlayerState === undefined ? {} : { recordedPlayerState }),
+    ...(playerNames === undefined ? {} : { playerNames }),
     ...(championModels === undefined ? {} : { championModels }),
     ...(inventory === undefined
       ? {}

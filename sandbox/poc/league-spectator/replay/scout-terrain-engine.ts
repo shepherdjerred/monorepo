@@ -417,7 +417,12 @@ export const createReplayEngine: ReplayEngineFactory = async ({
           loaded.announcerCues,
         )
       : undefined;
-  const data = prepareScene(loaded.scene, loaded.heights, inventory);
+  const data = prepareScene(
+    loaded.scene,
+    loaded.heights,
+    inventory,
+    loaded.playerNames,
+  );
   let perspective: ReplayPerspective = "all";
   function visibilityAt(timeSeconds: number) {
     const side = perspective;
