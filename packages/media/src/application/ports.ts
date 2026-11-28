@@ -139,6 +139,16 @@ export type MediaApplication = {
     mediaId: string,
     input: { expectedVersion: number; profileId: string },
   ) => Promise<CommandResult>;
+  retireProfile: (
+    actor: MediaActor,
+    key: string,
+    profileId: string,
+    input: {
+      expectedVersion: number;
+      replacementId: string;
+      kind: "movie" | "series";
+    },
+  ) => Promise<CommandResult>;
 };
 import type {
   IdentityPreview,

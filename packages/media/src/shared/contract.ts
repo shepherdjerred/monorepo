@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ResolvedProfile } from "#domain/resolved-contract.ts";
 import type { ResolvedEvidence } from "#domain/resolved-evidence.ts";
+import type { ManagedGuide } from "./quality-guide/contract.ts";
 
 export const MediaKindSchema = z.enum(["movie", "series", "season", "episode"]);
 export const AvailabilitySchema = z.enum([
@@ -165,6 +166,7 @@ export type QualityProfile = {
   cutoffScore: number;
   minimumScore: number;
   resolved?: ResolvedProfile | undefined;
+  managedGuide?: ManagedGuide | undefined;
 };
 
 export type MediaCommand = {

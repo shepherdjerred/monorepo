@@ -44,10 +44,11 @@ export async function reconcileMovieIntentV4(
   const record = await context.db.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
-  const { recoveryEpoch, releaseId } = z
+  const { recoveryEpoch, releaseId, feedSourceId } = z
     .object({
       recoveryEpoch: z.int().nonnegative(),
       releaseId: z.uuid().optional(),
+      feedSourceId: z.uuid().optional(),
     })
     .parse(record.payload);
   const retry = readMovieRetryDispatchV4(record, input);
@@ -152,6 +153,7 @@ export async function reconcileMovieIntentV4(
   );
   return reserveSelectedMovie(context, input, {
     releaseId,
+    feedSourceId,
     epoch: runtime.epoch,
     execution,
     providerSearchProgress,
@@ -163,6 +165,7 @@ async function reserveSelectedMovie(
   input: MovieOperationV4,
   options: {
     releaseId: string | undefined;
+    feedSourceId: string | undefined;
     epoch: number;
     execution: PlexBindingExecution;
     providerSearchProgress: MovieProviderSearchProgressV4 | undefined;
@@ -171,12 +174,11 @@ async function reserveSelectedMovie(
   const { releaseId, epoch, execution } = options;
   let selected: Awaited<ReturnType<typeof selectMovieCandidate>>;
   try {
-    selected = await selectMovieCandidate(
-      context,
-      input,
+    selected = await selectMovieCandidate(context, input, {
       releaseId,
-      options.providerSearchProgress,
-    );
+      providerSearchProgress: options.providerSearchProgress,
+      feedSourceId: options.feedSourceId,
+    });
   } catch (error) {
     if (!(error instanceof ProviderAdmissionDeferred)) throw error;
     execution.assertActive();
@@ -217,16 +219,25 @@ async function reserveSelectedMovie(
 async function selectMovieCandidate(
   context: MediaAutomationContext,
   input: MovieOperationV4,
-  releaseId: string | undefined,
-  providerSearchProgress: MovieProviderSearchProgressV4 | undefined,
+  options: {
+    releaseId: string | undefined;
+    providerSearchProgress: MovieProviderSearchProgressV4 | undefined;
+    feedSourceId: string | undefined;
+  },
 ) {
+  const { releaseId, providerSearchProgress, feedSourceId } = options;
   if (releaseId === undefined) {
-    const candidates = await searchMovieCandidatesV4(context, input.scope, {
-      ...input,
-      ...(providerSearchProgress === undefined
-        ? {}
-        : { providerSearchProgress }),
-    });
+    const candidates = await searchMovieCandidatesV4(
+      context,
+      input.scope,
+      {
+        ...input,
+        ...(providerSearchProgress === undefined
+          ? {}
+          : { providerSearchProgress }),
+      },
+      feedSourceId,
+    );
     return candidates[0];
   }
   const assessed = await assessRetainedMovieRelease(context, {

@@ -45,15 +45,25 @@ export function evaluateProviderSelection(input: {
     : { accepted: true, reason: null, eligibleAt: null };
 }
 
-/** Lower numbers win only after quality rank and custom-format score tie. */
+type RankedProviderCandidate = {
+  rank: number;
+  score: number;
+  priority: number;
+  id: string;
+  fallbackDistanceBytes?: number | undefined;
+  seeders?: number | null | undefined;
+};
+
 export function compareProviderCandidates(
-  left: { rank: number; score: number; priority: number; id: string },
-  right: { rank: number; score: number; priority: number; id: string },
+  left: RankedProviderCandidate,
+  right: RankedProviderCandidate,
 ) {
   return (
+    (left.fallbackDistanceBytes ?? -1) - (right.fallbackDistanceBytes ?? -1) ||
     right.rank - left.rank ||
     right.score - left.score ||
     left.priority - right.priority ||
+    (right.seeders ?? -1) - (left.seeders ?? -1) ||
     left.id.localeCompare(right.id)
   );
 }

@@ -330,6 +330,7 @@ export const PublicReleaseEvaluationSchema = z.object({
   accepted: z.boolean(),
   qualityRank: z.number().int(),
   score: z.number(),
+  fallbackDistanceBytes: z.int().nonnegative().optional(),
   reasons: z.array(
     z.union([
       z.string().regex(/^resolved_[a-z0-9_.:-]{1,150}$/u),

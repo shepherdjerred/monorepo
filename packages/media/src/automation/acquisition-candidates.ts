@@ -14,6 +14,9 @@ import { chooseUpgrade } from "#domain/quality.ts";
 import { compareProviderCandidates } from "#domain/provider-selection.ts";
 import { selectProviderCandidate } from "./provider-selection.ts";
 import { ProviderIdSchema } from "./providers.ts";
+import { isProgressiveQualityProfile } from "#domain/progressive-quality.ts";
+import type { MediaReconcileOperation } from "#shared/automation.ts";
+import { searchEpisodeProviders } from "./provider-search/episode-search.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import {
@@ -164,6 +167,7 @@ async function storeCandidate(
     profile: QualityProfile;
     current: ReleaseAttributes | null;
     matchedOnly?: boolean;
+    discovery?: boolean;
   },
 ) {
   const id = crypto.randomUUID();
@@ -266,6 +270,9 @@ async function storeCandidate(
     rank: authoritative.evaluation.qualityRank,
     upgrade: authoritative.upgrade,
     score: authoritative.evaluation.score,
+    seeders: candidate.seeders,
+    fallbackDistanceBytes: authoritative.evaluation.fallbackDistanceBytes,
+    ...(policy.discovery === undefined ? {} : { discovery: policy.discovery }),
   });
 }
 function packRuntime(
@@ -306,6 +313,10 @@ export async function searchCandidates(
   context: MediaAutomationContext,
   mediaId: string,
   profile: QualityProfile,
+  discovery?: {
+    operation: MediaReconcileOperation;
+    feedSourceId?: string | undefined;
+  },
 ): Promise<string[]> {
   const movieAccess = await networkMovieAccess(context, [mediaId]);
   await requireMovieSponsor(context.db, mediaId, movieAccess);
@@ -321,6 +332,50 @@ export async function searchCandidates(
     priority: number;
   }[] = [];
   const current = await currentRelease(context, mediaId);
+  if (discovery !== undefined && isProgressiveQualityProfile(profile)) {
+    return searchEpisodeProviders({
+      context,
+      ...discovery,
+      providers,
+      criteria: {
+        identity: target.identity,
+        profile,
+        currentId: current?.id ?? null,
+      },
+      search: { query: target.query, kind: target.kind },
+      assertAuthority: async () => {
+        const sponsor = await requireMovieSponsor(
+          context.db,
+          mediaId,
+          movieAccess,
+        );
+        sponsor?.freshness.assertActive();
+      },
+      assess: async (candidate) => {
+        const ranked = await storeCandidate(context, candidate, target, {
+          current,
+          profile,
+          discovery: true,
+          matchedOnly: true,
+        });
+        return ranked === null
+          ? null
+          : {
+              candidate: {
+                releaseId: ranked.id,
+                rank: ranked.rank,
+                score: ranked.score,
+                priority: ranked.priority,
+                seeders: candidate.seeders,
+                ...(ranked.fallbackDistanceBytes === undefined
+                  ? {}
+                  : { fallbackDistanceBytes: ranked.fallbackDistanceBytes }),
+              },
+              eligibleAt: ranked.eligibleAt,
+            };
+      },
+    });
+  }
   for (const provider of providers) {
     try {
       const candidates = await context.providers.withProvider(

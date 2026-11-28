@@ -3,7 +3,11 @@ import type { z } from "zod";
 import { queryClient, readApi, writeApi } from "#client/api.ts";
 import { dateLabel } from "#client/components.tsx";
 import { useUser } from "#client/shell/user.ts";
-import type { QualityGuideKind } from "#shared/quality-guide/contract.ts";
+import {
+  QUALITY_GUIDE_VARIANTS,
+  type QualityGuideKind,
+  type QualityGuideVariant,
+} from "#shared/quality-guide/contract.ts";
 import type { QualityGuideStatusSchema } from "#shared/quality-guide/view.ts";
 import { CommandResultSchema, ProfileDefaultsSchema } from "#shared/api.ts";
 import { Button } from "#client/ui/button.tsx";
@@ -18,6 +22,13 @@ const KIND_NAMES: Readonly<Record<QualityGuideKind, string>> = {
   movie: "movie",
   series: "TV",
 };
+
+export function guideSizeTarget(variant: QualityGuideVariant): string {
+  const target = QUALITY_GUIDE_VARIANTS[variant].sizeTargetMiBPerMinute;
+  if (target === null) return "TRaSH size targets by runtime and quality.";
+  const twoHoursGb = (target * 1024 * 1024 * 120) / 1_000_000_000;
+  return `Size target ${String(target)} MiB/min, about ${twoHoursGb.toFixed(0)} GB for two hours.`;
+}
 
 const SYNC_BADGES: Readonly<
   Record<Sync["status"], { tone: "ok" | "warn" | "danger"; label: string }>
@@ -99,7 +110,7 @@ export function GuideProfiles({
           <DataRow
             key={profile.id}
             title={profile.name}
-            detail={`Version ${String(profile.version)}. ${syncDetail(profile)}`}
+            detail={`${guideSizeTarget(profile.variant)} Version ${String(profile.version)}. ${syncDetail(profile)}`}
             status={
               <>
                 {profile.lastSync !== null && (

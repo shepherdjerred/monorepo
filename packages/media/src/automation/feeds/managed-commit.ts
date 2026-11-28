@@ -1,5 +1,7 @@
 import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { QualityRulesSchema } from "#shared/api.ts";
+import { isProgressiveQualityProfile } from "#domain/progressive-quality.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation } from "#automation/store.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
@@ -37,6 +39,7 @@ export async function queueManagedFeedMatchV1(
   initial: MediaAutomationContext,
   input: {
     key: string;
+    sourceId: string;
     current: Pick<
       FeedMatchTarget,
       | "mediaId"
@@ -64,7 +67,7 @@ export async function queueManagedFeedMatchV1(
     );
     if (grant === null || hash(grant.proof) !== hash(selected.management))
       changed();
-    await assertCurrentMovieAssessment(
+    const assessed = await assertCurrentMovieAssessment(
       tx,
       selected.selected.assessment,
       scope,
@@ -82,7 +85,9 @@ export async function queueManagedFeedMatchV1(
         mediaId: current.mediaId,
         scope,
         generation: current.generation,
-        releaseId: selected.selected.releaseId,
+        ...(isProgressiveQualityProfile(assessed.current.rules)
+          ? { feedSourceId: input.sourceId }
+          : { releaseId: selected.selected.releaseId }),
         cursor: null,
         libraryManagementReceiptId: grant.proof.receiptId,
       },
@@ -123,7 +128,9 @@ export async function queueManagedFeedMatchV1(
       payload: {
         mediaId: current.mediaId,
         generation: current.generation,
-        releaseId: selected.selected.id,
+        ...(isProgressiveQualityProfile(QualityRulesSchema.parse(profile.rules))
+          ? { feedSourceId: input.sourceId }
+          : { releaseId: selected.selected.id }),
         cursor: null,
       },
     });

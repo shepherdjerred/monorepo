@@ -73,6 +73,9 @@ test("a file is described by its picture, sound and size", () => {
       "en-US",
     ),
   ).toEqual(["Remux-2160p, HDR", "English, French audio", "71.3 GB"]);
+  expect(
+    fileSummary({ quality: "Bluray-1080p", qualityFallback: true }, "en-US"),
+  ).toEqual(["Bluray-1080p", "Fallback copy"]);
   expect(fileSummary({}, "en-US")).toEqual([]);
   expect(fileSummary("not an object", "en-US")).toEqual([]);
   expect(fileSize(8_214_663_168, "en-US")).toBe("8.2 GB");

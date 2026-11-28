@@ -203,6 +203,7 @@ export function ChangePanel({
         key={media.version}
         user={user}
         mediaId={media.id}
+        kind={movie ? "movie" : "series"}
         version={media.version}
         currentId={media.intent?.profileId ?? null}
         saved={saved}

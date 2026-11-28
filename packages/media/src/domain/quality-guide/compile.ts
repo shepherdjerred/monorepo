@@ -3,7 +3,9 @@ import { z } from "zod";
 import { QualityRulesSchema } from "#shared/api.ts";
 import {
   GuideOverridesSchema,
+  QUALITY_GUIDE_VARIANTS,
   type QualityGuideKind,
+  type QualityGuideVariant,
 } from "#shared/quality-guide/contract.ts";
 import {
   VERIFIED_SOURCE_COMMITS,
@@ -40,26 +42,70 @@ function quality(preset: GuidePreset, name: string): SourceQuality {
     );
   return found;
 }
-function definitions(preset: GuidePreset, bundle: GuideBundle) {
+function selectLadder(preset: GuidePreset, variant: QualityGuideVariant) {
+  if (variant === "trash") return preset.ladder;
+  const resolution = variant === "standard-4k" ? 2160 : 1080;
+  return preset.ladder.flatMap((group) => {
+    const members = group.members.filter((name) => {
+      const item = quality(preset, name);
+      return item.resolution <= resolution && item.modifier !== "remux";
+    });
+    return members.length === 0 ? [] : [{ ...group, members }];
+  });
+}
+
+function variantPreset(kind: QualityGuideKind, variant: QualityGuideVariant) {
+  const source = GUIDE_PRESETS[kind];
+  const ladder = selectLadder(source, variant);
+  const cutoff = variant === "trash" ? source.cutoff : ladder.at(-1)?.name;
+  if (cutoff === undefined) throw new Error("Selected guide ladder is empty");
+  const { label } = QUALITY_GUIDE_VARIANTS[variant];
+  return {
+    ...source,
+    name: `${label} ${kind === "movie" ? "Movies" : "TV"}`,
+    ladder,
+    cutoff,
+  };
+}
+
+function definitions(
+  preset: GuidePreset,
+  bundle: GuideBundle,
+  sizeTarget: number | null,
+) {
   unique(
     bundle.sizes.qualities.map((entry) => entry.quality),
     "quality definition",
   );
   return preset.qualities.flatMap((item) => {
+    const allowed = preset.ladder.some((group) =>
+      group.members.includes(item.name),
+    );
     const size = bundle.sizes.qualities.find(
       (entry) => entry.quality === item.name,
     );
     if (size === undefined) {
-      if (preset.ladder.some((group) => group.members.includes(item.name)))
+      if (allowed)
         throw new Error(`Selected quality has no guide size: ${item.name}`);
       return [];
     }
     const override = preset.sizeOverrides.find(
       (entry) => entry.name === item.name,
     );
-    const maximum = override?.max ?? size.max;
-    const preferred = override?.preferred ?? size.preferred;
-    if (preferred < size.min || preferred > maximum || size.min > maximum)
+    const guideMaximum = override?.max ?? size.max;
+    const guidePreferred = override?.preferred ?? size.preferred;
+    if (
+      guidePreferred < size.min ||
+      guidePreferred > guideMaximum ||
+      size.min > guideMaximum
+    )
+      throw new Error(`Invalid selected quality size interval: ${item.name}`);
+    const maximum =
+      allowed && sizeTarget !== null
+        ? Math.min(guideMaximum, sizeTarget)
+        : guideMaximum;
+    const preferred = Math.min(guidePreferred, maximum);
+    if (size.min > maximum)
       throw new Error(`Invalid selected quality size interval: ${item.name}`);
     return [
       {
@@ -79,9 +125,12 @@ export function compileQualityGuide(
   kind: QualityGuideKind,
   raw: unknown,
   rawOverrides: unknown = {},
+  variant: QualityGuideVariant = "trash",
 ) {
   const bundle = GuideBundleSchema.parse(raw);
-  const preset = GUIDE_PRESETS[kind];
+  const preset = variantPreset(kind, variant);
+  const { sizeTargetMiBPerMinute: sizeTarget } =
+    QUALITY_GUIDE_VARIANTS[variant];
   const overrides = GuideOverridesSchema.parse(rawOverrides);
   unique(
     preset.formats.map((entry) => entry.id),
@@ -185,6 +234,8 @@ export function compileQualityGuide(
           profile: bundle.profile ?? null,
           overrides,
           preset,
+          variant,
+          sizeTarget,
         }),
       ),
     )
@@ -214,7 +265,7 @@ export function compileQualityGuide(
       })),
     },
     customFormats: formats.map((item) => item.definition),
-    qualityDefinitions: definitions(preset, bundle),
+    qualityDefinitions: definitions(preset, bundle, sizeTarget),
     householdPolicy: {
       schemaVersion: 1,
       audio: "original",
@@ -244,6 +295,7 @@ export function compileQualityGuide(
         schemaVersion: 1,
         preset: "living-room-v1",
         kind,
+        variant,
         revision: bundle.revision,
         contentHash,
         scoreOverrides: overrides,

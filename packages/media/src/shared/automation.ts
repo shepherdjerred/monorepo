@@ -1,6 +1,7 @@
 import type { MatchFeedSourceV1 } from "./feeds/contract.ts";
 import type { SubtitleUpgradeV1 } from "./subtitle-maintenance/score.ts";
 import type { OrdinaryStagingBatch } from "./acquisition/ordinary-staging.ts";
+import type { EpisodeProviderSearchProgress } from "./acquisition/provider-search.ts";
 export type MediaStagingInput = {
   operationId: string;
   attemptId: string;
@@ -29,6 +30,9 @@ export type MediaOperation = {
   operationId: string;
   mediaId: string;
   generation: number;
+};
+export type MediaReconcileOperation = MediaOperation & {
+  providerSearchProgress?: EpisodeProviderSearchProgress;
 };
 export type MediaAttemptOperation = { operationId: string; attemptId: string };
 export type MediaHandoffOperation = { operationId: string; planId: string };
@@ -135,10 +139,12 @@ export type MediaNetworkActivities = PlexBindingActivities & {
     kind: "downloads" | "watch" | "feeds" | "due" | "inventory";
     cursor: string | null;
   }) => Promise<{ processed: number; nextCursor: string | null }>;
-  reconcileMediaIntent: (input: MediaOperation) => Promise<{
+  reconcileMediaIntent: (input: MediaReconcileOperation) => Promise<{
     status: "available" | "waiting" | "blocked" | "obsolete" | "acquire";
     attemptId: string | null;
     reason: string | null;
+    retryAfterSeconds?: number;
+    providerSearchProgress?: EpisodeProviderSearchProgress;
   }>;
   submitMediaTorrent: (input: MediaAttemptOperation) => Promise<{
     status: "submitted" | "waiting" | "blocked" | "obsolete";

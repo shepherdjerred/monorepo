@@ -63,6 +63,12 @@ const historicalSource = source
     /^model (?:MediaReleaseDate|PlaybackSession|PlaybackSessionIdentity|PlaybackCollector) \{[\s\S]+?^\}\n/gmu,
     "",
   )
+  .replace(/^model QualityProfile \{[\s\S]+?^\}/mu, (profile) =>
+    profile.replaceAll(
+      /^[ \t]+(?:replacedByProfileId|replacedBy|replaces)\b[^\r\n]*\r?\n/gmu,
+      "",
+    ),
+  )
   .split("\n")
   .filter((line) => !householdFields.has(line.trim().split(/\s+/u)[0] ?? ""))
   .join("\n");

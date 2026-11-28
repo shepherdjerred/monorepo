@@ -1738,10 +1738,13 @@ prove file ownership, grant request or edition consent, contact providers or
 establish live compatibility. Those behaviors require the separate integration
 and runtime checks.
 
-## Selected living-room quality profiles
+## TRaSH quality profiles and progressive acquisition
 
-Owner administration provides a preview and explicit apply action for the
-selected movie or TV TRaSH profile. The preset targets a Samsung QN90B, Apple TV
+Owner administration previews and applies TRaSH, Standard 4K, and Standard
+1080p for movies and TV. Set TRaSH as the default for each media type and assign
+Standard to titles that need a smaller copy. Standard targets 200 and 80 MiB/min
+with a preferred resolution of 2160p and 1080p, respectively. All three derive
+their rules from versioned TRaSH guides. The profiles target a Samsung QN90B, Apple TV
 4K with Infuse, and Sonos Arc: HDR10/HDR10+ preference, a mild DD+ Atmos score
 of 300 and DD+ score of 50, and neutral lossless audio. The movie ladder ends at
 2160p remux; TV ends at the equal-rank 2160p WEB group. Both use the intended
@@ -1759,6 +1762,16 @@ Vision without a standard compatible base layer is rejected; unknown Dolby
 signaling remains protected. Foreign originals also require regular English
 captions, derived from the actual title's assigned immutable profile, independently
 of requester language choices.
+
+Movie and episode acquisitions search enabled providers within a common page,
+listing, and time budget. They reserve the best release that fits the selected
+profile. If that search yields no fit, a playable fallback can exceed a size or
+quality preference and is ranked by distance from the size target. The absolute
+limits are 100 GB per movie and 20 GB per episode. Title, edition, episode, audio,
+and safe playback are checked through measured verification. The title shows
+when its installed file is a fallback. Later checks can improve it while keeping
+a sharper playable copy available. Older Media files with measured picture
+quality can use those measurements when a new profile first checks for upgrades.
 
 The `media-quality-guide` Temporal schedule runs daily. Its Network activity
 fetches only the selected fixed source paths at one immutable TRaSH Git revision,
@@ -1778,6 +1791,12 @@ content hash, expected profile version, and idempotency key. Managed profiles
 use these controls instead of the raw profile editor so source provenance and
 overrides cannot be silently removed. The bundled public guide test snapshot is
 MIT licensed; its revision is evidence for tests, never a production fallback.
+
+After changing the defaults, retire an old profile through
+`POST /api/v1/admin/profiles/:id/retire` with its expected version, replacement
+ID, media kind, and idempotency key. Retired profiles disappear from selection.
+The guide schedule reassigns eligible titles after their reservations settle.
+The original rules and historical assessments remain readable.
 
 ## Recurring personal subtitle maintenance
 

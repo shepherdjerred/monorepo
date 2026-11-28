@@ -448,14 +448,12 @@
       ],
       "ladder": [
         {
+          "name": "WEB 720p",
+          "members": ["WEBDL-720p", "WEBRip-720p"]
+        },
+        {
           "name": "Bluray|WEB-1080p",
-          "members": [
-            "Bluray-1080p",
-            "WEBDL-1080p",
-            "WEBRip-1080p",
-            "WEBDL-720p",
-            "WEBRip-720p"
-          ]
+          "members": ["Bluray-1080p", "WEBDL-1080p", "WEBRip-1080p"]
         },
         {
           "name": "Remux-1080p",

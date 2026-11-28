@@ -72,7 +72,10 @@ test("real inspection/promotion uses resolved quality and preserves measured evi
   });
   expect(
     await assertMeasuredUpgrade(db, measured, [f.media.id], entry.assetId),
-  ).toEqual({ [f.media.id]: 0 });
+  ).toEqual({
+    profileVersions: { [f.media.id]: 0 },
+    qualityFallbackReasons: [],
+  });
   // A current profile edit is evaluated from measured evidence, never the old candidate's tags.
   resolved.profile.minFormatScore = 1;
   await db.qualityProfile.update({

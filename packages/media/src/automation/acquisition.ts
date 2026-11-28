@@ -7,7 +7,7 @@ import type { MediaAutomationContext } from "./context.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import type {
   MediaNetworkActivities,
-  MediaOperation,
+  MediaReconcileOperation,
 } from "#shared/automation.ts";
 import { chooseUpgrade } from "#domain/quality.ts";
 import { previewDefaultEdition } from "#infrastructure/editions/acquisition.ts";
@@ -28,6 +28,7 @@ import { acknowledgeManagedAcquisition } from "./acquisition-management/acknowle
 import { selectSeriesPackV1 } from "./acquisition-management/series-pack/select.ts";
 import { seriesPackIdentityV1 } from "#shared/acquisition/library-management.ts";
 import { assertNoExternalLibrary } from "#infrastructure/external-library/protection.ts";
+import { EpisodeSearchDeferred } from "./provider-search/episode-search.ts";
 import {
   PLEX_EXCLUSION_PROOF_REQUIRED,
   hasLibraryPlexExclusionDatabaseProof,
@@ -92,7 +93,7 @@ async function inactiveRuntimeHold(
 }
 async function reconcile(
   context: MediaAutomationContext,
-  input: MediaOperation,
+  input: MediaReconcileOperation,
 ): ReturnType<AcquisitionActivities["reconcileMediaIntent"]> {
   const intent = await context.db.mediaIntent.findUniqueOrThrow({
     where: targetWhere(defaultScope(input.mediaId)),
@@ -157,13 +158,17 @@ async function reconcile(
   const selection = z
     .object({
       releaseId: z.string().optional(),
+      feedSourceId: z.uuid().optional(),
       identityDecision: z.unknown().optional(),
     })
     .parse(operation.payload);
   const selected = selection.releaseId;
   const candidates =
     selected === undefined
-      ? await searchCandidates(context, input.mediaId, profile)
+      ? await searchCandidates(context, input.mediaId, profile, {
+          operation: input,
+          feedSourceId: selection.feedSourceId,
+        })
       : [selected];
   const releaseId = candidates[0];
   if (releaseId === undefined)
@@ -205,6 +210,17 @@ export function createAcquisitionActivities(
         const context = await acquisitionInvocation(initialContext, input);
         return await reconcile(context, input);
       } catch (error) {
+        if (error instanceof EpisodeSearchDeferred)
+          return {
+            status: "waiting",
+            attemptId: null,
+            reason: "provider_deferred",
+            retryAfterSeconds: Math.max(
+              1,
+              Math.ceil((error.retryAt - Date.now()) / 1000),
+            ),
+            providerSearchProgress: error.progress,
+          };
         if (error instanceof MediaError)
           return { status: "blocked", attemptId: null, reason: error.code };
         throw error;

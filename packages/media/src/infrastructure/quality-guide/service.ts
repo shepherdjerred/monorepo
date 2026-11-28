@@ -49,12 +49,14 @@ export class PrismaQualityGuideAdministration extends MediaCommandBase {
       input.kind,
       await this.guide.load(input.kind),
       input.scoreOverrides,
+      input.variant,
     );
     const managed = compiled.rules.managedGuide;
     if (managed === undefined)
       throw new Error("Compiled guide omitted its immutable source");
     return QualityGuidePreviewResultSchema.parse({
       kind: input.kind,
+      variant: managed.variant ?? "trash",
       ...compiled,
       revision: managed.revision,
       contentHash: managed.contentHash,
@@ -75,6 +77,7 @@ export class PrismaQualityGuideAdministration extends MediaCommandBase {
             input.kind,
             await this.guide.load(input.kind),
             input.scoreOverrides,
+            input.variant,
           );
           if (
             compiled.rules.managedGuide?.revision !== input.expectedRevision ||
@@ -137,6 +140,7 @@ export class PrismaQualityGuideAdministration extends MediaCommandBase {
             name: profile.name,
             version: profile.version,
             kind: GuideKindSchema.parse(managed.kind),
+            variant: managed.variant ?? "trash",
             revision: managed.revision,
             contentHash: managed.contentHash,
             scoreOverrides: managed.scoreOverrides,

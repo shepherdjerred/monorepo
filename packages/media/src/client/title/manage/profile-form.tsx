@@ -1,12 +1,21 @@
 import { useId } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 import { CommandResultSchema, ProfileListSchema } from "#shared/api.ts";
 import type { MediaUser } from "#shared/contract.ts";
+import {
+  GuideKindSchema,
+  type QualityGuideKind,
+} from "#shared/quality-guide/contract.ts";
 import { queryClient, readApi, writeApi } from "#client/api.ts";
 import { LoadError } from "#client/ui/feedback.tsx";
 import { SelectField } from "#client/ui/forms/field.tsx";
 import { Form, FormFooter } from "#client/ui/forms/form.tsx";
 import { SkeletonRows } from "#client/ui/panel.tsx";
+
+const ProfileScopeSchema = z.object({
+  managedGuide: z.object({ kind: GuideKindSchema }).optional(),
+});
 
 /** The quality profiles the owner can assign. Shared by every reader of the list. */
 export function useProfiles(enabled = true) {
@@ -25,6 +34,7 @@ export function useProfiles(enabled = true) {
 export function ProfileForm({
   user,
   mediaId,
+  kind,
   version,
   currentId,
   saved,
@@ -33,6 +43,7 @@ export function ProfileForm({
 }: {
   user: MediaUser;
   mediaId: string;
+  kind: QualityGuideKind;
   /** The version of the title this form was loaded at; the write names it. */
   version: number;
   currentId: string | null;
@@ -43,6 +54,14 @@ export function ProfileForm({
 }) {
   const headingId = useId();
   const profiles = useProfiles();
+  const assignable = profiles.data?.filter(({ rules }) => {
+    const scope = ProfileScopeSchema.safeParse(rules);
+    return (
+      scope.success &&
+      (scope.data.managedGuide === undefined ||
+        scope.data.managedGuide.kind === kind)
+    );
+  });
   const save = useMutation({
     mutationFn: async (profileId: string) =>
       writeApi({
@@ -70,7 +89,7 @@ export function ProfileForm({
           }}
         />
       )}
-      {profiles.data !== undefined && (
+      {assignable !== undefined && (
         <Form
           labelledBy={headingId}
           // Editing never resets the save: a reset would end `isPending`
@@ -95,17 +114,19 @@ export function ProfileForm({
           <SelectField
             label="Quality profile"
             hideLabel
-            description="The profile decides which releases are good enough for this title. Changing it queues the title for evaluation."
+            description="The profile sets the preferred releases for this title. Changing it queues a new evaluation."
             name="profileId"
             required
             requiredMessage="Choose a profile."
-            defaultValue={currentId ?? ""}
+            defaultValue={
+              assignable.find((row) => row.id === currentId)?.id ?? ""
+            }
             width="medium"
           >
             <option value="" disabled>
               Select a profile
             </option>
-            {profiles.data.map((profile) => (
+            {assignable.map((profile) => (
               <option value={profile.id} key={profile.id}>
                 {profile.name}
               </option>

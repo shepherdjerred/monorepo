@@ -42,16 +42,29 @@ export async function selectProviderCandidate(
   input: Parameters<typeof providerCandidateAdmission>[1] & {
     upgrade: boolean;
     score: number;
+    seeders?: number | null;
+    fallbackDistanceBytes?: number | undefined;
+    discovery?: boolean;
   },
 ) {
   if (!input.upgrade) return null;
-  const admission = await providerCandidateAdmission(context, input);
-  return admission.accepted
+  const discovery = input.discovery === true;
+  const admission = discovery
+    ? await readProviderCandidateAdmission(context, input)
+    : await providerCandidateAdmission(context, input);
+  return admission.accepted || (discovery && admission.eligibleAt !== null)
     ? {
         id: input.releaseId,
         rank: input.rank,
         score: input.score,
         priority: admission.priority,
+        ...(input.seeders === undefined ? {} : { seeders: input.seeders }),
+        ...(input.fallbackDistanceBytes === undefined
+          ? {}
+          : { fallbackDistanceBytes: input.fallbackDistanceBytes }),
+        ...(discovery && admission.eligibleAt !== null
+          ? { eligibleAt: admission.eligibleAt }
+          : {}),
       }
     : null;
 }

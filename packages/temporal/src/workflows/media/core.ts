@@ -25,6 +25,7 @@ import { stageSeriesPackMembers } from "./series-pack/staging.ts";
 import { stageOrdinaryMedia } from "./ordinary-staging.ts";
 import { publishAcquisitionFiles } from "./series-pack/publication-flow.ts";
 import { rollbackPublishedSeriesPack } from "./series-pack/bounded-publication.ts";
+import { waitForEpisodeProviders } from "./provider-search.ts";
 import {
   prepareAndInstallSubtitle,
   type SubtitleInput,
@@ -74,17 +75,14 @@ async function finish(
   });
   return result;
 }
-
 function reason(value: string | null | undefined): { reason?: string } {
   return value == null ? {} : { reason: value };
 }
-
 export async function reconcileMediaWorkflow(
   input: MediaOperation,
 ): Promise<MediaWorkflowResult> {
   return withRecoveryCheckpoint(input.operationId, () => reconcile(input));
 }
-
 async function reconcile(input: MediaOperation): Promise<MediaWorkflowResult> {
   const result = await network.reconcileMediaIntent(input);
   if (result.status === "acquire") {
@@ -95,10 +93,13 @@ async function reconcile(input: MediaOperation): Promise<MediaWorkflowResult> {
       args: [{ operationId: input.operationId, attemptId: result.attemptId }],
     });
   }
-  return finish(input.operationId, {
-    status: result.status === "available" ? "completed" : result.status,
-    ...(result.reason === null ? {} : { reason: result.reason }),
-  });
+  return (
+    waitForEpisodeProviders(input, result) ??
+    finish(input.operationId, {
+      status: result.status === "available" ? "completed" : result.status,
+      ...(result.reason === null ? {} : { reason: result.reason }),
+    })
+  );
 }
 
 export async function acquireMediaReleaseWorkflow(
@@ -194,7 +195,7 @@ async function publishAcquisition(
   if (staged.status !== "staged")
     return finish(input.operationId, {
       status: "blocked",
-      ...(staged.reason === undefined ? {} : { reason: staged.reason }),
+      ...reason(staged.reason),
     });
   const published = await publishAcquisitionFiles(
     input,
@@ -204,20 +205,22 @@ async function publishAcquisition(
   if (published.status !== "published")
     return finish(input.operationId, {
       status: published.status,
-      ...(published.reason === undefined ? {} : { reason: published.reason }),
+      ...reason(published.reason),
     });
   for (let poll = 0; poll < 30; poll++) {
     const plex = await network.publishMediaToPlex(input);
-    if (plex.status === "available") {
-      await network.finalizeMediaAcquisition(input);
-      return finish(input.operationId, { status: "completed" });
-    }
-    if (plex.status === "blocked") {
-      return rollbackAcquisition(
-        input,
-        plex.reason ?? "plex_publication_rejected",
-        published.boundedPublication,
-      );
+    switch (plex.status) {
+      case "available":
+        await network.finalizeMediaAcquisition(input);
+        return finish(input.operationId, { status: "completed" });
+      case "blocked":
+        return rollbackAcquisition(
+          input,
+          plex.reason ?? "plex_publication_rejected",
+          published.boundedPublication,
+        );
+      case "waiting":
+        break;
     }
     await sleep("1 minute");
   }
