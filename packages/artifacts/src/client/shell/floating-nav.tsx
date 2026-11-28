@@ -1,5 +1,6 @@
 import { Menu } from "@base-ui/react/menu";
-import { AppSwitcher, ThemeToggle } from "@shepherdjerred/console-ui";
+import { AppSwitcher } from "@shepherdjerred/console-ui";
+import { ThemeButton } from "@shepherdjerred/console-ui/components/shell/phone-nav.tsx";
 import { KeyboardIcon, MoreHorizontalIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { CURRENT_APP, SWITCHER_APPS } from "./app-nav.ts";
@@ -57,7 +58,7 @@ export function FloatingNav({
         <KeyboardIcon aria-hidden="true" />
       </button>
       <span className="ar-fnav-end">
-        <ThemeToggle store={themeStore} />
+        <ThemeButton store={themeStore} />
       </span>
       <Menu.Root>
         <Menu.Trigger className="ar-icon-button ar-fnav-more" aria-label="More">

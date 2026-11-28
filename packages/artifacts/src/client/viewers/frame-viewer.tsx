@@ -91,6 +91,46 @@ function frameClientPoint(
   return { x: rect.left + at.x * scale, y: rect.top + at.y * scale };
 }
 
+/**
+ * The page did not keep this input: the canvas camera takes it. The point is
+ * the frame's own client pixels (rounded by the browser); pins never depend on
+ * it.
+ */
+function forwardHostInput(
+  frame: HTMLIFrameElement | null,
+  forward: ViewerProps["onHostInput"],
+  message: Extract<FrameMessage, { t: "wheel" | "gesture" }>,
+): void {
+  const client = frameClientPoint(frame, message);
+  if (client === null || forward === undefined) return;
+  forward(
+    message.t === "wheel"
+      ? {
+          type: "wheel",
+          dx: message.dx,
+          dy: message.dy,
+          ctrl: message.ctrl,
+          client,
+        }
+      : { type: "gesture", scale: message.scale, client },
+  );
+}
+
+/**
+ * Which controls the frame draws: the activate button while inert, and the Exit
+ * chip while active. On the canvas, the Exit chip is part of the unscaled
+ * overlay and a node never offers activation.
+ */
+function frameChrome(
+  mode: FrameMode,
+  active: boolean,
+): { readonly activate: boolean; readonly exit: boolean } {
+  return {
+    activate: !active && mode !== "node",
+    exit: active && mode === "focus",
+  };
+}
+
 function useContainerSize() {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -189,26 +229,9 @@ export function FrameViewer({
             );
             break;
           case "wheel":
-          case "gesture": {
-            // The page did not keep this input: the canvas camera takes it. The
-            // point is the frame's own client pixels (rounded by the browser);
-            // pins never depend on it.
-            const client = frameClientPoint(frameRef.current, message);
-            const forward = hostInput.current;
-            if (client === null || forward === undefined) break;
-            forward(
-              message.t === "wheel"
-                ? {
-                    type: "wheel",
-                    dx: message.dx,
-                    dy: message.dy,
-                    ctrl: message.ctrl,
-                    client,
-                  }
-                : { type: "gesture", scale: message.scale, client },
-            );
+          case "gesture":
+            forwardHostInput(frameRef.current, hostInput.current, message);
             break;
-          }
           case "drawn":
           case "scroll":
           case "nav":
@@ -351,6 +374,7 @@ export function FrameViewer({
     return <p className="ar-note">This version’s files were deleted.</p>;
 
   const connected = doc !== null;
+  const chrome = frameChrome(mode, active);
   const wrapperStyle =
     preset === "responsive" || mode === "node"
       ? { width: "100%", height: "100%" }
@@ -397,7 +421,7 @@ export function FrameViewer({
               });
             }}
           />
-        ) : active || mode === "node" ? null : (
+        ) : chrome.activate ? (
           <button
             type="button"
             className="ar-frame-activate"
@@ -406,10 +430,9 @@ export function FrameViewer({
             <PointerIcon aria-hidden="true" />
             <span>Click to interact</span>
           </button>
-        )}
+        ) : null}
       </div>
-      {/* On the canvas the Exit chip is part of the unscaled overlay. */}
-      {active && mode === "focus" ? (
+      {chrome.exit ? (
         <button
           type="button"
           className="ar-exit-chip"
