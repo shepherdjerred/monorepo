@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Numerics;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -15,7 +16,10 @@ string folder = Path.GetFullPath(args[0]), modelFile = Path.GetFullPath(args[1])
 if (modelFile.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || bindingFile.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Ordinal model output must be isolated from original inputs");
 string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 byte[] rigBytes = File.ReadAllBytes(Path.Combine(folder, "model.skl")), meshBytes = File.ReadAllBytes(Path.Combine(folder, "model.skn"));
-using var skin = SkinnedMesh.ReadFromSimpleSkin(new MemoryStream(meshBytes, false));
+const string rangeLocalKsanteMesh = "cecba47bc884d06eb7425c6987a74322d9701059a8fa6815f0e4ac3980dc02e3";
+bool usesKsanteRangeLocalIndices = Hash(meshBytes) == rangeLocalKsanteMesh;
+byte[] conversionMeshBytes = usesKsanteRangeLocalIndices ? ProjectKsanteIndices(meshBytes) : meshBytes;
+using var skin = SkinnedMesh.ReadFromSimpleSkin(new MemoryStream(conversionMeshBytes, false));
 var rig = new RigResource(new MemoryStream(rigBytes, false));
 int vertexCount=skin.VerticesView.VertexCount;
 var sourceIndices=skin.VerticesView.GetAccessor(ElementName.BlendIndex).AsXyzwU8Array();
@@ -58,6 +62,8 @@ try
     // complete joint/name array. Keep that palette in its exact source order.
     byte[] identity = Enumerable.Range(0,rig.Influences.Count).Select(value=>(byte)value).ToArray();
     var geometry = (Mesh)geometryMethod.Invoke(null,new object[]{root,skin,identity,materials});
+    if (usesKsanteRangeLocalIndices)
+        VerifyKsanteIndexProjection(geometry, meshBytes);
     int ignoredZeroWeightIndices = 0, weightedLanes=0, weightBitDifferences=0, baseVertex=0;
     using var sourceMapping=new MemoryStream();using var exportedMapping=new MemoryStream();using var sourceWriter=new BinaryWriter(sourceMapping);using var exportedWriter=new BinaryWriter(exportedMapping);
     for(int primitiveId=0;primitiveId<geometry.Primitives.Count;primitiveId++)
@@ -99,6 +105,55 @@ try
     Console.WriteLine(JsonSerializer.Serialize(new {model=modelFile,joints=nodes.Length,palette=rig.Influences.Count,duplicates=rig.Joints.Count-rig.Joints.Select(joint=>joint.Name).Distinct().Count(),ignoredZeroWeightIndices}));
 }
 finally {foreach(var texture in textures)texture.Texture.Dispose();}
+
+byte[] ProjectKsanteIndices(byte[] original)
+{
+    byte[] projected = (byte[])original.Clone();
+    foreach (var (startVertex, vertexCount, firstIndex, indexCount) in KsanteIndexRanges(original))
+    {
+        for (int index = firstIndex; index < firstIndex + indexCount; index++)
+        {
+            var slot = projected.AsSpan(952 + index * sizeof(ushort), sizeof(ushort));
+            int local = BinaryPrimitives.ReadUInt16LittleEndian(slot);
+            if (local >= vertexCount) throw new InvalidDataException("K'Sante index exceeds its authored range");
+            BinaryPrimitives.WriteUInt16LittleEndian(slot, checked((ushort)(startVertex + local)));
+        }
+    }
+    return projected;
+}
+
+void VerifyKsanteIndexProjection(Mesh geometry, byte[] original)
+{
+    var ranges = KsanteIndexRanges(original).ToArray();
+    if (geometry.Primitives.Count != ranges.Length) throw new InvalidDataException("K'Sante primitive coverage differs");
+    for (int primitive = 0; primitive < ranges.Length; primitive++)
+    {
+        var (_, vertexCount, firstIndex, indexCount) = ranges[primitive];
+        var indices = geometry.Primitives[primitive].GetIndices().ToArray();
+        if (indices.Length != indexCount || geometry.Primitives[primitive].VertexAccessors["POSITION"].Count != vertexCount)
+            throw new InvalidDataException("K'Sante primitive size differs");
+        for (int index = 0; index < indices.Length; index++)
+        {
+            int originalIndex = BinaryPrimitives.ReadUInt16LittleEndian(original.AsSpan(952 + (firstIndex + index) * sizeof(ushort), sizeof(ushort)));
+            if (indices[index] != originalIndex) throw new InvalidDataException("K'Sante GLB index differs from authored range-local topology");
+        }
+    }
+}
+
+IEnumerable<(int StartVertex, int VertexCount, int FirstIndex, int IndexCount)> KsanteIndexRanges(byte[] original)
+{
+    // This exact SKN stores indices relative to each vertex range. LeagueToolkit
+    // takes whole-mesh indices and subtracts StartVertex when emitting a GLB primitive.
+    for (int range = 0; range < 11; range++)
+    {
+        int table = 12 + 80 * range + 64;
+        yield return (
+            BinaryPrimitives.ReadInt32LittleEndian(original.AsSpan(table)),
+            BinaryPrimitives.ReadInt32LittleEndian(original.AsSpan(table + 4)),
+            BinaryPrimitives.ReadInt32LittleEndian(original.AsSpan(table + 8)),
+            BinaryPrimitives.ReadInt32LittleEndian(original.AsSpan(table + 12)));
+    }
+}
 
 void OmitUnusedMasterYiArmorTangents(Mesh geometry, SkinnedMesh skin, byte[] meshBytes)
 {
