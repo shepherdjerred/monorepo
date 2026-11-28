@@ -146,7 +146,11 @@ describe("buildMusicPrepareOptions", () => {
       resolved: {
         ...MUSIC,
         hdr: true,
-        subtitle: { path: "/tmp/subs.srt", cleanupPath: "/tmp/subs.srt" },
+        subtitle: {
+          kind: "text",
+          path: "/tmp/subs.srt",
+          cleanupPath: "/tmp/subs.srt",
+        },
       },
       startSeconds: 0,
       volumePercent: 100,
@@ -173,7 +177,11 @@ describe("buildVideoPrepareOptions", () => {
   test("keeps the hardware pipeline it always had", () => {
     const options = buildVideoPrepareOptions({
       stream,
-      resolved: { ...VIDEO, hdr: true, subtitle: { path: "/tmp/s.srt" } },
+      resolved: {
+        ...VIDEO,
+        hdr: true,
+        subtitle: { kind: "text", path: "/tmp/s.srt" },
+      },
       startSeconds: 30,
       volumePercent: 100,
       audioProcessing: AUDIO_OFF,
@@ -521,6 +529,55 @@ describe("buildVideoPrepareOptions picture corrections", () => {
       VIDEO,
     ]) {
       expect("convertColorToBt709" in hwOptions(resolved)).toBe(false);
+    }
+  });
+});
+
+describe("buildVideoPrepareOptions subtitle burn", () => {
+  test("an ASS track carries its fonts directory to libass", () => {
+    const options = buildVideoPrepareOptions({
+      stream,
+      resolved: {
+        ...VIDEO,
+        subtitle: {
+          kind: "text",
+          path: "/cache/k.ass",
+          fontsDir: "/cache/k.fonts",
+        },
+      },
+      startSeconds: 0,
+      volumePercent: 100,
+      pipelineMode: "hw",
+      audioProcessing: AUDIO_OFF,
+    });
+    expect(options.subtitleBurn).toEqual({
+      path: "/cache/k.ass",
+      fontsDir: "/cache/k.fonts",
+    });
+  });
+
+  test("an image track overlays the input's subtitle stream on every pipeline rung", () => {
+    for (const pipelineMode of ["hw", "hw-upload", "sw"] as const) {
+      const options = buildVideoPrepareOptions({
+        stream,
+        resolved: {
+          ...VIDEO,
+          subtitle: {
+            kind: "image",
+            subtitleIndex: 2,
+            codec: "hdmv_pgs_subtitle",
+          },
+        },
+        startSeconds: 90,
+        volumePercent: 100,
+        pipelineMode,
+        audioProcessing: AUDIO_OFF,
+      });
+      expect(options.subtitleBurn).toEqual({
+        kind: "image",
+        subtitleStreamIndex: 2,
+      });
+      expect(options.startTime).toBe(90);
     }
   });
 });

@@ -23,6 +23,7 @@ import {
   subtitleTrackRef,
   type SubtitleCandidate,
 } from "@shepherdjerred/streambot/sources/subtitles.ts";
+import { subtitleFormatLabel } from "@shepherdjerred/streambot/sources/subtitle-formats.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -108,7 +109,11 @@ function labelForCandidate(candidate: SubtitleCandidate): string {
   const lang = candidate.lang ?? "unknown language";
   const modifier =
     candidate.modifier === null ? "" : ` (${candidate.modifier})`;
-  const source = candidate.kind === "sidecar" ? "sidecar" : "embedded";
+  // A remux often carries the same language as text and image (PGS) tracks: name the format.
+  const source =
+    candidate.kind === "sidecar"
+      ? "sidecar"
+      : `embedded ${subtitleFormatLabel(candidate.codec)}`;
   return `${lang}${modifier} — ${source}`;
 }
 

@@ -61,6 +61,29 @@ describe("buildMenuOptions", () => {
     });
   });
 
+  test("embedded labels name the format, so same-language text and PGS tracks are distinguishable", () => {
+    const { options } = buildMenuOptions([
+      {
+        kind: "embedded",
+        subtitleIndex: 0,
+        codec: "subrip",
+        lang: "eng",
+        modifier: null,
+      },
+      {
+        kind: "embedded",
+        subtitleIndex: 1,
+        codec: "hdmv_pgs_subtitle",
+        lang: "eng",
+        modifier: null,
+      },
+    ]);
+    expect(options.slice(1).map((option) => option.label)).toEqual([
+      "eng — embedded SRT",
+      "eng — embedded PGS",
+    ]);
+  });
+
   test("index 0 always resolves to the off trackRef", () => {
     const { options, encodedRefs } = buildMenuOptions([]);
     expect(options).toEqual([{ label: "Off (no subtitles)", value: "0" }]);

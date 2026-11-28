@@ -8,7 +8,7 @@ import {
   type LibraryRoot,
 } from "@shepherdjerred/streambot/sources/library.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
-import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
+import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle-process.ts";
 import {
   expandPlaylist,
   expandPlaylistWithMetadata,

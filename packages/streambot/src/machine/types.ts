@@ -75,16 +75,36 @@ export type VoiceHandle = {
   readonly channelId: ChannelId;
 };
 
-/** A subtitle track staged to a safe file, ready to burn into the video. */
-export type ResolvedSubtitle = {
+/** A subtitle track ready to burn into the video: a staged text file or an embedded image stream. */
+export type ResolvedSubtitle = ResolvedTextSubtitle | ResolvedImageSubtitle;
+
+/** A text track (SRT/ASS/VTT) staged to a safe file for libass. */
+export type ResolvedTextSubtitle = {
+  readonly kind: "text";
   /** Safe file the ffmpeg `subtitles` filter reads — a staged temp copy or a persistent cache entry. */
   readonly path: string;
   /**
-   * Temp file to unlink once the stream ends — set only for one-shot staged copies (sidecars, yt-dlp
-   * downloads, uncached embedded extracts; never a user file). Absent for a persistent subtitle-cache
-   * entry, which must survive for the next play.
+   * Fonts extracted from the source's attachments (MKV) for an ASS/SSA track, passed to libass as
+   * `fontsdir`. Absent when the track is not ASS or the source attaches no fonts.
+   */
+  readonly fontsDir?: string;
+  /**
+   * Temp file or per-item temp directory to remove (recursively) once the stream ends — set only for
+   * one-shot staged copies (sidecars, yt-dlp downloads, uncached embedded extracts; never a user
+   * file). Absent for a persistent subtitle-cache entry, which must survive for the next play.
    */
   readonly cleanupPath?: string;
+};
+
+/**
+ * An image track (PGS/VobSub/DVB) of the playback input itself. Nothing is staged: ffmpeg overlays
+ * the input's own subtitle stream, so there is nothing to clean up.
+ */
+export type ResolvedImageSubtitle = {
+  readonly kind: "image";
+  /** Subtitle-relative stream index in the playback input (`0:s:<i>`). */
+  readonly subtitleIndex: number;
+  readonly codec: string;
 };
 
 /** A source resolved to something ffmpeg can read (a local path or a direct stream URL). */

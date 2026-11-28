@@ -176,6 +176,20 @@ therefore splits identities:
     video variant that fits `STREAM_HEIGHT`, then the highest
     `variant_bitrate`. Off, sources map the first audio track and the first
     sized video stream as before.
+- **Subtitles** — Go Live carries one video track, so subtitles are burned in
+  on every pipeline rung (GPU, GPU upload, software). Sidecar and embedded
+  tracks compete in one ranking (language, then full over SDH over forced,
+  then sidecar, embedded text, embedded image). Automatic selection only burns
+  a track in a `subtitles.languages` language or with no language tag; a film
+  whose only subtitles are foreign plays without them until someone picks a
+  track with 💬 Subtitles or the web remote, which list every track with its
+  format. Text tracks are extracted once (cached in `SUBS_CACHE_DIR`) and
+  rendered by libass: ASS/SSA keep their styling as `.ass`, with the MKV's
+  attached fonts dumped next to them for `fontsdir`; other text formats become
+  SRT. Image tracks (PGS, VobSub, DVB) need no extraction: ffmpeg overlays the
+  file's own subtitle stream, fitted to the picture. After a seek or resume, an
+  image cue that was already on screen at that point is skipped; the next cue
+  shows on time. Image sidecars (`.sup`, `.idx`/`.sub`) are not supported.
 
 The playback lifecycle is a pure, unit-tested XState machine; all I/O lives in
 invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the

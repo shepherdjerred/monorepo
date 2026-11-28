@@ -32,7 +32,12 @@ import { isBun, isDeno, isFiniteNonZero } from "../utils.js";
 import { AVCodecID } from "./LibavCodecId.js";
 import { createDecoder } from "./LibavDecoder.js";
 import { Encoders } from "./encoders/index.js";
-import { buildSoftwareVideoGraph, formatFrameRate } from "./videoGraph.js";
+import {
+  buildSoftwareVideoGraph,
+  formatFrameRate,
+  type ImageSubtitleGraphSpec,
+  type TextSubtitleGraphSpec,
+} from "./videoGraph.js";
 import {
   buildAudioOutputStage,
   isDialogDownmixLayout,
@@ -51,6 +56,11 @@ import type {
   FfmpegProgress,
   StreamObserver,
 } from "./StreamObserver.js";
+
+/** See {@link PrepareStreamOptions.subtitleBurn}. */
+export type SubtitleBurn =
+  | { kind?: "text"; path: string; fontsDir?: string }
+  | { kind: "image"; subtitleStreamIndex: number };
 
 export type PrepareStreamOptions = {
   /**
@@ -278,14 +288,24 @@ export type PrepareStreamOptions = {
   ffmpegPath?: string;
 
   /**
-   * Burn this subtitle file into the video. The graph is composed by `prepareStream` itself: on
-   * the GPU pipeline the subtitles are rendered by libass onto a transparent BGRA canvas,
-   * uploaded, and composited with `overlay_vaapi` (the whole video path stays on the GPU); on the
-   * software path a `subtitles=` burn is appended after any HDR tonemap. Either way the burn is
-   * PTS-compensated for `startTime`, so cues stay correct across seeks. Incompatible with
-   * `noTranscoding` (throws).
+   * Burn subtitles into the video. The graph is composed by `prepareStream` itself.
+   *
+   * A text subtitle (`{ path, fontsDir? }`, `kind` optional) is rendered by libass: on the GPU
+   * pipeline onto a transparent BGRA canvas that is uploaded and composited with `overlay_vaapi`
+   * (the whole video path stays on the GPU); on the software path as a `subtitles=` burn after any
+   * HDR tonemap. The burn is PTS-compensated for `startTime`, so cues stay correct across seeks.
+   * `fontsDir` points libass at the fonts an ASS track was styled with.
+   *
+   * An image subtitle (`{ kind: "image", subtitleStreamIndex }`: PGS, VobSub, DVB) overlays the
+   * primary input's subtitle stream `0:s:<subtitleStreamIndex>`, fitted to the picture —
+   * `overlay_vaapi` after a `hwupload` on the GPU pipeline, `overlay` on the software path. The
+   * input `-ss` seeks the subtitle stream with the video, so cues starting after the seek point
+   * stay in sync; a cue already on screen at the seek point is not redrawn (its packet precedes
+   * the seek).
+   *
+   * Incompatible with `noTranscoding` and `audioOnly` (throws).
    */
-  subtitleBurn?: { path: string };
+  subtitleBurn?: SubtitleBurn;
 
   /**
    * Color/transfer characteristics of the input. `"hdr"` (PQ/HLG sources) inserts a tonemap to
@@ -518,6 +538,33 @@ export class FfmpegExitError extends Error {
     this.stderrTail = opts.stderrTail;
     this.startTimeSeconds = opts.startTimeSeconds;
   }
+}
+
+/**
+ * Map the public {@link SubtitleBurn} option onto the graph builders' subtitle spec. A text burn
+ * carries the seek offset for its PTS compensation; an image burn needs none, because the input
+ * seek re-stamps its subtitle stream together with the video.
+ */
+function subtitleGraphSpec(
+  burn: SubtitleBurn,
+  startTime: number,
+): TextSubtitleGraphSpec | ImageSubtitleGraphSpec {
+  if (burn.kind === "image") {
+    if (
+      !Number.isInteger(burn.subtitleStreamIndex) ||
+      burn.subtitleStreamIndex < 0
+    ) {
+      throw new Error(
+        "subtitleBurn.subtitleStreamIndex must be a non-negative integer",
+      );
+    }
+    return { kind: "image", streamIndex: burn.subtitleStreamIndex };
+  }
+  return {
+    path: burn.path,
+    ...(burn.fontsDir === undefined ? {} : { fontsDir: burn.fontsDir }),
+    startTime,
+  };
 }
 
 /** Parse an "ffmpeg exited with code N" message; null when the shape doesn't match. */
@@ -1164,14 +1211,14 @@ export function prepareStream(
       ...(mergedOptions.deinterlace ? { deinterlace: true } : {}),
       ...(mergedOptions.convertColorToBt709 ? { convertToBt709: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),
-      ...(mergedOptions.subtitleBurn !== undefined
-        ? {
-            subtitle: {
-              path: mergedOptions.subtitleBurn.path,
-              startTime: mergedOptions.startTime ?? 0,
-            },
-          }
-        : {}),
+      ...(mergedOptions.subtitleBurn === undefined
+        ? {}
+        : {
+            subtitle: subtitleGraphSpec(
+              mergedOptions.subtitleBurn,
+              mergedOptions.startTime ?? 0,
+            ),
+          }),
     };
     const graph = hwPipeline
       ? hwPipeline.videoGraph(graphSpec)
@@ -1184,7 +1231,8 @@ export function prepareStream(
       commandBuilder.addOutputOption(["-map", videoMap]);
       commandBuilder.videoFilter(graph.filters);
     } else {
-      // Multi-branch graph (GPU subtitle overlay): -filter_complex plus -map of its labeled
+      // Multi-branch graph (GPU subtitle overlay, or an image-subtitle overlay on either path):
+      // -filter_complex plus -map of its labeled
       // output. `-map 0:v` must NOT be emitted alongside it — that would put a second, unfiltered
       // video stream into the NUT output.
       commandBuilder.complexFilter(graph.graph, graph.mapLabel);
