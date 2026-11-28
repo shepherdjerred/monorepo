@@ -299,8 +299,15 @@ or an explicit operator composition (manual).
 - R2. An automatic set revision is composed in the same transaction that
   verifies its build, or by a tracking recomposition (R7). It takes the
   build's new and retained artifacts and carries every unchanged component
-  forward from its base. If the result equals its base in every digest, no
-  set revision is created.
+  forward from its base. A CI publication can retain an artifact before a
+  concurrent pipeline's newer artifact becomes visible. When both producing
+  builds have a comparable order key in the same service and repository and
+  the retained original precedes the base component's producer, composition
+  carries the base component forward. The publication keeps its exact
+  retention record. Later producers skip that stale original when choosing
+  a comparison base while the newer component is live. Requirements (A3)
+  are checked against the resulting set. If the result equals its base in
+  every digest, no set revision is created.
 - R3. A manual set revision never becomes the base of an automatic one. A
   manual set revision is a hotfix: the next automatic set revision does not
   carry it forward, and its change persists only by landing in source.
