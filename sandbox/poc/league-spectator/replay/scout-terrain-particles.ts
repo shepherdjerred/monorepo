@@ -177,6 +177,16 @@ const billboardDepthTrack = familyTrack.extend({
     noAlphaTestFragment: glsl.optional(),
   }),
 });
+const mayhemImpactComparisonTrack = familyTrack.extend({
+  schema: z.literal(8),
+  status: z.literal("controlled-mayhem-impact-comparison"),
+  scope: z.literal("native-sampled-supplied-random"),
+  effects: z.tuple([]),
+  families: z.tuple([]),
+  worldImpact: worldQuadTrack.extend({
+    paths: worldQuadTrack.shape.paths.length(2),
+  }),
+});
 const particleTrack = z.discriminatedUnion("schema", [
   singleFamilyTrack,
   familyTrack,
@@ -185,6 +195,7 @@ const particleTrack = z.discriminatedUnion("schema", [
   depthStateTrack,
   maskedWorldTrack,
   billboardDepthTrack,
+  mayhemImpactComparisonTrack,
 ]);
 
 function normalizeTrack(track: z.infer<typeof particleTrack>) {
@@ -362,12 +373,17 @@ export async function loadRecordedTerrainParticles(
     build: string;
     replaySha256: string;
     durationMilliseconds: number;
+    mayhemImpactComparison?: boolean;
   },
   signal: AbortSignal,
 ) {
   const track = normalizeTrack(
     particleTrack.parse(await readRecordedParticleTrackJson(read, signal)),
   );
+  if ((track.schema === 8) !== (identity.mayhemImpactComparison === true))
+    throw new Error(
+      "The recorded impact comparison capability disagrees with this package.",
+    );
   const lifetimes = new Map(
     track.families.map(({ id, components }) => [
       id,
@@ -458,6 +474,23 @@ export async function loadRecordedTerrainParticles(
     palettePaths.add(unmaskedQuad.palette);
     basePaths.add(unmaskedQuad.texture);
   }
+  const impact = track.schema === 8 ? track.worldImpact : undefined;
+  const impactAt =
+    impact === undefined
+      ? undefined
+      : compileWorldPaths(impact.paths, duration, {
+          texture: impact.texture,
+          palette: impact.palette,
+          blend: "src-alpha-one" as const,
+          alphaTest: true,
+          depthTest: true,
+          worldUnmaskedQuad: true as const,
+          mayhemImpactComparison: true as const,
+        });
+  if (impact !== undefined) {
+    palettePaths.add(impact.palette);
+    basePaths.add(impact.texture);
+  }
   const expectedTextures = new Set([...palettePaths, ...basePaths]);
   if (
     (track.schema === 1 && expectedTextures.size !== 3) ||
@@ -534,6 +567,7 @@ export async function loadRecordedTerrainParticles(
   );
   const maximumDuration = Math.max(...lifetimes.values());
   function sampleAt(timeSeconds: number) {
+    if (impactAt !== undefined) return impactAt(timeSeconds);
     const legacyParticles = [];
     let first = 0;
     let end = track.effects.length;

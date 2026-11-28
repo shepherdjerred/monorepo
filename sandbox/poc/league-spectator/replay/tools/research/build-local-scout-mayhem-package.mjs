@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { openReplay } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/transport.mjs";
-import { writeLocalScoutTerrainPackage } from "../build-local-scout-terrain-package.mjs";
+import {
+  readLocalRecordedParticles,
+  writeLocalScoutTerrainPackage,
+} from "../build-local-scout-terrain-package.mjs";
 import {
   mayhemFlowMapAsset,
   mayhemFlowMapControlSha256,
@@ -286,12 +289,21 @@ async function buildPackage(inputs) {
     },
   };
   routes.set("/scene.json", [JSON.stringify(scene)]);
+  const impactComparisonFiles =
+    inputs.mayhemImpactComparison === undefined
+      ? undefined
+      : await readLocalRecordedParticles(
+          inputs.mayhemImpactComparison.path,
+          inputs.mayhemImpactComparison.sha256,
+          { ...identity, mayhemImpactComparison: true },
+        );
   return writeLocalScoutTerrainPackage({
     output: inputs.output,
     identity,
     map,
     routes,
     threeCore: inputs.three.path,
+    impactComparisonFiles,
   });
 }
 

@@ -2797,6 +2797,7 @@ export async function loadRenderer(
   read: ReadTerrainAsset,
   render: RendererModule,
   hasRecordedParticles: boolean,
+  mayhemImpactComparison = false,
 ) {
   const chaosTurret = scene.structureModels?.bindings.find(
     ({ collapse }) => collapse !== undefined,
@@ -2841,7 +2842,7 @@ export async function loadRenderer(
     if (hasRecordedParticles)
       recordedParticles = await loadRecordedTerrainParticles(
         read,
-        scene.identity,
+        { ...scene.identity, mayhemImpactComparison },
         signal,
       );
     if (scene.championModels !== undefined)

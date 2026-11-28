@@ -19,7 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from champion_replication_archive import CURRENT_BUILD, read_replication_image
 
 
-def run(image, event, fields, cadence, supplied_random, camera=None):
+def run(image, event, fields, cadence, supplied_random, camera=None, *,
+        observe_delay_only=False, configure_impact_shape=None):
     def constant(key, default=None):
         obj = fields.get(key)
         if obj is None:
@@ -31,11 +32,20 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
     def v(x, axes="XYZ"):
         return [x[k] for k in axes]
 
-    offset = v(fields["3bf0b4ed"]["fields"]["e5f268dd"]["value"])
-    assert fields["3bf0b4ed"]["classHash"] == "ee39916f"
     assert fields["007b14f6"]["classHash"] == "4beb81fd"
-    assert fields["42bd7f6b"]["value"] == 1 and fields["27d40903"]["value"] == 1
-    assert "99c94704" not in fields and "22e763bc" not in fields and "2431d42c" not in fields
+    assert fields["42bd7f6b"]["value"] == 1
+    assert "99c94704" not in fields and "2431d42c" not in fields
+    impact = observe_delay_only or configure_impact_shape is not None
+    if impact:
+        assert (camera is None) == observe_delay_only and 0 <= supplied_random < 1
+        assert fields["3bf0b4ed"]["classHash"] == "4f4e2ed7"
+        delay = fields["22e763bc"]["value"]
+        assert delay == 0.5
+    else:
+        assert fields["3bf0b4ed"]["classHash"] == "ee39916f"
+        offset = v(fields["3bf0b4ed"]["fields"]["e5f268dd"]["value"])
+        assert fields["27d40903"]["value"] == 1
+        assert "22e763bc" not in fields
     authored = {
         "rate": constant("ae839c67"),
         "lifetime": fields["5212abee"]["value"]["value"],
@@ -112,7 +122,7 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
         engine.reg_write(reg.UC_X86_REG_RSP, rsp + 8)
         engine.reg_write(reg.UC_X86_REG_RIP, target)
 
-    def call(entry, rdi, rsi=0, time=None, end=stop):
+    def call(entry, rdi, rsi=0, time=None, end=stop, also_stop_at=None):
         put(stack, "Q", stop)
         vm.reg_write(reg.UC_X86_REG_RSP, stack)
         vm.reg_write(reg.UC_X86_REG_RDI, rdi)
@@ -121,7 +131,7 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
             vm.reg_write(reg.UC_X86_REG_XMM0, struct.unpack("<I", struct.pack("<f", time))[0])
         vm.emu_start(image.base + entry, end, count=30000)
         result = vm.reg_read(reg.UC_X86_REG_RIP)
-        if result != end:
+        if result not in (end, also_stop_at):
             raise ValueError(f"Native emitter {entry:#x} did not complete: {result - image.base:#x}")
         return vm.reg_read(reg.UC_X86_REG_RAX)
 
@@ -187,14 +197,25 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
         assert vm.mem_read(system + 0x278, 12) == bytes(12)
     put(definition + 0xF8, "f", lifetime)
     put(definition + 0x108, "f", authored["lifetime"])
-    put(definition + 0x3E8, "3f", *v(constant("f0eb7084")))
-    put(definition + 0x3D0, "3f", *v(constant("5932ff9c")))
     if bind is not None:
         put(definition + 0x3A0, "f", bind)
-    shape = stop + 0x7900
-    call(0x17C59D0, shape)
-    put(definition + 0x238, "Q", shape)
-    put(shape + 8, "3f", *offset)
+    if impact:
+        # The registered timeBeforeFirstEmission field is read by 0x1786393.
+        put(definition + 0x218, "f", delay)
+        if configure_impact_shape is not None:
+            shape = stop + 0x7900
+            configure_impact_shape(fields["3bf0b4ed"]["fields"], call, put, shape, stop + 0xB000)
+            put(definition + 0x238, "Q", shape)
+            put(definition + 0x240, "3f", *v(constant("563d4a22")))
+            put(definition + 0x3E8, "3f", *v(constant("f0eb7084")))
+            put(definition + 0x3D0, "3f", *v(constant("5932ff9c")))
+    else:
+        put(definition + 0x3E8, "3f", *v(constant("f0eb7084")))
+        put(definition + 0x3D0, "3f", *v(constant("5932ff9c")))
+        shape = stop + 0x7900
+        call(0x17C59D0, shape)
+        put(definition + 0x238, "Q", shape)
+        put(shape + 8, "3f", *offset)
     put(system + 0x150, "2f", 1, 1)
     put(system + 0x1B0, "8f", *([1] * 8))
     put(system + 0x1D0, "f", 1)
@@ -202,16 +223,16 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
 
     if camera is not None:
         put(definition + 0x14, "B", fields["fa784eab"]["value"])
-        put(definition + 0x17, "B", fields["b9516a6f"]["value"])
-        put(definition + 0x70, "hB", fields["7b7a7318"]["value"], fields["6563bee8"]["value"])
-        put(definition + 0x77, "B", fields["b99310f4"]["value"])
-        assert (
-            fields["37ddb774"]["value"] == 1
-            and fields["3559e15b"]["value"] == 1
-            and "dddde180" not in fields
-            and "8d2e2474" not in fields
-        )
-        put(definition + 0x2D0, "I", flags | 0x10100A)
+        assert fields["3559e15b"]["value"] == 1
+        if impact:
+            assert "37ddb774" not in fields
+            put(definition + 0x2D0, "I", flags | 0x100008)
+        else:
+            put(definition + 0x17, "B", fields["b9516a6f"]["value"])
+            put(definition + 0x70, "hB", fields["7b7a7318"]["value"], fields["6563bee8"]["value"])
+            put(definition + 0x77, "B", fields["b99310f4"]["value"])
+            assert fields["37ddb774"]["value"] == 1 and "dddde180" not in fields and "8d2e2474" not in fields
+            put(definition + 0x2D0, "I", flags | 0x10100A)
         put(definition + 0x150, "4f", *v(constant("83cdeaa1"), "XYZW"))
         wrapper = stop + 0x6900
         emitter_entity = stop + 0x6C00
@@ -243,12 +264,13 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
             return lanes_src
 
         scale_curve = stop + 0xC000
-        put(definition + 0x420, "3f", *v(fields["d4e17a53"]["fields"]["b4b427aa"]["value"]))
+        if not impact:
+            put(definition + 0x420, "3f", *v(fields["d4e17a53"]["fields"]["b4b427aa"]["value"]))
         vector_curve("d4e17a53", 0x430, scale_curve)
         call(0x1703BA0, scale_curve)
         motion = stop + 0xC500
-        motion_src = vector_curve("1d779e6a", 0x410, motion)
-        for axis, row in enumerate(motion_src["a7084719"]["elements"]):
+        motion_axes = [] if impact else vector_curve("1d779e6a", 0x410, motion)["a7084719"]["elements"]
+        for axis, row in enumerate(motion_axes):
             probability = motion + 0x200 + axis * 0x70
             put(motion + 8 + axis * 8, "Q", probability)
             if not row["fields"]:
@@ -262,15 +284,16 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
             put(probability + 0x40, "4f", *times)
             put(probability + 0x50, "4f", *vals)
             put(probability + 0x25, "B", 1)
-        call(0x1703BA0, motion)
+        if not impact:
+            call(0x1703BA0, motion)
         color = stop + 0xCA00
         _src, times, vals = lanes("3d7e6258")
         call(0x17B0430, color)
         put(definition + 0x398, "Q", color)
         put(color + 0x28, "QII", color + 0x100, len(times), len(times))
         put(color + 0x38, "QII", color + 0x140, len(times), len(times))
-        put(color + 0x100, "4f", *times)
-        put(color + 0x140, "16f", *(q for value in vals for q in v(value, "XYZW")))
+        put(color + 0x100, f"{len(times)}f", *times)
+        put(color + 0x140, f"{len(vals) * 4}f", *(q for value in vals for q in v(value, "XYZW")))
         call(0x1705520, color)
         view, draw, geometry, indices, vertices, view_row = (
             stop + n for n in (0xA000, 0xA100, 0xA200, 0xA300, 0xA400, 0xE000)
@@ -310,23 +333,48 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
     births = []
 
     def capture(_engine, _address, _size, _data):
+        if observe_delay_only:
+            births.append(time)
+            vm.emu_stop()
+            return
         p = vm.reg_read(reg.UC_X86_REG_RSI)
         births.append([time, struct.unpack("<f", vm.mem_read(p + 0xCC, 4))[0]])
 
     addr = image.base + 0x1789DF0
     vm.hook_add(unicorn.UC_HOOK_CODE, capture, begin=addr, end=addr)
-    f32_bits = struct.unpack("<I", struct.pack("<f", lifetime))[0]
+    if observe_delay_only:
+        last_empty_age = None
+        for tick in range(cadence + 1):
+            time = tick / cadence
+            call(0x1786280, actor, time=time, also_stop_at=addr)
+            assert vm.mem_read(pool + 0x10, 4) == bytes(4)
+            if births:
+                assert births == [delay] and time == delay
+                return {
+                    "cadence": cadence,
+                    "lastEmptyAge": last_empty_age,
+                    "firstBirthHelperAge": time,
+                    "suppliedRandomSample": supplied_random,
+                    "rngCalls": len(rng_samples),
+                }
+            last_empty_age = time
+        raise ValueError("Original emitter did not reach the delayed birth helper")
+    if impact:
+        authored["particleLifetime"] = lifetime
+    birth_age = delay if impact else 0
+    last_age = birth_age + lifetime
+    f32_bits = struct.unpack("<I", struct.pack("<f", last_age))[0]
     next_age = struct.unpack("<f", struct.pack("<I", f32_bits + 1))[0]
     check_ticks = range(math.ceil((lifetime + authored["lifetime"] + 1) * cadence))
-    ages = sorted({lifetime, next_age, *(tick / cadence for tick in check_ticks)})
+    ages = sorted({last_age, next_age, *(tick / cadence for tick in check_ticks)})
     for time in ages:
         call(0x1786280, actor, time=time)
         count = struct.unpack("<I", vm.mem_read(pool + 0x10, 4))[0]
         if camera is not None and count:
             sampled.append([time, geometry_bytes()])
-        if count != (time <= lifetime):
+        if count != (birth_age <= time <= last_age):
             raise ValueError(f"Unexpected particle pool count {count} at age {time}")
-    if births != [[0, lifetime]]:
+    if births != [[birth_age, lifetime]]:
         raise ValueError(f"Expected one birth with the authored lifetime: {births}")
     return {
         "cadence": cadence,
@@ -335,7 +383,7 @@ def run(image, event, fields, cadence, supplied_random, camera=None):
         **({"geometry": sampled, "worldScale": scale, "readOrigin": sorted(reads)} if camera is not None else {}),
         "authored": authored,
         "births": births,
-        "lastLiveAge": lifetime,
+        "lastLiveAge": last_age,
         "firstEmptyFloat32Age": next_age,
     }
 

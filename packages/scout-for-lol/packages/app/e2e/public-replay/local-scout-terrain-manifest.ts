@@ -17,11 +17,21 @@ export const LocalScoutTerrainManifestSchema =
         gameMode: z.literal("CLASSIC"),
         ...recordedReplayCapabilities,
       }),
-      z.strictObject({
-        mapId: z.literal(12),
-        gameMode: z.literal("KIWI"),
-        mayhemMapSkin: z.string().min(1),
-        ...recordedReplayCapabilities,
-      }),
+      z
+        .strictObject({
+          mapId: z.literal(12),
+          gameMode: z.literal("KIWI"),
+          mayhemMapSkin: z.string().min(1),
+          mayhemImpactComparison: z
+            .literal("supplied-random-world-quad")
+            .optional(),
+          ...recordedReplayCapabilities,
+        })
+        .refine(
+          ({ mayhemImpactComparison, mayhemMapSkin, particlePreview }) =>
+            mayhemImpactComparison === undefined ||
+            (mayhemMapSkin === "Bloom" && particlePreview === undefined),
+          "The supplied-random impact comparison requires a private Bloom package.",
+        ),
     ]),
   });

@@ -99,6 +99,20 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
       }),
     ),
   ).not.toBe(openingPixels);
+  if ([...fixture.paths.values()].includes("recorded-particles.json")) {
+    // The supplied-random comparison is private and has no particle product badge.
+    expect(fixture.particlePreview).toBeUndefined();
+    for (const [time, draws] of [
+      [84.7, 0],
+      [84.8, 2],
+      [85, 0],
+    ] as const) {
+      await seek(page, time);
+      const frame = await readRecordedDraw(page);
+      expect(frame.recordedParticleDraws).toBe(draws);
+      expect(frame.recordedDepthDisabledParticleDraws).toBe(0);
+    }
+  }
   await seek(page, 60);
   expect(await readRecordedDraw(page)).toMatchObject({
     actorOrigins: opening.actorOrigins,

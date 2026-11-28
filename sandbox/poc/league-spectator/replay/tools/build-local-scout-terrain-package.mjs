@@ -64,13 +64,26 @@ export async function readLocalRecordedParticleResources(
   identity,
 ) {
   const track = JSON.parse(bytes);
-  assert.ok([1, 2, 3, 4, 5, 6, 7].includes(track.schema));
+  const impactComparison = identity.mayhemImpactComparison === true;
+  assert.ok(
+    (impactComparison ? [8] : [1, 2, 3, 4, 5, 6, 7]).includes(track.schema),
+  );
   assert.equal(track.kind, "recorded-native-terrain-particles");
   assert.equal(track.build, "16.23.841.8428");
   assert.equal(track.build, identity.build);
   assert.equal(track.replaySha256, identity.replaySha256);
-  assert.equal(track.status, "verified-partial-effects");
-  assert.equal(track.scope, "native-sampled-cold-remap");
+  assert.equal(
+    track.status,
+    impactComparison
+      ? "controlled-mayhem-impact-comparison"
+      : "verified-partial-effects",
+  );
+  assert.equal(
+    track.scope,
+    impactComparison
+      ? "native-sampled-supplied-random"
+      : "native-sampled-cold-remap",
+  );
   const files = new Map([["recorded-particles.json", bytes]]);
   const declaredTextures = new Set(track.textures.files);
   const expectedTextures = new Set(
@@ -113,6 +126,12 @@ export async function readLocalRecordedParticleResources(
     assert.equal(depthTest, false, "Unexpected unmasked quad depth test state");
     expectedTextures.add(texture);
     expectedTextures.add(palette);
+  }
+  if (impactComparison) {
+    assert.deepEqual(track.families, []);
+    assert.deepEqual(track.effects, []);
+    expectedTextures.add(track.worldImpact.texture);
+    expectedTextures.add(track.worldImpact.palette);
   }
   if (track.schema === 1) assert.equal(expectedTextures.size, 3);
   assert.equal(track.textures.files.length, expectedTextures.size);
@@ -201,6 +220,7 @@ export async function writeLocalScoutTerrainPackage({
   threeCore,
   announcerFiles,
   particleFiles,
+  impactComparisonFiles,
 }) {
   const cache = join(await realpath(repoRoot), ".cache");
   const outputRoot = resolve(output);
@@ -216,9 +236,18 @@ export async function writeLocalScoutTerrainPackage({
     "Private package cache must stay inside this repository",
   );
   const resources = new Map([[entrypoint, await buildEngine(threeCore)]]);
+  if (impactComparisonFiles !== undefined) {
+    assert.equal(particleFiles, undefined);
+    assert.equal(map.mapId, 12);
+    assert.equal(map.gameMode, "KIWI");
+    assert.equal(map.mayhemMapSkin, "Bloom");
+  }
   for (const [path, bytes] of announcerFiles ?? []) resources.set(path, bytes);
-  if (particleFiles !== undefined)
-    for (const [path, bytes] of packageLocalRecordedParticles(particleFiles))
+  const recordedParticleFiles = particleFiles ?? impactComparisonFiles;
+  if (recordedParticleFiles !== undefined)
+    for (const [path, bytes] of packageLocalRecordedParticles(
+      recordedParticleFiles,
+    ))
       resources.set(path, bytes);
   for (const [route, [body]] of routes) {
     assert.ok(route.startsWith("/"));
@@ -262,6 +291,9 @@ export async function writeLocalScoutTerrainPackage({
       ...(particleFiles === undefined
         ? {}
         : { particlePreview: "verified-partial-effects" }),
+      ...(impactComparisonFiles === undefined
+        ? {}
+        : { mayhemImpactComparison: "supplied-random-world-quad" }),
     },
     files,
   });

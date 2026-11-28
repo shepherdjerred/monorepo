@@ -357,6 +357,9 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   }
   const announcerProfile = localManifest.capabilities.announcerPreview;
   const particlePreview = localManifest.capabilities.particlePreview;
+  const mayhemImpactComparison =
+    localManifest.capabilities.mapId === 12 &&
+    localManifest.capabilities.mayhemImpactComparison !== undefined;
   if (
     announcerProfile === undefined &&
     scene.workerMotion?.announcerEvents !== undefined
@@ -365,12 +368,16 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "invalid-package",
       "Replay-derived announcements require the announcer preview capability.",
     );
-  if (announcerProfile !== undefined || particlePreview !== undefined) {
+  if (
+    announcerProfile !== undefined ||
+    particlePreview !== undefined ||
+    mayhemImpactComparison
+  ) {
     const replayDigest = await sha256Hex(replay);
     if (replayDigest !== localManifest.capabilities.replaySha256)
       throw new ReplayCapabilityError(
         "incompatible-build",
-        particlePreview === undefined
+        particlePreview === undefined && !mayhemImpactComparison
           ? "The announcer preview belongs to another saved replay."
           : "The particle preview belongs to another saved replay.",
       );
@@ -442,7 +449,8 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     signal,
     read,
     terrainRenderer,
-    particlePreview !== undefined,
+    particlePreview !== undefined || mayhemImpactComparison,
+    mayhemImpactComparison,
   );
   let width = canvas.clientWidth || canvas.width;
   let height = canvas.clientHeight || canvas.height;

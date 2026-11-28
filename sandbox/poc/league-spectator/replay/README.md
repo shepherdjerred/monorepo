@@ -1447,6 +1447,24 @@ comparison uses explicit controls for the remaining native fog, color-space,
 normal-decoding, and shadow globals. Native global values and combat visuals
 still require verification.
 
+For the local Miss Fortune impact comparison, use the exact Mayhem placement
+receipt and the pinned Skin 21 effect and texture inputs. Collect the original
+geometry at both supported probe cadences and author the two recorded placements.
+
+```powershell
+uv run --offline --no-project --with unicorn==2.1.4 python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-mayhem-impact.py $macGameExecutable $sourceReceipt $typedEffect $textureTex --geometry | Set-Content -Encoding utf8NoBOM $geometry
+bun sandbox/poc/league-spectator/replay/tools/research/author-recorded-mayhem-impact-comparison.mjs $impactInputs
+```
+
+The author inputs are `source`, `geometry` as a `{ "path": "…", "sha256": "…" }`
+reference, the verified PNG paths `texture` and `palette`, the translated quad
+shader paths `vertex` and `fragment`, and a new private `output` directory.
+Set the Mayhem package's `mayhemImpactComparison` to the printed track path and
+digest. The rendered interval uses native samples with controlled random inputs
+and the all-vision material. It covers the two detached Flash draws during the
+first fight. Other emitters and the original replay random state require their
+own evidence.
+
 ## Local Scout player demo
 
 `scout-demo.tsx` mounts the app's `ReplaySessionPlayer` with

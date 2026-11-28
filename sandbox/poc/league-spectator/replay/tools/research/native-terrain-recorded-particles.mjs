@@ -385,6 +385,7 @@ export function createRecordedParticleRenderer(
           worldRibbon,
           worldMaskedQuad: masked,
           worldUnmaskedQuad: unmasked,
+          mayhemImpactComparison = false,
         } of particles) {
           if (!unmasked && restoreUnmaskedCull !== undefined) {
             restoreUnmaskedCull();
@@ -420,8 +421,9 @@ export function createRecordedParticleRenderer(
             if (
               (masked && unmasked) ||
               worldRibbon ||
-              alphaTest ||
-              depthTest ||
+              alphaTest !== mayhemImpactComparison ||
+              depthTest !== mayhemImpactComparison ||
+              (mayhemImpactComparison && !unmasked) ||
               blend !== "src-alpha-one" ||
               !(vertices instanceof Uint8Array) ||
               vertices.length === 0 ||
@@ -524,6 +526,13 @@ export function createRecordedParticleRenderer(
           const offsetEnabled =
             (masked || unmasked) && gl.isEnabled(gl.POLYGON_OFFSET_FILL);
           if (offsetEnabled) gl.disable(gl.POLYGON_OFFSET_FILL);
+          const previousDepthFunc = mayhemImpactComparison
+            ? gl.getParameter(gl.DEPTH_FUNC)
+            : undefined;
+          if (previousDepthFunc !== undefined) {
+            gl.depthFunc(gl.LEQUAL);
+            gl.depthMask(true);
+          }
           try {
             gl.drawElements(
               gl.TRIANGLES,
@@ -532,6 +541,10 @@ export function createRecordedParticleRenderer(
               0,
             );
           } finally {
+            if (previousDepthFunc !== undefined) {
+              gl.depthMask(false);
+              gl.depthFunc(previousDepthFunc);
+            }
             if (offsetEnabled) gl.enable(gl.POLYGON_OFFSET_FILL);
           }
         }
