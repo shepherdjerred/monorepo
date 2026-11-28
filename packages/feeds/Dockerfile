@@ -62,6 +62,14 @@ USER 1000:1000
 CMD ["bun", "src/index.ts"]
 
 FROM runtime AS smoke
+# The smoke migrates a throwaway PostgreSQL, imports a SQLite file into it in
+# --cutover mode, and serves from it. The database server is installed in this
+# stage only; the pushed `image` stage inherits from `runtime` unchanged.
+USER 0
+# Unpinned on purpose: Debian drops superseded point releases from the archive.
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql postgresql-client && rm -rf /var/lib/apt/lists/*
+USER 1000:1000
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 ARG SMOKE_TARGET=feeds
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}

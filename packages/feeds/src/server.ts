@@ -15,8 +15,7 @@ import {
   createFeedsPoller,
   type CreateFeedsPollerDeps,
 } from "./server/poller.ts";
-import { asyncFeedsRepository } from "./server/sqlite-repository.ts";
-import { FeedsStore } from "./server/store.ts";
+import { PostgresFeedsStore } from "./server/postgres/store.ts";
 import type { FeedsPoller, FeedsRepository } from "./server/types.ts";
 
 const NON_NEGATIVE_INTEGER = /^(?:0|[1-9]\d*)$/u;
@@ -77,7 +76,23 @@ export type StartServerOptions = {
   readonly env?: NodeJS.ProcessEnv | undefined;
   readonly shouldRefresh?: (() => Promise<boolean>) | undefined;
   readonly fetchFeed?: CreateFeedsPollerDeps["fetchFeed"] | undefined;
+  /** A store to serve instead of connecting to `DATABASE_URL` (tests). */
+  readonly store?: FeedsRepository | undefined;
 };
+
+async function openStore(
+  env: NodeJS.ProcessEnv,
+  injected: FeedsRepository | undefined,
+): Promise<FeedsRepository> {
+  if (injected !== undefined) {
+    return injected;
+  }
+  const databaseUrl = env["DATABASE_URL"] ?? "";
+  if (databaseUrl === "") {
+    throw new Error("DATABASE_URL is required");
+  }
+  return await PostgresFeedsStore.connect(databaseUrl);
+}
 
 async function evaluateRefreshFlag(): Promise<boolean> {
   const evaluated = await isEnabled("feeds-refresh-enabled", {
@@ -164,8 +179,7 @@ export async function startServer(
   if (useFlags) {
     await initFeatureFlags({ environment: env });
   }
-  const databasePath = env["FEEDS_DATABASE_PATH"] ?? ":memory:";
-  const store = asyncFeedsRepository(FeedsStore.open(databasePath));
+  const store = await openStore(env, options.store);
   try {
     const reconciled = await store.reconcileCatalog();
     console.warn(
