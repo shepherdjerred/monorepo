@@ -42,6 +42,15 @@ advisory `X-Flags-Actor` label (`temporal-flag-inventory-sync`,
 `check-flag-inventory`) that the Flags audit trail records; it is not a
 credential.
 
+`packages/flags/src/flag-usage.generated.json` records which files read each
+managed key, for the operator UI. `scripts/generate/flag-usage.ts` builds it
+syntactically (call arguments, `names.flag`, derived config names, key arrays,
+named constants, and The Storm's Java literals), counting a key only under the
+package roots that `scripts/generate/flag-usage-scopes.json` allows for its
+namespace. CI's `check-flag-usage` fails when the file is stale; refresh it
+with `bun run generate-flag-usage`, and add a scope entry for every new
+inventory namespace.
+
 ## Variant value schemas
 
 Every variant flag stores one string, but each key has a real type.

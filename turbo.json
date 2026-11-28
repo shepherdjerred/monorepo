@@ -237,6 +237,28 @@
         "!sandbox/**"
       ]
     },
+    // Flag-usage index freshness. The index is a syntactic scan of every
+    // in-scope consumer, so any TypeScript or Java source (and the package.json
+    // names it reports) is an input; the scan's own exclusions are negated.
+    "//#check-flag-usage": {
+      "inputs": [
+        "scripts/checks/check-flag-usage.ts",
+        "scripts/generate/flag-usage.ts",
+        "scripts/generate/flag-usage-extract.ts",
+        "scripts/generate/flag-usage-scopes.json",
+        "scripts/lib/run.ts",
+        ".prettierrc.json",
+        "packages/feature-flags/src/managed-flag-inventory.json",
+        "packages/config/src/source.ts",
+        "packages/flags/src/flag-usage.generated.json",
+        "packages/**/package.json",
+        "packages/**/*.{ts,tsx,java}",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/sandbox/**",
+        "!**/generated/**"
+      ]
+    },
     "//#check-test-standardization": {
       "inputs": [
         "package.json",

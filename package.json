@@ -69,6 +69,8 @@
     "check-suppressions": "bun scripts/checks/check-suppressions.ts",
     "check-agent-guidance": "bun scripts/checks/check-agent-guidance.ts",
     "check-directory-file-counts": "bun scripts/checks/check-directory-file-counts.ts",
+    "generate-flag-usage": "bun scripts/generate/flag-usage.ts",
+    "check-flag-usage": "bun scripts/checks/check-flag-usage.ts",
     "check-ai-architecture": "bun scripts/checks/check-ai-architecture.ts",
     "check-floating-deps": "bun scripts/checks/deps/check-floating-deps.ts",
     "check-patched-deps": "bun scripts/checks/deps/check-patched-deps.ts",
