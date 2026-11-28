@@ -65,7 +65,7 @@ test("partial, skipped and inconsistent manual successes cannot clear a failure"
     full.workflows.filter((workflow) => workflow.name !== "verify"),
     full.workflows.map((workflow) => ({
       ...workflow,
-      state: workflow.name === "argocd-sync" ? "skipped" : "success",
+      state: workflow.name === "delivery-publish" ? "skipped" : "success",
     })),
     [...full.workflows, { name: "extra-check", state: "pending" }],
   ]) {

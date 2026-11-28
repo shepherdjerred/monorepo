@@ -13,10 +13,9 @@ export const MAIN_WOODPECKER_CONFIG = {
 
 const MAIN_REQUIRED_WORKFLOWS = [
   "verify",
-  "homelab-release-admission",
   "images",
   "helm-push",
-  "argocd-sync",
+  "delivery-publish",
 ];
 
 export function mainPipeline(

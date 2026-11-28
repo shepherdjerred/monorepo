@@ -51,7 +51,7 @@ export function failedWorkflows(pipeline: WoodpeckerPipeline): boolean {
 
 // Manual main runs can recover a missing push webhook, but a targeted manual
 // job must not clear a failed main verdict. Require the verification and
-// release graph, including admission and artifact publication, without skips.
+// release graph, including Delivery artifact publication, without skips.
 export function verifiesMain(pipeline: WoodpeckerPipeline): boolean {
   for (const workflow of pipeline.workflows) workflowStatus(workflow.state);
   if (pipeline.event === "push") return true;
@@ -62,13 +62,7 @@ export function verifiesMain(pipeline: WoodpeckerPipeline): boolean {
     )
   )
     return false;
-  return [
-    "verify",
-    "homelab-release-admission",
-    "images",
-    "helm-push",
-    "argocd-sync",
-  ].every((name) => {
+  return ["verify", "images", "helm-push", "delivery-publish"].every((name) => {
     const workflow = pipeline.workflows.find((item) => item.name === name);
     return workflow !== undefined && workflow.state.toLowerCase() !== "skipped";
   });
