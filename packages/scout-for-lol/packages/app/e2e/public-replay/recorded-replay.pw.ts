@@ -98,7 +98,8 @@ test("the build-scoped package rejects a same-build replay from the wrong map", 
     if (
       pathname.includes("/rift-combat-audio-") ||
       pathname.includes("/combat-audio/") ||
-      /\/(?:senna-w-lens|rift-billboards|rift-world-quads)\.json$/.test(
+      pathname.includes("/rift-projectile-") ||
+      /\/(?:senna-w-lens|rift-billboards|rift-ribbon|rift-world-quads)\.json$/.test(
         pathname,
       )
     )

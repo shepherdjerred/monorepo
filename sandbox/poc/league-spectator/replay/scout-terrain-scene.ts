@@ -49,6 +49,7 @@ import {
   type LoadedTerrainParticles,
 } from "./scout-terrain-particles.ts";
 import type { RiftCombatVisualEntry } from "./scout-rift-combat-audio.ts";
+import type { RiftRibbonTrack } from "./scout-rift-projectile-trails.ts";
 import {
   currentTerrainPositionBuild,
   terrainPositionBuild,
@@ -2879,6 +2880,7 @@ export async function loadRenderer(
   decodedParticles?: {
     entries: readonly RiftCombatVisualEntry[];
     worldQuads: boolean;
+    ribbons: RiftRibbonTrack | undefined;
   },
 ) {
   const chaosTurret = scene.structureModels?.bindings.find(
@@ -2928,6 +2930,7 @@ export async function loadRenderer(
         decodedParticles.entries,
         signal,
         decodedParticles.worldQuads,
+        decodedParticles.ribbons,
       );
     else if (hasRecordedParticles)
       recordedParticles = await loadRecordedTerrainParticles(

@@ -19,6 +19,10 @@ const combatBillboardPins = {
   profile: "8c2492c6a68cac9dbb504ac9ce4ce1214a73158ecc4d84f3ba583d257de26690",
   pages: "f6a17c9a7ae0d999ba708709fd2459125fa775a5c6884a8d9c5e602e4332622e",
 };
+const projectilePins = {
+  profile: "13c770e5e35d84ee04420ed7bf5cd6eb99926ec2362be68c0540febc1a10b2a5",
+  pages: "be0b043086884352db613b8ff65d3965e6acaae72e4dcc1b82616740d1ccfb3a",
+};
 
 async function readPinned(path, digest) {
   const bytes = await Bun.file(path).bytes();
@@ -56,7 +60,7 @@ async function buildRiftWorker(name, profile, runtime, decompress, proofPins) {
           plugin.onResolve(
             {
               filter:
-                /^\/rift-(startup|combat-audio)-(profile\.json|emulator\.mjs)$/u,
+                /^\/rift-(startup|combat-audio|projectile)-(profile\.json|emulator\.mjs)$/u,
             },
             ({ path }) => ({
               path,
@@ -86,13 +90,17 @@ export async function buildRiftCombatWorker(
   profile,
   runtime,
   decompress,
-  { wav, billboardSource, worldQuadSource },
+  { wav, billboardSource, worldQuadSource, projectileProfile },
 ) {
   assert.ok(
     worldQuadSource === undefined || billboardSource !== undefined,
     "Rift world quads require the reviewed billboard resources",
   );
-  const [files, sound, billboards, worldQuad] = await Promise.all([
+  assert.ok(
+    projectileProfile === undefined || billboardSource !== undefined,
+    "Rift projectiles require the reviewed billboard resources",
+  );
+  const [files, sound, billboards, worldQuad, projectile] = await Promise.all([
     buildRiftWorker(
       "rift-combat-audio",
       profile,
@@ -103,13 +111,25 @@ export async function buildRiftCombatWorker(
     wav === undefined ? undefined : readReviewedCombatAudioWav(wav),
     billboardSource === undefined
       ? undefined
-      : readBuildScopedRiftBillboardAssets(billboardSource),
+      : readBuildScopedRiftBillboardAssets(billboardSource, {
+          ribbon: projectileProfile !== undefined,
+        }),
     worldQuadSource === undefined
       ? undefined
       : readBuildScopedRiftGroundGlowAssets(worldQuadSource, billboardSource),
+    projectileProfile === undefined
+      ? undefined
+      : buildRiftWorker(
+          "rift-projectile",
+          projectileProfile,
+          runtime,
+          decompress,
+          projectilePins,
+        ),
   ]);
   if (sound !== undefined) files.set("combat-audio/329446178.wav", sound);
   for (const [path, bytes] of billboards ?? []) files.set(path, bytes);
+  for (const [path, bytes] of projectile ?? []) files.set(path, bytes);
   if (worldQuad !== undefined) {
     const { build, mapId, shaders } = JSON.parse(
       files.get("rift-billboards.json"),

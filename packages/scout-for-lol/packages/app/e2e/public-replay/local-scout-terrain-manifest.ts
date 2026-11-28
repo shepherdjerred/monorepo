@@ -75,8 +75,19 @@ export const LocalScoutTerrainManifestSchema =
       const pages = paths.has("rift-combat-audio-pages.bin");
       const billboardAsset = paths.has("rift-billboards.json");
       const worldQuadAsset = paths.has("rift-world-quads.json");
+      const ribbonFiles = [
+        "rift-ribbon.json",
+        "rift-projectile-pages.bin",
+        "rift-projectile-worker.mjs",
+      ].filter((path) => paths.has(path)).length;
       if (capabilities.rosterCoverage !== "build-scoped-archive")
-        return !worker && !pages && !billboardAsset && !worldQuadAsset;
+        return ![
+          worker,
+          pages,
+          billboardAsset,
+          worldQuadAsset,
+          ribbonFiles > 0,
+        ].some(Boolean);
       const audio = capabilities.combatAudioComparison !== undefined;
       const billboards = capabilities.particlePreview !== undefined;
       return (
@@ -86,6 +97,7 @@ export const LocalScoutTerrainManifestSchema =
         audio === paths.has("combat-audio/329446178.wav") &&
         billboards === billboardAsset &&
         (!worldQuadAsset || billboards) &&
+        (ribbonFiles === 0 || (ribbonFiles === 3 && billboards)) &&
         (audio || billboards
           ? capabilities.mapModeSource === "original-startup" && worker && pages
           : !worker && !pages)

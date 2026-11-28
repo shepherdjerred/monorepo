@@ -13,6 +13,7 @@ import {
 } from "@scout-for-lol/replay/types";
 import { LocalScoutTerrainManifestSchema } from "../../../../packages/scout-for-lol/packages/app/e2e/public-replay/local-scout-terrain-manifest.ts";
 import { readBuildScopedCombatEffects } from "./scout-rift-combat-audio.ts";
+import { readBuildScopedRiftTrails } from "./scout-rift-projectile-trails.ts";
 import {
   ScoutTerrainAnnouncer,
   sennaGroundHitWav,
@@ -435,6 +436,8 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     buildScoped && capabilities.particlePreview === "replay-decoded-billboards";
   const buildScopedWorldQuads =
     buildScopedBillboards && files.has("rift-world-quads.json");
+  const buildScopedRibbons =
+    buildScopedBillboards && files.has("rift-ribbon.json");
   const presentedParticlePreview = buildScopedBillboards
     ? "verified-partial-effects"
     : particlePreview;
@@ -522,7 +525,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     scene.participants.length === 0
       ? motion.then(({ scene }) => scene)
       : Promise.resolve(scene);
-  const [loaded, inventory, combatEffects] = await Promise.all([
+  const [loaded, inventory, combatEffects, ribbons] = await Promise.all([
     motion,
     inventoryScene.then((scene) =>
       loadRecordedInventory(
@@ -543,6 +546,11 @@ export const createReplayEngine: ReplayEngineFactory = async ({
             visual: buildScopedBillboards,
             worldQuads: buildScopedWorldQuads,
           },
+        )
+      : undefined,
+    buildScopedRibbons
+      ? motion.then((world) =>
+          readBuildScopedRiftTrails(resources, replay, signal, world),
         )
       : undefined,
   ]);
@@ -598,6 +606,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       ? {
           entries: combatEffects.visualEntries,
           worldQuads: buildScopedWorldQuads,
+          ribbons,
         }
       : undefined,
   );

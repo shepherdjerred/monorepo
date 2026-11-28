@@ -560,8 +560,26 @@ translating the same local samples reconstructs each capture to float32
 placement precision. The browser reads each origin, creation clock, and
 stop request from the replay. It uses the reviewed emitter lifetime and the
 shared unmasked world-quad pass.
-Moving trails, seeded emitters, other skins, and team-vision presentation
-require separate evidence.
+
+To add the Maokai R ribbon, capture the complete opcode 639 corpora from the
+same two .8428 replays. Use fresh paths under the repository's `.cache`.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-rift-missile-corpus.mjs $riftRofl $riftLaunches
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-rift-missile-corpus.mjs $bloomRofl $bloomLaunches
+uv run --offline --no-project --with unicorn==2.1.4 python sandbox/poc/league-spectator/replay/tools/research/prepare-rift-missile-launch-pages.py $archive $privateLaunchDirectory $riftLaunches $bloomLaunches
+bun sandbox/poc/league-spectator/replay/tools/research/verify-rift-missile-launch-reader.mjs $unicornRuntime $privateLaunchDirectory $riftLaunches $bloomLaunches
+```
+
+Pass the generated `profile.json` to `--rift-projectile-profile` along with
+`--rift-billboard-source`. The package contains the verified material and
+launch reader. During replay loading, the browser decodes the launch fields,
+checks opening skin and visibility writes, and computes each flight with the
+authored acceleration and Map11 navgrid. It samples ribbon geometry from that
+flight at the replay clock. The first unreviewed actor update or geometric
+end closes the reviewed interval. This all-vision comparison covers Maokai
+skin 33's R ribbon over the reviewed interval. Full missile behavior, seeded
+emitters, other skins, and team-vision presentation require separate evidence.
 
 To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a

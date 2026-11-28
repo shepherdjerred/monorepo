@@ -25,7 +25,10 @@ const reviewedFamilies = [
   "senna-soul-death",
 ];
 
-export async function readBuildScopedRiftBillboardAssets(source) {
+export async function readBuildScopedRiftBillboardAssets(
+  source,
+  { ribbon = false } = {},
+) {
   const path = toNamespacedPath(resolve(source));
   const directory = dirname(path);
   const manifest = await readFile(path);
@@ -79,5 +82,20 @@ export async function readBuildScopedRiftBillboardAssets(source) {
       shaders,
     }),
   );
+  if (ribbon) {
+    const { texture, palette } = track.worldRibbon;
+    for (const path of [texture, palette]) files.set(path, assets.get(path));
+    files.set(
+      "rift-ribbon.json",
+      JSON.stringify({
+        schema: 1,
+        kind: "recorded-rift-ribbon-resource",
+        build,
+        mapId: 11,
+        texture,
+        palette,
+      }),
+    );
+  }
   return files;
 }

@@ -6,6 +6,7 @@ import {
   type RiftBillboardSource,
 } from "./scout-rift-billboard-sources.ts";
 import type { RiftCombatVisualEntry } from "./scout-rift-combat-audio.ts";
+import type { RiftRibbonTrack } from "./scout-rift-projectile-trails.ts";
 
 const png = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.png$/);
 const glsl = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.glsl$/);
@@ -1093,6 +1094,7 @@ export async function loadRiftBillboardParticles(
   entries: readonly RiftCombatVisualEntry[],
   signal: AbortSignal,
   worldQuads: boolean,
+  ribbons?: RiftRibbonTrack,
 ): Promise<LoadedTerrainParticles> {
   signal.throwIfAborted();
   const decoder = new TextDecoder("utf-8", { fatal: true });
@@ -1138,6 +1140,10 @@ export async function loadRiftBillboardParticles(
     world === undefined
       ? undefined
       : compileRiftWorldQuadSampler(world, entries, duration);
+  if (ribbons !== undefined) {
+    palettePaths.add(ribbons.palette);
+    basePaths.add(ribbons.texture);
+  }
   if (world !== undefined) {
     if (
       world.build !== resource.build ||
@@ -1222,6 +1228,7 @@ export async function loadRiftBillboardParticles(
   return {
     ...assets,
     sampleAt: (time: number) => [
+      ...(ribbons?.sampleAt(time) ?? []),
       ...sampleBillboardsAt(time),
       ...(sampleWorldAt?.(time) ?? []),
     ],

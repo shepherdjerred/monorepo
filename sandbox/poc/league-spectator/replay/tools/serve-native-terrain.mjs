@@ -62,6 +62,7 @@ const { positionals, values } = parseArgs({
     "rift-combat-audio-wav": { type: "string" },
     "rift-billboard-source": { type: "string" },
     "rift-world-quad-source": { type: "string" },
+    "rift-projectile-profile": { type: "string" },
     "rift-minimap": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
@@ -157,6 +158,7 @@ const riftCombatAudioProfile = values["rift-combat-audio-profile"];
 const riftCombatAudioWav = values["rift-combat-audio-wav"];
 const riftBillboardSource = values["rift-billboard-source"];
 const riftWorldQuadSource = values["rift-world-quad-source"];
+const riftProjectileProfile = values["rift-projectile-profile"];
 assert.equal(
   riftBrowserStartupProfile === undefined,
   riftBrowserStartupRuntime === undefined,
@@ -175,6 +177,10 @@ assert.equal(
 assert.ok(
   riftWorldQuadSource === undefined || riftBillboardSource !== undefined,
   "Replay-decoded world quads require the Rift billboard source",
+);
+assert.ok(
+  riftProjectileProfile === undefined || riftBillboardSource !== undefined,
+  "Replay-decoded projectiles require the Rift billboard source",
 );
 assert.ok(
   riftCombatAudioProfile === undefined ||
@@ -3150,6 +3156,7 @@ if (privatePackageOutput !== undefined) {
                     wav: riftCombatAudioWav,
                     billboardSource: riftBillboardSource,
                     worldQuadSource: riftWorldQuadSource,
+                    projectileProfile: riftProjectileProfile,
                   },
                 ),
             ),

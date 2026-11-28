@@ -18,6 +18,8 @@ const decodedBillboardTextures = {
     "senna-soul-death",
   da843215267b2ff311adb960c166b3b57138c2ae857f8fc7fa4450547593e17b:
     "maokai-e-ground-glow",
+  "5d12032cdab3f822722f45ac312843f78b3723572181bc760d76d231cee027ce":
+    "maokai-r-trails",
 };
 
 export async function installReplayDecodedBillboardProbe(
@@ -39,6 +41,15 @@ export async function verifyReplayDecodedBillboards(
     ([, asset]) => asset === "rift-world-quads.json",
   )?.[0];
   if (groundPath !== undefined) expect(requested.has(groundPath)).toBe(true);
+  const hasRibbons = [...fixture.paths.values()].includes("rift-ribbon.json");
+  if (hasRibbons) {
+    for (const leaf of [
+      "rift-ribbon.json",
+      "rift-projectile-worker.mjs",
+      "rift-projectile-pages.bin",
+    ])
+      expect(resources.some((url) => url.endsWith(`/${leaf}`))).toBe(true);
+  }
   expect(resources.some((url) => url.endsWith("/rift-billboards.json"))).toBe(
     true,
   );
@@ -70,6 +81,7 @@ export async function verifyReplayDecodedBillboards(
   ];
   if (groundPath !== undefined)
     cues.push(["maokai-e-ground-glow", 1714.7, 1715, 1715.4, 1]);
+  if (hasRibbons) cues.push(["maokai-r-trails", 1713.9, 1714.3, 1718.5, 5]);
   for (const [family, before, active, expired, draws] of cues) {
     await seek(page, before);
     await expectDraws(family, 0);
