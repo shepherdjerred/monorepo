@@ -1,0 +1,73 @@
+---
+import { AssetIcon } from "@scout-for-lol/design-system/domain/rows/asset-icon";
+import { formatPercent } from "@scout-for-lol/design-system/domain/profile/win-rate-bar";
+import { hasLater, laterModel } from "#src/components/champions/later.ts";
+import type { SnapshotChampion } from "#src/lib/champion-meta/snapshot-v2-schema.ts";
+
+interface Props {
+  slice: SnapshotChampion["slices"][number];
+}
+
+const { slice } = Astro.props;
+const later = laterModel(slice);
+const { boots } = later;
+---
+
+{hasLater(later) && (
+  <section
+    class="scout-soft-panel scout-soft-panel--panel champions-later"
+    aria-labelledby="later-h"
+  >
+    <h2 id="later-h">Later in the game</h2>
+    {later.headline !== null && <p class="champions-lead">{later.headline}</p>}
+    <div class="champions-later-cols">
+      {later.lengths.length > 0 && (
+        <div>
+          <h3 class="champions-mini">By game length</h3>
+          <ul class="champions-lengths">
+            {later.lengths.map((length) => (
+              <li class="champions-length">
+                <span class="champions-length-label">{length.label}</span>
+                <span class="champions-fig">
+                  <b>{formatPercent(length.winRate)}</b> wins
+                </span>
+                <span class="champions-quiet champions-length-games">
+                  from {length.games.toLocaleString("en-US")} games
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {(later.afterCore.length > 0 || boots !== null) && (
+        <div>
+          {later.afterCore.length > 0 && (
+            <>
+              <h3 class="champions-mini">Usually bought after the core</h3>
+              <ul class="champions-things">
+                {later.afterCore.map((item) => (
+                  <li class="champions-thing">
+                    <AssetIcon asset={item.asset} label="" />
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {boots !== null && (
+            <ul class="champions-things champions-boots">
+              <li class="champions-thing">
+                <AssetIcon asset={boots.asset} label="" />
+                <span>{boots.label}</span>
+              </li>
+              <li class="champions-quiet">
+                {formatPercent(boots.share)} of boots bought, from{" "}
+                {boots.games.toLocaleString("en-US")} games
+              </li>
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  </section>
+)}

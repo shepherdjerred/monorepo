@@ -108,15 +108,21 @@ are one-shot and each command starts a new saved conversation.
   detection, marketing showcase refresh, image GC, champion-meta snapshot
   refresh)
 - The public champion pages (`/champions/`, `/champions/<slug>/`,
-  `/champions/<slug>/<role>/`) are static, built from the committed
-  `frontend/src/data/generated/champion-meta.snapshot.json`.
-  `scout-champion-meta-weekly-refresh` regenerates it from the production
+  `/champions/<slug>/<role>/`) are static, built from the committed snapshot v2
+  (below) on the friendly design system: the index reads `index.json` and the
+  champion files for its lane figures, a champion page its one champion file.
+  Every page states the patch, queue, rank bracket and the days its games were
+  played; an API with nothing published yields an empty snapshot, which renders
+  "No champion data yet" and hides the Champions navigation link.
+  `CHAMPION_META_SNAPSHOT_FILE` points a build at another snapshot's
+  `index.json` for rendering checks; the design audit uses the made-up fixture
+  under `frontend/src/lib/champion-meta/__fixtures__/snapshot-v2/`, rewritten
+  with `bun run scripts/write-champion-meta-fixture.ts` in `frontend`.
+  `scout-champion-meta-weekly-refresh` regenerates the single-file snapshot
+  `frontend/src/data/generated/champion-meta.snapshot.json` from the production
   `/api/meta/v1` API (`bun run refresh-champion-meta --origin <origin> --output
 <absolute path>` in `frontend`) and opens a PR on drift. Minimum samples are
-  the API's; an API with nothing published yields an empty snapshot, which
-  renders "No champion data yet" and hides the Champions navigation link.
-  `CHAMPION_META_SNAPSHOT_FILE` points a build at another snapshot for
-  rendering checks.
+  the API's.
 - Snapshot v2 splits the same numbers so a static page loads one small file:
   `frontend/src/data/generated/champion-meta/` holds `index.json`,
   `champions/<slug>.json` and `matchups/<slug>/<role>/<opponent>.json`
@@ -125,9 +131,9 @@ are one-shot and each command starts a new saved conversation.
 <absolute path ending in champion-meta>`, from the API's `matchups/:id`
   route, and refuses to write over the size budget in `data/src/meta/snapshot-v2-budget.ts`,
   which `scripts/check-asset-sizes.ts` also enforces on what is committed. The
-  index states the patch, queue, rank bracket and the lane window. The
-  single-file snapshot stays until the public pages switch to v2; the weekly
-  workflow does not write v2 yet.
+  index states the patch, queue, rank bracket and the lane window. The public
+  pages read v2; the weekly workflow does not write v2 yet, so the pages stay
+  empty until it passes `--snapshot-dir`.
 - Scout beta bootstraps deterministic Workflow versioning with a capable stable
   image followed by a distinct credentialless candidate; the backend retains
   its embedded drain poller and all effectful Activity Workers until the

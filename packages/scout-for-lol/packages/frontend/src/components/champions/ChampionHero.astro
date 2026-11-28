@@ -1,0 +1,94 @@
+---
+import { LaneIcon } from "@scout-for-lol/design-system/assets";
+import { Chip } from "@scout-for-lol/design-system/components/surfaces/chip";
+import { HeroPanel } from "@scout-for-lol/design-system/domain/profile/hero-panel";
+import {
+  WinRateBar,
+  formatPercent,
+} from "@scout-for-lol/design-system/domain/profile/win-rate-bar";
+import { laneIconFor } from "#src/components/champions/index-model.ts";
+import { roleLabel, roleSlug } from "#src/lib/champion-meta/snapshot.ts";
+import { championContextLine } from "#src/lib/champion-meta/public-context.ts";
+import type {
+  SnapshotChampion,
+  SnapshotIndex,
+} from "#src/lib/champion-meta/snapshot-v2-schema.ts";
+
+interface Props {
+  champion: SnapshotChampion;
+  slice: SnapshotChampion["slices"][number];
+  index: SnapshotIndex;
+}
+
+const { champion, slice, index } = Astro.props;
+const winRate = slice.winRate.value * 100;
+const low = slice.winRate.lower * 100;
+const high = slice.winRate.upper * 100;
+// The track spans 48 to 56 percent, wider when the likely range needs it.
+const domain: [number, number] = [
+  Math.min(48, Math.floor(low) - 1),
+  Math.max(56, Math.ceil(high) + 1),
+];
+const { lane } = slice;
+---
+
+<HeroPanel
+  aria-labelledby="champion-h"
+  art={{ champion: champion.id }}
+  className="champions-hero"
+>
+  <nav class="champions-crumb" aria-label="Breadcrumb">
+    <a href="/champions/">Champions</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">{champion.name}</span>
+  </nav>
+  <div class="champions-name">
+    <h1 id="champion-h" class="champions-h1">
+      {champion.name}
+    </h1>
+    <div class="champions-controls" role="group" aria-label="Role">
+      {champion.slices.map((entry) => (
+        <Chip
+          href={`/champions/${champion.slug}/${roleSlug(entry.context.role)}/`}
+          pressed={entry.context.role === slice.context.role}
+        >
+          <LaneIcon
+            lane={laneIconFor(entry.context.role)}
+            alt=""
+            className="champions-lane"
+          />
+          {roleLabel(entry.context.role)}
+        </Chip>
+      ))}
+    </div>
+  </div>
+  <p class="champions-lead champions-verdict">
+    <span class="champions-tier" aria-hidden="true">
+      {slice.tier}
+    </span>
+    <span>
+      {slice.tier} tier. Wins {formatPercent(winRate)} of games.
+    </span>
+  </p>
+  <WinRateBar
+    variant="range"
+    value={winRate}
+    even
+    range={{ low, high }}
+    domain={domain}
+  />
+  <p class="champions-sub">
+    Likely between {formatPercent(low)} and {formatPercent(high)}. Picked in{" "}
+    {formatPercent(slice.pickRate.value * 100)} of games, banned in{" "}
+    {formatPercent(slice.banRate.value * 100)}.
+  </p>
+  {lane !== undefined && (
+    <p class="champions-sub champions-lane-sub">
+      Ahead at 15 minutes in {formatPercent(lane.aheadRate.value * 100)} of{" "}
+      {lane.games.toLocaleString("en-US")} games.
+    </p>
+  )}
+  <p class="champions-quiet champions-honest">
+    {championContextLine(slice.sample.games, index, lane !== undefined)}
+  </p>
+</HeroPanel>

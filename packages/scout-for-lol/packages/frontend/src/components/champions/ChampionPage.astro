@@ -1,0 +1,72 @@
+---
+import { ChampionCard } from "@scout-for-lol/design-system/domain/rows/champion-card";
+import ChampionHero from "#src/components/champions/ChampionHero.astro";
+import ChampionLater from "#src/components/champions/ChampionLater.astro";
+import ChampionMatchups from "#src/components/champions/ChampionMatchups.astro";
+import ChampionSetup from "#src/components/champions/ChampionSetup.astro";
+import ChampionsShell from "#src/components/champions/ChampionsShell.astro";
+import {
+  indexCards,
+  sortCards,
+} from "#src/components/champions/index-model.ts";
+import { championMetaSnapshot } from "#src/components/champions/snapshot.ts";
+import type { MetaRole } from "@scout-for-lol/data/meta/meta-serving.ts";
+import { roleLabel } from "#src/lib/champion-meta/snapshot.ts";
+
+interface Props {
+  slug: string;
+  role: MetaRole;
+}
+
+const { slug, role } = Astro.props;
+const snapshot = await championMetaSnapshot;
+const champion = await snapshot.champion(slug);
+const slice = champion.slices.find((entry) => entry.context.role === role);
+if (slice === undefined) {
+  throw new Error(`Champion ${slug} has no ${role} slice`);
+}
+const more = sortCards(
+  indexCards(snapshot.index, null).filter(
+    (card) => card.main && card.id !== champion.id,
+  ),
+  "strongest",
+).slice(0, 6);
+---
+
+<ChampionsShell
+  title={`${champion.name} ${roleLabel(role)} builds, runes and win rate · Scout for LoL`}
+  description={`${champion.name} ${roleLabel(role)} win rate, builds, runes and skill order, with the games, patch, queue, rank bracket and dates behind every figure.`}
+>
+  <ChampionHero champion={champion} slice={slice} index={snapshot.index} />
+  <ChampionSetup champion={champion} slice={slice} />
+  <ChampionLater slice={slice} />
+  <ChampionMatchups champion={champion} role={role} />
+  {/* Recent changes mount here: the block follows the matchups. */}
+  {more.length > 0 && (
+    <section
+      class="scout-soft-panel scout-soft-panel--open"
+      aria-labelledby="more-h"
+    >
+      <div class="champions-head">
+        <h2 id="more-h">More champions</h2>
+        <a class="champions-link" href="/champions/">
+          See all champions
+        </a>
+      </div>
+      <ul class="champions-cards champions-cards-six">
+        {more.map((card) => (
+          <li>
+            <ChampionCard
+              champion={card.id}
+              href={card.href}
+              lane={{ label: card.roleName, icon: card.laneIcon }}
+              winRate={card.winRate}
+              games={card.games}
+              tier={`${card.tier} tier`}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</ChampionsShell>

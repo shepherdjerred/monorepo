@@ -54,7 +54,7 @@ function parseJson(path: string, raw: string): unknown {
   }
 }
 
-function parseChampion(
+export function parseChampion(
   files: SnapshotTexts,
   index: SnapshotIndex,
   listed: SnapshotIndex["champions"][number],

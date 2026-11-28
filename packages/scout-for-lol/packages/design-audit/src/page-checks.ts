@@ -16,35 +16,52 @@ export async function waitForStablePage(page: Page): Promise<void> {
   ).toHaveCount(0);
   await page.evaluate(async () => {
     await document.fonts.ready;
+    const settled = async (image: HTMLImageElement): Promise<void> => {
+      if (!image.complete) {
+        await new Promise<void>((resolve) => {
+          image.addEventListener(
+            "load",
+            () => {
+              resolve();
+            },
+            { once: true },
+          );
+          image.addEventListener(
+            "error",
+            () => {
+              resolve();
+            },
+            { once: true },
+          );
+        });
+      }
+      try {
+        await image.decode();
+      } catch {
+        void 0;
+      }
+    };
     const images = [...document.images];
-    for (const image of images) image.loading = "eager";
-    await Promise.all(
-      images.map(async (image) => {
-        if (!image.complete) {
-          await new Promise<void>((resolve) => {
-            image.addEventListener(
-              "load",
-              () => {
-                resolve();
-              },
-              { once: true },
-            );
-            image.addEventListener(
-              "error",
-              () => {
-                resolve();
-              },
-              { once: true },
-            );
-          });
-        }
-        try {
-          await image.decode();
-        } catch {
-          void 0;
-        }
-      }),
+    // A server-rendered island's images keep the `loading` attribute they were
+    // rendered with: React compares it while it hydrates, so changing it would
+    // report a hydration mismatch that is only the audit. They are scrolled to
+    // instead, which loads them the way a reader would.
+    const islandImages = images.filter(
+      (image) => image.closest("astro-island") !== null,
     );
+    for (const image of images) {
+      if (!islandImages.includes(image)) image.loading = "eager";
+    }
+    await Promise.all(
+      images
+        .filter((image) => !islandImages.includes(image))
+        .map((image) => settled(image)),
+    );
+    for (const image of islandImages) {
+      image.scrollIntoView({ block: "center" });
+      await settled(image);
+    }
+    if (islandImages.length > 0) window.scrollTo(0, 0);
     // Let hydration and decoded-image layout commit without a fixed delay.
     await new Promise<number>(requestAnimationFrame);
   });

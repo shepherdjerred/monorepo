@@ -361,12 +361,20 @@
   bottom: -5px;
   width: 2px;
   margin-left: -1px;
+}
+
+/* The tick is a pseudo-element, not the mark's own background, so the label
+   inside the mark is not text on a translucent ancestor. */
+.scout-win-rate[data-variant="range"] .scout-win-rate__even::before {
+  position: absolute;
+  inset: 0;
   border-radius: 1px;
   background: color-mix(
     in srgb,
     var(--scout-color-text-muted) 60%,
     transparent
   );
+  content: "";
 }
 
 .scout-win-rate[data-variant="range"] .scout-win-rate__even > span {

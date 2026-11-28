@@ -155,13 +155,21 @@ const BRACKET_LABELS: Record<MetaBracket, string> = {
   master_plus: "Master and above",
 };
 
+export function queueLabel(queue: string): string {
+  const label = QUEUE_LABELS[queue];
+  if (label === undefined) {
+    throw new Error(`Unknown meta queue label ${queue}`);
+  }
+  return label;
+}
+
+export function bracketLabel(bracket: MetaBracket): string {
+  return BRACKET_LABELS[bracket];
+}
+
 /** "from 1,204 games · patch 16.3 · Ranked Solo/Duo · all ranks". */
 export function evidenceLine(games: number, context: ChampionSlice["context"]) {
-  const queue = QUEUE_LABELS[context.queue];
-  if (queue === undefined) {
-    throw new Error(`Unknown meta queue label ${context.queue}`);
-  }
-  return `from ${games.toLocaleString("en-US")} games · patch ${context.patch} · ${queue} · ${BRACKET_LABELS[context.bracket]}`;
+  return `from ${games.toLocaleString("en-US")} games · patch ${context.patch} · ${queueLabel(context.queue)} · ${bracketLabel(context.bracket)}`;
 }
 
 export function percent(rate: number): string {
