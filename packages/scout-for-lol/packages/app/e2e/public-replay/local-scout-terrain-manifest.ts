@@ -22,6 +22,7 @@ export const LocalScoutTerrainManifestSchema =
         combatAudioComparison: z
           .literal("replay-decoded-dry-source")
           .optional(),
+        particlePreview: z.literal("replay-decoded-billboards").optional(),
       }),
       z.discriminatedUnion("mapId", [
         z.strictObject({
@@ -72,13 +73,21 @@ export const LocalScoutTerrainManifestSchema =
       const paths = new Set(files.map(({ path }) => path));
       const worker = paths.has("rift-combat-audio-worker.mjs");
       const pages = paths.has("rift-combat-audio-pages.bin");
+      const billboardAsset = paths.has("rift-billboards.json");
+      const worldQuadAsset = paths.has("rift-world-quads.json");
       if (capabilities.rosterCoverage !== "build-scoped-archive")
-        return !worker && !pages;
-      if (paths.has("combat-audio/cue.json")) return false;
-      return capabilities.combatAudioComparison === "replay-decoded-dry-source"
-        ? capabilities.mapModeSource === "original-startup" &&
-            worker &&
-            pages &&
-            paths.has("combat-audio/329446178.wav")
-        : !worker && !pages && !paths.has("combat-audio/329446178.wav");
-    }, "Build-scoped combat audio requires the original startup and creation workers, authored media, and a replay-derived clock.");
+        return !worker && !pages && !billboardAsset && !worldQuadAsset;
+      const audio = capabilities.combatAudioComparison !== undefined;
+      const billboards = capabilities.particlePreview !== undefined;
+      return (
+        !paths.has("combat-audio/cue.json") &&
+        !paths.has("recorded-particles.json") &&
+        !paths.has("recorded-particles.json.gz") &&
+        audio === paths.has("combat-audio/329446178.wav") &&
+        billboards === billboardAsset &&
+        (!worldQuadAsset || billboards) &&
+        (audio || billboards
+          ? capabilities.mapModeSource === "original-startup" && worker && pages
+          : !worker && !pages)
+      );
+    }, "Build-scoped combat requires the original startup and creation workers, untimed media, and replay-derived clocks.");

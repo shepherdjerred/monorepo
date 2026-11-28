@@ -378,12 +378,6 @@ try {
       `Missing terrain, actors, or camera at ${String(second)}s.`,
     );
   }
-  for (const event of events)
-    assert.ok(
-      event.observed.length > 0,
-      `No ${event.family} texture submissions in its playback window.`,
-    );
-
   // Seek away before each repeat to force a fresh paused presentation. Each
   // pass submits the same draws, while only the named texture is suppressed.
   const seekControls = [];
@@ -438,6 +432,7 @@ try {
       family,
       label,
       seekAt,
+      minimumDraws,
       draws: enabled.frame.families,
       metrics,
       frames: paused.map(({ frame }) => frame),
@@ -449,17 +444,25 @@ try {
     );
     for (const { frame } of paused)
       assert.deepEqual(frame.families, evidence.draws);
-    assert.ok(
-      (evidence.draws[family] ?? 0) >= minimumDraws,
-      `Expected ${String(minimumDraws)} ${family} draws at the ${label} seek cue.`,
-    );
   }
+  // Keep all cue evidence even when a comparison package is missing effects.
   assert.deepEqual(
-    seekControls
-      .filter(({ metrics }) => metrics.causal === 0)
-      .map(({ label }) => label),
-    [],
-    "No stable visible contribution at the sampled seek for these families.",
+    {
+      missingPlayback: events
+        .filter(({ observed }) => observed.length === 0)
+        .map(({ family, label = family }) => label),
+      missingSeekDraws: seekControls
+        .filter(
+          ({ family, draws, minimumDraws }) =>
+            (draws[family] ?? 0) < minimumDraws,
+        )
+        .map(({ label }) => label),
+      missingSeekPixels: seekControls
+        .filter(({ metrics }) => metrics.causal === 0)
+        .map(({ label }) => label),
+    },
+    { missingPlayback: [], missingSeekDraws: [], missingSeekPixels: [] },
+    "Recorded Rift fight failed the texture submission or visibility checks.",
   );
   assert.deepEqual(browserErrors, []);
   assert.deepEqual([...credentialedRequests], []);

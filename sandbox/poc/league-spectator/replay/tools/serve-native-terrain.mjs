@@ -60,6 +60,8 @@ const { positionals, values } = parseArgs({
     "rift-browser-startup-runtime": { type: "string" },
     "rift-combat-audio-profile": { type: "string" },
     "rift-combat-audio-wav": { type: "string" },
+    "rift-billboard-source": { type: "string" },
+    "rift-world-quad-source": { type: "string" },
     "rift-minimap": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
@@ -153,6 +155,8 @@ const riftBrowserStartupProfile = values["rift-browser-startup-profile"];
 const riftBrowserStartupRuntime = values["rift-browser-startup-runtime"];
 const riftCombatAudioProfile = values["rift-combat-audio-profile"];
 const riftCombatAudioWav = values["rift-combat-audio-wav"];
+const riftBillboardSource = values["rift-billboard-source"];
+const riftWorldQuadSource = values["rift-world-quad-source"];
 assert.equal(
   riftBrowserStartupProfile === undefined,
   riftBrowserStartupRuntime === undefined,
@@ -165,13 +169,17 @@ assert.ok(
 );
 assert.equal(
   riftCombatAudioProfile === undefined,
-  riftCombatAudioWav === undefined,
-  "Supply both the combat creation profile and its reviewed sound",
+  riftCombatAudioWav === undefined && riftBillboardSource === undefined,
+  "Supply the combat creation profile with its reviewed sound or billboard assets",
+);
+assert.ok(
+  riftWorldQuadSource === undefined || riftBillboardSource !== undefined,
+  "Replay-decoded world quads require the Rift billboard source",
 );
 assert.ok(
   riftCombatAudioProfile === undefined ||
     riftBrowserStartupProfile !== undefined,
-  "Replay-decoded combat audio requires the original Rift startup worker",
+  "Replay-decoded combat requires the original Rift startup worker",
 );
 assert.ok(
   !buildScoped ||
@@ -3131,14 +3139,18 @@ if (privatePackageOutput !== undefined) {
     ...(riftCombatAudioProfile === undefined
       ? {}
       : {
-          riftCombatAudioFiles:
+          riftCombatFiles:
             await import("./research/build-rift-startup-worker.mjs").then(
-              ({ buildRiftCombatAudioWorker }) =>
-                buildRiftCombatAudioWorker(
+              ({ buildRiftCombatWorker }) =>
+                buildRiftCombatWorker(
                   riftCombatAudioProfile,
                   riftBrowserStartupRuntime,
                   values["worker-decompressor"],
-                  riftCombatAudioWav,
+                  {
+                    wav: riftCombatAudioWav,
+                    billboardSource: riftBillboardSource,
+                    worldQuadSource: riftWorldQuadSource,
+                  },
                 ),
             ),
         }),

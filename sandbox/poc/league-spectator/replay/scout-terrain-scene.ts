@@ -45,8 +45,10 @@ import {
 } from "./scout-terrain-objectives.ts";
 import {
   loadRecordedTerrainParticles,
+  loadRiftBillboardParticles,
   type LoadedTerrainParticles,
 } from "./scout-terrain-particles.ts";
+import type { RiftCombatVisualEntry } from "./scout-rift-combat-audio.ts";
 import {
   currentTerrainPositionBuild,
   terrainPositionBuild,
@@ -2874,6 +2876,10 @@ export async function loadRenderer(
   render: RendererModule,
   hasRecordedParticles: boolean,
   mayhemImpactComparison = false,
+  decodedParticles?: {
+    entries: readonly RiftCombatVisualEntry[];
+    worldQuads: boolean;
+  },
 ) {
   const chaosTurret = scene.structureModels?.bindings.find(
     ({ collapse }) => collapse !== undefined,
@@ -2915,7 +2921,15 @@ export async function loadRenderer(
   try {
     if (scene.mayhemFlowMapControl !== undefined)
       flowMapControl = await loadFlowMapControl(read);
-    if (hasRecordedParticles)
+    if (decodedParticles !== undefined)
+      recordedParticles = await loadRiftBillboardParticles(
+        read,
+        scene.identity,
+        decodedParticles.entries,
+        signal,
+        decodedParticles.worldQuads,
+      );
+    else if (hasRecordedParticles)
       recordedParticles = await loadRecordedTerrainParticles(
         read,
         { ...scene.identity, mayhemImpactComparison },

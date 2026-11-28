@@ -5,10 +5,94 @@ import {
   selectRecordedRiftEffectPackets,
 } from "./recorded-rift-effect-packets.mjs";
 import { bindRecordedRiftEffectReceipt } from "./recorded-rift-effect-receipts.mjs";
+import { collectRecordedRiftCombatEffects } from "./recorded-rift-combat-effects.mjs";
+import { sennaGroundHitResourceKey } from "./native-rift-effect-create-reader.mjs";
 import {
   position944SubstitutionIndex,
   rotateByteLeft,
 } from "./native-terrain-byte-codecs.mjs";
+
+test("joins same-clock stops causally and counts handle reuse outside the lens", () => {
+  const entry = { handle: 4, owner: 3, parent: 0, descriptor: { flags: 32 } };
+  const lensBody = Uint8Array.of(0x02, 0x52, 0x55, 0x1b, 0xc7);
+  const otherBody = Uint8Array.of(7);
+  const packet = (kind, sequence, payload) => ({
+    kind,
+    sequence,
+    context: 0,
+    timeSeconds: 12,
+    payload,
+  });
+  const packets = [
+    packet("stop", 1, otherBody),
+    packet("create", 2, lensBody),
+    packet("stop", 3, otherBody),
+    packet("create", 4, otherBody),
+  ];
+  const reader = {
+    decode(body) {
+      return body === lensBody
+        ? [{ resourceKey: sennaGroundHitResourceKey, entries: [entry] }]
+        : [{ resourceKey: 5, entries: [{ ...entry, descriptor: null }] }];
+    },
+  };
+  const [visual] = collectRecordedRiftCombatEffects(packets, reader, () => ({
+    target: 4,
+    flags: 60,
+    route: "alternate-stop",
+  }));
+  expect(visual).toMatchObject({
+    sequence: 2,
+    handleCount: 2,
+    stops: [
+      { timeSeconds: 12, sequence: 3, flags: 60, route: "alternate-stop" },
+    ],
+  });
+  const [audio] = collectRecordedRiftCombatEffects(packets, reader);
+  expect(audio).toMatchObject({ sequence: 2, handleCount: 0, stops: [] });
+  expect(() =>
+    collectRecordedRiftCombatEffects(packets, reader, () => null),
+  ).toThrow("Invalid particle-stop body at sequence 1");
+});
+
+test("selects reviewed visual resource keys without widening audio", () => {
+  const visualKeys = [0x0fb3cb06, 0xcd9f3617];
+  const groups = [...visualKeys, sennaGroundHitResourceKey, 0x45f7e988].map(
+    (resourceKey, index) => ({
+      resourceKey,
+      entries: [
+        { handle: index + 1, owner: 5, parent: 0, descriptor: { flags: 32 } },
+      ],
+    }),
+  );
+  const reader = { decode: () => groups };
+  const packets = [
+    {
+      kind: "create",
+      sequence: 2,
+      context: 0,
+      timeSeconds: 12,
+      payload: Uint8Array.of(0x02, 0x52, 0x55, 0x1b, 0xc7),
+    },
+  ];
+  const visual = collectRecordedRiftCombatEffects(
+    packets,
+    reader,
+    () => null,
+    visualKeys,
+  );
+  expect(visual.map(({ resourceKey }) => resourceKey)).toEqual(visualKeys);
+  expect(visual.map(({ handleCount }) => handleCount)).toEqual([1, 1]);
+  const audio = collectRecordedRiftCombatEffects(
+    packets,
+    reader,
+    undefined,
+    visualKeys,
+  );
+  expect(audio.map(({ resourceKey }) => resourceKey)).toEqual([
+    sennaGroundHitResourceKey,
+  ]);
+});
 
 test("keeps creation and stop packets in physical order with inherited headers", () => {
   const payload = Uint8Array.of(9);

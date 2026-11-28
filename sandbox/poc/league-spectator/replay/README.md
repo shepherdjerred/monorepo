@@ -538,6 +538,31 @@ grouped creation packets. The comparison covers detached Senna skin 18
 ground hits in all-vision mode with the original dry clip. Other skins,
 combat cues, and spatial mixing require separate evidence.
 
+To render the reviewed detached billboards, capture the same two corpora with the
+command above and omit `--senna-ground-hit-only`. The full profile lets the
+browser check handle reuse across all creation packets. Pass that profile to
+`--rift-combat-audio-profile` and the reviewed compressed Rift particle
+envelope to `--rift-billboard-source`. Use the envelope with SHA-256
+`55f6c5da1be9e0ad9bf51abdf8b5bed1e6d1f5325d25d40a7fce8d23809ffac3`.
+The builder verifies the track and emits untimed component data, textures, and
+shaders. The same visual package works with or without
+`--rift-combat-audio-wav`.
+
+The browser binds each detached creation to the verified opening skin and
+checks original stop requests in packet order. Resource and skin checks cover
+the reviewed Heimerdinger W impact and Q ammo bubble, Kai'Sa E flash, and
+Senna soul-death and W ground-hit components in all-vision mode.
+
+Add `--rift-world-quad-source` with the reviewed 40-case Maokai GroundGlow1
+native receipt to draw the detached Maokai E ground glow. The author checks
+the original world vertices against the particle track and verifies that
+translating the same local samples reconstructs each capture to float32
+placement precision. The browser reads each origin, creation clock, and
+stop request from the replay. It uses the reviewed emitter lifetime and the
+shared unmasked world-quad pass.
+Moving trails, seeded emitters, other skins, and team-vision presentation
+require separate evidence.
+
 To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose

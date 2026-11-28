@@ -45,7 +45,9 @@ export async function createNativeRiftEffectCreateReader(
   uc,
   profile,
   imagePages,
+  placementResourceKeys = [sennaGroundHitResourceKey],
 ) {
+  const placementKeys = new Set(placementResourceKeys);
   const digest = Array.from(
     new Uint8Array(await crypto.subtle.digest("SHA-256", imagePages)),
     (byte) => byte.toString(16).padStart(2, "0"),
@@ -294,9 +296,7 @@ export async function createNativeRiftEffectCreateReader(
               const owner = field(entry + 0x70, tables.owner);
               const parent = field(entry + 0xa0, tables.parent);
               const descriptor =
-                resourceKey === sennaGroundHitResourceKey &&
-                parent === 0 &&
-                context === 0
+                placementKeys.has(resourceKey) && parent === 0 && context === 0
                   ? placement(group, entry, handle, owner, resourceKey)
                   : null;
               return { handle, owner, parent, descriptor };

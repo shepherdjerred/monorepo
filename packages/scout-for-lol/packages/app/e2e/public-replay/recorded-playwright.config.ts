@@ -21,15 +21,16 @@ const mapId =
     ? 11
     : LocalScoutTerrainManifestSchema.parse(await Bun.file(manifest).json())
         .capabilities.mapId;
-const tests = [
-  mapId === 12 ? "recorded-mayhem.pw.ts" : "recorded-replay.pw.ts",
-];
+const tests =
+  mapId === 12
+    ? ["recorded-mayhem.pw.ts"]
+    : ["recorded-replay.pw.ts", "recorded-neutral.pw.ts"];
 if (withAnnouncer) tests.push("recorded-announcer.pw.ts");
 
 export default defineConfig({
   testDir: ".",
   testMatch: tests,
-  ...(withAnnouncer ? { workers: 1 } : {}),
+  workers: 1,
   outputDir: "../../test-results/recorded-replay",
   timeout: 180_000,
   expect: { timeout: 60_000 },

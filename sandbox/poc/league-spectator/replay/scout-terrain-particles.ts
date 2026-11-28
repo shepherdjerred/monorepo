@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { evaluateRecordedBillboard } from "./recorded-terrain-billboard.mjs";
+import {
+  riftBillboardSources,
+  riftGroundGlowSource,
+  type RiftBillboardSource,
+} from "./scout-rift-billboard-sources.ts";
+import type { RiftCombatVisualEntry } from "./scout-rift-combat-audio.ts";
 
 const png = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.png$/);
 const glsl = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.glsl$/);
@@ -242,6 +248,50 @@ const particleTrack = z.discriminatedUnion("schema", [
   billboardDepthTrack,
   mayhemImpactComparisonTrack,
 ]);
+
+type RiftBillboardFamilyId = keyof typeof riftBillboardSources;
+const riftBillboardResource = z.strictObject({
+  schema: z.literal(1),
+  kind: z.literal("recorded-rift-billboard-resources"),
+  build: trackIdentity.shape.build,
+  mapId: z.literal(11),
+  families: z
+    .array(
+      z.strictObject({
+        id: z.custom<RiftBillboardFamilyId>(
+          (value) =>
+            typeof value === "string" &&
+            Object.hasOwn(riftBillboardSources, value),
+        ),
+        components: z.array(depthComponent.strict()).min(1).max(4),
+      }),
+    )
+    .length(Object.keys(riftBillboardSources).length),
+  textures: z.strictObject({ files: z.array(png).min(1).max(20) }),
+  shaders: billboardDepthTrack.shape.shaders.strict(),
+});
+const riftWorldQuadResource = z.strictObject({
+  schema: z.literal(1),
+  kind: z.literal("recorded-rift-world-quad-resources"),
+  build: trackIdentity.shape.build,
+  mapId: z.literal(11),
+  family: z.strictObject({
+    id: z.literal("maokai-e-ground-glow"),
+    components: z.tuple([
+      depthComponent.strict().extend({
+        placement: z.literal("world"),
+        centerY: z.literal(0),
+        blend: z.literal("src-alpha-one"),
+        alphaTest: z.literal(false),
+        depthTest: z.literal(false),
+        billboard: z.never().optional(),
+      }),
+    ]),
+  }),
+  shaders: trackIdentity.shape.shaders
+    .extend({ noAlphaTestFragment: glsl })
+    .strict(),
+});
 
 function normalizeTrack(track: z.infer<typeof particleTrack>) {
   if (track.schema !== 1) return track;
@@ -712,8 +762,47 @@ export async function loadRecordedTerrainParticles(
   )
     throw new Error("The recorded particle textures disagree with the track.");
 
-  const compiledFamilies = new Map(
-    track.families.map(({ id, components: entries }) => [
+  const sampleLocalAt = compileLocalParticleSampler(
+    track.families,
+    track.effects,
+  );
+  function sampleAt(timeSeconds: number) {
+    const legacyParticles = sampleLocalAt(timeSeconds);
+    if (impactsAt.length > 0)
+      return [
+        ...impactsAt.flatMap((read) => read(timeSeconds)),
+        ...legacyParticles,
+      ];
+    const particles =
+      worldRibbonAt === undefined
+        ? legacyParticles
+        : [...worldRibbonAt(timeSeconds), ...legacyParticles];
+    const withMask =
+      maskedQuadAt === undefined
+        ? particles
+        : [...particles, ...maskedQuadAt(timeSeconds)];
+    return unmaskedQuadAt === undefined
+      ? withMask
+      : [...withMask, ...unmaskedQuadAt(timeSeconds)];
+  }
+
+  const assets = await loadTerrainParticleAssets(
+    read,
+    signal,
+    track.shaders,
+    palettePaths,
+    basePaths,
+    noAlphaTestFragment,
+    maskedQuad,
+  );
+  return { ...assets, sampleAt };
+}
+
+function compileLocalParticleFamilies(
+  families: ReturnType<typeof normalizeTrack>["families"],
+) {
+  return new Map(
+    families.map(({ id, components: entries }) => [
       id,
       entries.map((component) => {
         const { indices, samples, ...entry } = component;
@@ -777,19 +866,30 @@ export async function loadRecordedTerrainParticles(
       }),
     ]),
   );
-  const maximumDuration = Math.max(...lifetimes.values());
-  function sampleAt(timeSeconds: number) {
+}
+
+function compileLocalParticleSampler(
+  families: ReturnType<typeof normalizeTrack>["families"],
+  effects: readonly (z.infer<typeof particleEffect> & { family: string })[],
+) {
+  const compiledFamilies = compileLocalParticleFamilies(families);
+  const maximumDuration = Math.max(
+    ...[...compiledFamilies.values()].flatMap((entries) =>
+      entries.map(({ lifetime }) => lifetime),
+    ),
+  );
+  return (timeSeconds: number) => {
     const legacyParticles = [];
     let first = 0;
-    let end = track.effects.length;
+    let end = effects.length;
     while (first < end) {
       const middle = first + Math.floor((end - first) / 2);
-      if (timeSeconds - track.effects[middle]!.start >= maximumDuration)
+      if (timeSeconds - effects[middle]!.start >= maximumDuration)
         first = middle + 1;
       else end = middle;
     }
-    for (let index = first; index < track.effects.length; index++) {
-      const { start, position, family } = track.effects[index]!;
+    for (let index = first; index < effects.length; index++) {
+      const { start, position, family } = effects[index]!;
       const age = timeSeconds - start;
       if (age < 0) break;
       for (const { lifetime, verticesAt, ...style } of compiledFamilies.get(
@@ -805,24 +905,19 @@ export async function loadRecordedTerrainParticles(
           });
       }
     }
-    if (impactsAt.length > 0)
-      return [
-        ...impactsAt.flatMap((read) => read(timeSeconds)),
-        ...legacyParticles,
-      ];
-    const particles =
-      worldRibbonAt === undefined
-        ? legacyParticles
-        : [...worldRibbonAt(timeSeconds), ...legacyParticles];
-    const withMask =
-      maskedQuadAt === undefined
-        ? particles
-        : [...particles, ...maskedQuadAt(timeSeconds)];
-    return unmaskedQuadAt === undefined
-      ? withMask
-      : [...withMask, ...unmaskedQuadAt(timeSeconds)];
-  }
+    return legacyParticles;
+  };
+}
 
+async function loadTerrainParticleAssets(
+  read: (path: string) => Promise<ArrayBuffer>,
+  signal: AbortSignal,
+  shaders: { vertex: string; fragment: string },
+  palettePaths: ReadonlySet<string>,
+  basePaths: ReadonlySet<string>,
+  noAlphaTestFragment?: string,
+  maskedQuad?: z.infer<typeof maskedWorldTrack>["worldMaskedQuad"],
+) {
   const shaderDecoder = new TextDecoder("utf-8", { fatal: true });
   const shader = async (path: string) =>
     shaderDecoder.decode(await read(`/${path}`));
@@ -852,8 +947,8 @@ export async function loadRecordedTerrainParticles(
     noAlphaTestFragmentShader,
     worldMaskedQuad,
   ] = await Promise.all([
-    shader(track.shaders.vertex),
-    shader(track.shaders.fragment),
+    shader(shaders.vertex),
+    shader(shaders.fragment),
     noAlphaTestFragment === undefined ? undefined : shader(noAlphaTestFragment),
     maskedQuad === undefined ? undefined : maskedAssets(maskedQuad),
   ]);
@@ -863,7 +958,7 @@ export async function loadRecordedTerrainParticles(
     images.clear();
   };
   try {
-    for (const path of expectedTextures) {
+    for (const path of new Set([...palettePaths, ...basePaths])) {
       signal.throwIfAborted();
       const image = await createImageBitmap(
         new Blob([await read(`/${path}`)], { type: "image/png" }),
@@ -883,13 +978,254 @@ export async function loadRecordedTerrainParticles(
         palettes: fromPaths(palettePaths),
         baseTextures: fromPaths(basePaths),
       },
-      sampleAt,
       closeImages,
     };
   } catch (error) {
     closeImages();
     throw error;
   }
+}
+
+function isExactFloat32(value: number) {
+  return Number.isFinite(value) && Math.fround(value) === value;
+}
+
+function hasReviewedBillboardPlacement(
+  entry: RiftCombatVisualEntry,
+  source: RiftBillboardSource,
+  lifetime: number,
+  durationSeconds: number,
+) {
+  const {
+    positions: [origin, secondary, unused],
+    scaleRate,
+    timeSeconds,
+    sequence,
+  } = entry;
+  return (
+    entry.handleCount === 1 &&
+    scaleRate[0] === source.scale &&
+    scaleRate[1] === 1 &&
+    origin.every(isExactFloat32) &&
+    secondary.every(
+      (axis, index) => axis === (source.repeatOrigin ? origin[index] : 0),
+    ) &&
+    unused.every((axis) => axis === 0) &&
+    timeSeconds + lifetime <= durationSeconds &&
+    // Only natural expiration is covered by the reviewed emitter samples.
+    !entry.stops.some(
+      (stop) =>
+        stop.sequence > sequence && stop.timeSeconds < timeSeconds + lifetime,
+    )
+  );
+}
+
+function translateQuadVertices(
+  localVertices: Uint8Array,
+  origin: readonly [number, number, number],
+) {
+  const vertices = localVertices.slice();
+  const packed = new DataView(vertices.buffer);
+  for (let offset = 0; offset < vertices.byteLength; offset += 28) {
+    for (const [axis, lane] of origin.entries()) {
+      const address = offset + axis * 4;
+      packed.setFloat32(address, packed.getFloat32(address, true) + lane, true);
+    }
+  }
+  return vertices;
+}
+
+function compileRiftWorldQuadSampler(
+  { family }: z.infer<typeof riftWorldQuadResource>,
+  entries: readonly RiftCombatVisualEntry[],
+  durationSeconds: number,
+) {
+  const [{ indices, samples, lifetime, placement: _, ...style }] =
+    family.components;
+  if (
+    samples.some(
+      ({ age }, index) =>
+        age >= lifetime || (index > 0 && age <= samples[index - 1]!.age),
+    )
+  )
+    throw new Error("The Rift world quad sample clock is invalid.");
+  const frames = samples.map(({ age, vertices }) => ({
+    age,
+    vertices: decodeVertices(vertices, false),
+  }));
+  const indexBytes = decodeHex(indices);
+  const placements = entries.filter(
+    (entry) =>
+      entry.resourceKey === riftGroundGlowSource.resourceKey &&
+      hasReviewedBillboardPlacement(
+        entry,
+        riftGroundGlowSource,
+        lifetime,
+        durationSeconds,
+      ),
+  );
+  return (time: number) => {
+    const active = [];
+    const first = firstMatchingIndex(
+      placements,
+      ({ timeSeconds }) => time < timeSeconds + lifetime,
+    );
+    for (let index = first; index < placements.length; index++) {
+      const { timeSeconds, positions } = placements[index]!;
+      const age = time - timeSeconds;
+      if (age < 0) break;
+      const frame = frames.findLast((candidate) => candidate.age <= age);
+      if (frame !== undefined)
+        active.push({
+          ...style,
+          worldUnmaskedQuad: true as const,
+          indices: indexBytes,
+          vertices: translateQuadVertices(frame.vertices, positions[0]),
+        });
+    }
+    return active;
+  };
+}
+
+export async function loadRiftBillboardParticles(
+  read: (path: string) => Promise<ArrayBuffer>,
+  identity: { build: string; durationMilliseconds: number },
+  entries: readonly RiftCombatVisualEntry[],
+  signal: AbortSignal,
+  worldQuads: boolean,
+): Promise<LoadedTerrainParticles> {
+  signal.throwIfAborted();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  const readJson = async (path: string): Promise<unknown> =>
+    JSON.parse(decoder.decode(await read(path)));
+  const [resource, world] = await Promise.all([
+    readJson("/rift-billboards.json").then((json) =>
+      riftBillboardResource.parse(json),
+    ),
+    worldQuads
+      ? readJson("/rift-world-quads.json").then((json) =>
+          riftWorldQuadResource.parse(json),
+        )
+      : undefined,
+  ]);
+  if (
+    identity.build !== resource.build ||
+    new Set(resource.families.map(({ id }) => id)).size !==
+      resource.families.length
+  )
+    throw new Error(
+      "The Rift billboard catalog disagrees with the replay build.",
+    );
+
+  const components = resource.families.flatMap((family) => family.components);
+  const palettePaths = new Set(components.map(({ palette }) => palette));
+  const basePaths = new Set(components.map(({ texture }) => texture));
+  const expectedTextures = new Set([...palettePaths, ...basePaths]);
+  const { vertex, fragment, noAlphaTestFragment } = resource.shaders;
+  if (
+    expectedTextures.size !== resource.textures.files.length ||
+    new Set(resource.textures.files).size !== expectedTextures.size ||
+    resource.textures.files.some((path) => !expectedTextures.has(path)) ||
+    vertex === fragment ||
+    vertex === noAlphaTestFragment ||
+    fragment === noAlphaTestFragment ||
+    components.some(({ alphaTest }) => !alphaTest) !==
+      (noAlphaTestFragment !== undefined)
+  )
+    throw new Error("The Rift billboard assets disagree with the catalog.");
+  const duration = identity.durationMilliseconds / 1000;
+  const sampleWorldAt =
+    world === undefined
+      ? undefined
+      : compileRiftWorldQuadSampler(world, entries, duration);
+  if (world !== undefined) {
+    if (
+      world.build !== resource.build ||
+      world.shaders.vertex !== vertex ||
+      world.shaders.fragment !== fragment ||
+      world.shaders.noAlphaTestFragment !== noAlphaTestFragment
+    )
+      throw new Error(
+        "The Rift world quad programs disagree with the catalog.",
+      );
+    const [{ texture, palette }] = world.family.components;
+    palettePaths.add(palette);
+    basePaths.add(texture);
+  }
+
+  const byResource = new Map<
+    number,
+    {
+      id: RiftBillboardFamilyId;
+      source: RiftBillboardSource;
+      lifetime: number;
+    }
+  >(
+    resource.families.map(({ id, components: familyComponents }) => {
+      const source = riftBillboardSources[id];
+      return [
+        source.resourceKey,
+        {
+          id,
+          source,
+          lifetime: Math.max(
+            ...familyComponents.map(({ lifetime }) => lifetime),
+          ),
+        },
+      ];
+    }),
+  );
+  const effects = [];
+  for (const entry of entries) {
+    const rule = byResource.get(entry.resourceKey);
+    if (
+      rule === undefined ||
+      !hasReviewedBillboardPlacement(
+        entry,
+        rule.source,
+        rule.lifetime,
+        duration,
+      )
+    )
+      continue;
+    effects.push({
+      family: rule.id,
+      handle: entry.handle,
+      start: entry.timeSeconds,
+      position: entry.positions[0],
+    });
+  }
+  const sampleBillboardsAt = compileLocalParticleSampler(
+    resource.families,
+    effects,
+  );
+  const assets = await loadTerrainParticleAssets(
+    async (path) => {
+      const data = await read(path);
+      signal.throwIfAborted();
+      const digest = path.slice(
+        path.lastIndexOf("/") + 1,
+        path.lastIndexOf("."),
+      );
+      if ((await sha256Hex(data)) !== digest)
+        throw new Error(
+          "A Rift billboard asset digest disagrees with its path.",
+        );
+      return data;
+    },
+    signal,
+    resource.shaders,
+    palettePaths,
+    basePaths,
+    noAlphaTestFragment,
+  );
+  return {
+    ...assets,
+    sampleAt: (time: number) => [
+      ...sampleBillboardsAt(time),
+      ...(sampleWorldAt?.(time) ?? []),
+    ],
+  };
 }
 
 export type LoadedTerrainParticles = Awaited<

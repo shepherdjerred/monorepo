@@ -437,7 +437,6 @@ export async function readRecordedReplay() {
   const capabilities = championCapabilities(scene);
   const { directWorldObservations, ...observationCapabilities } =
     workerCapabilities(scene);
-
   const packageDigest = sha256(manifest);
   const packageRoot = `${packagePrefix}${packageDigest}`;
   const packageUrl = `${packageRoot}/manifest.json`;
@@ -477,6 +476,8 @@ export async function readRecordedReplay() {
     announcerEvents: scene.workerMotion?.announcerEvents,
     announcerPreview: inventory.capabilities.announcerPreview,
     particlePreview: recorded?.particlePreview,
+    replayDecodedBillboards:
+      inventory.capabilities.particlePreview === "replay-decoded-billboards",
     championAnimationCueCount: championAnimationCues?.length ?? 0,
     ...capabilities,
     descriptor: {

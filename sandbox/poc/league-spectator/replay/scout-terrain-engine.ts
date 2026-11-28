@@ -12,7 +12,7 @@ import {
   type ReplayStateListener,
 } from "@scout-for-lol/replay/types";
 import { LocalScoutTerrainManifestSchema } from "../../../../packages/scout-for-lol/packages/app/e2e/public-replay/local-scout-terrain-manifest.ts";
-import { readBuildScopedCombatCueTimes } from "./scout-rift-combat-audio.ts";
+import { readBuildScopedCombatEffects } from "./scout-rift-combat-audio.ts";
 import {
   ScoutTerrainAnnouncer,
   sennaGroundHitWav,
@@ -431,6 +431,21 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const announcerProfile = capabilities.announcerPreview;
   const announcerEvents = scene.workerMotion?.announcerEvents;
   const particlePreview = recordedCapabilities?.particlePreview;
+  const buildScopedBillboards =
+    buildScoped && capabilities.particlePreview === "replay-decoded-billboards";
+  const buildScopedWorldQuads =
+    buildScopedBillboards && files.has("rift-world-quads.json");
+  const presentedParticlePreview = buildScopedBillboards
+    ? "verified-partial-effects"
+    : particlePreview;
+  if (
+    buildScopedBillboards &&
+    capabilities.mapModeSource !== "original-startup"
+  )
+    throw new ReplayCapabilityError(
+      "invalid-package",
+      "Rift billboards require original startup verification.",
+    );
   const recordedCombatAudio =
     recordedCapabilities?.mapId === 11 &&
     recordedCapabilities.combatAudioComparison !== undefined;
@@ -507,7 +522,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     scene.participants.length === 0
       ? motion.then(({ scene }) => scene)
       : Promise.resolve(scene);
-  const [loaded, inventory] = await Promise.all([
+  const [loaded, inventory, combatEffects] = await Promise.all([
     motion,
     inventoryScene.then((scene) =>
       loadRecordedInventory(
@@ -517,6 +532,19 @@ export const createReplayEngine: ReplayEngineFactory = async ({
         (path) => resources.objectUrl(path, "image/png"),
       ),
     ),
+    buildScopedCombatAudio || buildScopedBillboards
+      ? readBuildScopedCombatEffects(
+          resources,
+          replay,
+          signal,
+          motion.then(({ scene }) => scene),
+          {
+            audio: buildScopedCombatAudio,
+            visual: buildScopedBillboards,
+            worldQuads: buildScopedWorldQuads,
+          },
+        )
+      : undefined,
   ]);
   if (!loaded.scene.decodedPositionFrames?.length)
     throw new ReplayCapabilityError(
@@ -525,14 +553,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     );
   const includeAnnouncer =
     announcerProfile !== undefined && loaded.announcerCues?.length !== 0;
-  const combatCueTimes = buildScopedCombatAudio
-    ? await readBuildScopedCombatCueTimes(
-        resources,
-        replay,
-        signal,
-        loaded.scene,
-      )
-    : undefined;
+  const combatCueTimes = combatEffects?.cueTimes;
   const combatAudioComparison =
     recordedCombatAudio || Boolean(combatCueTimes?.length);
   const announcer =
@@ -573,6 +594,12 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     terrainRenderer,
     particlePreview !== undefined || mayhemImpactComparison,
     mayhemImpactComparison,
+    buildScopedBillboards && combatEffects !== undefined
+      ? {
+          entries: combatEffects.visualEntries,
+          worldQuads: buildScopedWorldQuads,
+        }
+      : undefined,
   );
   let width = canvas.clientWidth || canvas.width;
   let height = canvas.clientHeight || canvas.height;
@@ -710,7 +737,9 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       rates: [0.5, 1, 2, 4],
       minimapUrl,
       timelineEvents,
-      ...(particlePreview === undefined ? {} : { particlePreview }),
+      ...(presentedParticlePreview === undefined
+        ? {}
+        : { particlePreview: presentedParticlePreview }),
       ...(announcer !== undefined && includeAnnouncer
         ? { announcerPreview: "female1-en-us" }
         : {}),

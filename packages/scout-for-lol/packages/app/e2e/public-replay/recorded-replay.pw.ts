@@ -11,7 +11,7 @@ import { observeRecordedItemBlobs } from "./proof/current-inventory.ts";
 import { verifyRecordedInhibitorReturns } from "./recorded-inhibitor-assertions.ts";
 import { verifyDirectChampionStatsWorker } from "./proof/champion-stats-worker.ts";
 import { observeDirectChampionStatsWorker } from "./proof/motion-worker-capture.ts";
-import { verifyRecordedNeutralObjectives } from "./recorded-neutral-assertions.ts";
+import { verifyLegacyNeutrals } from "./recorded-neutral-assertions.ts";
 import {
   verifyRecordedChampionLifecycle,
   verifyRecordedRoster,
@@ -29,6 +29,10 @@ import {
   replayPath,
   sha256,
 } from "./recorded-replay-data.ts";
+import {
+  installReplayDecodedBillboardProbe,
+  verifyReplayDecodedBillboards,
+} from "./proof/recorded-replay-decoded-billboards.ts";
 import {
   observeRecordedReplayRequests,
   seek,
@@ -93,7 +97,10 @@ test("the build-scoped package rejects a same-build replay from the wrong map", 
     const pathname = new URL(request.url()).pathname;
     if (
       pathname.includes("/rift-combat-audio-") ||
-      pathname.includes("/combat-audio/")
+      pathname.includes("/combat-audio/") ||
+      /\/(?:senna-w-lens|rift-billboards|rift-world-quads)\.json$/.test(
+        pathname,
+      )
     )
       combatRequests.push(pathname);
   });
@@ -181,6 +188,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   const result = await readFooterScores(fixture.roflPath);
   const traffic = await observeRecordedReplayRequests(page, baseURL);
   await installRecordedDrawProbe(page);
+  await installReplayDecodedBillboardProbe(page, fixture);
   await observeRecordedItemBlobs(page);
   if (fixture.directReplayObservations)
     await observeDirectChampionStatsWorker(page);
@@ -474,12 +482,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   } finally {
     await viewer.close();
   }
-  await verifyRecordedNeutralObjectives(
-    page,
-    fixture,
-    traffic.requested,
-    testInfo,
-  );
+  await verifyLegacyNeutrals(page, fixture, traffic.requested, testInfo);
   if (fixture.unitVisibility)
     await verifyRecordedTeamVision(page, testInfo, fixture);
   if (cueCount > 0)
@@ -493,4 +496,5 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
       testInfo,
     );
   await verifyRecordedParticlePreview(page, fixture, traffic.requested);
+  await verifyReplayDecodedBillboards(page, fixture, traffic.requested);
 });

@@ -2,46 +2,44 @@ import { decompress } from "/fzstd.mjs";
 import createEmulator from "/rift-combat-audio-emulator.mjs";
 import profile from "/rift-combat-audio-profile.json";
 import { openReplay } from "../../transport.mjs";
+import { createNativeRiftEffectCreateReader } from "./native-rift-effect-create-reader.mjs";
+import { createPreparedTerrainByteCodecs } from "./native-terrain-byte-codecs.mjs";
+import { collectRecordedRiftCombatEffects } from "./recorded-rift-combat-effects.mjs";
 import {
-  createNativeRiftEffectCreateReader,
-  hasSennaGroundHitResourceKey,
-  sennaGroundHitResourceKey,
-} from "./native-rift-effect-create-reader.mjs";
-import { readRecordedRiftEffectPackets } from "./recorded-rift-effect-packets.mjs";
+  createRecordedRiftStopReader,
+  readRecordedRiftEffectPackets,
+} from "./recorded-rift-effect-packets.mjs";
 
-self.onmessage = async ({ data: { replay, pages } }) => {
+self.onmessage = async ({
+  data: { replay, pages, stopMaps, visualResourceKeys },
+}) => {
   try {
-    const packets = readRecordedRiftEffectPackets(
-      openReplay(replay),
-      decompress,
-    );
+    const original = openReplay(replay);
+    const packets = readRecordedRiftEffectPackets(original, decompress);
+    const decodeStop =
+      stopMaps === undefined
+        ? undefined
+        : createRecordedRiftStopReader(
+            original,
+            await createPreparedTerrainByteCodecs(
+              new Uint8Array(stopMaps),
+              original,
+              { allowCurrentBuild: true },
+            ),
+          );
     const reader = await createNativeRiftEffectCreateReader(
       await createEmulator(),
       profile,
       new Uint8Array(pages),
+      decodeStop === undefined ? undefined : visualResourceKeys,
     );
     try {
-      const entries = [];
-      for (const { kind, context, timeSeconds, payload } of packets) {
-        if (kind !== "create" || !hasSennaGroundHitResourceKey(payload))
-          continue;
-        for (const group of reader.decode(payload, context)) {
-          const { resourceKey } = group;
-          if (resourceKey !== sennaGroundHitResourceKey) continue;
-          for (const { owner, parent, handle, descriptor } of group.entries) {
-            if (descriptor === null) continue;
-            entries.push({
-              timeSeconds,
-              context,
-              resourceKey,
-              owner,
-              parent,
-              handle,
-              ...descriptor,
-            });
-          }
-        }
-      }
+      const entries = collectRecordedRiftCombatEffects(
+        packets,
+        reader,
+        decodeStop,
+        visualResourceKeys,
+      );
       self.postMessage({ ok: true, entries });
     } finally {
       reader.close();

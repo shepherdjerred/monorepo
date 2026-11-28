@@ -23,11 +23,7 @@ async function captureObjective(
   await page.getByLabel("League of Legends replay scene").screenshot({ path });
 }
 
-async function verifyCurrentNeutralObjectives(
-  page: Page,
-  testInfo: TestInfo,
-  hasTeamVision: boolean,
-) {
+async function verifyNeutralObjectiveJumps(page: Page, testInfo: TestInfo) {
   const objectives = page.getByRole("combobox", { name: "Jump to event" });
   for (const [clock, name] of [
     ["7:04", "Chemtech Drake"],
@@ -73,7 +69,13 @@ async function verifyCurrentNeutralObjectives(
   await seek(page, 1246);
   const mountain = [9842.164, 4400.52] as const;
   expect(await drawsNear(page, 26_085, mountain)).toBe(true);
+}
 
+async function verifyCurrentNeutralObjectives(
+  page: Page,
+  testInfo: TestInfo,
+  hasTeamVision: boolean,
+) {
   const play = page.getByRole("button", { name: "Play", exact: true });
   const perspective = hasTeamVision ? "&perspective=red" : "";
   await page.goto(`${replayPath}?t=389.72843701171877${perspective}`);
@@ -93,6 +95,12 @@ async function verifyCurrentNeutralObjectives(
     chemtech,
     testInfo.outputPath("current-chemtech-drake.png"),
   );
+  await page.getByRole("button", { name: "Map overview" }).click();
+  if (hasTeamVision)
+    await page
+      .getByRole("combobox", { name: "Unit visibility" })
+      .selectOption("all");
+  await verifyNeutralObjectiveJumps(page, testInfo);
 
   await page.goto(`${replayPath}?t=2137.4022734375`);
   await expect(play).toBeVisible();
@@ -175,9 +183,13 @@ async function verifyAdditionalCampModels(
   testInfo: TestInfo,
   campSkins: [string, number][] | undefined,
 ) {
-  await page.goto(`${replayPath}?t=85.6`);
   const play = page.getByRole("button", { name: "Play", exact: true });
   await expect(play).toBeVisible();
+  await page.getByRole("button", { name: "Map overview" }).click();
+  await page
+    .getByRole("combobox", { name: "Unit visibility" })
+    .selectOption("all");
+  await seek(page, 85.6);
   const gromp = [12_659.8058, 6440.5835] as const;
   expect(await drawsNear(page, 17_172, gromp)).toBe(true);
   await captureObjective(page, gromp, testInfo.outputPath("current-gromp.png"));
@@ -251,29 +263,33 @@ async function verifyAuthoredCampSkins(page: Page, testInfo: TestInfo) {
   }
 }
 
-export async function verifyRecordedNeutralObjectives(
+export async function verifyRecordedCurrentNeutralObjectives(
+  page: Page,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+  testInfo: TestInfo,
+) {
+  await verifyCurrentNeutralObjectives(page, testInfo, fixture.unitVisibility);
+  if (fixture.directNeutralCamps) {
+    await verifyCurrentNeutralCamps(page, testInfo);
+    if (
+      fixture.directNeutralModels?.some(([name]) => name === "sru_gromp") ===
+      true
+    )
+      await verifyAdditionalCampModels(
+        page,
+        testInfo,
+        fixture.directNeutralCampSkins,
+      );
+  }
+}
+
+export async function verifyLegacyNeutrals(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
   requested: Set<string>,
   testInfo: TestInfo,
 ) {
-  if (fixture.directNeutralModels !== undefined) {
-    await verifyCurrentNeutralObjectives(
-      page,
-      testInfo,
-      fixture.unitVisibility,
-    );
-    if (fixture.directNeutralCamps) {
-      await verifyCurrentNeutralCamps(page, testInfo);
-      if (fixture.directNeutralModels.some(([name]) => name === "sru_gromp"))
-        await verifyAdditionalCampModels(
-          page,
-          testInfo,
-          fixture.directNeutralCampSkins,
-        );
-    }
-    return;
-  }
+  if (fixture.directNeutralModels !== undefined) return;
   const assets = [...fixture.paths.keys()].filter((url) =>
     neutralModels.some((digest) =>
       url.endsWith(`/world-unit-models/${digest}.glb`),
