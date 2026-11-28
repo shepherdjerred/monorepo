@@ -45,6 +45,32 @@ describe("pairKey", () => {
 });
 
 describe("parseReport", () => {
+  test.skipIf(process.platform !== "win32")(
+    "handles namespaced Windows paths",
+    () => {
+      const report = {
+        duplicates: [
+          {
+            tokens: 10,
+            firstFile: {
+              name: "//?/C:/repo/packages/a.ts",
+              startLoc: { line: 1, column: 1 },
+              endLoc: { line: 2, column: 1 },
+            },
+            secondFile: {
+              name: "//?/C:/repo/packages/b.ts",
+              startLoc: { line: 3, column: 1 },
+              endLoc: { line: 4, column: 1 },
+            },
+          },
+        ],
+      };
+      expect(parseReport(report, "C:/repo")[0]?.pair).toBe(
+        "packages/a.ts|packages/b.ts",
+      );
+    },
+  );
+
   test("relativizes absolute paths against the repo root and keys sorted pairs", () => {
     const report = {
       duplicates: [

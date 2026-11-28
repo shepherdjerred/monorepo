@@ -481,7 +481,9 @@ export async function loadRegistrationInputs(
     bakeTargets,
     smokeCommands: parseSmokeCommands(smokeText),
     helmCharts: new Set(helmCharts.map((file) => path.dirname(file))),
-    recipeEnvironments: new Set(recipeFiles.map((file) => path.dirname(file))),
+    recipeEnvironments: new Set(
+      recipeFiles.map((file) => path.dirname(file).replaceAll("\\", "/")),
+    ),
     recipeCharts: new Set(
       recipes
         .flatMap((r) => recipeChartComponents(r))
