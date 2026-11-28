@@ -746,6 +746,20 @@ Choose a champion to follow and use **Close-up follow** to inspect the model.
 This view uses the original bind pose and opening mesh visibility.
 Replay-driven facing, animation, and native material shading remain unverified.
 
+For the `16.23.841.8428` archive catalog, compile the authored champion effect
+bindings from the same installed WADs. Use the reviewed model manifest digest
+and a new path for the receipt.
+
+```powershell
+bun tools/research/native-terrain-champion-effect-resources.mjs $installation $archiveModelManifest $archiveModelManifestSha256 $newEffectResourceReceipt
+```
+
+The compiler follows each skin root's resolver and its archived BIN
+dependencies. The receipt identifies the source of each unambiguous binding and
+reports null links, other object classes, missing dependencies, and ambiguous
+definitions explicitly. Replay placement, lifetime, and pixel coverage have
+separate verification.
+
 The animation verifier samples an explicitly chosen authored clip against the
 original joint layout and checks exact rewind. The death verifier joins
 corroborated recorded deaths to authored clip and sound references from the
