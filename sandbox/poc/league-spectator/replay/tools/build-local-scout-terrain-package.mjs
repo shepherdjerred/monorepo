@@ -29,7 +29,7 @@ export async function readLocalRecordedParticles(path, digest, identity) {
     "Recorded particle manifest digest differs",
   );
   const track = JSON.parse(bytes);
-  assert.equal(track.schema, 1);
+  assert.ok(track.schema === 1 || track.schema === 2);
   assert.equal(track.kind, "recorded-native-terrain-particles");
   assert.equal(track.build, "16.23.841.8428");
   assert.equal(track.build, identity.build);
@@ -38,16 +38,22 @@ export async function readLocalRecordedParticles(path, digest, identity) {
   assert.equal(track.scope, "native-sampled-cold-remap");
   const files = new Map([["recorded-particles.json", bytes]]);
   const declaredTextures = new Set(track.textures.files);
-  const expectedTextures = [
-    track.textures.palette,
-    ...track.components.map(({ texture }) => texture),
-  ];
-  assert.equal(track.textures.files.length, 3);
-  assert.equal(new Set(expectedTextures).size, 3);
-  assert.equal(expectedTextures.length, 3);
-  assert.ok(expectedTextures.every((file) => declaredTextures.has(file)));
+  const expectedTextures = new Set(
+    track.schema === 1
+      ? [
+          track.textures.palette,
+          ...track.components.map(({ texture }) => texture),
+        ]
+      : track.families.flatMap(({ components }) =>
+          components.flatMap(({ texture, palette }) => [texture, palette]),
+        ),
+  );
+  if (track.schema === 1) assert.equal(expectedTextures.size, 3);
+  assert.equal(track.textures.files.length, expectedTextures.size);
+  assert.equal(declaredTextures.size, expectedTextures.size);
+  assert.ok([...expectedTextures].every((file) => declaredTextures.has(file)));
   for (const [file, pattern] of [
-    ...expectedTextures.map((path) => [
+    ...[...expectedTextures].map((path) => [
       path,
       /^recorded-particles\/([a-f0-9]{64})\.png$/,
     ]),

@@ -1,4 +1,6 @@
 import { expect, type Page } from "@playwright/test";
+import path from "node:path";
+import { z } from "zod";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
 import {
   apiPath,
@@ -49,6 +51,29 @@ export async function verifyRecordedParticlePreview(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
 ) {
   if (fixture.particlePreview === undefined) return;
+  const effect = z.object({ start: z.number() });
+  const components = z.array(
+    z.object({
+      lifetime: z.number(),
+      samples: z.array(z.object({ age: z.number() })),
+    }),
+  );
+  const track = z
+    .discriminatedUnion("schema", [
+      z.object({
+        schema: z.literal(1),
+        effects: z.array(effect).min(1),
+        components,
+      }),
+      z.object({
+        schema: z.literal(2),
+        effects: z.array(effect.extend({ family: z.string() })).min(1),
+        families: z.array(z.object({ id: z.string(), components })),
+      }),
+    ])
+    .parse(
+      await Bun.file(path.join(fixture.root, "recorded-particles.json")).json(),
+    );
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
   const count = async () => {
     const draw = await readRecordedDraw(page);
@@ -58,15 +83,54 @@ export async function verifyRecordedParticlePreview(
     await seek(page, seconds);
     await expect.poll(count).toBe(draws);
   };
+  const expectedDraws = (time: number) => {
+    const expectedFor = (start: number, parts: z.infer<typeof components>) => {
+      const age = time - start;
+      return parts.filter(
+        ({ lifetime, samples }) =>
+          age < lifetime && samples.some((sample) => sample.age <= age),
+      ).length;
+    };
+    if (track.schema === 1)
+      return track.effects.reduce(
+        (draws, { start }) => draws + expectedFor(start, track.components),
+        0,
+      );
+    const families = new Map(
+      track.families.map(({ id, components: parts }) => [id, parts]),
+    );
+    return track.effects.reduce((draws, { start, family }) => {
+      const parts = families.get(family);
+      if (parts === undefined)
+        throw new Error("Missing recorded effect family.");
+      return draws + expectedFor(start, parts);
+    }, 0);
+  };
+
   await vision.selectOption("all");
+  if (track.effects.length > 100) {
+    // Five distinct impacts share one start time in the recorded fight.
+    await expectAt(1715.7, 10);
+    await expectAt(1716, 0);
+    await expectAt(1715.7, 10);
+  }
+  if (
+    track.schema === 2 &&
+    track.families.some(({ id }) => id === "kaisa-e-activation")
+  ) {
+    await expectAt(1719, 1);
+    await expectAt(1719.2, 0);
+    await expectAt(1719, 1);
+  }
+  const activeDraws = expectedDraws(2095.2);
+  expect(activeDraws).toBeGreaterThan(0);
   await expectAt(2094.9, 0);
-  // Two detached impacts with two authored components each.
-  await expectAt(2095.2, 4);
+  await expectAt(2095.2, activeDraws);
   await vision.selectOption("blue");
   await expect.poll(count).toBe(0);
   await vision.selectOption("all");
-  await expect.poll(count).toBe(4);
+  await expect.poll(count).toBe(activeDraws);
   await expectAt(2095.6, 0);
-  await expectAt(2095.2, 4);
+  await expectAt(2095.2, activeDraws);
   await expectAt(2094.9, 0);
 }

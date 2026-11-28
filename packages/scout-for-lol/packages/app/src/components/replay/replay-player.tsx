@@ -74,7 +74,7 @@ function ReplayParticleCoverage({
     return null;
   return (
     <p className="px-3 pt-2 text-xs text-muted-foreground">
-      Verified partial effects · Heimerdinger W impacts in All vision
+      Verified partial effects · All vision
     </p>
   );
 }

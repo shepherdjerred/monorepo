@@ -24,7 +24,7 @@ export function createChampionOverhead(canvas) {
   overlay.dataset.scoutChampionOverhead = "";
   overlay.setAttribute("aria-hidden", "true");
   overlay.style.cssText =
-    "position:absolute;inset:0;overflow:hidden;pointer-events:none";
+    "position:absolute;inset:0;overflow:hidden;pointer-events:none;isolation:isolate";
   canvas.after(overlay);
   const rows = new Map();
 
@@ -55,6 +55,8 @@ export function createChampionOverhead(canvas) {
           label.dataset.participantId = String(participantId);
           label.style.cssText =
             "position:absolute;top:0;left:0;white-space:nowrap;text-align:center;font:600 11px/15px system-ui;color:#f4f7fa;text-shadow:0 1px 3px #101820";
+          // Visibility changes recreate rows, so use a stable paint order.
+          label.style.zIndex = String(participantId);
           const name = document.createElement("span");
           name.dataset.scoutChampionName = "";
           const level = document.createElement("span");

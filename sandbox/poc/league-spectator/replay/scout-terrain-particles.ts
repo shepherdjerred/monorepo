@@ -2,42 +2,84 @@ import { z } from "zod";
 
 const png = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.png$/);
 const glsl = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.glsl$/);
+const quadComponent = z.object({
+  texture: png,
+  indices: z.literal("000001000200000002000300"),
+  lifetime: z.number().positive(),
+  samples: z
+    .array(
+      z.object({
+        age: z.number().positive(),
+        vertices: z.string().regex(/^[a-f0-9]{224}$/),
+      }),
+    )
+    .min(1)
+    .max(100),
+});
 const component = (lifetime: number) =>
-  z.object({
-    texture: png,
-    indices: z.literal("000001000200000002000300"),
+  quadComponent.extend({
     lifetime: z.literal(Math.fround(lifetime)),
-    samples: z
-      .array(
-        z.object({
-          age: z.number().positive(),
-          vertices: z.string().regex(/^[a-f0-9]{224}$/),
-        }),
-      )
-      .min(1)
-      .max(100),
   });
-const particleTrack = z.object({
-  schema: z.literal(1),
+const material = z.enum(["one-one", "src-alpha-one"]);
+const familyComponent = quadComponent.extend({
+  palette: png,
+  blend: material,
+  centerY: z.number(),
+});
+const familyId = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
+const particleEffect = z.object({
+  handle: z.number().int().positive().max(0xffff_ffff),
+  start: z.number().nonnegative(),
+  position: z.tuple([z.number(), z.number(), z.number()]),
+});
+const trackIdentity = z.object({
   kind: z.literal("recorded-native-terrain-particles"),
   build: z.literal("16.23.841.8428"),
   replaySha256: z.string().regex(/^[a-f0-9]{64}$/),
   status: z.literal("verified-partial-effects"),
   scope: z.literal("native-sampled-cold-remap"),
-  effects: z
-    .array(
-      z.object({
-        handle: z.number().int().positive().max(0xffff_ffff),
-        start: z.number().nonnegative(),
-        position: z.tuple([z.number(), z.number(), z.number()]),
-      }),
-    )
-    .min(1)
-    .max(100),
-  components: z.tuple([component(0.2), component(0.3)]),
-  textures: z.object({ palette: png, files: z.array(png).length(3) }),
   shaders: z.object({ vertex: glsl, fragment: glsl }),
 });
+const singleFamilyTrack = trackIdentity.extend({
+  schema: z.literal(1),
+  effects: z.array(particleEffect).min(1),
+  components: z.tuple([component(0.2), component(0.3)]),
+  textures: z.object({ palette: png, files: z.array(png).length(3) }),
+});
+const familyTrack = trackIdentity.extend({
+  schema: z.literal(2),
+  effects: z.array(particleEffect.extend({ family: familyId })).min(1),
+  families: z
+    .array(
+      z.object({ id: familyId, components: z.array(familyComponent).min(1) }),
+    )
+    .min(1),
+  textures: z.object({ files: z.array(png).min(1) }),
+});
+const particleTrack = z.discriminatedUnion("schema", [
+  singleFamilyTrack,
+  familyTrack,
+]);
+
+function normalizeTrack(track: z.infer<typeof particleTrack>) {
+  if (track.schema === 2) return track;
+  const family = "heimerdinger-w-impact";
+  return {
+    ...track,
+    effects: track.effects.map((effect) => ({ ...effect, family })),
+    families: [
+      {
+        id: family,
+        components: track.components.map((entry) => ({
+          ...entry,
+          palette: track.textures.palette,
+          blend: "one-one" as const,
+          centerY: 100,
+        })),
+      },
+    ],
+  };
+}
 
 function decodeHex(value: string) {
   const bytes = new Uint8Array(value.length / 2);
@@ -59,6 +101,10 @@ function decodeQuad(value: string) {
       )
     )
       throw new Error("A recorded particle vertex has a nonfinite lane.");
+    if (view.getFloat32(offset + 8, true) !== 0)
+      throw new Error(
+        "A recorded particle quad is outside its local XY plane.",
+      );
   }
   return bytes;
 }
@@ -73,70 +119,96 @@ export async function loadRecordedTerrainParticles(
   signal: AbortSignal,
 ) {
   const decoder = new TextDecoder("utf-8", { fatal: true });
-  const track = particleTrack.parse(
-    JSON.parse(decoder.decode(await read("/recorded-particles.json"))),
+  const track = normalizeTrack(
+    particleTrack.parse(
+      JSON.parse(decoder.decode(await read("/recorded-particles.json"))),
+    ),
   );
-  const maximumDuration = Math.max(
-    ...track.components.map(({ lifetime }) => lifetime),
+  const lifetimes = new Map(
+    track.families.map(({ id, components }) => [
+      id,
+      Math.max(...components.map(({ lifetime }) => lifetime)),
+    ]),
   );
+  const activeFamilies = new Set(track.effects.map(({ family }) => family));
   if (
     identity.build !== track.build ||
     identity.replaySha256 !== track.replaySha256 ||
+    lifetimes.size !== track.families.length ||
+    activeFamilies.size !== lifetimes.size ||
     new Set(track.effects.map(({ handle }) => handle)).size !==
       track.effects.length ||
-    track.effects.some(
-      ({ start, position }, index) =>
-        start + maximumDuration > identity.durationMilliseconds / 1000 ||
+    track.effects.some(({ start, position, family }, index) => {
+      const lifetime = lifetimes.get(family);
+      return (
+        lifetime === undefined ||
+        start + lifetime > identity.durationMilliseconds / 1000 ||
         (index > 0 && start < track.effects[index - 1]!.start) ||
-        position.some((value) => !Number.isFinite(Math.fround(value))),
-    )
+        position.some((value) => !Number.isFinite(Math.fround(value)))
+      );
+    })
   )
     throw new Error("The recorded particle track disagrees with this replay.");
-  const expectedTextures = [
-    track.textures.palette,
-    ...track.components.map(({ texture }) => texture),
-  ];
+  const components = track.families.flatMap((family) => family.components);
+  const palettePaths = new Set(components.map(({ palette }) => palette));
+  const basePaths = new Set(components.map(({ texture }) => texture));
+  const expectedTextures = new Set([...palettePaths, ...basePaths]);
   if (
-    new Set(expectedTextures).size !== 3 ||
-    new Set(track.textures.files).size !== 3 ||
-    !expectedTextures.every((path) => track.textures.files.includes(path))
+    (track.schema === 1 && expectedTextures.size !== 3) ||
+    expectedTextures.size !== track.textures.files.length ||
+    new Set(track.textures.files).size !== expectedTextures.size ||
+    !track.textures.files.every((path) => expectedTextures.has(path))
   )
     throw new Error("The recorded particle textures disagree with the track.");
 
-  const components = track.components.map(
-    ({ texture, indices, lifetime, samples }) => {
-      if (
-        samples.some(
-          ({ age }, index) =>
-            age >= lifetime || (index > 0 && age <= samples[index - 1]!.age),
+  const compiledFamilies = new Map(
+    track.families.map(({ id, components: entries }) => [
+      id,
+      entries.map(({ indices, samples, ...entry }) => {
+        if (
+          !Number.isFinite(Math.fround(entry.centerY)) ||
+          samples.some(
+            ({ age }, index) =>
+              age >= entry.lifetime ||
+              (index > 0 && age <= samples[index - 1]!.age),
+          )
         )
-      )
-        throw new Error("The recorded particle samples are out of order.");
-      return {
-        texture,
-        indices: decodeHex(indices),
-        lifetime,
-        samples: samples.map(({ age, vertices }) => ({
-          age,
-          vertices: decodeQuad(vertices),
-        })),
-      };
-    },
+          throw new Error("The recorded particle component is invalid.");
+        return {
+          ...entry,
+          indices: decodeHex(indices),
+          samples: samples.map(({ age, vertices }) => ({
+            age,
+            vertices: decodeQuad(vertices),
+          })),
+        };
+      }),
+    ]),
   );
+  const maximumDuration = Math.max(...lifetimes.values());
   function sampleAt(timeSeconds: number) {
     const particles = [];
-    for (const { start, position } of track.effects) {
-      if (start > timeSeconds) break;
+    let first = 0;
+    let end = track.effects.length;
+    while (first < end) {
+      const middle = first + Math.floor((end - first) / 2);
+      if (timeSeconds - track.effects[middle]!.start >= maximumDuration)
+        first = middle + 1;
+      else end = middle;
+    }
+    for (let index = first; index < track.effects.length; index++) {
+      const { start, position, family } = track.effects[index]!;
       const age = timeSeconds - start;
-      if (age >= maximumDuration) continue;
-      for (const { texture, indices, lifetime, samples } of components) {
+      if (age < 0) break;
+      for (const { lifetime, samples, ...style } of compiledFamilies.get(
+        family,
+      )!) {
         if (age >= lifetime) continue;
         const sample = samples.findLast((entry) => entry.age <= age);
         if (sample !== undefined)
           particles.push({
-            texture,
+            ...style,
             position,
-            indices,
             vertices: sample.vertices,
           });
       }
@@ -164,12 +236,15 @@ export async function loadRecordedTerrainParticles(
       images.set(path, image);
     }
     signal.throwIfAborted();
-    const palette = images.get(track.textures.palette)!;
-    const baseTextures = new Map(
-      track.components.map(({ texture }) => [texture, images.get(texture)!]),
-    );
+    const fromPaths = (paths: ReadonlySet<string>) =>
+      new Map(Array.from(paths, (path) => [path, images.get(path)!]));
     return {
-      assets: { vertexShader, fragmentShader, palette, baseTextures },
+      assets: {
+        vertexShader,
+        fragmentShader,
+        palettes: fromPaths(palettePaths),
+        baseTextures: fromPaths(basePaths),
+      },
       sampleAt,
       closeImages,
     };

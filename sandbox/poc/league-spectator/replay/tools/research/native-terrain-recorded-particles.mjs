@@ -93,7 +93,7 @@ function saveState(gl, uniformCount) {
  */
 export function createRecordedParticleRenderer(
   gl,
-  { vertexShader, fragmentShader, palette, baseTextures },
+  { vertexShader, fragmentShader, palettes, baseTextures },
 ) {
   const restore = saveState(gl, 5);
   const program = createProgram(gl, vertexShader, fragmentShader);
@@ -222,7 +222,9 @@ export function createRecordedParticleRenderer(
     gl.activeTexture(gl.TEXTURE0);
     const unusedInstance = createTexture(null, { integer: true });
     const coldRemap = createTexture(null);
-    const paletteTexture = createTexture(palette);
+    const uploadedPalettes = new Map(
+      Array.from(palettes, ([name, image]) => [name, createTexture(image)]),
+    );
     const uploaded = new Map(
       Array.from(baseTextures, ([name, image]) => [
         name,
@@ -256,48 +258,68 @@ export function createRecordedParticleRenderer(
           gl.bindBufferBase(gl.UNIFORM_BUFFER, index, buffer);
         for (const [unit, texture] of [
           [0, unusedInstance],
-          [2, paletteTexture],
           [3, coldRemap],
         ]) {
           gl.activeTexture(gl.TEXTURE0 + unit);
           gl.bindTexture(gl.TEXTURE_2D, texture);
           gl.bindSampler(unit, null);
         }
-        gl.activeTexture(gl.TEXTURE1);
         gl.bindSampler(1, null);
+        gl.bindSampler(2, null);
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
-        gl.blendFunc(gl.ONE, gl.ONE);
         gl.disable(gl.CULL_FACE);
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(false);
         const basis = camera.matrixWorld.elements;
-        for (const { texture, position, vertices, indices } of particles) {
+        let activePalette;
+        let activeBlend;
+        for (const {
+          texture,
+          palette,
+          blend,
+          centerY,
+          position,
+          vertices,
+          indices,
+        } of particles) {
           const base = uploaded.get(texture);
+          const paletteTexture = uploadedPalettes.get(palette);
           if (
             !base ||
+            !paletteTexture ||
             vertices.length !== worldVertices.length ||
             indices.length !== indicesPerQuad * 2
           )
-            throw Error(
-              "Invalid recorded particle quad or missing base texture",
-            );
+            throw Error("Invalid recorded particle quad or missing texture");
           worldVertices.set(vertices);
           for (let vertex = 0; vertex < verticesPerQuad; vertex++) {
             const at = vertex * vertexStride;
             const right = vertexView.getFloat32(at, true);
-            // The current admitted W impact combines two native +50 Y offsets.
-            // Keep that world-space center and orient only the plane offsets.
-            const up = vertexView.getFloat32(at + 4, true) - 100;
+            // Keep the native world-space center while orienting the plane.
+            const up = vertexView.getFloat32(at + 4, true) - centerY;
             for (let axis = 0; axis < 3; axis++) {
               const world =
                 position[axis] +
-                (axis === 1 ? 100 : 0) +
+                (axis === 1 ? centerY : 0) +
                 right * basis[axis] +
                 up * basis[4 + axis];
               vertexView.setFloat32(at + axis * 4, world, true);
             }
           }
+          if (paletteTexture !== activePalette) {
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, paletteTexture);
+            activePalette = paletteTexture;
+          }
+          if (blend !== activeBlend) {
+            gl.blendFunc(
+              blend === "src-alpha-one" ? gl.SRC_ALPHA : gl.ONE,
+              gl.ONE,
+            );
+            activeBlend = blend;
+          }
+          gl.activeTexture(gl.TEXTURE1);
           gl.bindTexture(gl.TEXTURE_2D, base);
           gl.bufferData(gl.ARRAY_BUFFER, worldVertices, gl.STREAM_DRAW);
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STREAM_DRAW);

@@ -1,10 +1,28 @@
 import assert from "node:assert/strict";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { zstdDecompressSync } from "node:zlib";
+import { replayTimedPacketEnvelopes } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-packet-clock.mjs";
+import {
+  openReplay,
+  replayPacketEnvelopes,
+} from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/transport.mjs";
+import { createNativeTerrainChampionCreation88Reader } from "./native-terrain-champion-identities.mjs";
+import { createExactTerrainByteCodecs } from "./native-terrain-positions-944.mjs";
 
 const build = "16.23.841.8428";
-const replaySha256 =
+const originalReplaySha256 =
   "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
+const protocol = "8bbfcd5af2bc92db";
+const executableSha256 =
+  "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7";
+// Both reviewed Map11 replays select the same WAD definition f17239e0.
+// Skin2 and Skin4 each resolve 0fb3cb06 through the same shared dependency
+// 6a43c9a8863bb24d8070adffab0033f445b383faeb06b1be02a691d05e126322.
+const reviewedReplays = new Map([
+  [originalReplaySha256, 4],
+  ["4bb0f94d3ceb19df374c0937a9e59dcc866a5b92e4727b81c6c7d5b3aca970b7", 2],
+]);
 const resourceDirectory = "recorded-particles";
 const indices = "000001000200000002000300";
 const sha256 = (bytes) => Bun.CryptoHasher.hash("sha256", bytes, "hex");
@@ -15,7 +33,13 @@ const receiptHashes = {
   bubble: "226097a33606304c46ae50577ccdadbc90468f96fda930b03a18dd081591fffc",
   vertex: "6809fb4a64b928575ded4a01dbdcb50b66a78b01baf79dde46206bfb8964a462",
   pixel: "f603c39a5d8edb7c6d47b073e6a79cf3a6fc77f3228a7f27595070df6439b8f5",
+  fight: "cbd5794411aaa4592763941c98a641cc33d14e73e2d291e52a632ad1989d3eb5",
+  kaisa: "dfa2b3f7f1e2635adcf55b87ac76a6ba8b8b1ed6c990825c151522d0da1d96eb",
 };
+const kaisaTextureDigests = [
+  "9467333104f5ce482014c220d593e89eaf3b609c860c2606932c999d67616e7a",
+  "33fbb0aa732bf24befe556da253e9fefbac5f19fa1f3551924c4b1f85d63f10b",
+];
 const textureSources = [
   {
     path: "ASSETS/Shared/Particles/color-firemissile.tex",
@@ -40,40 +64,204 @@ const textureSources = [
   },
 ];
 
-async function readReceipt(path, key) {
+async function readReceipt(path, key, digest = receiptHashes[key]) {
   const bytes = await Bun.file(path).bytes();
-  assert.equal(sha256(bytes), receiptHashes[key], `Unreviewed ${key} receipt`);
+  assert.equal(sha256(bytes), digest, `Unreviewed ${key} receipt`);
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }
 
-function compileEffects(placements) {
-  assert.equal(placements.length, 7);
+const inflate = (input, output) =>
+  zstdDecompressSync(input, { maxOutputLength: output.length });
+
+async function openReviewedReplay(path, positionCodecsPath) {
+  const bytes = await Bun.file(path).arrayBuffer();
+  const replaySha256 = sha256(bytes);
+  const reviewedSkin = reviewedReplays.get(replaySha256);
+  assert.ok(
+    reviewedSkin !== undefined,
+    "Replay has no reviewed Map11 skin binding",
+  );
+  const replay = openReplay(bytes);
+  assert.equal(replay.build, build);
+  assert.equal(replay.protocol, protocol);
+  assert.equal(
+    replay.roster.filter((row) => row.champion === "Heimerdinger").length,
+    1,
+  );
+  const options = { allowCurrentBuild: true };
+  const codecs = createExactTerrainByteCodecs(
+    await Bun.file(positionCodecsPath).bytes(),
+    replay,
+    options,
+  );
+  const readChampion = createNativeTerrainChampionCreation88Reader(
+    replay,
+    codecs,
+    options,
+  );
+  let openingChunk;
+  let opcode;
+  const openings = [];
+  for (const packet of replayPacketEnvelopes(replay, inflate)) {
+    if (packet.stream !== 2) continue;
+    openingChunk ??= packet.chunkOffset;
+    if (packet.chunkOffset !== openingChunk) break;
+    opcode = packet.explicitOpcode ?? opcode;
+    if (opcode === 88)
+      openings.push(readChampion(packet.payload, { includeSkin: true }));
+  }
+  assert.deepEqual(
+    openings.map(({ champion }) => champion).sort(),
+    replay.roster.map(({ champion }) => champion).sort(),
+    "Opening creation roster differs from the replay footer",
+  );
+  assert.equal(new Set(openings.map(({ context }) => context)).size, 10);
+  const owner = openings.find(({ champion }) => champion === "Heimerdinger");
+  assert.equal(owner.skinId, reviewedSkin);
+  return { replay, replaySha256, owner: owner.context, openings };
+}
+
+// Independently bind the receipt rows to original packet bytes and clocks.
+// The reviewed archived decoder receipt supplies the decoded handles and positions.
+function verifyPacketProvenance(replay, receipt, window = [0, Infinity]) {
+  const expected = new Map();
+  for (const { sequence, stamp, context, packetSha256 } of receipt.events) {
+    assert.ok(Number.isSafeInteger(sequence) && sequence >= 0);
+    assert.match(packetSha256, /^[a-f0-9]{64}$/);
+    const identity = `${stamp}:${context}:${packetSha256}`;
+    assert.equal(expected.get(sequence) ?? identity, identity);
+    expected.set(sequence, identity);
+  }
+  let opcode;
+  let context = 0;
+  let packetCount = 0;
+  let sequence = 0;
+  for (const packet of replayTimedPacketEnvelopes(
+    replayPacketEnvelopes(replay, inflate),
+  )) {
+    const packetSequence = sequence++;
+    if (packet.blockOffset === 0) {
+      opcode = undefined;
+      context = 0;
+    }
+    opcode = packet.explicitOpcode ?? opcode;
+    context =
+      packet.marker & 32
+        ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
+        : packet.paramBits;
+    if (
+      packet.stream !== 1 ||
+      opcode !== 938 ||
+      packet.timeSeconds < window[0] ||
+      packet.timeSeconds >= window[1]
+    )
+      continue;
+    packetCount++;
+    const identity = expected.get(packetSequence);
+    if (identity === undefined) continue;
+    assert.equal(
+      `${packet.timeSeconds}:${context}:${sha256(packet.payload)}`,
+      identity,
+      "Recorded effect packet provenance differs",
+    );
+    expected.delete(packetSequence);
+  }
+  assert.equal(
+    packetCount,
+    receipt.packetCount,
+    "Opcode 938 packet count differs",
+  );
+  assert.equal(expected.size, 0, "Recorded effect packet provenance differs");
+}
+
+async function readPlacements(values) {
+  const { replay, placements } = values;
+  const digest = values["placements-sha256"];
+  const codecs = values["position-codecs"];
+  if (replay === undefined) {
+    assert.ok(
+      digest === undefined && codecs === undefined,
+      "A replay is required to verify a decoded receipt",
+    );
+    const events = await readReceipt(placements, "placements");
+    assert.equal(events.length, 7);
+    return { events, replaySha256: originalReplaySha256, owner: 0x40000151 };
+  }
+  assert.ok(
+    typeof digest === "string" && /^[a-f0-9]{64}$/.test(digest),
+    "--placements-sha256 must be the reviewed placement receipt digest",
+  );
+  assert.ok(codecs?.length, "--position-codecs is required");
+  const [opening, receipt] = await Promise.all([
+    openReviewedReplay(replay, codecs),
+    readReceipt(placements, "placements", digest),
+  ]);
+  assert.equal(receipt.schema, 1);
+  assert.equal(receipt.build, build);
+  assert.equal(receipt.protocol, protocol);
+  assert.equal(receipt.executableSha256, executableSha256);
+  assert.equal(receipt.replaySha256, opening.replaySha256);
+  assert.ok(Array.isArray(receipt.events) && receipt.events.length > 0);
+  for (const count of [
+    receipt.packetCount,
+    receipt.groupCount,
+    receipt.entryCount,
+  ])
+    assert.ok(Number.isSafeInteger(count) && count > 0);
+  assert.ok(receipt.events.length <= receipt.entryCount);
+  verifyPacketProvenance(opening.replay, receipt);
+  return { events: receipt.events, ...opening };
+}
+
+function compileEffects(
+  placements,
+  ownerContext,
+  duration = Infinity,
+  {
+    key = 0x0fb3cb06,
+    lifetime = Math.fround(0.3),
+    secondaryIsZero = false,
+  } = {},
+) {
   return placements
     .map(({ stamp, handle, owner, context, descriptor }) => {
-      assert.equal(owner, 0x40000151);
+      assert.equal(owner, ownerContext);
       assert.equal(context, 0);
-      assert.equal(descriptor.resourceKey, 0x0fb3cb06);
+      assert.equal(descriptor.resourceKey, key);
       assert.equal(descriptor.flags, 0x20);
       assert.deepEqual(descriptor.scaleRate, [1, 1]);
       const [position, secondary, unused] = descriptor.positions;
       assert.equal(position.length, 3);
-      assert.ok(position.every(Number.isFinite));
-      assert.deepEqual(position, secondary);
+      assert.ok(
+        position.every(
+          (value) =>
+            Number.isFinite(value) && Number.isFinite(Math.fround(value)),
+        ),
+      );
+      assert.deepEqual(secondary, secondaryIsZero ? [0, 0, 0] : position);
       assert.deepEqual(unused, [0, 0, 0]);
-      assert.ok(Number.isFinite(stamp) && stamp > 0);
+      assert.ok(
+        Number.isFinite(stamp) && stamp > 0 && stamp + lifetime <= duration,
+      );
       assert.ok(Number.isInteger(handle) && handle > 0 && handle <= 0xffffffff);
       return { handle, start: stamp, position };
     })
     .sort((a, b) => a.start - b.start || a.handle - b.handle);
 }
 
-function compileComponent(receipt, texture, expectedLifetime) {
+function compileComponent(
+  receipt,
+  texture,
+  expectedLifetime,
+  position = [0, 100, 0],
+  scale = [100, 100, 100],
+) {
   const [insertion] = receipt.inserts;
   assert.equal(receipt.inserts.length, 1);
   assert.equal(insertion.birthClock, 0);
   assert.equal(insertion.lifetime, expectedLifetime);
-  assert.deepEqual(insertion.position, [0, 100, 0]);
-  assert.deepEqual(insertion.scale, [100, 100, 100]);
+  assert.deepEqual(insertion.position, position);
+  assert.deepEqual(insertion.scale, scale);
   const samples = [];
   for (const [age, count, geometry] of receipt.timeline) {
     // The initializer and the terminal degenerate quad do not establish a
@@ -118,6 +306,70 @@ async function readTextures(receiptPath) {
   );
 }
 
+async function compileKaisaFamily(values, opening) {
+  assert.equal(opening.replaySha256, originalReplaySha256);
+  assert.ok(opening.replay, "A full decoded replay receipt is required");
+  // Skin15 resolves a216a0e4 to 14b4ac30 in dependency
+  // f50fcbe61a5fe11dbe1c11c83d6d4419ca3dfa892a037766510c989dca3c1f5f.
+  const owner = opening.openings.find(({ champion }) => champion === "Kaisa");
+  assert.equal(owner?.skinId, 15);
+  const [fight, curve, textures] = await Promise.all([
+    readReceipt(values["fight-placements"], "fight"),
+    readReceipt(values["kaisa-curves"], "kaisa"),
+    Promise.all(
+      kaisaTextureDigests.map(async (digest, index) => {
+        const bytes = await Bun.file(
+          join(values["kaisa-textures"], `${index}.png`),
+        ).bytes();
+        assert.equal(sha256(bytes), digest, "Unreviewed Kai'Sa texture");
+        return { path: `${resourceDirectory}/${digest}.png`, bytes };
+      }),
+    ),
+  ]);
+  assert.equal(fight.replaySha256, opening.replaySha256);
+  assert.equal(fight.executableSha256, executableSha256);
+  assert.deepEqual(fight.window, [1712, 1721]);
+  const events = fight.events.filter(
+    (row) =>
+      row.owner === owner.context &&
+      row.resourceKey === 0xa216a0e4 &&
+      row.parent === 0 &&
+      row.status === "detached-placement-confirmed",
+  );
+  assert.equal(events.length, 2);
+  verifyPacketProvenance(opening.replay, { ...fight, events }, fight.window);
+  const lifetime = Math.fround(0.15);
+  const effects = compileEffects(
+    events,
+    owner.context,
+    opening.replay.duration,
+    {
+      key: 0xa216a0e4,
+      lifetime,
+      secondaryIsZero: true,
+    },
+  );
+  const component = compileComponent(
+    curve,
+    textures[1].path,
+    lifetime,
+    [0, 130, 0],
+    [250, 150, 150],
+  );
+  return {
+    effects,
+    textures,
+    components: [
+      {
+        ...component,
+        palette: textures[0].path,
+        blend: "src-alpha-one",
+        centerY: 130,
+      },
+    ],
+  };
+}
+
 function shaderResource({ glsl }) {
   assert.ok(glsl.startsWith("#version 300 es\n"));
   const bytes = new TextEncoder().encode(glsl);
@@ -135,45 +387,103 @@ const inputNames = [
 ];
 const { values } = parseArgs({
   options: Object.fromEntries(
-    inputNames.map((name) => [name, { type: "string" }]),
+    [
+      ...inputNames,
+      "replay",
+      "placements-sha256",
+      "position-codecs",
+      "fight-placements",
+      "kaisa-curves",
+      "kaisa-textures",
+    ].map((name) => [name, { type: "string" }]),
   ),
 });
 for (const name of inputNames)
   assert.ok(values[name]?.length, `--${name} is required`);
 const [placements, flash, bubble, textures, vertex, pixel] = await Promise.all([
-  readReceipt(values.placements, "placements"),
+  readPlacements(values),
   readReceipt(values.flash, "flash"),
   readReceipt(values.bubble, "bubble"),
   readTextures(values.textures),
   readReceipt(values.vertex, "vertex").then(shaderResource),
   readReceipt(values.pixel, "pixel").then(shaderResource),
 ]);
-const effects = compileEffects(placements);
-assert.equal(new Set(effects.map(({ handle }) => handle)).size, effects.length);
-const manifest = {
-  schema: 1,
+const effects = compileEffects(
+  placements.events,
+  placements.owner,
+  placements.replay?.duration,
+);
+const familyOptions = ["fight-placements", "kaisa-curves", "kaisa-textures"];
+let kaisa;
+if (familyOptions.some((name) => values[name] !== undefined)) {
+  assert.ok(
+    familyOptions.every((name) => values[name]?.length),
+    "All Kai'Sa inputs are required",
+  );
+  kaisa = await compileKaisaFamily(values, placements);
+}
+const shared = {
   kind: "recorded-native-terrain-particles",
   build,
-  replaySha256,
+  replaySha256: placements.replaySha256,
   status: "verified-partial-effects",
   scope: "native-sampled-cold-remap",
-  effects,
-  components: [
-    compileComponent(flash, textures[1].path, Math.fround(0.2)),
-    compileComponent(bubble, textures[2].path, Math.fround(0.3)),
-  ],
-  textures: {
-    palette: textures[0].path,
-    files: textures.map(({ path }) => path),
-  },
-  shaders: { vertex: vertex.path, fragment: pixel.path },
 };
+const shaders = { vertex: vertex.path, fragment: pixel.path };
+const components = [
+  compileComponent(flash, textures[1].path, Math.fround(0.2)),
+  compileComponent(bubble, textures[2].path, Math.fround(0.3)),
+];
+const allTextures = [...textures, ...(kaisa?.textures ?? [])];
+const textureFiles = allTextures.map(({ path }) => path);
+const manifest =
+  kaisa === undefined
+    ? {
+        schema: 1,
+        ...shared,
+        effects,
+        components,
+        textures: { palette: textures[0].path, files: textureFiles },
+        shaders,
+      }
+    : {
+        schema: 2,
+        ...shared,
+        effects: [
+          ...effects.map((event) => ({
+            ...event,
+            family: "heimerdinger-w-impact",
+          })),
+          ...kaisa.effects.map((event) => ({
+            ...event,
+            family: "kaisa-e-activation",
+          })),
+        ].sort((a, b) => a.start - b.start || a.handle - b.handle),
+        families: [
+          {
+            id: "heimerdinger-w-impact",
+            components: components.map((component) => ({
+              ...component,
+              palette: textures[0].path,
+              blend: "one-one",
+              centerY: 100,
+            })),
+          },
+          { id: "kaisa-e-activation", components: kaisa.components },
+        ],
+        textures: { files: textureFiles },
+        shaders,
+      };
+assert.equal(
+  new Set(manifest.effects.map(({ handle }) => handle)).size,
+  manifest.effects.length,
+);
 // The private player translates the recorded local quads by each packet's
 // world position. The cold remap, sampled geometry, and archived texture proof
 // do not establish the active match remap, whole factory, or other effects.
 const output = resolve(values.out);
 await Promise.all(
-  [...textures, vertex, pixel].map(({ path, bytes }) =>
+  [...allTextures, vertex, pixel].map(({ path, bytes }) =>
     Bun.write(join(output, path), bytes, { createPath: true }),
   ),
 );

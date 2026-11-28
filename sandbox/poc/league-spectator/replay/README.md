@@ -774,12 +774,29 @@ alpha cutoff and a frame without a draw. This establishes the buffer layout
 under the supplied geometry and textures. Recorded playback has its own
 activation, material, and visibility checks.
 
-The recorded Scout preview can draw the seven reviewed Heimerdinger W impacts
-from the saved `16.23.841.8428` Rift replay. Prepare the track with the reviewed
-placement, native curve, texture, and shader receipts.
+The recorded Scout preview draws verified detached particle components from
+the saved `16.23.841.8428` Rift replay. Extract opcode 938 packets and run their
+archived reader offline to get the full Heimerdinger W impact track. Inventory
+mode instead records every creation within a half-open replay-clock interval,
+keeping attached effects distinct from verified world placements.
 
 ```powershell
-bun sandbox/poc/league-spectator/replay/tools/research/prepare-native-terrain-recorded-particles.mjs --placements $placementReceipt --flash $flashReceipt --bubble $bubbleReceipt --textures $textureReceipt --vertex $translatedVertex --pixel $translatedPixel --out $newPrivateParticleDirectory
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath | Set-Content -Encoding utf8 $packetInput
+uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/extract-recorded-heimer-impacts.py $macGameExecutable $packetInput $placementReceipt
+uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/extract-recorded-heimer-impacts.py $macGameExecutable $packetInput $fightPlacements --inventory 1712 1721
+```
+
+Prepare the track with the original replay, its reviewed byte codecs, and the
+placement, native curve, texture, and shader receipts. The producer checks the
+packet hashes and clock against the original ROFL and binds the recorded skin
+from the opening stream. Packet agreement verifies the links to original
+envelopes. The reviewed archived decoder receipt supplies reconstructed
+coordinates and handles. The three Kai’Sa arguments admit the reviewed Basic
+emitter from her E activation in that fight.
+
+```powershell
+$placementSha256 = (Get-FileHash -LiteralPath $placementReceipt -Algorithm SHA256).Hash.ToLowerInvariant()
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-native-terrain-recorded-particles.mjs --replay $replayPath --position-codecs $positionCodecs --placements $placementReceipt --placements-sha256 $placementSha256 --flash $flashReceipt --bubble $bubbleReceipt --textures $textureReceipt --vertex $translatedVertex --pixel $translatedPixel --fight-placements $fightPlacements --kaisa-curves $kaisaCurves --kaisa-textures $kaisaTextures --out $newPrivateParticleDirectory
 ```
 
 Pass the resulting `recorded-particles.json` to the private package builder with
