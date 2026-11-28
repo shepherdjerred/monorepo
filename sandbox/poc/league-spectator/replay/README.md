@@ -382,6 +382,16 @@ Map11 CLASSIC mode, duration, and all ten players against the original footer.
 The check includes per-player kills, deaths, assists, and ordered item slots.
 The result file stays local.
 
+Use the archived startup reader to inspect a saved `.8428` replay's configured
+map and mode before preparing Rift resources. It reads the original startup
+packet and reports the exact identity and byte count.
+
+```powershell
+uv run --no-project --with unicorn python sandbox/poc/league-spectator/replay/tools/inspect-8428-replay-startup.py $macGameExecutable $replayPath --verify-malformed-controls
+```
+
+Standard Rift packages require Map11 and `CLASSIC`.
+
 For a new `.8428` Rift replay, check its opening against the pinned archived
 skin census before building a package. The preflight can also verify each
 opening model against an existing archive-scoped champion catalog.
