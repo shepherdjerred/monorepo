@@ -858,6 +858,11 @@ All vision. The preview uses the cold color-remap resource and a camera-facing
 quad. Active match remapping, other effects, and team visibility for particles
 remain outside the preview.
 
+The package builder can store tracks above 16 MiB as `recorded-particles.json.gz`
+alongside a JSON descriptor. The player checks the expanded bytes against the
+descriptor length and SHA-256 before parsing. Earlier packages with a plain
+`recorded-particles.json` still use the same track reader.
+
 Verify the five recorded Heimerdinger W missile launches and contacts in the
 same fight with the original replay and archived executable. The private
 receipt records full native reads, packet clock and ordering, launch position,
@@ -938,6 +943,11 @@ $discoverySha256 = (Get-FileHash -LiteralPath $newPrivateLaunchReceipt -Algorith
 uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/observe-maokai-visibility-boundary.py $macGameExecutable $newPrivateLaunchReceipt $discoverySha256
 uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-maokai-movement.py $macGameExecutable "$newPrivateLaunchStem.navgrid" $newPrivateLaunchReceipt $newPrivateDiscoveredMotionReceipt --discovery-sha256 $discoverySha256 --authored-movement "$newPrivateLaunchStem.json"
 ```
+
+Add `--keep-geometric-prefix` to retain movement before an earlier native
+geometric terminal proposal. The receipt records the original clamped endpoint
+separately. Rendering ends at the last sample that passed the native gate, so
+the terminal proposal and its clamped position stay outside the ribbon track.
 
 For the same reviewed replay and Maokai skin 33, the discovery ribbon author can
 append visible prefixes outside the existing cast windows. For each selected
@@ -1114,13 +1124,15 @@ The portable opcode 938 reader checks the packet group count and reads the
 resource key and entry-array boundary at each established group offset. The
 archived reader consumes both group and entry arrays in alternating order
 from the front and back of the array. For three groups the wire order is
-0, 2, 1. The portable reader stops before the entry bodies. It cannot find
-subsequent group offsets, establish placement, or validate a complete
-creation request.
+0, 2, 1. At a known entry offset, the reader decodes the optional leading
+vector bit patterns and the first two signed X-grid words. The Map11 grid
+projection uses the archived bounds initializer and verifies both axes over
+all signed 16-bit inputs. The remaining variable-length entry fields,
+complete placement, and creation admission still require the archived reader.
 
 ```powershell
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath --opcode 938 $newPrivateCreateCorpus
-uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-rift-create-prefix.py $macGameExecutable $newPrivateCreateCorpus $nativeCreatePrefixReceipt
+uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-rift-create-prefix.py $macGameExecutable $newPrivateCreateCorpus $nativeCreatePrefixReceipt --entries --grid
 bun sandbox/poc/league-spectator/replay/tools/research/verify-recorded-rift-create-prefix.mjs $newPrivateCreateCorpus $nativeCreatePrefixReceipt $exactPositionCodecs
 ```
 

@@ -286,6 +286,71 @@ function compileWorldPaths<Style extends object>(
     });
 }
 
+const gzipTrackEnvelope = z.strictObject({
+  kind: z.literal("gzip-recorded-native-terrain-particles"),
+  schema: z.literal(1),
+  bytes: z
+    .number()
+    .int()
+    .min(1)
+    .max(64 * 1024 * 1024),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+});
+
+export async function readRecordedParticleTrackJson(
+  read: (path: string) => Promise<ArrayBuffer>,
+  signal: AbortSignal,
+): Promise<unknown> {
+  signal.throwIfAborted();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  const bytes = await read("/recorded-particles.json");
+  signal.throwIfAborted();
+  const track: unknown = JSON.parse(decoder.decode(bytes));
+  if (
+    track === null ||
+    typeof track !== "object" ||
+    !("kind" in track) ||
+    track.kind !== "gzip-recorded-native-terrain-particles"
+  )
+    return track;
+
+  const { bytes: decodedSize, sha256 } = gzipTrackEnvelope.parse(track);
+  const gzip = await read("/recorded-particles.json.gz");
+  signal.throwIfAborted();
+  const unpacked = new Uint8Array(decodedSize);
+  const reader = new Blob([gzip])
+    .stream()
+    .pipeThrough(new DecompressionStream("gzip"), { signal })
+    .getReader();
+  let offset = 0;
+  try {
+    for (;;) {
+      const chunk = await reader.read();
+      signal.throwIfAborted();
+      if (chunk.done) break;
+      if (chunk.value.length > decodedSize - offset)
+        throw new Error("Recorded particle track exceeded its decoded size");
+      unpacked.set(chunk.value, offset);
+      offset += chunk.value.length;
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
+  if (offset !== decodedSize)
+    throw new Error("Recorded particle track has an unexpected decoded size");
+  const digest = new Uint8Array(
+    await crypto.subtle.digest("SHA-256", unpacked),
+  );
+  signal.throwIfAborted();
+  const actual = Array.from(digest, (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  if (actual !== sha256)
+    throw new Error("Recorded particle track decoded digest differs");
+  return JSON.parse(decoder.decode(unpacked));
+}
+
 export async function loadRecordedTerrainParticles(
   read: (path: string) => Promise<ArrayBuffer>,
   identity: {
@@ -295,11 +360,8 @@ export async function loadRecordedTerrainParticles(
   },
   signal: AbortSignal,
 ) {
-  const decoder = new TextDecoder("utf-8", { fatal: true });
   const track = normalizeTrack(
-    particleTrack.parse(
-      JSON.parse(decoder.decode(await read("/recorded-particles.json"))),
-    ),
+    particleTrack.parse(await readRecordedParticleTrackJson(read, signal)),
   );
   const lifetimes = new Map(
     track.families.map(({ id, components }) => [
@@ -486,7 +548,9 @@ export async function loadRecordedTerrainParticles(
       : [...particles, ...maskedQuadAt(timeSeconds)];
   }
 
-  const shader = async (path: string) => decoder.decode(await read(`/${path}`));
+  const shaderDecoder = new TextDecoder("utf-8", { fatal: true });
+  const shader = async (path: string) =>
+    shaderDecoder.decode(await read(`/${path}`));
   const maskedAssets = async (quad: NonNullable<typeof maskedQuad>) => {
     const { path, width, height } = quad.mask;
     const bytes = await read(`/${path}`);

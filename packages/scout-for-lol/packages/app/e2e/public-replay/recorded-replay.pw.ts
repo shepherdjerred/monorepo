@@ -495,5 +495,5 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
       },
       testInfo,
     );
-  await verifyRecordedParticlePreview(page, fixture);
+  await verifyRecordedParticlePreview(page, fixture, traffic.requested);
 });

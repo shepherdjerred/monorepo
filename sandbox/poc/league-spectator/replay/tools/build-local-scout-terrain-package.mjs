@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 import { LocalScoutTerrainManifestSchema } from "../../../../../packages/scout-for-lol/packages/app/e2e/public-replay/local-scout-terrain-manifest.ts";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -19,6 +20,31 @@ const sceneFiles = new Set([
 const assetPath =
   /^(?:map-textures|champion-models|champion-animations|structure-models|structure-animations|nexus-models|inhibitor-models|world-unit-models|item-icons)\//;
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+
+export function packageLocalRecordedParticles(files) {
+  const track = files.get("recorded-particles.json");
+  assert.ok(Buffer.isBuffer(track), "Expected validated particle track bytes");
+  if (track.length <= 16 * 1024 * 1024) return files;
+  assert.ok(
+    track.length <= 64 * 1024 * 1024,
+    "Recorded particle track exceeds the compact format limit",
+  );
+  const gzip = gzipSync(track, { level: 6 });
+  const envelope = Buffer.from(
+    JSON.stringify({
+      kind: "gzip-recorded-native-terrain-particles",
+      schema: 1,
+      bytes: track.length,
+      sha256: sha256(track),
+    }),
+  );
+  if (gzip.length + envelope.length >= track.length) return files;
+  const packed = new Map(files);
+  assert.ok(!packed.has("recorded-particles.json.gz"));
+  packed.set("recorded-particles.json", envelope);
+  packed.set("recorded-particles.json.gz", gzip);
+  return packed;
+}
 
 export async function readLocalRecordedParticles(path, digest, identity) {
   assert.match(digest, /^[a-f0-9]{64}$/);
@@ -174,7 +200,9 @@ export async function writeLocalScoutTerrainPackage({
   );
   const resources = new Map([[entrypoint, await buildEngine(threeCore)]]);
   for (const [path, bytes] of announcerFiles ?? []) resources.set(path, bytes);
-  for (const [path, bytes] of particleFiles ?? []) resources.set(path, bytes);
+  if (particleFiles !== undefined)
+    for (const [path, bytes] of packageLocalRecordedParticles(particleFiles))
+      resources.set(path, bytes);
   for (const [route, [body]] of routes) {
     assert.ok(route.startsWith("/"));
     const path = route.slice(1);

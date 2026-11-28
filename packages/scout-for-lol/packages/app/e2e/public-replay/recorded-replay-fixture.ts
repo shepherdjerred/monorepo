@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
-import path from "node:path";
 import { z } from "zod";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
+import { readRecordedParticleDocument } from "./proof/recorded-particle-document.ts";
 import {
   apiPath,
   packagePrefix,
@@ -74,7 +74,6 @@ const DepthQualifiedParticleTrack = FamilyParticleTrack.extend({
     }),
   ),
 });
-
 export async function readRecordedParticleTrack(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
 ) {
@@ -105,9 +104,7 @@ export async function readRecordedParticleTrack(
       }),
       DepthQualifiedParticleTrack.extend({ schema: z.literal(7) }),
     ])
-    .parse(
-      await Bun.file(path.join(fixture.root, "recorded-particles.json")).json(),
-    );
+    .parse(await readRecordedParticleDocument(fixture.root));
 }
 
 function expectedFor(
@@ -384,9 +381,15 @@ function sennaFlareWitnesses(
 export async function verifyRecordedParticlePreview(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+  requested: ReadonlySet<string>,
 ) {
   const track = await readRecordedParticleTrack(fixture);
   if (track === undefined) return;
+  const compressedPath = [...fixture.paths].find(
+    ([, asset]) => asset === "recorded-particles.json.gz",
+  )?.[0];
+  if (compressedPath !== undefined)
+    expect(requested.has(compressedPath)).toBe(true);
   const expectedDraws = (time: number) => expectedParticleDraws(track, time);
   const vision = page.getByRole("combobox", { name: "Unit visibility" });
   const count = async () => {

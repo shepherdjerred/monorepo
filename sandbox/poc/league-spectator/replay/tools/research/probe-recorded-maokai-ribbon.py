@@ -417,7 +417,13 @@ def main():
         end = projectile["motionVerifiedThroughSeconds"]
         assert projectile["sourceContext"] == 1073742170
         assert projectile["recordedStopTimeSeconds"] is None
-        assert projectile["firstUnclassifiedPacket"]["seconds"] == end
+        terminal = projectile.get("geometricTerminal")
+        packet_cutoff = projectile["firstUnclassifiedPacket"]["seconds"]
+        if terminal is None:
+            assert packet_cutoff == end
+        else:
+            assert projectile["nativeGeometricTerminalGateTriggeredDuringTrace"]
+            assert terminal["lastAdmittedSampleSeconds"] == end < terminal["timeSeconds"] <= packet_cutoff
         assert start < end
         assert projectile["birthVisibilityPackets"]
         assert all(

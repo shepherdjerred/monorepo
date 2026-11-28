@@ -181,7 +181,21 @@ const paths = await Promise.all(
     assert.equal(trace.timeline.length, trajectory.samples.length);
     if (append) {
       assert.equal(trajectory.recordedStopTimeSeconds, null);
-      assert.equal(trajectory.firstUnclassifiedPacket.seconds, end);
+      const packetCutoff = trajectory.firstUnclassifiedPacket.seconds;
+      const terminal = trajectory.geometricTerminal;
+      if (terminal === undefined) {
+        assert.equal(packetCutoff, end);
+      } else {
+        assert(
+          discovery &&
+            trajectory.nativeGeometricTerminalGateTriggeredDuringTrace,
+        );
+        assert.equal(terminal.lastAdmittedSampleSeconds, end);
+        assert(
+          end < terminal.timeSeconds && terminal.timeSeconds <= packetCutoff,
+        );
+        assert.equal(trajectory.samples.at(-1).timeSeconds, end);
+      }
     }
     if (discovery) {
       assert.equal(trajectory.sourceContext, trace.spawn.sourceContext);
@@ -285,9 +299,19 @@ if (append) {
   );
   if (discovery) {
     assert.equal(new Set(paths.map(({ handle }) => handle)).size, paths.length);
+    const terminalHandles = new Set(
+      motion.cases
+        .filter(({ geometricTerminal }) => geometricTerminal !== undefined)
+        .map(({ entity }) => entity),
+    );
     assert(
-      paths.every(({ start, end }) =>
-        retainedPaths.every((path) => end <= path.start || start >= path.end),
+      paths.every(({ handle, start, end }) =>
+        retainedPaths.every(
+          (path) =>
+            end <= path.start ||
+            start >= path.end ||
+            (terminalHandles.has(handle) && start === path.start),
+        ),
       ),
     );
   }

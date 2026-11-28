@@ -58,6 +58,11 @@ def main():
         "--authored-movement", type=Path, help="Original Maokai spell receipt from verify-rift-maokai-launches"
     )
     parser.add_argument("--max-launches", type=int, help="Limit discovery verification to the earliest launches")
+    parser.add_argument(
+        "--keep-geometric-prefix",
+        action="store_true",
+        help="Preserve discovered movement before a native geometric terminal proposal",
+    )
     args = parser.parse_args()
     output = args.output
     if not output.parent.resolve().is_relative_to(Path(".cache").resolve()) or output.exists():
@@ -80,7 +85,7 @@ def main():
         decoder_sha = source["decoderSha256"]
         navgrid_sha = receipts["navgridSha256"]
     else:
-        assert args.authored_movement is None and args.max_launches is None
+        assert args.authored_movement is None and args.max_launches is None and not args.keep_geometric_prefix
         assert source["replaySha256"] == "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1"
         cohort = source["cohorts"][0]
         decoder_sha = source["native"]["decoderSha256"]
@@ -159,6 +164,7 @@ def main():
         (movement_vtable, 0x20, 0x8A1850),
         (movement_vtable, 0xE8, 0x895FE0),
         (movement_vtable, 0xF0, 0x8A65E0),
+        (movement_vtable, 0xF8, 0x8A63C0),
         (actor_vtable, 0xA0, 0x5560D0),
         (actor_vtable, 0x1F0, 0x87CFB0),
     ):
@@ -228,6 +234,36 @@ def main():
         assert spatial_writes == [position]
         return position
 
+    def observe_geometric_terminal():
+        # The native caller sets the terminal bit and clamps the same proposal
+        # before applying it. Keep the resulting endpoint out of rendered samples.
+        before = read(actor + 0x160, "3f")
+        target = read(controller + 0x7C, "3f")
+        assert read(controller + 0x9C, "f") == (0,)
+        unclamped = read(proposal + 0x10, "3f")
+        oracle.call(
+            0x8A6175,
+            {
+                r.UC_X86_REG_RBX: proposal,
+                r.UC_X86_REG_R14: controller,
+            },
+            stop_rva=0x8A6189,
+        )
+        assert read(proposal + 0x1C, "B") == (1,)
+        clamped = read(proposal + 0x10, "3f")
+        assert all(bits(delta) == bits(end - start) for delta, start, end in zip(clamped, before, target, strict=True))
+        spatial_writes.clear()
+        call(0x8A1850, controller, proposal)
+        endpoint = read(actor + 0x160, "3f")
+        assert spatial_writes == [endpoint]
+        assert all(math.isclose(actual, end, abs_tol=0.001) for actual, end in zip(endpoint, target, strict=True))
+        return {
+            "targetXYZ": target,
+            "unclampedDeltaXYZ": unclamped,
+            "clampedDeltaXYZ": clamped,
+            "clampedEndpointXYZ": endpoint,
+        }
+
     cases = []
     omissions = []
     if args.outer:
@@ -289,9 +325,16 @@ def main():
         initialize(record, target)
         subdivisions = math.ceil(duration * 120)
         samples = [fields_at_start]
+        terminal = None
         for index in range(1, subdivisions + 1):
             position = advance(duration / subdivisions)
             if position is None:
+                if args.keep_geometric_prefix and len(samples) > 1:
+                    terminal = {
+                        "timeSeconds": launch_seconds + duration * index / subdivisions,
+                        "lastAdmittedSampleSeconds": samples[-1]["timeSeconds"],
+                        **observe_geometric_terminal(),
+                    }
                 break
             samples.append(
                 {
@@ -303,7 +346,11 @@ def main():
             )
         cadence_delta = None if discovery else math.dist(coarse_end, samples[-1]["positionXYZ"])
         if discovery:
-            if len(samples) != subdivisions + 1:
+            if terminal is not None:
+                # The exact frame cadence between the two sampled proposals
+                # is unknown. Hide the ribbon at the last proven open sample.
+                verified_through = terminal["lastAdmittedSampleSeconds"]
+            elif len(samples) != subdivisions + 1:
                 omissions.append({"entity": ident, "reason": "native-geometric-terminal-before-packet"})
                 continue
         else:
@@ -324,7 +371,7 @@ def main():
                 "postContactMotionUnverified": bounded_prefix or verified_through < stop_seconds,
                 "launchBodySha256": event["launch"]["bodySha256"],
                 "recordedStopSequences": [] if discovery else [row["sequence"] for row in event["stops"]],
-                "nativeGeometricTerminalGateTriggeredDuringTrace": False,
+                "nativeGeometricTerminalGateTriggeredDuringTrace": terminal is not None,
                 "nativeVelocityZeroAtStop": None if bounded_prefix else True,
                 "nativeMissileStoppedBitAtStop": None if bounded_prefix else True,
                 **(
@@ -337,6 +384,7 @@ def main():
                     else {}
                 ),
                 **({"sourceContext": expected_source, "birthVisibilityPackets": birth_visibility} if discovery else {}),
+                **({"geometricTerminal": terminal} if terminal is not None else {}),
                 "differentTargetVelocityControl": control["velocityXYZ"],
                 "oneStepEndpointDeltaFrom120HzWorldUnits": cadence_delta,
                 "samples": samples,
