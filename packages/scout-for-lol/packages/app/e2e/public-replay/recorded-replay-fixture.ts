@@ -229,7 +229,20 @@ async function verifyGroundQuadDraws(
   if (track.schema !== 6) return;
   expect(track.worldMaskedQuad.paths).toHaveLength(1);
   const hasUnmasked = track.worldUnmaskedQuad !== undefined;
+  const fullMatchClocks =
+    (track.worldUnmaskedQuad?.paths.length ?? 0) > 1
+      ? ([
+          [1023.6, 0, 0],
+          [1024, 0, 1],
+          [1024.2, 0, 0],
+          [2063.5, 0, 0],
+          [2064, 0, 1],
+          [2064.1, 0, 0],
+          [1024, 0, 1],
+        ] as const)
+      : [];
   for (const [seconds, expected, unmasked] of [
+    ...fullMatchClocks,
     [1712.7, 0, 0],
     [1713.2, 1, 0],
     [1714.7, 1, 0],

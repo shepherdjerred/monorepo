@@ -54,6 +54,14 @@ export async function readLocalRecordedParticles(path, digest, identity) {
     digest,
     "Recorded particle manifest digest differs",
   );
+  return readLocalRecordedParticleResources(dirname(path), bytes, identity);
+}
+
+export async function readLocalRecordedParticleResources(
+  directory,
+  bytes,
+  identity,
+) {
   const track = JSON.parse(bytes);
   assert.ok([1, 2, 3, 4, 5, 6, 7].includes(track.schema));
   assert.equal(track.kind, "recorded-native-terrain-particles");
@@ -135,7 +143,7 @@ export async function readLocalRecordedParticles(path, digest, identity) {
       match && !files.has(file),
       "Invalid recorded particle asset path",
     );
-    const asset = await readFile(join(dirname(path), file));
+    const asset = await readFile(join(directory, file));
     assert.equal(
       sha256(asset),
       match[1],
@@ -187,6 +195,7 @@ async function buildEngine(threeCore) {
 export async function writeLocalScoutTerrainPackage({
   output,
   identity,
+  map = { mapId: 11, gameMode: "CLASSIC" },
   routes,
   threeCore,
   announcerFiles,
@@ -235,8 +244,7 @@ export async function writeLocalScoutTerrainPackage({
     protocol: identity.protocol,
     entrypoint,
     capabilities: {
-      mapId: 11,
-      gameMode: "CLASSIC",
+      ...map,
       teamSizes: [5, 5],
       rosterCoverage: "recorded-replay",
       replaySha256: identity.replaySha256,

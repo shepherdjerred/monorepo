@@ -800,9 +800,10 @@ archive, ROFL, and pinned champion source manifest to reproduce provider
 behavior on the reviewed Maokai waypoint pair. The verifier decodes the
 original packets and executes their native coordinate expansion. It exercises
 the original provider constructor and update under controlled collision,
-elapsed-time, and wrapper inputs. A ready provider also occurs with singleton
-waypoints and zero elapsed time. Playback activation still requires actual
-actor-update history and animation-rate inputs.
+elapsed-time, and wrapper inputs. The clear controls execute the original
+position commit and actor-history writes. Three eligible multi-point controls
+reach the native `Run` invocation. Playback activation still requires the
+actual frame clock, collision outcome, and animation selection.
 
 ### Recorded unmasked ground particles
 
@@ -811,18 +812,21 @@ the unmasked quad shader without alpha testing. The renderer applies source
 alpha additive blending and clockwise back-face culling. Depth testing,
 depth writes, and polygon offset are disabled for this pass.
 
-Run `probe-recorded-detached-quad-expiry.py` with the pinned archive,
-asset, creation, and stop receipts. Select `685154d2:GroundGlow1:1073820917`
-and produce separate `--world-ground-quad primary` and `alternate` receipts.
-The author verifies both outputs, extracts the authored texture from the
-exact installation, and adds the samples to the existing schema-6 track.
+Run `probe-recorded-detached-quad-expiry.py` with the pinned archive, asset,
+creation, and stop receipts. With the full-match creation and stop receipts,
+use `--all-ground-glows` and produce separate `--world-ground-quad primary`
+and `alternate` outputs. The author verifies both outputs, extracts the
+authored texture from the exact installation, and adds the 40 paths to the
+existing schema-6 track. Supply the base track with its sibling
+`recorded-particles` directory to carry forward its verified resources.
 
 ```powershell
 bun sandbox/poc/league-spectator/replay/tools/research/author-recorded-world-ground-quad.mjs `
   $installation $textureMipAssembly $primaryReceipt $alternateReceipt $baseTrack $output
 ```
 
-The signed-out browser proof can follow the reviewed Maokai at `1715` with
+The signed-out browser proof can follow the reviewed Maokai at `1023.8`,
+`1715`, or `2063.7` with
 `capture-recorded-particle-visibility.ts` and `unmasked-ground`. It checks
 ordinary 1× playback and compares the same fixed frame with and without the
 selected draw. Other spell components require their own placement and

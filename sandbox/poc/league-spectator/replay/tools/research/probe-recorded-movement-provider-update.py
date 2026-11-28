@@ -111,10 +111,22 @@ def witness(row, elapsed, collision, wrapper_eligible):
     vm.mem_write(actor + 0x160, struct.pack("<3f", *world[0]))
     vm.mem_write(path, struct.pack("<3f", *world[1 if len(world) > 1 else 0]))
     vm.mem_write(base + 0x24E8B40, struct.pack("<Q", arena + 0x7C00))
-    vm.mem_write(base + 0x24E3030, struct.pack("<Q", arena + 0x7C80))
+    clock_holder, clock, clock_owner, clock_bank = (arena + offset for offset in (0x7C80, 0x7D00, 0x7D80, 0x7E00))
+    vm.mem_write(base + 0x24E3030, struct.pack("<Q", clock_holder))
+    vm.mem_write(clock_holder + 0x10, struct.pack("<Q", clock))
+    vm.mem_write(clock, struct.pack("<Q", clock_owner))
+    vm.mem_write(clock_owner + 0x30, struct.pack("<Q", clock_bank))
+    # Feed requested test times to the native clock bank. The absolute
+    # packet clock is a selected control, not the original actor tick time.
+    frequency = 1_000_000_000
+    vm.mem_write(
+        clock_bank,
+        struct.pack("<qq", round(row["timeSeconds"] * frequency), round(elapsed * frequency)),
+    )
     vm.mem_write(actor, struct.pack("<Q", actor_table))
     trap = {}
-    for slot in (0x688, 0x138, 0x2C8):
+    animator = arena + 0x9200
+    for slot in (0x688, 0x138, 0x2C8, 0xEC8, 0xE08, 0xDA0):
         pc = stop + 0x10 + len(trap) * 0x10
         trap[pc] = slot
         vm.mem_write(actor_table + slot, struct.pack("<Q", pc))
@@ -124,6 +136,7 @@ def witness(row, elapsed, collision, wrapper_eligible):
     vm.reg_write(r.UC_X86_REG_RSI, actor)
     events = []
     boundary = "return"
+    run_dispatch = None
 
     def ret():
         rsp = vm.reg_read(r.UC_X86_REG_RSP)
@@ -131,9 +144,9 @@ def witness(row, elapsed, collision, wrapper_eligible):
         vm.reg_write(r.UC_X86_REG_RSP, rsp + 8)
 
     def step(_cpu, pc, _size, _state):
-        nonlocal boundary
+        nonlocal boundary, run_dispatch
         ip = pc - base
-        if ip in (0xB61CC, 0xB71AA, 0xB6749, 0xB631A):
+        if ip in (0x16103E0, 0x555EF0, 0x555F40, 0xB61CC, 0xB71AA, 0xB6749, 0xB631A):
             events.append(hex(ip))
         if ip == 0xB631A:
             boundary = "collision-solver-entry"
@@ -143,10 +156,21 @@ def witness(row, elapsed, collision, wrapper_eligible):
             vm.emu_stop()
         elif pc in trap:
             slot = trap[pc]
-            vm.reg_write(r.UC_X86_REG_RAX, wrapper if slot == 0x688 else int(collision) if slot == 0x2C8 else 0)
+            results = {0x688: wrapper, 0x2C8: int(collision), 0xEC8: animator}
+            vm.reg_write(r.UC_X86_REG_RAX, results.get(slot, 0))
             ret()
-        elif ip == 0x16103E0:
-            vm.reg_write(r.UC_X86_REG_XMM0, struct.unpack("<I", struct.pack("<f", elapsed))[0])
+        elif ip == 0x15A2CC0:
+            assert vm.reg_read(r.UC_X86_REG_RDI) == animator
+            run_dispatch = {
+                "nameHash": f"{vm.reg_read(r.UC_X86_REG_ESI):08x}",
+                "flags": vm.reg_read(r.UC_X86_REG_ECX),
+                "selector": vm.reg_read(r.UC_X86_REG_EDX),
+                "initialRateBits": f"{vm.reg_read(r.UC_X86_REG_XMM0) & 0xFFFFFFFF:08x}",
+            }
+            vm.emu_stop()
+        elif ip == 0x2051310:
+            assert bytes(vm.mem_read(vm.reg_read(r.UC_X86_REG_RDI), 4)) == b"Run\0"
+            vm.reg_write(r.UC_X86_REG_RAX, 3)
             ret()
         elif ip == 0x14A0300:
             assert vm.reg_read(r.UC_X86_REG_RDI) == 0xD0
@@ -155,7 +179,7 @@ def witness(row, elapsed, collision, wrapper_eligible):
         elif ip == 0xB95A0:
             vm.reg_write(r.UC_X86_REG_RAX, 1)
             ret()
-        elif ip in (0xB0300, 0x555F40, 0xB7250):
+        elif ip in (0xB0300, 0xB7250):
             ret()
         elif ip == 0xAC070:
             vm.reg_write(r.UC_X86_REG_RAX, path)
@@ -163,12 +187,12 @@ def witness(row, elapsed, collision, wrapper_eligible):
         elif ip == 0x16DF8F0:
             vm.reg_write(r.UC_X86_REG_XMM0, 0)
             ret()
-        elif ip == 0x555EF0:
-            next_position = vm.mem_read(vm.reg_read(r.UC_X86_REG_RSI), 12)
-            vm.mem_write(actor + 0x160, bytes(next_position))
-            ret()
 
     vm.hook_add(UC_HOOK_CODE, step)
+    vm.reg_write(r.UC_X86_REG_RCX, frequency)
+    vm.emu_start(base + 0x160D7B1, base + 0x160D7EA, count=40)
+    assert vm.reg_read(r.UC_X86_REG_RIP) == base + 0x160D7EA
+    assert struct.unpack("<d", vm.mem_read(base + 0x25E68A8, 8))[0] == 1 / frequency
     vm.emu_start(base + 0x569320, stop, count=100)
     assert vm.reg_read(r.UC_X86_REG_RIP) == stop
     mode = vm.reg_read(r.UC_X86_REG_RAX)
@@ -200,8 +224,44 @@ def witness(row, elapsed, collision, wrapper_eligible):
         raise RuntimeError(hex(vm.reg_read(r.UC_X86_REG_RIP) - base)) from error
     active = vm.mem_read(provider + 0xB0, 1)[0]
     assert boundary == ("collision-solver-entry" if collision else "post-step-provider-dispatch")
-    assert events[0] == "0xb61cc"
+    assert events[:2] == ["0x16103e0", "0xb61cc"]
     assert active == int(not collision and wrapper_eligible)
+    position = struct.unpack("<3f", vm.mem_read(actor + 0x160, 12))
+    history = None
+    movement_predicate = None
+    if not collision:
+        assert "0x555ef0" in events, events
+        vm.reg_write(r.UC_X86_REG_R13, actor)
+        vm.emu_start(base + 0xC335F, base + 0xC3433, count=100)
+        assert vm.reg_read(r.UC_X86_REG_RIP) == base + 0xC3433
+        history = struct.unpack("<4f", vm.mem_read(actor + 0x376C, 16))
+        assert history[:3] == position
+        assert struct.pack("<f", history[3]) == struct.pack("<f", row["timeSeconds"])
+        # Exercise the exact fallback predicate suffix with the freshly
+        # updated provider flag. The actor eligibility gate is a control.
+        vm.mem_write(actor + 0xC88, b"\x04")
+        vm.mem_write(path + 0x30, struct.pack("<I", len(world)))
+        for register, value in (
+            (r.UC_X86_REG_RBX, actor),
+            (r.UC_X86_REG_R14, provider),
+            (r.UC_X86_REG_R15, int(wrapper_eligible)),
+            (r.UC_X86_REG_RAX, path),
+            (r.UC_X86_REG_R12, path),
+            (r.UC_X86_REG_RSP, stack - 0x58),
+        ):
+            vm.reg_write(register, value)
+        vm.emu_start(base + 0xB8158, stop, count=200)
+        assert vm.reg_read(r.UC_X86_REG_RIP) == stop
+        movement_predicate = bool(vm.reg_read(r.UC_X86_REG_AL))
+        assert movement_predicate == (wrapper_eligible and len(world) >= 2)
+        if movement_predicate:
+            # Demonstrate invocation once Run selection has occurred. The
+            # intervening animator and attack/preemption checks are unbound.
+            vm.reg_write(r.UC_X86_REG_RSP, stack)
+            vm.reg_write(r.UC_X86_REG_RDI, actor)
+            vm.emu_start(base + 0x1152B0, stop, count=1000)
+            assert vm.reg_read(r.UC_X86_REG_RIP) == base + 0x15A2CC0
+            assert run_dispatch == {"nameHash": "2acd4eca", "flags": 1, "selector": 1, "initialRateBits": "3f800000"}
     return {
         "frameSeconds": elapsed,
         "collisionRequested": collision,
@@ -210,7 +270,10 @@ def witness(row, elapsed, collision, wrapper_eligible):
         "originalBranches": events,
         "nativeConstructorMode": mode,
         "wrapperEligibilityControl": wrapper_eligible,
-        "actorAfterModeledPositionCommit": struct.unpack("<3f", vm.mem_read(actor + 0x160, 12)),
+        "actorAfterNativePositionCommit": position,
+        "nativeHistoryBeforeAnimatorInvocation": history,
+        "movementPredicateUnderControlledGate": movement_predicate,
+        "runDispatchUnderControlledSelection": run_dispatch,
     }
 
 
@@ -227,9 +290,11 @@ print(
             "championManifestSha256": proof["manifestSha256"],
             "scope": (
                 "Original mode-1 constructor, wrapper flag writer/reader, provider update, "
-                "and clear-frame position arithmetic. Allocator, first update admission, actor target, "
-                "clock, collision query, ground and commit are controls. "
-                "Execution stops at collision solver entry or clear-frame post-step dispatch."
+                "and clear-frame position commits. Allocator, first update admission, actor target, "
+                "clock-bank inputs, collision query and ground are controls. Clear-frame history rotation "
+                "and the original movement gate suffix are checked separately. The Run invocation prefix "
+                "is controlled, with animator selection and preemption outside this proof. "
+                "Collision solving is a stop boundary."
             ),
             "witnesses": [
                 {

@@ -432,11 +432,10 @@ export async function readRecordedReplay() {
     inventory.capabilities.replaySha256 !== digest ||
     identity.build !== inventory.gameBuild ||
     identity.protocol !== inventory.protocol
-  ) {
+  )
     throw new Error(
       "The scene, manifest and ROFL must identify the same replay.",
     );
-  }
   const capabilities = championCapabilities(scene);
   const { directWorldObservations, ...observationCapabilities } =
     workerCapabilities(scene);
@@ -456,6 +455,8 @@ export async function readRecordedReplay() {
     gameBuild: inventory.gameBuild,
     protocol: inventory.protocol,
     durationSeconds: identity.durationMilliseconds / 1000,
+    mapId: inventory.capabilities.mapId,
+    gameMode: inventory.capabilities.gameMode,
   };
   const uploaded = await readUploadedReplay(recordedIdentity);
   return {

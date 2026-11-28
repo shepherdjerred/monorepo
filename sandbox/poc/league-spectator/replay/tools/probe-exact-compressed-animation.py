@@ -314,7 +314,29 @@ try:
     mapped = mapping_entries[:joint_count]
     assert all(idx == -1 for idx in mapping_entries[joint_count:])
     assert all(-1 <= idx < tracks for idx in mapped)
-    assert len(set(mapped) - {-1}) == (135 if yasuo_death_binding else tracks)
+    matched_tracks = len(set(mapped) - {-1})
+    senna_binding = None
+    if args.current_build and args.rig_sha256 == "ecfb1699bbe63a091589328e14ed5c200c66944a338e084d728a1a4b6f1cf03f":
+        # The equipped Senna rig omits 35 source tracks in both E exit clips.
+        # Admit only the original binder's exact target-ordinal mappings.
+        senna_binding = {
+            "dafccc7e12a6c9275f84828a51106ab5c334016e6a7cfc4316ec823f25399abd": (
+                153,
+                118,
+                "ae08cd216021f5f9d2aee401951f424c0216b7874700a468250ab1bd4ac76930",
+            ),
+            "e026de0104607b33be62c91ba00268e8431a5b9f49ed2c362a01a7f973567462": (
+                154,
+                119,
+                "807294ac5df6eb06e552b8662847686254de6376248425ba4b01437685a4ecea",
+            ),
+        }.get(args.animation_sha256)
+    if senna_binding is None:
+        assert matched_tracks == (135 if yasuo_death_binding else tracks)
+    else:
+        expected_tracks, expected_matches, expected_mapping = senna_binding
+        assert (tracks, joint_count, matched_tracks) == (expected_tracks, 185, expected_matches)
+        assert sha(struct.pack(f"<{joint_count}i", *mapped)) == expected_mapping
     result["trackIndices"] = mapped
     phase = "cache-construction"
 

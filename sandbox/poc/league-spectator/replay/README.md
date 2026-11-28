@@ -1376,6 +1376,32 @@ current evidence, missing capabilities, research uncertainties and completion
 criteria. The detailed research sections below retain their individual scopes;
 component results do not establish whole-match equivalence.
 
+## Recorded Mayhem browser check
+
+For a local Map12 Mayhem review, assemble the exact 16.23.841.8428 Bloom
+package with the native startup receipt, equipped roster receipt, and reviewed
+terrain and model exports. The input JSON supplies `output`, a new direct child
+of `.cache`, and `{ "path": "…", "sha256": "…" }` references in `terrain`,
+`startup`, `equipped`, `catalog`, `replay`, `minimap`, `decoder`, `worker`, and
+`three`. The terrain receipt lists the geometry, heights, material bindings and
+textures relative to its directory. The catalog lists equipped models relative
+to its directory.
+
+```powershell
+$package = bun sandbox/poc/league-spectator/replay/tools/research/build-local-scout-mayhem-package.mjs $inputs | ConvertFrom-Json
+$env:SCOUT_REPLAY_E2E_MANIFEST = $package.manifestPath
+$env:SCOUT_REPLAY_E2E_ROFL = $rofl
+Push-Location packages/scout-for-lol/packages/app
+bun --no-install --bun playwright test --config e2e/public-replay/recorded-playwright.config.ts
+Pop-Location
+```
+
+Use the original `NA1-5686263770.rofl`. The test checks the ten recorded
+champions and textured geometry, runs the 1:00–1:30 window at 1×, rewinds, and
+checks a timestamp and player camera shared with a fresh signed-out browser.
+This private fixture renders terrain and champion movement. Bloom flow-map
+shading and combat presentation are incomplete.
+
 ## Local Scout player demo
 
 `scout-demo.tsx` mounts the app's `ReplaySessionPlayer` with

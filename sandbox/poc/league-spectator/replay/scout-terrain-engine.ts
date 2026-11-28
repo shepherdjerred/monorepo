@@ -207,7 +207,7 @@ function recordedMapActors(
   return actors;
 }
 
-/** Private renderer for the exact saved replay and its prepared Map11 assets. */
+/** Private renderer for an exact saved replay and its prepared map assets. */
 export const createReplayEngine: ReplayEngineFactory = async ({
   canvas,
   replay,
@@ -221,10 +221,14 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const read = async (path: string) =>
     (await resources.read(path.slice(1))).buffer;
   const scene = SceneSchema.parse(parseTerrainJson(await read("/scene.json")));
+  const capabilities = localManifest.capabilities;
+  const mayhemMapSkin =
+    capabilities.mapId === 12 ? capabilities.mayhemMapSkin : undefined;
   if (
     scene.identity.build !== localManifest.gameBuild ||
     scene.identity.protocol !== localManifest.protocol ||
-    scene.identity.replaySha256 !== localManifest.capabilities.replaySha256
+    scene.identity.replaySha256 !== capabilities.replaySha256 ||
+    scene.identity.mayhemMapSkin !== mayhemMapSkin
   )
     throw new ReplayCapabilityError(
       "incompatible-build",

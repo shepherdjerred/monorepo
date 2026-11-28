@@ -353,7 +353,9 @@ def main():
         parser.add_argument(name, type=Path)
     for name in ("assets", "creations", "stops"):
         parser.add_argument(f"--{name}-sha256", required=True)
-    parser.add_argument("--pick", action="append", required=True, help="hex key:emitter:handle")
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--pick", action="append", help="hex key:emitter:handle")
+    selection.add_argument("--all-ground-glows", action="store_true")
     parser.add_argument(
         "--world-ground-quad",
         choices=("primary", "alternate"),
@@ -362,7 +364,9 @@ def main():
     args = parser.parse_args()
     cameras = {"primary": (11853, 1900, 10747), "alternate": (12000, 1400, 11700)}
     camera = cameras.get(args.world_ground_quad)
-    if camera is not None and args.pick != ["685154d2:GroundGlow1:1073820917"]:
+    if args.all_ground_glows and camera is None:
+        parser.error("Full GroundGlow1 replay sampling requires a camera control")
+    if camera is not None and not args.all_ground_glows and args.pick != ["685154d2:GroundGlow1:1073820917"]:
         parser.error("The world-quad probe is scoped to the authenticated GroundGlow1 event")
     if not __debug__:
         raise RuntimeError("Run this probe with Python assertions enabled")
@@ -382,20 +386,59 @@ def main():
     ):
         raise ValueError("Incompatible native creation and stop provenance")
 
+    if args.all_ground_glows:
+        # The full offline inventory is tied to the same fixture and resolved
+        # Maokai skin as the individually reviewed battle impact.
+        if (args.assets_sha256, args.creations_sha256, args.stops_sha256) != (
+            "d65448fc88202817178adaa317121b3ee1156d4830c11769232adbbbbdbe3195",
+            "d5d2185d10acf9cad99fc04df9edae94d48497d5bb88b47e64867e627a247bc8",
+            "6ddb6bf54c460b2f3df02c46454af247eda1c0340a01d2de39fbddf00f8220ed",
+        ):
+            raise ValueError("Unreviewed GroundGlow1 full-match inputs")
+        if creations["mode"] != "creation-inventory" or creations["window"] != stops["window"]:
+            raise ValueError("GroundGlow1 requires matching full creation and stop coverage")
+        picks = [
+            ("685154d2", "GroundGlow1", event)
+            for event in creations["events"]
+            if (event.get("descriptor") or {}).get("resourceKey") == 0x685154D2
+        ]
+        if len(picks) != 40 or len({event["handle"] for _, _, event in picks}) != len(picks):
+            raise ValueError("GroundGlow1 full-match selection differs")
+    else:
+        picks = []
+        for picked in args.pick:
+            key, name, handle = picked.split(":")
+            [event] = [row for row in creations["events"] if row["handle"] == int(handle)]
+            picks.append((key, name, event))
+
     out = []
-    for picked in args.pick:
-        key, name, handle = picked.split(":")
+    for key, name, event in picks:
         [asset] = [row for row in assets if row["key"] == key]
-        [event] = [row for row in creations["events"] if row["handle"] == int(handle)]
         if (
             event["status"] != "detached-placement-confirmed"
             or event["parent"] != 0
             or event["descriptor"]["resourceKey"] != int(key, 16)
             or event["descriptor"]["flags"] not in (32, 48)
             or event["descriptor"]["scaleRate"][1] != 1
-            or not any(stamp == event["stamp"] and source == event["handle"] for stamp, _, source in asset["entries"])
+            or (
+                not args.all_ground_glows
+                and not any(
+                    stamp == event["stamp"] and source == event["handle"] for stamp, _, source in asset["entries"]
+                )
+            )
         ):
             raise ValueError("Authored definition lacks a matching detached event")
+        if args.all_ground_glows:
+            origin, secondary, direction = event["descriptor"]["positions"]
+            if (
+                event["owner"] != 1073742170
+                or event["descriptor"]["flags"] != 32
+                or event["descriptor"]["scaleRate"] != [1.25, 1]
+                or secondary != origin
+                or direction != [0, 0, 0]
+                or not all(math.isfinite(lane) for lane in origin)
+            ):
+                raise ValueError("GroundGlow1 differs from the verified world placement branch")
         if not (stops["window"][0] <= event["stamp"] < stops["window"][1]):
             raise ValueError("Detached event is outside the native stop window")
         [fields] = [

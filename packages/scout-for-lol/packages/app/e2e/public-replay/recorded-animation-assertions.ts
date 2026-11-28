@@ -77,7 +77,8 @@ export async function verifyRecordedChampionAnimation(
   testInfo: TestInfo,
 ) {
   if (fixture.current) {
-    expect([502, 1020]).toContain(fixture.cueCount);
+    expect([502, 1020, 1031]).toContain(fixture.cueCount);
+    const expanded = fixture.cueCount >= 1020;
     await verifyLaterCue(page, testInfo, {
       actor: "1073742167",
       indexCount: 16_995,
@@ -85,7 +86,7 @@ export async function verifyRecordedChampionAnimation(
       screenshot: "recorded-current-wukong-action.png",
     });
     expect(await paletteAt(page, 58.3, 16_995)).toBeUndefined();
-    if (fixture.cueCount === 1020) await verifyWukongPathFacing(page);
+    if (expanded) await verifyWukongPathFacing(page);
     await verifyLaterCue(page, testInfo, {
       actor: "1073742164",
       indexCount: 20_190,
@@ -94,7 +95,7 @@ export async function verifyRecordedChampionAnimation(
       absentAt: [863.8, 865.8],
       screenshot: "recorded-current-jhin-reload.png",
     });
-    if (fixture.cueCount === 1020) {
+    if (expanded) {
       await verifyLaterCue(page, testInfo, {
         actor: "1073742161",
         indexCount: 16_356,
@@ -108,6 +109,24 @@ export async function verifyRecordedChampionAnimation(
         clocks: [1718.1, 1718.4],
         absentAt: [1718, 1718.6],
         screenshot: "recorded-current-lee-cast.png",
+      });
+    }
+    if (fixture.cueCount === 1031) {
+      // The draw probe associates each palette upload with the first material draw.
+      const sennaFirstMaterialIndices = 5136;
+      await verifyLaterCue(page, testInfo, {
+        actor: "1073742165",
+        indexCount: sennaFirstMaterialIndices,
+        clocks: [983.9, 984.4],
+        absentAt: [983.7, 984.8],
+        screenshot: "recorded-current-senna-exit-to-run.png",
+      });
+      await verifyLaterCue(page, testInfo, {
+        actor: "1073742165",
+        indexCount: sennaFirstMaterialIndices,
+        clocks: [2220.2, 2220.7],
+        absentAt: [2220, 2221],
+        screenshot: "recorded-current-senna-exit-to-idle.png",
       });
     }
     return;

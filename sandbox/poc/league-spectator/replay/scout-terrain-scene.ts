@@ -714,6 +714,7 @@ const TerrainSceneFields = z.object({
     durationMilliseconds: z.number().int().positive(),
     participantCount: z.literal(10),
     replaySha256: z.string().regex(/^[a-f0-9]{64}$/),
+    mayhemMapSkin: z.string().min(1).optional(),
   }),
   winningTeam: teamId.optional(),
   teamVision: TeamVisionSchema.optional(),
