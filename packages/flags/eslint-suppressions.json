@@ -19,6 +19,11 @@
       "count": 1
     }
   },
+  "src/client/views/archive-page.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 6
+    }
+  },
   "src/client/views/compare-page.tsx": {
     "@typescript-eslint/no-deprecated": {
       "count": 12
@@ -32,6 +37,11 @@
   "src/client/views/drift-page.tsx": {
     "@typescript-eslint/no-deprecated": {
       "count": 10
+    }
+  },
+  "src/client/views/history-panel.tsx": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
     }
   },
   "src/client/views/home-page.tsx": {

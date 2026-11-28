@@ -106,5 +106,23 @@
     "file": "src/client/views/home-page.tsx",
     "count": 4,
     "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "theme-store-key",
+    "file": "src/client/app-harness.test-support.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1 (added by #5325 after the first baseline). Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/archive-page.tsx",
+    "count": 4,
+    "reason": "Baseline at CU1 (added by #5325 after the first baseline). Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/history-panel.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1 (added by #5325 after the first baseline). Flags moves onto the shared pieces in FL1."
   }
 ]
