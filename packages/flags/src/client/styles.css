@@ -324,6 +324,19 @@ p.fl-detail {
   font-size: 12.5px;
 }
 
+.fl-notice[data-tone="warning"] {
+  border-color: var(--ui-sev-warning);
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+}
+
+/* A model picker: the catalog select, its custom id field and any warning */
+.fl-choice {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
 /* Review dialog */
 .fl-dialog {
   width: min(64rem, calc(100vw - 2rem));

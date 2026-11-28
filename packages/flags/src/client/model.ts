@@ -11,7 +11,6 @@ import {
   flagValueEncoding,
   validateVariantValue,
 } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
-import generatedValueSchemas from "@shepherdjerred/feature-flags/flag-value-schemas.generated.json";
 import {
   issuePointer,
   type VariantEncoding,
@@ -22,6 +21,11 @@ import {
   type ManagedVariantFlagKey,
 } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import { BooleanFlagSchema } from "@shepherdjerred/flags/schema.ts";
+import {
+  managedChoices,
+  managedValueSchema,
+  type ValueChoices,
+} from "./value-choices.ts";
 
 const STAGE_LABELS: Readonly<Record<string, string>> = {
   beta: "Beta",
@@ -355,28 +359,22 @@ export type ValueKind =
       readonly kind: "managed";
       readonly key: ManagedVariantFlagKey;
       readonly encoding: VariantEncoding;
+      /** Values to pick from instead of typing; see `value-choices.ts`. */
+      readonly choices?: ValueChoices;
     }
   | { readonly kind: "unmanaged" };
-
-const GeneratedValueSchemasSchema = z.record(
-  z.string(),
-  z.strictObject({
-    encoding: z.enum(["string", "number", "json"]),
-    schema: z.record(z.string(), z.unknown()),
-  }),
-);
-
-/** `flag-value-schemas.generated.json`: each managed key's decoded-value JSON Schema. */
-const valueJsonSchemas = GeneratedValueSchemasSchema.parse(
-  generatedValueSchemas,
-);
 
 export function valueKind(flag: FlagValue): ValueKind {
   if (flag.type === "boolean") return { kind: "boolean" };
   const key = ManagedVariantFlagKeySchema.safeParse(flag.key);
-  return key.success
-    ? { kind: "managed", key: key.data, encoding: flagValueEncoding(key.data) }
-    : { kind: "unmanaged" };
+  if (!key.success) return { kind: "unmanaged" };
+  const choices = managedChoices(key.data);
+  return {
+    kind: "managed",
+    key: key.data,
+    encoding: flagValueEncoding(key.data),
+    ...(choices === undefined ? {} : { choices }),
+  };
 }
 
 /** JSON-encoded variants open as JSON; everything else opens as a form. */
@@ -491,7 +489,9 @@ const UNMANAGED_SCHEMA: Record<string, unknown> = { type: "string" };
 /**
  * The JSON Schema Monaco validates JSON-mode text against: the flag object
  * with its type and key fixed (`const`) for boolean flags, the registry's
- * decoded-value schema for managed variants, a plain string otherwise.
+ * decoded-value schema for managed variants (catalog models as `examples`
+ * for model-id keys), a plain string otherwise. Each key's schema is one
+ * stable object, so the editor registers it once.
  */
 export function jsonSchemaFor(flag: FlagValue): Record<string, unknown> {
   const kind = valueKind(flag);
@@ -504,11 +504,9 @@ export function jsonSchemaFor(flag: FlagValue): Record<string, unknown> {
     booleanSchemas.set(flag.key, schema);
     return schema;
   }
-  if (kind.kind === "unmanaged") return UNMANAGED_SCHEMA;
-  const entry = valueJsonSchemas[kind.key];
-  if (entry === undefined)
-    throw new Error(`flag-value-schemas.generated.json is missing ${kind.key}`);
-  return entry.schema;
+  return kind.kind === "unmanaged"
+    ? UNMANAGED_SCHEMA
+    : managedValueSchema(kind.key);
 }
 
 /** What the review and conflict diffs compare: a JSON variant's decoded value, else the flag. */

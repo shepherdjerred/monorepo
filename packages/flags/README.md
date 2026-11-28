@@ -255,6 +255,17 @@ so text that does not parse yet is still there when you switch back.
   saved compactly with object defaults filled in. `number` and `string`
   variants are edited as a JSON number or string literal.
 
+Categorical variants are picked rather than typed. A key whose registry schema
+is an `enum` or `const` gets a closed select. A model-id key (tagged
+`x-model-route` by `modelIdFor` in the registry) gets a select of the
+`@shepherdjerred/llm-models` catalog models its consumer can route — current,
+then preview, then deprecated, never `pricingOnly` — plus "Custom…", which
+reveals a text field for a model the catalog does not list yet. A stored value
+outside the list opens on Custom. A warning shows when the value is not in the
+catalog, lacks the route the consumer needs, or is deprecated; the registry
+still accepts any well-formed model id, so the warning never blocks a save.
+JSON mode offers the same catalog models as completions.
+
 `json`-encoded variants open in JSON mode; everything else opens in Form mode.
 A variant whose key is not in the value registry is shown as plain text with a
 notice that the server rejects writes to unmanaged keys.

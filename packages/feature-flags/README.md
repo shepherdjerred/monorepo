@@ -98,6 +98,14 @@ strings; stored strings carry no surrounding whitespace where consumers trimmed.
 `storm-forum-season` lists the `@shepherdjerred/storm-theme` catalog ids,
 guarded by a storm-forum test.
 
+Model-id keys use `modelIdFor(route)`: `ModelIdSchema` tagged in its JSON
+Schema with `x-model-route`, the `@shepherdjerred/llm-models` route the
+consumer resolves (`{ kind: "native", endpoint, requires? }`, `codexSdk`, or
+`claudeAgentSdk`). The tag does not change what parses, and this package does
+not depend on the model catalog; the Flags editor reads the tag to offer the
+catalog models that route. Set the route from the consumer's call site when
+adding a model-id key.
+
 `bun run generate` also writes `src/flag-value-schemas.generated.json`
 (`{ [key]: { encoding, schema } }`, JSON Schema draft 2020-12 of the decoded
 input) for editors. Tests fail when either generated file is stale. When adding
