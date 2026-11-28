@@ -88,7 +88,8 @@ function saveState(gl, uniformCount) {
 }
 
 /**
- * Draw admitted .8428 native quad records using the verified cold remap preview.
+ * Draw admitted .8428 native quad and world ribbon records using the verified
+ * cold remap preview.
  * Texture images remain owned by the caller.
  */
 export function createRecordedParticleRenderer(
@@ -268,6 +269,7 @@ export function createRecordedParticleRenderer(
     function draw(viewProjection, camera, particles) {
       if (particles.length === 0) return;
       const restoreDraw = saveState(gl, uniformBuffers.length);
+      let restoreRibbon;
       try {
         gl.useProgram(program);
         gl.bindVertexArray(vertexArray);
@@ -315,6 +317,7 @@ export function createRecordedParticleRenderer(
           position,
           vertices,
           indices,
+          worldRibbon,
         } of particles) {
           const particleProgram = alphaTest ? program : noAlphaTestProgram;
           if (particleProgram === undefined)
@@ -332,26 +335,56 @@ export function createRecordedParticleRenderer(
           }
           const base = uploaded.get(texture);
           const paletteTexture = uploadedPalettes.get(palette);
-          if (
-            !base ||
-            !paletteTexture ||
-            vertices.length !== worldVertices.length ||
-            indices.length !== indicesPerQuad * 2
-          )
-            throw Error("Invalid recorded particle quad or missing texture");
-          worldVertices.set(vertices);
-          for (let vertex = 0; vertex < verticesPerQuad; vertex++) {
-            const at = vertex * vertexStride;
-            const right = vertexView.getFloat32(at, true);
-            // Keep the native world-space center while orienting the plane.
-            const up = vertexView.getFloat32(at + 4, true) - centerY;
-            for (let axis = 0; axis < 3; axis++) {
-              const world =
-                position[axis] +
-                (axis === 1 ? centerY : 0) +
-                right * basis[axis] +
-                up * basis[4 + axis];
-              vertexView.setFloat32(at + axis * 4, world, true);
+          if (!base || !paletteTexture)
+            throw Error("Missing recorded particle texture");
+          if (worldRibbon === true) {
+            if (
+              !(vertices instanceof Uint8Array) ||
+              vertices.length === 0 ||
+              vertices.length % vertexStride !== 0 ||
+              !(indices instanceof Uint8Array) ||
+              indices.length === 0 ||
+              indices.length % 6 !== 0 ||
+              !alphaTest ||
+              blend !== "src-alpha-one"
+            )
+              throw Error("Invalid recorded world ribbon");
+            if (restoreRibbon === undefined) {
+              const depthFunc = gl.getParameter(gl.DEPTH_FUNC);
+              const offsetEnabled = gl.isEnabled(gl.POLYGON_OFFSET_FILL);
+              const offsetFactor = gl.getParameter(gl.POLYGON_OFFSET_FACTOR);
+              const offsetUnits = gl.getParameter(gl.POLYGON_OFFSET_UNITS);
+              restoreRibbon = () => {
+                gl.depthFunc(depthFunc);
+                gl.polygonOffset(offsetFactor, offsetUnits);
+                if (!offsetEnabled) gl.disable(gl.POLYGON_OFFSET_FILL);
+              };
+              gl.depthFunc(gl.LEQUAL);
+              gl.enable(gl.POLYGON_OFFSET_FILL);
+              gl.polygonOffset(-1, -2);
+            }
+          } else {
+            restoreRibbon?.();
+            restoreRibbon = undefined;
+            if (
+              vertices.length !== worldVertices.length ||
+              indices.length !== indicesPerQuad * 2
+            )
+              throw Error("Invalid recorded particle quad");
+            worldVertices.set(vertices);
+            for (let vertex = 0; vertex < verticesPerQuad; vertex++) {
+              const at = vertex * vertexStride;
+              const right = vertexView.getFloat32(at, true);
+              // Keep the native world-space center while orienting the plane.
+              const up = vertexView.getFloat32(at + 4, true) - centerY;
+              for (let axis = 0; axis < 3; axis++) {
+                const world =
+                  position[axis] +
+                  (axis === 1 ? centerY : 0) +
+                  right * basis[axis] +
+                  up * basis[4 + axis];
+                vertexView.setFloat32(at + axis * 4, world, true);
+              }
             }
           }
           if (paletteTexture !== activePalette) {
@@ -368,11 +401,21 @@ export function createRecordedParticleRenderer(
           }
           gl.activeTexture(gl.TEXTURE1);
           gl.bindTexture(gl.TEXTURE_2D, base);
-          gl.bufferData(gl.ARRAY_BUFFER, worldVertices, gl.STREAM_DRAW);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            worldRibbon === true ? vertices : worldVertices,
+            gl.STREAM_DRAW,
+          );
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STREAM_DRAW);
-          gl.drawElements(gl.TRIANGLES, indicesPerQuad, gl.UNSIGNED_SHORT, 0);
+          gl.drawElements(
+            gl.TRIANGLES,
+            indices.length / 2,
+            gl.UNSIGNED_SHORT,
+            0,
+          );
         }
       } finally {
+        restoreRibbon?.();
         restoreDraw();
       }
     }

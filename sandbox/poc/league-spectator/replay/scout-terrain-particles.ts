@@ -69,10 +69,46 @@ const multipleProgramsTrack = familyTrack.extend({
     .min(1),
   shaders: trackIdentity.shape.shaders.extend({ noAlphaTestFragment: glsl }),
 });
+const indexedRibbonTrack = multipleProgramsTrack.extend({
+  schema: z.literal(4),
+  worldRibbon: z.strictObject({
+    texture: png,
+    palette: png,
+    paths: z
+      .array(
+        z.strictObject({
+          handle: particleEffect.shape.handle,
+          start: z.number().nonnegative(),
+          end: z.number().positive(),
+          samples: z
+            .array(
+              z.strictObject({
+                age: z.number().positive(),
+                vertices: z
+                  .string()
+                  .min(168)
+                  .max(57344)
+                  .regex(/^[a-f0-9]+$/),
+                indices: z
+                  .string()
+                  .min(12)
+                  .max(12288)
+                  .regex(/^[a-f0-9]+$/),
+              }),
+            )
+            .min(1)
+            .max(960),
+        }),
+      )
+      .min(1)
+      .max(256),
+  }),
+});
 const particleTrack = z.discriminatedUnion("schema", [
   singleFamilyTrack,
   familyTrack,
   multipleProgramsTrack,
+  indexedRibbonTrack,
 ]);
 
 function normalizeTrack(track: z.infer<typeof particleTrack>) {
@@ -102,8 +138,10 @@ function decodeHex(value: string) {
   return bytes;
 }
 
-function decodeQuad(value: string) {
+function decodeVertices(value: string, localPlane: boolean) {
   const bytes = decodeHex(value);
+  if (value.length % 56 !== 0)
+    throw new Error("A recorded particle vertex layout is misaligned.");
   const view = new DataView(bytes.buffer);
   for (let offset = 0; offset < view.byteLength; offset += 28) {
     if (
@@ -115,12 +153,66 @@ function decodeQuad(value: string) {
       )
     )
       throw new Error("A recorded particle vertex has a nonfinite lane.");
-    if (view.getFloat32(offset + 8, true) !== 0)
+    if (localPlane && view.getFloat32(offset + 8, true) !== 0)
       throw new Error(
         "A recorded particle quad is outside its local XY plane.",
       );
   }
   return bytes;
+}
+
+function compileWorldRibbon(
+  {
+    paths,
+    texture,
+    palette,
+  }: z.infer<typeof indexedRibbonTrack>["worldRibbon"],
+  duration: number,
+) {
+  if (new Set(paths.map(({ handle }) => handle)).size !== paths.length)
+    throw new Error("A recorded ribbon repeats a missile handle.");
+  const compiled = paths.map(({ start, end, samples }) => {
+    if (start >= end || end > duration)
+      throw new Error("A recorded ribbon interval is outside the replay.");
+    let previous = 0;
+    const frames = samples.map(
+      ({ age, vertices: packed, indices: rawIndices }) => {
+        if (
+          age <= previous ||
+          age >= end - start ||
+          rawIndices.length % 12 !== 0
+        )
+          throw new Error(
+            "A recorded ribbon sample has an invalid time or index layout.",
+          );
+        previous = age;
+        const vertices = decodeVertices(packed, false);
+        const indices = decodeHex(rawIndices);
+        const count = vertices.length / 28;
+        const view = new DataView(indices.buffer);
+        for (let offset = 0; offset < indices.length; offset += 2)
+          if (view.getUint16(offset, true) >= count)
+            throw new Error(
+              "A recorded ribbon index is outside its vertex data.",
+            );
+        return { age, vertices, indices };
+      },
+    );
+    return { start, end, frames };
+  });
+  const style = {
+    texture,
+    palette,
+    blend: "src-alpha-one" as const,
+    alphaTest: true,
+    worldRibbon: true as const,
+  };
+  return (time: number) =>
+    compiled.flatMap(({ start, end, frames }) => {
+      if (time < start || time >= end) return [];
+      const frame = frames.findLast(({ age }) => age <= time - start);
+      return frame === undefined ? [] : [{ ...style, ...frame }];
+    });
 }
 
 export async function loadRecordedTerrainParticles(
@@ -165,9 +257,11 @@ export async function loadRecordedTerrainParticles(
     throw new Error("The recorded particle track disagrees with this replay.");
   const components = track.families.flatMap((family) => family.components);
   const noAlphaTestFragment =
-    track.schema === 3 ? track.shaders.noAlphaTestFragment : undefined;
+    track.schema === 3 || track.schema === 4
+      ? track.shaders.noAlphaTestFragment
+      : undefined;
   if (
-    track.schema === 3 &&
+    (track.schema === 3 || track.schema === 4) &&
     (track.shaders.fragment === noAlphaTestFragment ||
       !track.families.some(({ components }) =>
         components.some(({ alphaTest }) => !alphaTest),
@@ -178,6 +272,17 @@ export async function loadRecordedTerrainParticles(
     );
   const palettePaths = new Set(components.map(({ palette }) => palette));
   const basePaths = new Set(components.map(({ texture }) => texture));
+  const worldRibbonAt =
+    track.schema === 4
+      ? compileWorldRibbon(
+          track.worldRibbon,
+          identity.durationMilliseconds / 1000,
+        )
+      : undefined;
+  if (track.schema === 4) {
+    palettePaths.add(track.worldRibbon.palette);
+    basePaths.add(track.worldRibbon.texture);
+  }
   const expectedTextures = new Set([...palettePaths, ...basePaths]);
   if (
     (track.schema === 1 && expectedTextures.size !== 3) ||
@@ -206,7 +311,7 @@ export async function loadRecordedTerrainParticles(
           indices: decodeHex(indices),
           samples: samples.map(({ age, vertices }) => ({
             age,
-            vertices: decodeQuad(vertices),
+            vertices: decodeVertices(vertices, true),
           })),
         };
       }),
@@ -214,7 +319,7 @@ export async function loadRecordedTerrainParticles(
   );
   const maximumDuration = Math.max(...lifetimes.values());
   function sampleAt(timeSeconds: number) {
-    const particles = [];
+    const legacyParticles = [];
     let first = 0;
     let end = track.effects.length;
     while (first < end) {
@@ -233,14 +338,16 @@ export async function loadRecordedTerrainParticles(
         if (age >= lifetime) continue;
         const sample = samples.findLast((entry) => entry.age <= age);
         if (sample !== undefined)
-          particles.push({
+          legacyParticles.push({
             ...style,
             position,
             vertices: sample.vertices,
           });
       }
     }
-    return particles;
+    return worldRibbonAt === undefined
+      ? legacyParticles
+      : [...worldRibbonAt(timeSeconds), ...legacyParticles];
   }
 
   const shader = async (path: string) => decoder.decode(await read(`/${path}`));

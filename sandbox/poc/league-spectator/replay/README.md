@@ -868,13 +868,36 @@ For the same recorded fight, trace Maokai R movement with the verified missile
 inputs, the original movement controller, and the exact Map11 navgrid. The
 movement report stops each trace at its first recorded contact or stop. It
 records the clock and the original controller's position and velocity samples.
-The report covers movement only. Rendering needs the authored emitter and its
-activation, update, and teardown behavior.
+The movement report is also the input to the authored Maokai ribbon probe.
 
 ```powershell
 bun sandbox/poc/league-spectator/replay/tools/research/verify-rift-maokai-launches.mjs $replayPath $macGameExecutable $leagueInstallation $newPrivateLaunchStem uv run --with unicorn python
 uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-maokai-movement.py $macGameExecutable "$newPrivateLaunchStem.navgrid" "$newPrivateLaunchStem.json" $newPrivateMotionReceipt
 ```
+
+To add the Maokai skin 33 ground ribbon to an existing schema 3 particle track,
+generate the original indexed world-space samples. The author compares the two
+random controls, checks the original ground pass and authored textures, and
+preserves the existing particle components in a schema 4 track.
+
+```powershell
+foreach ($slot in 0..2) {
+  foreach ($random in @('0.125', '0.875')) {
+    uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-maokai-ribbon.py $macGameExecutable $newPrivateMotionReceipt $authoredMaokaiEffectReceipt $slot $random "$privateRibbonReceipts/ribbon-final-$slot-$random.json"
+  }
+}
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-maokai-ribbon.mjs $privateV3TrackDirectory $newPrivateMotionReceipt $privateRibbonReceipts $authoredRibbonMip0Png $authoredDefaultColorPng $newPrivateRibbonTrackDirectory
+```
+
+The renderer uploads the captured ribbon geometry without rotating it toward
+the camera. All vision shows these ribbons for three recorded missiles up to
+the verified contact or stop. The remaining emitters and post-stop trails are
+outside this track.
+
+The Illaoi spawn probe captures the original `Ground_SLOW2` arbitrary quads at
+the recorded detached origin. It also checks the native stop request. It supplies
+an identity attachment and leaves ground-mask, fog and post-stop scheduling
+outside the CPU geometry receipt.
 
 Capture continuous 1× playback of the reviewed fight from a signed-out
 loopback Scout preview. The video and timeline cover 28:32–28:41. The timeline

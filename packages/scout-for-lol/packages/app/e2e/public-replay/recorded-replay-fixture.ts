@@ -52,6 +52,12 @@ const ParticleComponents = z.array(
     samples: z.array(z.object({ age: z.number() })),
   }),
 );
+const FamilyParticleTrack = z.object({
+  effects: z.array(z.object({ start: z.number(), family: z.string() })).min(1),
+  families: z.array(
+    z.object({ id: z.string(), components: ParticleComponents }),
+  ),
+});
 
 export async function readRecordedParticleTrack(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -65,12 +71,20 @@ export async function readRecordedParticleTrack(
         effects: z.array(effect).min(1),
         components: ParticleComponents,
       }),
-      z.object({
+      FamilyParticleTrack.extend({
         schema: z.union([z.literal(2), z.literal(3)]),
-        effects: z.array(effect.extend({ family: z.string() })).min(1),
-        families: z.array(
-          z.object({ id: z.string(), components: ParticleComponents }),
-        ),
+      }),
+      FamilyParticleTrack.extend({
+        schema: z.literal(4),
+        worldRibbon: z.object({
+          paths: z.array(
+            z.object({
+              start: z.number(),
+              end: z.number(),
+              samples: z.array(z.object({ age: z.number() })).nonempty(),
+            }),
+          ),
+        }),
       }),
     ])
     .parse(
@@ -112,12 +126,19 @@ export async function verifyRecordedParticlePreview(
     const families = new Map(
       track.families.map(({ id, components: parts }) => [id, parts]),
     );
+    const ribbons =
+      track.schema === 4
+        ? track.worldRibbon.paths.filter(
+            ({ start, end, samples }) =>
+              time < end && samples.some(({ age }) => age <= time - start),
+          ).length
+        : 0;
     return track.effects.reduce((draws, { start, family }) => {
       const parts = families.get(family);
       if (parts === undefined)
         throw new Error("Missing recorded effect family.");
       return draws + expectedFor(start, parts);
-    }, 0);
+    }, ribbons);
   };
 
   await vision.selectOption("all");
@@ -136,13 +157,23 @@ export async function verifyRecordedParticlePreview(
     await expectAt(1719, 1);
   }
   if (
-    track.schema === 3 &&
+    (track.schema === 3 || track.schema === 4) &&
     track.families.some(({ id }) => id === "senna-soul-death")
   ) {
     await expectAt(254.7, 0);
     await expectAt(255, 1);
     await expectAt(255.3, 0);
     await expectAt(255, 1);
+  }
+  if (track.schema === 4) {
+    for (const seconds of [1713.9, 1714.3, 1714.7, 1714.9, 1715.2, 1714.3])
+      await expectAt(seconds, expectedDraws(seconds));
+    await vision.selectOption("blue");
+    await expect.poll(count).toBe(0);
+    await vision.selectOption("red");
+    await expect.poll(count).toBe(0);
+    await vision.selectOption("all");
+    await expect.poll(count).toBe(expectedDraws(1714.3));
   }
   const activeDraws = expectedDraws(2095.2);
   expect(activeDraws).toBeGreaterThan(0);
