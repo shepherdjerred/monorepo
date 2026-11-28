@@ -263,7 +263,7 @@ test("keeps direct TypeScript on 6 without constraining the native alias", async
     description:
       "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
     groupName: "typescript",
-    matchManagers: ["bun", "npm"],
+    matchManagers: ["bun", "npm", "custom.jsonata"],
     matchDepNames: ["typescript"],
     allowedVersions: "<7",
   });

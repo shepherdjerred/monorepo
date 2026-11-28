@@ -15,6 +15,7 @@ const turboTasks = [
   "check-directory-file-counts",
   "check-flag-usage",
   "check-ai-architecture",
+  "check-console-stack",
   "check-floating-deps",
   "check-patched-deps",
   "check-ci-env",

@@ -40,6 +40,8 @@ describe("classifySpec", () => {
       "workspace:*",
       "file:../eslint-config",
       "link:../thing",
+      "catalog:",
+      "catalog:testing",
     ]) {
       expect(classifySpec(spec)).toEqual({ ok: true });
     }
@@ -94,6 +96,20 @@ describe("manifestErrors", () => {
         JSON.stringify({ dependencies: { broken: 1 } }),
       ),
     ).toThrow("dependencies.broken must be a string");
+  });
+});
+
+describe("catalog entries", () => {
+  test("are checked like dependency specs", () => {
+    const manifest = JSON.stringify({
+      catalog: { react: "19.3.1", zod: "latest", clsx: "catalog:" },
+      catalogs: { testing: { vitest: "*" } },
+    });
+    const errors = manifestErrors("package.json", manifest);
+    expect(errors).toHaveLength(3);
+    expect(errors.join("\n")).toContain("catalog.zod");
+    expect(errors.join("\n")).toContain("catalog.clsx");
+    expect(errors.join("\n")).toContain("catalogs.testing.vitest");
   });
 });
 

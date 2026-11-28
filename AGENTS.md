@@ -182,11 +182,11 @@ review gate observes both the code and thread state.
 
 ## Task-specific guidance
 
-Use the matching repository skill in `.agents/skills/` for repeatable delivery,
-homelab, Delivery recovery, Scout, Temporal, TaskNotes, Minecraft harness and
-building, docs, Tracker, Experiments, PostHog, Discord, or report rendering
-work. Package-local runtime skills remain application assets and do not replace
-repository workflow guidance.
+Use the matching repository skill in `.agents/skills/` for delivery, homelab,
+Delivery recovery, Scout, Temporal, TaskNotes, Minecraft, docs, Tracker,
+Experiments, PostHog, Discord, or report rendering work. Package-local runtime
+skills remain application assets, not repository workflow guidance. First-party
+web consoles follow `packages/docs/wiki/src/content/docs/reference/console-stack.md`.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

@@ -282,6 +282,28 @@
         "!packages/dotfiles/dot_agents/skills/**"
       ]
     },
+    // The ten ops consoles share one stack. The check reads each console's
+    // package.json (and the root catalog), so those manifests are its inputs.
+    "//#check-console-stack": {
+      "inputs": [
+        "package.json",
+        "packages/alert-dashboard/package.json",
+        "packages/delivery/package.json",
+        "packages/tracker/package.json",
+        "packages/errors/package.json",
+        "packages/mail/package.json",
+        "packages/flags/package.json",
+        "packages/feeds/package.json",
+        "packages/golink/package.json",
+        "packages/charts/package.json",
+        "packages/charts/Cargo.toml",
+        "packages/ci-cache/package.json",
+        "packages/ci-cache/Cargo.toml",
+        "packages/console-ui/package.json",
+        "scripts/checks/check-console-stack.ts",
+        "scripts/checks/console-stack-rules.ts"
+      ]
+    },
     // Dependency specs must be lockfile-pinnable: a dist-tag re-resolves on
     // every install, so the registry moving `latest` breaks --frozen-lockfile
     // on main with no commit to blame.

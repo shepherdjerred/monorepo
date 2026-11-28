@@ -11,12 +11,15 @@ import {
 
 const ConfigSchema = z.object({
   customManagers: z.array(
-    z.object({
-      customType: z.literal("regex"),
-      description: z.string(),
-      managerFilePatterns: z.array(z.string()),
-      matchStrings: z.array(z.string()),
-    }),
+    z.union([
+      z.object({
+        customType: z.literal("regex"),
+        description: z.string(),
+        managerFilePatterns: z.array(z.string()),
+        matchStrings: z.array(z.string()),
+      }),
+      z.looseObject({ customType: z.literal("jsonata") }),
+    ]),
   ),
 });
 
@@ -24,7 +27,9 @@ async function repositoryManagers(): Promise<RegexManager[]> {
   const config = ConfigSchema.parse(
     await Bun.file(`${import.meta.dir}/../../../renovate.json`).json(),
   );
-  return config.customManagers;
+  return config.customManagers.flatMap((manager) =>
+    manager.customType === "regex" ? [manager] : [],
+  );
 }
 
 // Fixtures are assembled from parts so this file never contains a real hint

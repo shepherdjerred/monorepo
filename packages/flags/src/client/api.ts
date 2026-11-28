@@ -72,12 +72,45 @@ async function getJson<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   return schema.parse(body);
 }
 
+const ListedSchema = z.array(
+  z.object({ id: z.string(), revision: z.number() }),
+);
+const RevisionSchema = z.object({ revision: z.number() });
+const DocumentKeySchema = z.tuple([
+  z.literal("document"),
+  z.string(),
+  z.string(),
+]);
+
+/**
+ * Keeps the summaries in step with edits. The deployment list and the drift
+ * report never refetch on their own; when a document arrives at a revision the
+ * list does not show (someone saved), both are refreshed.
+ */
+function keepSummariesFresh(queryClient: QueryClient): void {
+  queryClient.getQueryCache().subscribe((event) => {
+    if (event.type !== "updated" || event.action.type !== "success") return;
+    const key = DocumentKeySchema.safeParse(event.query.queryKey);
+    const saved = RevisionSchema.safeParse(event.action.data);
+    const listed = ListedSchema.safeParse(
+      queryClient.getQueryData(["deployments"]),
+    );
+    if (!key.success || !saved.success || !listed.success) return;
+    const [, catalog, stage] = key.data;
+    const id = `${catalog}/${stage}`;
+    const known = listed.data.find((entry) => entry.id === id);
+    if (known === undefined || known.revision === saved.data.revision) return;
+    void queryClient.invalidateQueries({ queryKey: ["deployments"] });
+    void queryClient.invalidateQueries({ queryKey: ["diff"] });
+  });
+}
+
 /**
  * The page's query client. Documents change only through this UI, which
  * invalidates what it writes, so nothing refetches on its own.
  */
 export function createQueryClient(): QueryClient {
-  return new QueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
@@ -86,6 +119,8 @@ export function createQueryClient(): QueryClient {
       },
     },
   });
+  keepSummariesFresh(queryClient);
+  return queryClient;
 }
 
 export function useDeployments() {

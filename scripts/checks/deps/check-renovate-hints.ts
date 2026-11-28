@@ -27,8 +27,23 @@ const RegexManagerSchema = z.object({
   matchStrings: z.array(z.string()),
 });
 
+/**
+ * Hinted pins are read only by regex managers. Other manager types (the
+ * JSONata manager that reads the root Bun catalog) are not hint readers.
+ */
+const CustomManagerSchema = z.union([
+  RegexManagerSchema,
+  z.looseObject({ customType: z.literal("jsonata") }),
+]);
+
 const RenovateConfigSchema = z.object({
-  customManagers: z.array(RegexManagerSchema),
+  customManagers: z
+    .array(CustomManagerSchema)
+    .transform((managers) =>
+      managers.flatMap((manager) =>
+        manager.customType === "regex" ? [manager] : [],
+      ),
+    ),
   customDatasources: z.record(z.string(), z.unknown()).optional(),
   ignorePaths: z.array(z.string()).optional(),
 });

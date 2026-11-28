@@ -3,6 +3,11 @@
  * Scaffolds a hosted first-party service in its prepared state.
  *
  *   bun scripts/misc/new-service.ts --name notes --kind web --port 7400 --host notes
+ *   bun scripts/misc/new-service.ts --name notes --kind web --port 7400 --host notes --console
+ *
+ * `--console` writes the first-party console stack (Hono on Bun, tRPC, Prisma
+ * on PostgreSQL, a Vite + React client on TanStack Router and console-ui) in
+ * place of the bare health server; see `new-service-console.ts`.
  *
  * It creates the package (Bun entrypoint with a health endpoint, Dockerfile),
  * a cdk8s chart on the matching first-party construct, the Argo Application
@@ -38,7 +43,7 @@ export const DOCKERHUB_SYNTH_OUTPUT =
   "packages/homelab/src/tofu/dockerhub/main.tf.json";
 /** The Dockerfile whose stages and base-image pins a new service starts from. */
 const DOCKERFILE_MODEL = "packages/tracker/Dockerfile";
-const FORMATTED = /\.(?:ts|json)$/u;
+const FORMATTED = /\.(?:tsx?|json|html)$/u;
 
 /**
  * Formats with this checkout's prettier configuration, whichever root the
@@ -116,7 +121,16 @@ export async function scaffoldService(
 }
 
 /** What the scaffolder leaves to its author; the how-to has the detail. */
-function nextSteps({ name }: ServiceOptions): string[] {
+function nextSteps({ name, console: isConsole }: ServiceOptions): string[] {
+  const consoleSteps =
+    isConsole === true
+      ? [
+          `  5. Replace the placeholder model in packages/${name}/prisma/schema.prisma, then`,
+          `     run bunx turbo run generate --filter=@shepherdjerred/${name} and add its migration.`,
+          "  6. Add the console to CONSOLES in scripts/checks/console-stack-rules.ts so",
+          "     bun run check-console-stack holds it to the standard.",
+        ]
+      : [];
   return [
     `Nothing deploys while ${activationConstant(name)} is false. Left to you:`,
     "  1. Bump the three inventory counts the new image and chart change:",
@@ -124,6 +138,7 @@ function nextSteps({ name }: ServiceOptions): string[] {
     `  2. Add ${name} to the inventory table in packages/README.md.`,
     `  3. Write packages/${name}/README.md and the service itself.`,
     "  4. Activate it in a later change, once its image is published.",
+    ...consoleSteps,
     'See the wiki how-to "Add a hosted service":',
     "  packages/docs/wiki/src/content/docs/how-to/add-a-hosted-service.md",
   ];

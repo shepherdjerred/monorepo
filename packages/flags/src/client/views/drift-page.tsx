@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback } from "react";
 import {
   deploymentPath,
   flagPath,
@@ -191,21 +191,27 @@ function DeploymentSection({
   );
 }
 
-/** Scrolls to `#<deployment id>` once the sections it names exist. */
-function useHashScroll(ready: boolean): void {
+/**
+ * The ref callback for the sections: it scrolls to `#<deployment id>` when the
+ * sections mount, which is once the report they name has loaded.
+ */
+function useHashScroll(): (element: HTMLElement | null) => void {
   const { hash } = useLocation();
-  useEffect(() => {
-    if (!ready || hash.length <= 1) return;
-    globalThis.document
-      .querySelector(`#${CSS.escape(decodeURIComponent(hash.slice(1)))}`)
-      ?.scrollIntoView({ block: "start" });
-  }, [ready, hash]);
+  return useCallback(
+    (element: HTMLElement | null) => {
+      if (element === null || hash.length <= 1) return;
+      element.ownerDocument
+        .querySelector(`#${CSS.escape(decodeURIComponent(hash.slice(1)))}`)
+        ?.scrollIntoView({ block: "start" });
+    },
+    [hash],
+  );
 }
 
 /** Every live document compared with the repository's flag inventory. */
 export function DriftPage(): React.JSX.Element {
   const drift = useDrift();
-  useHashScroll(drift.data !== undefined);
+  const scrollToHash = useHashScroll();
   const deployments = drift.data?.deployments ?? [];
   const totals = totalCounts(deployments);
   const total = itemCount(totals);
@@ -268,7 +274,7 @@ export function DriftPage(): React.JSX.Element {
             anything drifts). The flag-inventory-sync schedule reconciles
             missing and retired keys every two minutes.
           </p>
-          <div className="fl-drift-sections">
+          <div className="fl-drift-sections" ref={scrollToHash}>
             {dirty.map((entry) => (
               <DeploymentSection key={entry.id} entry={entry} />
             ))}

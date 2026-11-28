@@ -22,12 +22,12 @@
     "ajv": "^8.20.0",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3",
-    "vitest": "5.1.2",
-    "@vitest/coverage-istanbul": "5.1.2"
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "catalog:"
   },
   "exports": {
     "./services.json": "./services.json",

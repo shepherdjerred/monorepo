@@ -13,10 +13,12 @@ export type ServiceOptions = {
   host?: string;
   /** The catalog title. */
   title: string;
+  /** Scaffold the first-party console stack instead of a health-only server. */
+  console?: boolean;
 };
 
 export const USAGE =
-  "Usage: bun scripts/misc/new-service.ts --name <kebab-name> --kind web|worker --port <port> [--host <tailnet-host>] [--title <title>]";
+  "Usage: bun scripts/misc/new-service.ts --name <kebab-name> --kind web|worker --port <port> [--host <tailnet-host>] [--title <title>] [--console]";
 
 const HOST_PATTERN = /^[a-z][a-z0-9-]*$/u;
 /** In-image smoke runs bind `port + 10000`, which must stay a valid port. */
@@ -40,6 +42,7 @@ export function parseServiceOptions(argv: readonly string[]): ServiceOptions {
       port: { type: "string" },
       host: { type: "string" },
       title: { type: "string" },
+      console: { type: "boolean" },
     },
     strict: true,
   });
@@ -55,6 +58,8 @@ export function parseServiceOptions(argv: readonly string[]): ServiceOptions {
     throw usage("--host is required for a web service");
   if (kind === "worker" && host !== undefined)
     throw usage("--host applies to a web service; a worker has no ingress");
+  if (kind !== "web" && values.console === true)
+    throw usage("--console applies to a web service; a worker has no browser");
   if (host !== undefined && !HOST_PATTERN.test(host))
     throw usage("--host must be a lowercase tailnet hostname label");
   return {
@@ -63,5 +68,6 @@ export function parseServiceOptions(argv: readonly string[]): ServiceOptions {
     port,
     ...(host === undefined ? {} : { host }),
     title: values.title ?? defaultTitle(name),
+    ...(values.console === true ? { console: true } : {}),
   };
 }

@@ -25,6 +25,16 @@
   },
   "customManagers": [
     {
+      "customType": "jsonata",
+      "description": "Root Bun workspace catalog (package.json `catalog`). The ten first-party consoles, console-ui and ops-model reference these as `catalog:`, which Renovate's npm manager does not read, so this manager is the only thing that bumps them. Half upgrade: Mend-hosted Renovate cannot run `bun install`, so a human refreshes bun.lock on the branch; `bun install --frozen-lockfile` fails until then.",
+      "fileFormat": "json",
+      "managerFilePatterns": ["/^package\\.json$/"],
+      "matchStrings": [
+        "catalog.$each(function($value, $name) { { \"depName\": $name, \"currentValue\": $value } })"
+      ],
+      "datasourceTemplate": "npm"
+    },
+    {
       "customType": "regex",
       "description": "OpenTofu provider pins for the CDK Terrain stacks. A bump here is half of an upgrade: Mend-hosted Renovate cannot run post-upgrade commands, so someone runs bun run --cwd packages/homelab-cdktn providers:refresh on the branch to move the lock files, bindings and synthesized JSON. CI fails until that is done.",
       "managerFilePatterns": [
@@ -293,7 +303,7 @@
     {
       "description": "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
       "groupName": "typescript",
-      "matchManagers": ["bun", "npm"],
+      "matchManagers": ["bun", "npm", "custom.jsonata"],
       "matchDepNames": ["typescript"],
       "allowedVersions": "<7"
     },

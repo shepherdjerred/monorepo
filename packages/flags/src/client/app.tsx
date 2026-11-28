@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Outlet,
   useLocation,
@@ -39,7 +38,7 @@ import { itemCount, totalCounts } from "./views/drift-model.ts";
 import { DriftPage } from "./views/drift-page.tsx";
 import { descriptionsOf } from "./views/flag-meta.tsx";
 import { HomePage } from "./views/home-page.tsx";
-import { useDrift, useSummaryRefresh } from "./views/views-api.ts";
+import { useDrift } from "./views/views-api.ts";
 
 /** The deployment and flag the URL names; undefined on pages outside a deployment. */
 function useDeploymentRoute(): Route | undefined {
@@ -55,7 +54,6 @@ function Shell({ theme }: { theme: ThemeStore }) {
   const deployments = useDeployments();
   const drift = useDrift();
   const archive = useArchive();
-  useSummaryRefresh();
   const ids = deployments.data?.map((deployment) => deployment.id);
   const counts = new Map(
     (deployments.data ?? []).map(
@@ -63,9 +61,6 @@ function Shell({ theme }: { theme: ThemeStore }) {
     ),
   );
   const title = view === undefined ? pageTitle(route) : viewTitle(view);
-  useEffect(() => {
-    globalThis.document.title = title;
-  }, [title]);
   const navigation = {
     ids,
     counts,
@@ -84,6 +79,7 @@ function Shell({ theme }: { theme: ThemeStore }) {
 
   return (
     <>
+      <title>{title}</title>
       <FlagsTopBar {...navigation} />
       <ShellFrame sidebar={<DeploymentSidebar {...navigation} />}>
         <Outlet />
