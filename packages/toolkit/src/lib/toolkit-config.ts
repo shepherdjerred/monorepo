@@ -171,6 +171,16 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: APP_HOSTS.hub,
   },
+  /**
+   * Executable `toolkit incident wait`/`take --spawn` runs to open a commander
+   * session: `<spawner> --request-env` with the herdr-new-worktree request in
+   * `HERDR_WORKTREE_REQUEST`. Tests and demos point it at a fake.
+   */
+  incidentSpawner: {
+    schema: z.string().trim().min(1),
+    sources: ["env", "file", "default"],
+    default: "herdr-new-worktree",
+  },
 } as const;
 
 export function defaultToolkitConfigPath(home: string = os.homedir()): string {

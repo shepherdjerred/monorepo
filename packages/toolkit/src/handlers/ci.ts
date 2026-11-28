@@ -208,10 +208,12 @@ Options:
 Wait exits: 0 ready, 1 check failure/conflict, 2 upstream/usage error,
 3 human intervention, 4 head changed, 5 PR ready but main red, 6 timeout,
 7 PR closed/merged. A red main never ends a PR wait early; exit 5 is reported
-only after the PR itself is ready. wait --main exits 0 when the pinned main
+only after the PR itself is ready, with the open main-ci incident and the
+toolkit incident command to run (wait on it, or take it if you caused it). wait --main exits 0 when the pinned main
 commit's run passes and 1 when it fails. Long queues/builds are expected. Keep
 awaiting the same process, rather than starting another status poll. Keep
-working if main is red; check toolkit forum list --json first, follow an owned
+working if main is red; check toolkit incident check --system main-ci and
+toolkit forum list --json first, follow an owned
 recovery, fix failures your changes caused, or claim/post a notice (--owner me)
 before picking up an unowned blocker with no better active owner. To wait and
 then merge, use toolkit pr land.
