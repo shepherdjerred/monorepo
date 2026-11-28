@@ -1,4 +1,4 @@
-"""Sample exact-build recorded Yasuo or Lee Sin CameraQuad emitters.
+"""Sample exact-build recorded Yasuo, Lee Sin, or Senna CameraQuad emitters.
 
 The replay handle seeds a repeatable sample of the original clock-seeded RNG.
 The fixed random controls exercise the authored probability curves.
@@ -57,19 +57,57 @@ def bind_lee_sin_curves(fields, stop, definition, scale, data, vm, call, put):
     put(flex + 4, "f", flex_fields["95111b29"]["value"])
     put(flex + 0x10, "f", flex_fields["c0bf561e"]["value"])
 
-    def bind_curve(key, curve, times_at, values_at, dimension, vector_offset, constructor, destination):
+    bind_authored_scale_color(fields, stop, definition, scale, data, call, put)
+
+
+def bind_authored_scale_color(fields, stop, definition, scale, data, call, put):
+    for key, curve, times_at, values_at, dimension, offset, constructor, destination in (
+        ("d4e17a53", scale, data + 0x80, data + 0xA0, 3, 0x20, 0x17AFEC0, 0x430),
+        ("3d7e6258", stop + 0xD000, data + 0x1C0, data + 0x1D0, 4, 0x28, 0x17B0430, 0x398),
+    ):
         native = fields[key]["fields"]["bc037de7"]["fields"]
         times = [item["value"] for item in native["5d68eeb5"]["elements"]]
         values = [axis for item in native["34474c3b"]["elements"] for axis in item["value"].values()]
         call(constructor, curve)
-        put(curve + vector_offset, "QII", times_at, len(times), len(times))
-        put(curve + vector_offset + 0x10, "QII", values_at, len(times), len(times))
+        put(curve + offset, "QII", times_at, len(times), len(times))
+        put(curve + offset + 0x10, "QII", values_at, len(times), len(times))
         put(times_at, f"{len(times)}f", *times)
         put(values_at, f"{len(times) * dimension}f", *values)
         put(definition + destination, "Q", curve)
 
-    bind_curve("d4e17a53", scale, data + 0x80, data + 0xA0, 3, 0x20, 0x17AFEC0, 0x430)
-    bind_curve("3d7e6258", stop + 0xD000, data + 0x1C0, data + 0x1D0, 4, 0x28, 0x17B0430, 0x398)
+
+def senna_authored(catalog):
+    event, = [row for row in catalog["events"] if row["handle"] == 1073821562]
+    assert event["stamp"] == 1719.9504140625 and event["context"] == 0
+    assert event["status"] == "detached-placement-confirmed"
+    assert event["definitionKey"] == "senna-18:6bb08197"
+    assert event["descriptor"]["scaleRate"] == [0.8999999761581421, 1]
+    row = catalog["definitions"][event["definitionKey"]]
+    assert row["source"]["particleName"] == "Senna_Skin16_W_hit_impact"
+    assert row["definition"]["pathHash"] == "7029e6f5"
+    fields = row["definition"]["fields"]["868eb76a"]["elements"][10]["fields"]
+    assert fields["3d25b8ce"]["value"] == "BigLensFlare1"
+    assert fields["42bd7f6b"]["value"] == 1  # isSingleParticle
+    assert "007b14f6" not in fields  # original default CameraQuad
+    assert "3bf0b4ed" not in fields  # no authored spawn shape
+
+    def constant(key):
+        value = fields[key]["fields"]["b4b427aa"]["value"]
+        return list(value.values()) if isinstance(value, dict) else value
+
+    return fields, {
+        "rate": constant("ae839c67"),
+        "lifetime": fields["5212abee"]["value"]["value"],
+        "EmitterPosition": [0, 0, 0],
+        "particleLifetime": constant("2a552694"),
+        "particleLinger": 0,
+        "bindWeight": constant("ca406316"),
+        "color": constant("3d7e6258"),
+        "birthColor": constant("83cdeaa1"),
+        "birthRotation0": constant("5932ff9c"),
+        "birthScale0": constant("f0eb7084"),
+        "blendMode": fields["fa784eab"]["value"],
+    }
 
 
 def main():
@@ -77,10 +115,16 @@ def main():
     parser.add_argument("executable", type=Path)
     parser.add_argument("authored", type=Path)
     parser.add_argument("random_control", choices=("0.125", "0.875", "seeded"))
-    parser.add_argument("handle", type=int, choices=(1073820923, 1073820924, 1073820962, 1073821375, 1073821521))
+    parser.add_argument(
+        "handle",
+        type=int,
+        choices=(1073820923, 1073820924, 1073820962, 1073821375, 1073821521, 1073821562),
+    )
     parser.add_argument("--lee-bound-size", type=int, choices=(0, 65, 200))
     args = parser.parse_args()
     lee_sin = args.handle == 1073821521
+    senna = args.handle == 1073821562
+    uses_larger_pool = lee_sin or senna
     if lee_sin != (args.lee_bound_size is not None):
         parser.error("Supply an explicit controlled bound size only for Lee Sin handle 1073821521")
     if not __debug__:
@@ -93,11 +137,15 @@ def main():
     source_digest = hashlib.sha256(source).hexdigest()
     if lee_sin:
         assert source_digest == "71e6f835ec86c21b65d17c2de6370a452ced7bab73ea6e9e1f7bfc7a0658d92f"
+    elif senna:
+        assert source_digest == "9dd0fa59cc4f827f84ed211a0dc57c7d4f9d079a1b8279e302a00eab841fe6d6"
     else:
         assert source_digest == "ad2db3f0980ece3118bea353302bdc126caf63aa0082dfe64da53ac206557d73"
     row = json.loads(source)
     if lee_sin:
         authored = lee_sin_authored(row)
+    elif senna:
+        fields, authored = senna_authored(row)
     else:
         event = next(event for event in row["events"] if event["handle"] == args.handle)
         assert event["descriptor"]["scaleRate"] == [2, 1]
@@ -119,9 +167,9 @@ def main():
     vm.mem_write(image.base, bytes(image.image))
 
     stop = 0x10000000
-    heap_begin = stop + (0x20000 if lee_sin else 0x8000)
-    heap_end = stop + (0x30000 if lee_sin else 0xA000)
-    vm.mem_map(stop, 0x30000 if lee_sin else 0x18000)
+    heap_begin = stop + (0x20000 if uses_larger_pool else 0x8000)
+    heap_end = stop + (0x30000 if uses_larger_pool else 0xA000)
+    vm.mem_map(stop, 0x30000 if uses_larger_pool else 0x18000)
     stack = stop + 0xF008
     definition, primitive, actor, link, system, quality = (stop + offset for offset in range(0x1000, 0x7000, 0x1000))
 
@@ -134,14 +182,14 @@ def main():
         rsi = engine.reg_read(reg.UC_X86_REG_RSI)
         rva = address - image.base
         if rva in (0x14A0300, 0x14A2030, 0x14C5B20):
-            if not 0 < rdi <= (0x1000 if lee_sin else 0x100) or heap + rdi > heap_end:
+            if not 0 < rdi <= (0x1000 if uses_larger_pool else 0x100) or heap + rdi > heap_end:
                 raise ValueError("Original emitter allocation exceeds owned arena")
             engine.reg_write(reg.UC_X86_REG_RAX, heap)
             allocations.add(heap)
             heap += (rdi + 15) & ~15
         elif rva == 0x14C5B80:
             if rdi:
-                if not lee_sin or rdi not in allocations:
+                if not uses_larger_pool or rdi not in allocations:
                     raise ValueError("Unexpected release from a populated pool")
                 allocations.remove(rdi)
         elif rva == 0x2051310:
@@ -200,7 +248,8 @@ def main():
         vm.reg_write(reg.UC_X86_REG_RDX, rdx)
         if time is not None:
             vm.reg_write(reg.UC_X86_REG_XMM0, struct.unpack("<I", struct.pack("<f", time))[0])
-        vm.emu_start(image.base + entry, end, count=100000 if entry == 0x1773710 else 30000)
+        budget = 300000 if senna else 100000 if entry == 0x1773710 else 30000
+        vm.emu_start(image.base + entry, end, count=budget)
         result = vm.reg_read(reg.UC_X86_REG_RIP)
         if result != end:
             raise ValueError(f"Native emitter {entry:#x} did not complete: {result - image.base:#x}")
@@ -217,6 +266,23 @@ def main():
     ]
     call(0x14D501F, definition, end=image.base + 0x14D523E)
     call(0x17BDC20, definition)
+    if senna:
+        # The native palette object registration binds the emitter pointer at
+        # 0x40 and its authored Vec4, Vec3, and count at 0x18, 0x30, and 0x68.
+        call(0x17BE850, 0)
+        palette = vm.reg_read(reg.UC_X86_REG_RAX)
+        palette_fields = fields["8aa1ffc1"]["fields"]
+        assert set(palette_fields) == {"143f06d1", "8bd46035", "9e52382f"}
+        coordinates = palette_fields["143f06d1"]["fields"]["b4b427aa"]["value"]
+        selector = palette_fields["8bd46035"]["fields"]["b4b427aa"]["value"]
+        put(palette + 0x18, "4f", *coordinates.values())
+        put(palette + 0x30, "3f", *selector.values())
+        put(palette + 0x68, "i", palette_fields["9e52382f"]["value"])
+        put(definition + 0x40, "Q", palette)
+        palette_path, palette_length, _ = struct.unpack("<QII", vm.mem_read(definition + 0xA8, 16))
+        assert bytes(vm.mem_read(palette_path, palette_length)) == (
+            b"ASSETS/Shared/Particles/DefaultColorOverlifetime.png"
+        )
     for hook in hooks:
         vm.hook_del(hook)
     (primitive,) = struct.unpack("<Q", vm.mem_read(definition + 0x60, 8))
@@ -251,14 +317,20 @@ def main():
     put(definition + 0x240, "3f", *authored["EmitterPosition"])
     put(definition + 0xF8, "f", authored["particleLifetime"])
     put(definition + 0x118, "f", authored["particleLinger"])
-    if not lee_sin:
+    if senna:
+        put(definition + 0x388, "4f", *authored["color"])
+        put(definition + 0x150, "4f", *authored["birthColor"])
+        put(definition + 0x70, "hB", fields["7b7a7318"]["value"], fields["6563bee8"]["value"])
+        put(definition + 0x17, "B", fields["b9516a6f"]["value"])
+    elif not lee_sin:
         put(definition + 0x388, "4f", *authored["color"])
         put(definition + 0x150, "4f", 0.686274528503418, 1, 0.7764706015586853, 1)
     put(definition + 0x3D0, "3f", *authored["birthRotation0"])
     put(definition + 0x3E8, "3f", *authored["birthScale0"])
     put(definition + 0x14, "B", authored["blendMode"])
-    put(definition + 0x2D0, "I", flags | 0x100008)
-    put(definition + 0x108, "f", authored["lifetime"])
+    put(definition + 0x2D0, "I", flags | (0x100000 if senna else 0x100008))
+    if not senna:
+        put(definition + 0x108, "f", authored["lifetime"])
     put(definition + 0x3A0, "f", authored["bindWeight"])
 
     # Feed the corroborated descriptor scalars through the facade's original
@@ -267,6 +339,8 @@ def main():
     put(facade + 0x18, "I", 6)
     put(facade + 0x28, "Q", system)
     scale_rate = (1, 1) if lee_sin else (2, 1)
+    if senna:
+        scale_rate = (0.8999999761581421, 1)
     put(facade + 0xB4, "2f", *scale_rate)
     vm.reg_write(reg.UC_X86_REG_RBX, facade)
     vm.emu_start(image.base + 0x17947D5, image.base + 0x1794804, count=32)
@@ -286,29 +360,34 @@ def main():
     put(rotation + 0x20, "QII", data, 1, 1)
     put(rotation + 0x30, "QII", data + 0x20, 1, 1)
     put(data, "f", 0)
-    put(data + 0x20, "3f", 1, 0, 0)
+    put(data + 0x20, "3f", *(authored["birthRotation0"] if senna else [1, 0, 0]))
     probabilities = [data + n for n in (0x100, 0x140, 0x180)]
     for i, probability in enumerate(probabilities):
         put(rotation + 8 + i * 8, "Q", probability)
-    put(probabilities[0], "QII", data + 0x40, 2, 2)
-    put(probabilities[0] + 0x10, "QII", data + 0x60, 2, 2)
-    put(probabilities[0] + 0x25, "B", 1)
-    put(probabilities[1] + 0x24, "B", 1)
-    put(probabilities[2] + 0x24, "B", 1)
-    put(probabilities[1] + 0x20, "f", 1)
-    put(probabilities[2] + 0x20, "f", 1)
+    axis = 1 if senna else 0
+    for component, probability in enumerate(probabilities):
+        if component == axis:
+            put(probability, "QII", data + 0x40, 2, 2)
+            put(probability + 0x10, "QII", data + 0x60, 2, 2)
+            put(probability + 0x25, "B", 1)
+        else:
+            put(probability + 0x24, "B", 1)
+            put(probability + 0x20, "f", 1)
     put(data + 0x40, "2f", 0, 1)
     rotation_values = (1, 90)
-    if lee_sin:
-        fields = row["emitter"]["fields"]
+    if lee_sin or senna:
+        if lee_sin:
+            fields = row["emitter"]["fields"]
         rotation_curve = fields["5932ff9c"]["fields"]["bc037de7"]["fields"]
-        probabilities_source = rotation_curve["a7084719"]["elements"][0]["fields"]
+        probabilities_source = rotation_curve["a7084719"]["elements"][axis]["fields"]
         rotation_values = [item["value"] for item in probabilities_source["e44b7382"]["elements"]]
     put(data + 0x60, "2f", *rotation_values)
     call(0x1703BA0, rotation)
     put(definition + 0x3E0, "Q", rotation)
     if lee_sin:
         bind_lee_sin_curves(fields, stop, definition, scale, data, vm, call, put)
+    elif senna:
+        bind_authored_scale_color(fields, stop, definition, scale, data, call, put)
     else:
         put(scale + 0x20, "QII", data + 0x80, 3, 3)
         put(scale + 0x30, "QII", data + 0xA0, 3, 3)
@@ -456,12 +535,20 @@ def main():
     vm.mem_write(actor + 0x24, previous_clock_marker)
     put(actor + 0x18, "B", 0)
     expected_count = 3 if lee_sin else 1
-    for currentTime in [i / 120 for i in range(150 if lee_sin else 32)]:
+    ages = [i / 120 for i in range(150 if lee_sin else 32)]
+    if senna:
+        expected_count = 2
+        fractions = [0, 0.015, 0.03, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99, 1, 1.01, 4.2, 8.4]
+        ages = [fraction * authored["particleLifetime"] for fraction in fractions]
+    for currentTime in ages:
         call(0x1786280, actor, time=currentTime)
         (count,) = struct.unpack("<I", vm.mem_read(pool + 0x10, 4))
         timeline.append([currentTime, count, snapshot() if count else None])
     assert len(inserts) == expected_count, inserts
-    assert len(rng_samples) in ((6,) if lee_sin else (3, 4))
+    if senna:
+        assert len(rng_samples) == (2 if args.random_control == "seeded" else 4)
+    else:
+        assert len(rng_samples) in ((6,) if lee_sin else (3, 4))
     assert all(
         count == 0
         or (

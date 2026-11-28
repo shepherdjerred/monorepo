@@ -897,6 +897,24 @@ the camera. All vision shows these ribbons for three recorded missiles up to
 the verified contact or stop. The remaining emitters and post-stop trails are
 outside this track.
 
+Extend an existing schema 4–6 particle track with two outer Maokai R ribbons
+from the same cast. The original movement and ribbon geometry cover the time
+from launch to the first unclassified actor packet for each missile. The cutoff
+is exclusive at 1718.3534140625 seconds for missile 1073820800 and
+1717.6824140625 seconds for missile 1073820809.
+The track preserves all existing particle families, paths, and assets.
+
+```powershell
+uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-maokai-movement.py $macGameExecutable "$newPrivateLaunchStem.navgrid" "$newPrivateLaunchStem.json" $newPrivateOuterMotionReceipt --outer
+foreach ($slot in 0..1) {
+  foreach ($random in @('0.125', '0.875')) {
+    uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-maokai-ribbon.py $macGameExecutable $newPrivateOuterMotionReceipt $authoredMaokaiEffectReceipt $slot $random "$privateRibbonReceipts/ribbon-outer-$slot-$random.json"
+  }
+}
+$ribbonBaseDigest = (Get-FileHash -LiteralPath "$ribbonTrackDirectory/recorded-particles.json" -Algorithm SHA256).Hash.ToLowerInvariant()
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-maokai-ribbon.mjs --outer $ribbonTrackDirectory $ribbonBaseDigest $newPrivateOuterMotionReceipt $privateRibbonReceipts $newPrivateOuterTrackDirectory
+```
+
 The Heimerdinger Ammo Spend author extends that same track with the `bubble`
 camera quad at two recorded detached creates. It binds the reviewed create and
 stop receipts, two matching native control runs, and the exact texture mip.
@@ -945,6 +963,26 @@ foreach ($lane in '0.125', '0.875') {
   uv run --with unicorn python $yasuoProbe $macGameExecutable $reviewedYasuoAuthoredReceipt $lane 1073820923 > "$privateYasuoReceiptDirectory/yasuo-flash-$lane-1073820923.json"
 }
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-yasuo-wind-wall-flash.mjs $maskedTrackDirectory $reviewedYasuoAuthoredReceipt $fightStopReceipt $privateYasuoReceiptDirectory $yasuoFlashMip0 $newPrivateParticleDirectory
+```
+
+The Senna W impact author adds the original `BigLensFlare1` emitter at the
+detached create at 1719.950414 seconds. The archived update births two quads.
+The two random controls and the replay-seeded run produce identical geometry.
+The author extracts the reviewed texture mip from the local Senna WAD and uses
+the original alpha-tested, depth-disabled additive pass with the existing
+`DefaultColorOverlifetime` texture. The other 24 authored emitters are outside
+this track.
+
+Use the reviewed continuous-billboard track, fight catalog, and archived
+creation receipt from the same replay. The author checks the handle against
+the reviewed whole-replay stop receipt.
+
+```powershell
+$cameraQuadProbe = 'sandbox/poc/league-spectator/replay/tools/research/probe-recorded-yasuo-wind-wall-flash.py'
+foreach ($control in '0.125', '0.875', 'seeded') {
+  uv run --offline --with unicorn python $cameraQuadProbe $macGameExecutable $reviewedFightCatalog $control 1073821562 > "$privateSennaReceiptDirectory/native-$control.json"
+}
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-senna-w-flare.mjs "$continuousBillboardTrackDirectory/recorded-particles.json" $reviewedFightCatalog $fightPlacements $fullReplayStopReceipt "$privateSennaReceiptDirectory/native-0.125.json" "$privateSennaReceiptDirectory/native-0.875.json" "$privateSennaReceiptDirectory/native-seeded.json" $leagueInstallation $textureExporterDll $newPrivateParticleDirectory
 ```
 
 The Illaoi spawn probe records the original `Ground_SLOW2` world-space quads
@@ -1086,6 +1124,9 @@ each tested family.
 ```powershell
 bun packages/scout-for-lol/packages/app/e2e/public-replay/proof/capture-recorded-rift-fight.ts $loopbackReplayUrl $newPrivateCaptureDirectory
 ```
+
+Pass `--senna-w` and `--outer-maokai-ribbons` when the package includes those
+components to require both the corresponding playback draws and visible pixels.
 
 The 1080p performance fixture writes WebGL submission measurements across the
 reviewed scenes. It also measures Chromium compositor draws at 1× and 4× in

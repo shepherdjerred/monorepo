@@ -13,7 +13,7 @@ import { installRiftFightTextureProbe } from "./rift-fight-texture-probe.ts";
 
 // Base texture hashes and inclusive UI-clock windows from the reviewed Rift
 // particle track. Multiple instances of a family can draw the same texture.
-const textures = {
+const textures: Record<string, string> = {
   "77fe7d5cb87d81abbb080dc57dc446e311699df17cc0910d7e815016f6d9d3e4":
     "illaoi-ground-ring",
   "5d12032cdab3f822722f45ac312843f78b3723572181bc760d76d231cee027ce":
@@ -31,7 +31,14 @@ const textures = {
   "33fbb0aa732bf24befe556da253e9fefbac5f19fa1f3551924c4b1f85d63f10b":
     "kaisa-e-activation",
 };
-const cues = [
+const cues: {
+  family: string;
+  from: number;
+  to: number;
+  seekAt: number;
+  label?: string;
+  minimumDraws?: number;
+}[] = [
   { family: "illaoi-ground-ring", from: 1712.7, to: 1714.7, seekAt: 1713.1 },
   { family: "maokai-r-ribbon", from: 1714, to: 1715.1, seekAt: 1714.3 },
   { family: "anivia-q-snowflash", from: 1714.4, to: 1714.5, seekAt: 1714.5 },
@@ -71,14 +78,40 @@ function fightRegionInFrame(matrix: number[]) {
 
 // Run with bun and the installed Playwright Chromium. Pass the real signed-out
 // loopback replay URL and a fresh local directory for the evidence.
-const [previewArgument, output] = Bun.argv.slice(2);
+const [previewArgument, output, ...components] = Bun.argv.slice(2);
 assert.ok(
   previewArgument !== undefined &&
     previewArgument !== "" &&
     output !== undefined &&
     output !== "",
-  "Usage: bun capture-recorded-rift-fight.ts <loopback replay URL> <new evidence directory>",
+  "Usage: bun capture-recorded-rift-fight.ts <loopback replay URL> <new evidence directory> [--senna-w] [--outer-maokai-ribbons]",
 );
+for (const component of components) {
+  assert.ok(
+    component === "--senna-w" || component === "--outer-maokai-ribbons",
+    `Unknown recorded fight component: ${component}`,
+  );
+}
+if (components.includes("--outer-maokai-ribbons")) {
+  cues.push({
+    family: "maokai-r-ribbon",
+    label: "maokai-r-outer-ribbons",
+    from: 1715.3,
+    to: 1717.3,
+    seekAt: 1716,
+    minimumDraws: 2,
+  });
+}
+if (components.includes("--senna-w")) {
+  textures["3b38892fe260d501aa7ae6f2d3026d7cf28e9b92f88beb0b72060282e41ca44d"] =
+    "senna-w-hit-flare";
+  cues.push({
+    family: "senna-w-hit-flare",
+    from: 1719.9,
+    to: 1720.1,
+    seekAt: 1720,
+  });
+}
 const preview = new URL(previewArgument);
 assert.equal(preview.protocol, "http:");
 assert.equal(preview.hostname, "127.0.0.1");
@@ -289,7 +322,7 @@ try {
         seconds,
         draws: families[cue.family] ?? 0,
       }))
-      .filter(({ draws }) => draws > 0),
+      .filter(({ draws }) => draws >= (cue.minimumDraws ?? 1)),
   }));
   await writeFile(path.join(output, "rift-fight-1x.webm"), bytes);
   await writeFile(
@@ -356,9 +389,9 @@ try {
   const seekControls = [];
   const readFrame = () =>
     page.evaluate(() => globalThis.recordedRiftTextures.frame);
-  for (const { family, seekAt } of cues) {
+  for (const { family, label = family, minimumDraws = 1, seekAt } of cues) {
     const paused = [];
-    for (const [label, suppressed] of [
+    for (const [variant, suppressed] of [
       ["enabled", null],
       ["suppressed", family],
       ["suppressed-repeat", family],
@@ -378,7 +411,7 @@ try {
         .toBeGreaterThan(reset.generation);
       const before = await readFrame();
       const screenshot = await canvas.screenshot({
-        path: path.join(output, `${family}-${label}.png`),
+        path: path.join(output, `${label}-${variant}.png`),
       });
       const after = await readFrame();
       assert.equal(before.suppressed, suppressed);
@@ -398,11 +431,12 @@ try {
     );
     assert.ok(mask !== undefined);
     await writeFile(
-      path.join(output, `${family}-causal-pixel-mask.png`),
+      path.join(output, `${label}-causal-pixel-mask.png`),
       Buffer.from(mask, "base64"),
     );
     const evidence = {
       family,
+      label,
       seekAt,
       draws: enabled.frame.families,
       metrics,
@@ -416,14 +450,14 @@ try {
     for (const { frame } of paused)
       assert.deepEqual(frame.families, evidence.draws);
     assert.ok(
-      (evidence.draws[family] ?? 0) > 0,
-      `No ${family} texture at its seek cue.`,
+      (evidence.draws[family] ?? 0) >= minimumDraws,
+      `Expected ${String(minimumDraws)} ${family} draws at the ${label} seek cue.`,
     );
   }
   assert.deepEqual(
     seekControls
       .filter(({ metrics }) => metrics.causal === 0)
-      .map(({ family }) => family),
+      .map(({ label }) => label),
     [],
     "No stable visible contribution at the sampled seek for these families.",
   );
@@ -435,17 +469,21 @@ try {
         samples: samples.length,
         wallMilliseconds: samples.at(-1)?.elapsedMilliseconds,
         bytes: bytes.length,
-        events: events.map(({ family, observed }) => ({
+        events: events.map(({ family, label = family, observed }) => ({
           family,
+          label,
           observations: observed.length,
           peakDraws: Math.max(...observed.map(({ draws }) => draws)),
         })),
-        seekControls: seekControls.map(({ family, seekAt, metrics }) => ({
-          family,
-          seekAt,
-          causalPixels: metrics.causal,
-          unstablePixels: metrics.unstable,
-        })),
+        seekControls: seekControls.map(
+          ({ family, label, seekAt, metrics }) => ({
+            family,
+            label,
+            seekAt,
+            causalPixels: metrics.causal,
+            unstablePixels: metrics.unstable,
+          }),
+        ),
       },
       null,
       2,

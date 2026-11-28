@@ -11,7 +11,7 @@ const quadComponent = z.object({
   samples: z
     .array(
       z.object({
-        age: z.number().positive(),
+        age: z.number().nonnegative(),
         vertices: z.string().regex(/^[a-f0-9]{224}$/),
       }),
     )

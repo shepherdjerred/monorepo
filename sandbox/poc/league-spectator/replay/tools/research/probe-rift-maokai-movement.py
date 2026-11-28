@@ -44,6 +44,9 @@ def main():
         parser.error("Run the probe with assertions enabled")
     for name in ("executable", "navgrid", "launch_receipt", "output"):
         parser.add_argument(name, type=Path)
+    parser.add_argument(
+        "--outer", action="store_true", help="Trace the two outer missiles up to their first unclassified packet"
+    )
     args = parser.parse_args()
     output = args.output
     if not output.parent.resolve().is_relative_to(Path(".cache").resolve()) or output.exists():
@@ -201,19 +204,32 @@ def main():
 
     cases = []
     events_by_id = {event["id"]: event for event in cohort["events"]}
-    for ident in (1073820771, 1073820782, 1073820791):
+    if args.outer:
+        assert sha(source_bytes) == "dae6f325435b30bf80cdfe6810e253754339956d2e8c5e083f509aa1e5415894"
+    handles = (1073820800, 1073820809) if args.outer else (1073820771, 1073820782, 1073820791)
+    for ident in handles:
         event = events_by_id[ident]
         record = actor_records[ident]
         assert record["forcedRecordedSource"] and record["packetElapsedSeconds"] == 0
         assert record["requestedMissileSpellHash"] == 0x0187CC63
         assert record["sourceContext"] == 1073742170
-        assert event["opcodeInventory"].keys() <= {"66", "479", "639", "682", "784"}
         launch_seconds = event["launch"]["seconds"]
         assert launch_seconds == 1713.9644140625
-        stop_seconds = event["stops"][0]["seconds"]
-        assert all(row["seconds"] == stop_seconds for row in event["stops"])
-        first_contact = min((row["seconds"] for row in event["components"]), default=stop_seconds)
-        verified_through = min(first_contact, stop_seconds)
+        if args.outer:
+            assert not event["stops"]
+            assert event["opcodeInventory"].keys() <= {"66", "213", "639", "682", "696", "784"}
+            assert all(len(bytes.fromhex(packet["payload"])) == 19 for packet in event["components"])
+            first_unclassified = min(
+                event["otherActorPackets"] + event["components"], key=lambda packet: packet["sequence"]
+            )
+            stop_seconds = None
+            verified_through = first_unclassified["seconds"]
+        else:
+            assert event["opcodeInventory"].keys() <= {"66", "479", "639", "682", "784"}
+            stop_seconds = event["stops"][0]["seconds"]
+            assert all(row["seconds"] == stop_seconds for row in event["stops"])
+            first_contact = min((row["seconds"] for row in event["components"]), default=stop_seconds)
+            verified_through = min(first_contact, stop_seconds)
         duration = verified_through - launch_seconds
         assert duration > 0
         target = record["castTargetXYZ"]
@@ -239,21 +255,31 @@ def main():
         assert cadence_delta < 0.25
         assert math.dist(before["positionXYZ"], samples[-1]["positionXYZ"]) > 100
         stop_writes.clear()
-        call(0x893510, actor)
-        assert stop_writes == [(0, 0, 0)]
-        assert read(actor + 0x3D8, "B") == (1,)
+        if not args.outer:
+            call(0x893510, actor)
+            assert stop_writes == [(0, 0, 0)]
+            assert read(actor + 0x3D8, "B") == (1,)
         cases.append(
             {
                 "entity": ident,
                 "recordedLaunchTimeSeconds": launch_seconds,
                 "recordedStopTimeSeconds": stop_seconds,
                 "motionVerifiedThroughSeconds": verified_through,
-                "postContactMotionUnverified": verified_through < stop_seconds,
+                "postContactMotionUnverified": args.outer or verified_through < stop_seconds,
                 "launchBodySha256": event["launch"]["bodySha256"],
                 "recordedStopSequences": [row["sequence"] for row in event["stops"]],
                 "nativeGeometricTerminalGateTriggeredDuringTrace": False,
-                "nativeVelocityZeroAtStop": True,
-                "nativeMissileStoppedBitAtStop": True,
+                "nativeVelocityZeroAtStop": None if args.outer else True,
+                "nativeMissileStoppedBitAtStop": None if args.outer else True,
+                **(
+                    {
+                        "firstUnclassifiedPacket": {
+                            key: first_unclassified[key] for key in ("opcode", "sequence", "seconds", "bodySha256")
+                        }
+                    }
+                    if args.outer
+                    else {}
+                ),
                 "differentTargetVelocityControl": control["velocityXYZ"],
                 "oneStepEndpointDeltaFrom120HzWorldUnits": cadence_delta,
                 "samples": samples,
@@ -282,6 +308,13 @@ def main():
                 },
                 "cases": cases,
                 "scope": (
+                    "Original movement from recorded birth strictly before the first unclassified "
+                    "actor packet, using exact Map11 heights. The final sample is an exclusive "
+                    "boundary. No stop is synthesized. Native visibility, VFX seed and teardown "
+                    "remain outside the trace."
+                )
+                if args.outer
+                else (
                     "Original movement and world-state apply from recorded birth to the first recorded contact "
                     "or stop, using exact Map11 heights. The archived stop consumer is checked separately. "
                     "Sample cadence is controlled. Native visibility, shader, VFX seed and teardown "

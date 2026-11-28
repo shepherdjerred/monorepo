@@ -2,13 +2,18 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { dirname, resolve, sep, toNamespacedPath } from "node:path";
+import { readLocalRecordedParticles } from "../build-local-scout-terrain-package.mjs";
 
 // Generate ribbon-final-<slot>-<random>.json with the companion native probe,
 // for slots 0, 1, and 2 and random values 0.125 and 0.875. Both runs must retain
 // the same indexed world geometry. The author preserves the v3 effects and
 // keeps only ribbon samples strictly before each recorded contact or stop.
 const usage =
-  "bun prepare-recorded-maokai-ribbon.mjs <v3-track-root> <motion-receipt> <native-receipt-directory> <base-mip0-png> <default-color-png> <new-private-output-root>";
+  "bun prepare-recorded-maokai-ribbon.mjs <v3-track-root> <motion-receipt> <native-receipt-directory> <base-mip0-png> <default-color-png> <new-private-output-root>\n" +
+  "bun prepare-recorded-maokai-ribbon.mjs --outer <existing-ribbon-track-root> <base-sha256> <outer-motion-receipt> <native-receipt-directory> <new-private-output-root>";
+const args = process.argv.slice(2);
+const outer = args[0] === "--outer";
+if (outer) args.shift();
 const [
   trackRoot,
   motionPath,
@@ -16,12 +21,12 @@ const [
   texturePath,
   palettePath,
   outputRoot,
-] = process.argv.slice(2);
+] = outer ? [args[0], args[2], args[3], null, null, args[4]] : args;
 if (trackRoot === "--help") {
   console.log(usage);
   process.exit(0);
 }
-assert(process.argv.length === 8, usage);
+assert.equal(args.length, outer ? 5 : 6, usage);
 const cache = await realpath(".cache");
 const output = resolve(outputRoot);
 const parent = await realpath(dirname(output));
@@ -44,10 +49,19 @@ const vertex =
   "c9d94bb152fac1036a46871248ae3d310b6b47e178f4cb70cac44d55569dce97";
 const fragment =
   "11948a488fc18ecf633c1a672ba92c1bac38431ab7f295ac4f0ef5ca223cd3fc";
+const manifestPath = resolve(trackRoot, "recorded-particles.json");
+const baseFiles = outer
+  ? await readLocalRecordedParticles(manifestPath, args[1], {
+      build: "16.23.841.8428",
+      replaySha256,
+    })
+  : null;
 const source = JSON.parse(
-  await read(resolve(trackRoot, "recorded-particles.json")),
+  baseFiles
+    ? baseFiles.get("recorded-particles.json")
+    : await read(manifestPath),
 );
-assert.equal(source.schema, 3);
+assert(outer ? [4, 5, 6].includes(source.schema) : source.schema === 3);
 assert.equal(source.kind, "recorded-native-terrain-particles");
 assert.equal(source.build, "16.23.841.8428");
 assert.equal(source.replaySha256, replaySha256);
@@ -57,36 +71,52 @@ assert.equal(source.shaders.fragment, `recorded-particles/${fragment}.glsl`);
 const motion = JSON.parse(
   await checked(
     motionPath,
-    "2c97bd8d259a544f2e145e47bbedd676b6b0e912991f2a1eaa283c337ae1b94a",
+    outer
+      ? "11dfea28db28ca841a38e21d0cd53620bfaab98895ea99288bc340b0c9c7f5cf"
+      : "2c97bd8d259a544f2e145e47bbedd676b6b0e912991f2a1eaa283c337ae1b94a",
   ),
 );
 assert.equal(motion.replaySha256, replaySha256);
-const nativeTraces = [
-  [
-    1073820771,
-    "7c280e46b3be229decff2db237c746c4b268e3f214f365a00d338a145ae6b127",
-    "6f42938ccb72f26e437362945ffe397912d45317e0c248acb950831bb7a9707a",
-  ],
-  [
-    1073820782,
-    "e29100bbf32bff325576e661eaa2b80363d85fac7eebb77668136bc5fba08dc1",
-    "e5e61249f876aee30af4ddd296009a311ee42a279199b90419291e7186b9e26d",
-  ],
-  [
-    1073820791,
-    "48c977fa7b78ba8538a47b117a685deed9cbdac8899ef41361b76f0092190d41",
-    "c5df27a2b2489cbe1d13f3d84cc22e4aa82e33a1f2507fae03d478a127fc5e0b",
-  ],
-];
+const nativeTraces = outer
+  ? [
+      [
+        1073820800,
+        "5b52dcac3e89463b34c014b834676f1f4965977a5d6f3781780f68bbf72e1416",
+        "d20fcb7d79587b16e1e136eea1f5a9b09b63c9a15535fa4becec306a867cde7f",
+      ],
+      [
+        1073820809,
+        "62c7b16a994a4afa6861e8b28c2b214c4bcd08001eee4e2dc0f3563d2ddbea64",
+        "a16c3fe1712eccc4987e78d2f82fffd3b68372094a7d68c287e7188b754a1a4f",
+      ],
+    ]
+  : [
+      [
+        1073820771,
+        "7c280e46b3be229decff2db237c746c4b268e3f214f365a00d338a145ae6b127",
+        "6f42938ccb72f26e437362945ffe397912d45317e0c248acb950831bb7a9707a",
+      ],
+      [
+        1073820782,
+        "e29100bbf32bff325576e661eaa2b80363d85fac7eebb77668136bc5fba08dc1",
+        "e5e61249f876aee30af4ddd296009a311ee42a279199b90419291e7186b9e26d",
+      ],
+      [
+        1073820791,
+        "48c977fa7b78ba8538a47b117a685deed9cbdac8899ef41361b76f0092190d41",
+        "c5df27a2b2489cbe1d13f3d84cc22e4aa82e33a1f2507fae03d478a127fc5e0b",
+      ],
+    ];
 const paths = await Promise.all(
   nativeTraces.map(async ([handle, digest, controlDigest], index) => {
+    const receiptStem = outer ? "ribbon-outer" : "ribbon-final";
     const [trace, control] = await Promise.all([
       checked(
-        resolve(receiptRoot, `ribbon-final-${index}-0.125.json`),
+        resolve(receiptRoot, `${receiptStem}-${index}-0.125.json`),
         digest,
       ).then((bytes) => JSON.parse(bytes)),
       checked(
-        resolve(receiptRoot, `ribbon-final-${index}-0.875.json`),
+        resolve(receiptRoot, `${receiptStem}-${index}-0.875.json`),
         controlDigest,
       ).then((bytes) => JSON.parse(bytes)),
     ]);
@@ -105,6 +135,10 @@ const paths = await Promise.all(
     );
     assert.deepEqual(trace.timeline, control.timeline);
     assert.equal(trace.timeline.length, trajectory.samples.length);
+    if (outer) {
+      assert.equal(trajectory.recordedStopTimeSeconds, null);
+      assert.equal(trajectory.firstUnclassifiedPacket.seconds, end);
+    }
     assert.equal(trace.materialState.pass, 5);
     assert.equal(
       trace.materialState.descriptorHex,
@@ -155,32 +189,59 @@ const palette =
   "9467333104f5ce482014c220d593e89eaf3b609c860c2606932c999d67616e7a";
 const ribbonTexture = `recorded-particles/${texture}.png`;
 const ribbonPalette = `recorded-particles/${palette}.png`;
-const files = new Map(
-  await Promise.all(
-    [
-      ...new Set([...source.textures.files, ...Object.values(source.shaders)]),
-    ].map(async (path) => {
-      const valid = /^recorded-particles\/([\da-f]{64})\.(?:glsl|png)$/.exec(
-        path,
-      );
-      assert(valid, "Unrecognized v3 asset path");
-      return [path, await checked(resolve(trackRoot, path), valid[1])];
-    }),
-  ),
-);
-files.set(ribbonTexture, await checked(texturePath, texture));
-files.set(ribbonPalette, await checked(palettePath, palette));
-const track = {
-  ...source,
-  schema: 4,
-  textures: {
-    ...source.textures,
-    files: [
-      ...new Set([...source.textures.files, ribbonTexture, ribbonPalette]),
-    ],
-  },
-  worldRibbon: { texture: ribbonTexture, palette: ribbonPalette, paths },
-};
+const files =
+  baseFiles ??
+  new Map(
+    await Promise.all(
+      [
+        ...new Set([
+          ...source.textures.files,
+          ...Object.values(source.shaders),
+        ]),
+      ].map(async (path) => {
+        const valid = /^recorded-particles\/([\da-f]{64})\.(?:glsl|png)$/.exec(
+          path,
+        );
+        assert(valid, "Unrecognized v3 asset path");
+        return [path, await checked(resolve(trackRoot, path), valid[1])];
+      }),
+    ),
+  );
+files.delete("recorded-particles.json");
+let track;
+if (outer) {
+  assert.equal(source.worldRibbon.texture, ribbonTexture);
+  assert.equal(source.worldRibbon.palette, ribbonPalette);
+  const retainedPaths = source.worldRibbon.paths;
+  assert(
+    [1073820771, 1073820782, 1073820791].every((handle) =>
+      retainedPaths.some((path) => path.handle === handle),
+    ),
+  );
+  assert(
+    paths.every(({ handle }) =>
+      retainedPaths.every((path) => path.handle !== handle),
+    ),
+  );
+  track = {
+    ...source,
+    worldRibbon: { ...source.worldRibbon, paths: [...retainedPaths, ...paths] },
+  };
+} else {
+  files.set(ribbonTexture, await checked(texturePath, texture));
+  files.set(ribbonPalette, await checked(palettePath, palette));
+  track = {
+    ...source,
+    schema: 4,
+    textures: {
+      ...source.textures,
+      files: [
+        ...new Set([...source.textures.files, ribbonTexture, ribbonPalette]),
+      ],
+    },
+    worldRibbon: { texture: ribbonTexture, palette: ribbonPalette, paths },
+  };
+}
 
 await mkdir(output);
 await mkdir(resolve(output, "recorded-particles"));

@@ -47,11 +47,16 @@ def main():
     motion_bytes = args.motion_receipt.read_bytes()
     asset_bytes = args.effect_receipt.read_bytes()
     assert digest == "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7"
-    assert (
-        hashlib.sha256(motion_bytes).hexdigest() == "2c97bd8d259a544f2e145e47bbedd676b6b0e912991f2a1eaa283c337ae1b94a"
-    )
+    cohorts = {
+        "2c97bd8d259a544f2e145e47bbedd676b6b0e912991f2a1eaa283c337ae1b94a": (1073820771, 1073820782, 1073820791),
+        "11dfea28db28ca841a38e21d0cd53620bfaab98895ea99288bc340b0c9c7f5cf": (1073820800, 1073820809),
+    }
+    motion_digest = hashlib.sha256(motion_bytes).hexdigest()
+    assert motion_digest in cohorts
     assert hashlib.sha256(asset_bytes).hexdigest() == "d16ac8262fa12cb2d239cbda480c77221eb85e105f1d72a5bd0421008f32df3c"
     motion = json.loads(motion_bytes)
+    assert tuple(case["entity"] for case in motion["cases"]) == cohorts[motion_digest]
+    assert args.slot < len(motion["cases"])
     asset = json.loads(asset_bytes)
     atan2f = ctypes.CDLL("ucrtbase.dll").atan2f
     atan2f.argtypes = [ctypes.c_float, ctypes.c_float]
