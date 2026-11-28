@@ -55,6 +55,10 @@ test("the built stylesheet is self-contained and down-leveled", async () => {
   }
 });
 
+// Each route check owns its browser context and persona cookie; share the
+// bounded CI workers across this generated file instead of serializing it.
+test.describe.configure({ mode: "parallel" });
+
 for (const scheme of SCHEMES) {
   test.describe(`${scheme} theme`, () => {
     test.use({ colorScheme: scheme });

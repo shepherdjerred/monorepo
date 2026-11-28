@@ -1,6 +1,24 @@
 import { cp, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
+import { z } from "zod";
+import { lakeSchemaFingerprint } from "@scout-for-lol/backend/report-lake/schema.ts";
+
+export const DEV_SEED_REFRESH_COMMAND =
+  "bun run --filter='./packages/scout-for-lol' dev:seed";
+
+export type LakeSchemaStatus = "current" | "unknown";
+
+const BuildManifestSchema = z.looseObject({
+  schemaFingerprint: z.string().min(1).optional(),
+});
+
+export type PublishedBuildInspection = {
+  readonly buildId: string;
+  readonly schemaFingerprint: string | undefined;
+  readonly schemaStatus: LakeSchemaStatus;
+  readonly compatible: boolean;
+};
 
 /**
  * A machine-wide seed copy of the report lake, shared by every checkout.
@@ -82,6 +100,54 @@ export async function publishedBuildId(
   return build?.isDirectory() === true ? buildId : null;
 }
 
+async function readManifestSchemaFingerprint(
+  buildDir: string,
+): Promise<string | undefined> {
+  const manifestFile = Bun.file(path.join(buildDir, "manifest.json"));
+  if (!(await manifestFile.exists())) {
+    return undefined;
+  }
+  try {
+    const raw: unknown = await manifestFile.json();
+    const parsed = BuildManifestSchema.safeParse(raw);
+    return parsed.success ? parsed.data.schemaFingerprint : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Inspect a lake directory's published build and validate its `manifest.json`
+ * `schemaFingerprint` against the current checkout's report-lake schema.
+ */
+export async function inspectPublishedBuild(
+  lakeDir: string,
+): Promise<PublishedBuildInspection | null> {
+  const buildId = await publishedBuildId(lakeDir);
+  if (buildId === null) {
+    return null;
+  }
+  const schemaFingerprint = await readManifestSchemaFingerprint(
+    path.join(lakeDir, "builds", buildId),
+  );
+  const schemaStatus: LakeSchemaStatus =
+    schemaFingerprint === lakeSchemaFingerprint() ? "current" : "unknown";
+  return {
+    buildId,
+    schemaFingerprint,
+    schemaStatus,
+    compatible: schemaStatus === "current",
+  };
+}
+
+export function describeBuildSchemaMismatch(
+  inspection: PublishedBuildInspection,
+): string {
+  return inspection.schemaFingerprint === undefined
+    ? `manifest.json has no valid schemaFingerprint (expected ${lakeSchemaFingerprint()})`
+    : `schemaFingerprint ${inspection.schemaFingerprint} does not match expected ${lakeSchemaFingerprint()}`;
+}
+
 /**
  * Copy the shared seed into `lakeDir`, replacing whatever is there.
  *
@@ -155,10 +221,15 @@ async function assertSafeLakeTarget(lakeDir: string): Promise<void> {
 
 export async function copySeedInto(lakeDir: string): Promise<string> {
   const seed = seedLakeDir();
-  const buildId = await publishedBuildId(seed);
-  if (buildId === null) {
+  const seedBuild = await inspectPublishedBuild(seed);
+  if (seedBuild === null) {
     throw new Error(
-      `No published build in the shared seed at ${seed}. Run \`bun run dev:seed\` first.`,
+      `No published build in the shared seed at ${seed}. Run \`${DEV_SEED_REFRESH_COMMAND}\` first.`,
+    );
+  }
+  if (!seedBuild.compatible) {
+    throw new Error(
+      `Shared seed build ${seedBuild.buildId} at ${seed} has an incompatible report-lake schema (${describeBuildSchemaMismatch(seedBuild)}). Run \`${DEV_SEED_REFRESH_COMMAND}\` to refresh it.`,
     );
   }
 
@@ -170,24 +241,37 @@ export async function copySeedInto(lakeDir: string): Promise<string> {
   await cp(seed, staging, { recursive: true });
   await rm(lakeDir, { recursive: true, force: true });
   await rename(staging, lakeDir);
-  return buildId;
+  return seedBuild.buildId;
 }
 
 /**
- * Give this checkout a lake to read, if it has none and the seed does.
+ * Give this checkout a lake to read, if it has none and the seed holds a
+ * schema-compatible build.
  *
- * A missing seed is not an error — it is the state before anyone has run
- * `dev:seed` — so this reports what it did and lets dev boot against an empty
- * lake, exactly as it did before the seed existed.
+ * A missing or stale seed does not crash boot — it warns with the exact
+ * `dev:seed` refresh command and lets dev boot against an empty lake rather
+ * than copying an incompatible build that fails at query time.
  */
 export async function adoptSeedIfUnseeded(lakeDir: string): Promise<string> {
-  const existing = await publishedBuildId(lakeDir);
+  const existing = await inspectPublishedBuild(lakeDir);
   if (existing !== null) {
-    return `report lake: using this checkout's build ${existing}`;
+    if (existing.compatible) {
+      return `report lake: using this checkout's build ${existing.buildId}`;
+    }
+    const warning = `report lake: warning — this checkout's build ${existing.buildId} at ${lakeDir} has an incompatible schema (${describeBuildSchemaMismatch(existing)}); queries will fail until refreshed. Run \`${DEV_SEED_REFRESH_COMMAND}\` and remove ${lakeDir} to re-seed.`;
+    console.warn(warning);
+    return warning;
   }
-  if ((await publishedBuildId(seedLakeDir())) === null) {
-    return `report lake: empty, and no shared seed at ${seedLakeDir()} — run \`bun run dev:seed\` to build one (queries will return no rows until then)`;
+  const seed = seedLakeDir();
+  const seedBuild = await inspectPublishedBuild(seed);
+  if (seedBuild === null) {
+    return `report lake: empty, and no shared seed at ${seed} — run \`${DEV_SEED_REFRESH_COMMAND}\` to build one (queries will return no rows until then)`;
+  }
+  if (!seedBuild.compatible) {
+    const warning = `report lake: warning — skipping incompatible shared seed build ${seedBuild.buildId} at ${seed} (${describeBuildSchemaMismatch(seedBuild)}); run \`${DEV_SEED_REFRESH_COMMAND}\` to refresh it (queries will return no rows until then)`;
+    console.warn(warning);
+    return warning;
   }
   const adopted = await copySeedInto(lakeDir);
-  return `report lake: seeded build ${adopted} from ${seedLakeDir()}`;
+  return `report lake: seeded build ${adopted} from ${seed}`;
 }

@@ -51,6 +51,10 @@ use crate::hotkeys::{OverlayKey, OverlayKeyPort, overlay_accelerator};
 const CLOSE_TIMEOUT: Duration = Duration::from_secs(5);
 /// An overlay that cannot take a frame this long is hung.
 const WRITE_TIMEOUT: Duration = Duration::from_secs(5);
+/// How long to wait for buffered stdout reports after stdin breaks, so an
+/// `Unavailable` report emitted right before exit wins over the broken-pipe
+/// fallback without letting a wedged stdout stall the supervisor.
+const DRAIN_TIMEOUT: Duration = Duration::from_millis(250);
 
 /// How long each card stays queued.
 const PLAN_TTL_SECS: u32 = 120;
@@ -418,7 +422,10 @@ impl OverlayHost {
         {
             self.sent = frame;
         } else {
-            self.fail(diagnostics, "the overlay stopped reading frames".to_owned());
+            self.drain_reports(diagnostics).await;
+            if !self.down {
+                self.fail(diagnostics, "the overlay stopped reading frames".to_owned());
+            }
         }
     }
 
@@ -462,8 +469,51 @@ impl OverlayHost {
             })
             .await
         {
-            self.fail(diagnostics, "the overlay did not take its hello".to_owned());
+            self.drain_reports(diagnostics).await;
+            if !self.down {
+                self.fail(diagnostics, "the overlay did not take its hello".to_owned());
+            }
         }
+    }
+
+    /// Read any stdout lines the overlay emitted before its stdin closed, so an
+    /// `Unavailable` report from a fast-exiting overlay is recorded instead of a
+    /// generic broken-pipe failure.
+    async fn drain_reports(&mut self, diagnostics: &Diagnostics) {
+        let _ = tokio::time::timeout(DRAIN_TIMEOUT, async {
+            while !self.down {
+                let next = {
+                    let Some(lines) = self
+                        .process
+                        .as_mut()
+                        .and_then(|process| process.lines.as_mut())
+                    else {
+                        break;
+                    };
+                    lines.next_line().await
+                };
+                let event = match next {
+                    Ok(Some(line)) => match decode_line::<OverlayReport>(&line) {
+                        Ok(report) => OverlayEvent::Report(report),
+                        Err(error) => OverlayEvent::Unreadable(error.to_string()),
+                    },
+                    Ok(None) => {
+                        if let Some(process) = self.process.as_mut() {
+                            process.lines = None;
+                        }
+                        break;
+                    }
+                    Err(error) => {
+                        if let Some(process) = self.process.as_mut() {
+                            process.lines = None;
+                        }
+                        OverlayEvent::Unreadable(format!("could not read the overlay: {error}"))
+                    }
+                };
+                self.handle(event, diagnostics);
+            }
+        })
+        .await;
     }
 
     /// Close the overlay. It is reaped in the background, so the end of a
@@ -520,6 +570,12 @@ impl OverlayHost {
         let Some(process) = self.process.as_mut() else {
             return false;
         };
+        // An exited overlay cannot read, even if a concurrently forked child
+        // briefly holds the pipe's read end open between `fork` and `exec`.
+        if matches!(process.child.try_wait(), Ok(Some(_))) {
+            process.stdin = None;
+            return false;
+        }
         let Some(stdin) = process.stdin.as_mut() else {
             return false;
         };
@@ -849,5 +905,73 @@ pub(super) mod tests {
         ] {
             assert!(!in_game(&phase), "{phase:?}");
         }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn broken_stdin_drains_buffered_unavailable_report_before_recording_write_failure()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let script = format!(
+            "printf '{{\"type\":\"hello\",\"protocol\":{PROTOCOL_VERSION}}}\\n'\n\
+             printf '{{\"type\":\"unavailable\",\"reason\":\"no click-through\"}}\\n'\n\
+             exec 0<&-\n\
+             exit 0"
+        );
+        let launcher = WindowLauncher::new(
+            std::path::PathBuf::from("sh"),
+            vec!["-c".to_owned(), script],
+        );
+        let mut child = launcher.spawn()?;
+        let stdin = child.stdin.take().ok_or("missing child stdin")?;
+        let stdout = child.stdout.take().ok_or("missing child stdout")?;
+        // Wait for the child to emit Hello + Unavailable and close stdin so the
+        // subsequent Hello write is guaranteed to fail with EPIPE.
+        let _ = child.wait().await?;
+
+        let diagnostics = Diagnostics::in_memory();
+        let mut host = OverlayHost::new(launcher, None);
+        host.playing = true;
+        host.process = Some(OverlayProcess {
+            child,
+            stdin: Some(stdin),
+            lines: Some(BufReader::new(stdout).lines()),
+            greeted: false,
+        });
+
+        assert!(
+            !host
+                .write(&OverlayCommand::Hello {
+                    protocol: PROTOCOL_VERSION,
+                })
+                .await,
+            "writing to an already-exited overlay stdin must fail"
+        );
+        host.drain_reports(&diagnostics).await;
+        if !host.down {
+            host.fail(
+                &diagnostics,
+                "the overlay did not take its hello".to_owned(),
+            );
+        }
+
+        let summaries: Vec<String> = diagnostics
+            .events()
+            .iter()
+            .map(DiagnosticEvent::summary)
+            .collect();
+        assert!(
+            summaries
+                .iter()
+                .any(|summary| summary.contains("no click-through")),
+            "expected unavailable reason in {summaries:?}"
+        );
+        assert!(
+            !summaries
+                .iter()
+                .any(|summary| summary.contains("did not take its hello")),
+            "broken-pipe fallback must not mask Unavailable: {summaries:?}"
+        );
+        assert!(host.down);
+        Ok(())
     }
 }

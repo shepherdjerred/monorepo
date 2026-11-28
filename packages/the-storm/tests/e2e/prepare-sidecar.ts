@@ -8,7 +8,7 @@ import {
   symlink,
 } from "node:fs/promises";
 import path from "node:path";
-import { RconClient } from "#e2e/harness/rcon.ts";
+import { verifyRconReady } from "#e2e/harness/boot/rcon-ready.ts";
 import { stagePlugins } from "./harness/server.ts";
 import { e2eProfile, gameplayFixtures } from "./gameplay-fixtures.ts";
 import { paper } from "@shepherdjerred/mc-harness/pins.ts";
@@ -142,13 +142,11 @@ for (;;) {
     continue;
   }
   try {
-    const client = await RconClient.connect({
-      host: rconHost,
-      port: 25_575,
-      password: rconPassword,
-      timeoutMs: 2000,
-    });
-    client.close();
+    await verifyRconReady(
+      { host: rconHost, port: 25_575 },
+      rconPassword,
+      deadline,
+    );
     break;
   } catch (error) {
     if (Date.now() >= deadline) {

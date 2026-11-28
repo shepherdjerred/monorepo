@@ -65,8 +65,8 @@ fun Test.rwfbotsFixtures() {
 
 tasks.test { rwfbotsFixtures() }
 
-// The whole-match simulations tagged "simulation": extended gameplay acceptance the committer
-// runs locally (README "Contributor verification"); the CI suite excludes them.
+// The whole-match simulations tagged "simulation": extended-tier headless acceptance
+// (`test:extended:jvm` locally and nightly `ci-extended-verify`); PR `test` excludes them.
 tasks.register<Test>("simulationTest") {
   description = "Runs the headless whole-match bot simulations."
   group = "verification"

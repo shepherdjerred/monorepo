@@ -20,7 +20,12 @@ export async function getLastProcessedMatch(
     const account = await prismaClient.account.findFirst({
       where: {
         puuid,
+        lastProcessedMatchId: { not: null },
       },
+      orderBy: [
+        { lastMatchTime: { sort: "desc", nulls: "last" } },
+        { id: "desc" },
+      ],
       select: {
         lastProcessedMatchId: true,
       },

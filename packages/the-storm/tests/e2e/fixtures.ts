@@ -16,6 +16,7 @@ export const test = base
       host: server.host,
       port: server.rconPort,
       password: server.rconPassword,
+      timeoutMs: 15_000,
     });
     onCleanup(() => {
       rcon.close();

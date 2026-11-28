@@ -113,3 +113,7 @@ export const ImportedPersonalClaimsSchema = z
 export type ImportedPersonalClaim = z.infer<
   typeof ImportedPersonalClaimsSchema
 >[number];
+
+export const AttachImportedRequestsSchema = z.object({
+  attached: z.int().nonnegative(),
+});

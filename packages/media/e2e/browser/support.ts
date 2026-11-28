@@ -10,7 +10,10 @@ import {
   SCENARIO_COOKIE,
   type FixtureScenario,
 } from "#testing/fixture-api/scenario.ts";
-import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
+import {
+  FIXTURE_CSRF_COOKIE,
+  PERSONA_COOKIE,
+} from "#testing/fixture-api/server.ts";
 import type { RouteCase } from "./routes.ts";
 
 const POLICY_TAG = "content-security-policy:";
@@ -93,15 +96,15 @@ export async function openSettled(page: Page, persona: Persona, path: string) {
 }
 
 /**
- * Gives the page the CSRF cookie a signed-in session has. The fixture API is
- * read-only, so a test that sends a command also answers it with
- * `page.route`.
+ * Pins a deterministic CSRF cookie for tests that assert its exact header or
+ * stub `/api/v1/me`. Unstubbed fixture sessions already receive `media-csrf`
+ * from `GET /api/v1/me`.
  */
 export async function allowWrites(page: Page) {
   await page
     .context()
     .addCookies([
-      { name: "media-csrf", value: "browser-test", url: page.url() },
+      { name: FIXTURE_CSRF_COOKIE, value: "browser-test", url: page.url() },
     ]);
 }
 

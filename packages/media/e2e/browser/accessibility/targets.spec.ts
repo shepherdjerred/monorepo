@@ -2,6 +2,8 @@ import { expect } from "@playwright/test";
 import { ROUTES } from "#e2e/browser/routes.ts";
 import { open, test } from "#e2e/browser/support.ts";
 
+test.describe.configure({ mode: "parallel" });
+
 type Box = { width: number; height: number };
 
 /** What the page says about one control; the exemptions are judged here. */

@@ -1,9 +1,13 @@
+import { fileURLToPath } from "node:url";
+import { envWithPostgresBin } from "@shepherdjerred/test-postgres";
 import { afterAll, expect, test } from "vitest";
 import { z } from "zod";
 import {
   createTestDatabase,
   dropTestDatabase,
 } from "#src/testing/test-database.ts";
+
+const BACKEND_ROOT = fileURLToPath(new URL("../..", import.meta.url));
 
 const database = createTestDatabase("support-migration");
 afterAll(async () => {
@@ -99,3 +103,41 @@ test("historical feedback and failed replies survive without notification jobs",
   expect(result.conversation.lastMessageAt).toBe("2026-09-05T00:00:00");
   expect(result.conversation.operatorReadAt).toBeNull();
 });
+
+test("migrated database has zero drift against schema.prisma", async () => {
+  const fresh = createTestDatabase("prisma-schema-drift");
+  try {
+    // Strip the test-template harness bookkeeping table so diff inspects only migrated schema objects.
+    await fresh.prisma.$executeRawUnsafe(
+      'DROP TABLE IF EXISTS "_template_meta"',
+    );
+    const diff = Bun.spawn(
+      [
+        "bun",
+        "x",
+        "--no-install",
+        "prisma",
+        "migrate",
+        "diff",
+        "--from-config-datasource",
+        "--to-schema",
+        "prisma/schema.prisma",
+        "--exit-code",
+      ],
+      {
+        cwd: BACKEND_ROOT,
+        env: envWithPostgresBin({ DATABASE_URL: fresh.dbUrl }),
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(diff.stdout).text(),
+      new Response(diff.stderr).text(),
+      diff.exited,
+    ]);
+    expect(exitCode, `${stdout}\n${stderr}`).toBe(0);
+  } finally {
+    await dropTestDatabase(fresh.prisma, fresh.dbPath);
+  }
+}, 60_000);
