@@ -56,9 +56,10 @@ export function PersonInitial({
         {initialOf(name)}
       </span>
       {live ? (
-        <span className="scout-person__live">
+        <>
+          <span className="scout-person__live" aria-hidden="true" />
           <span className="scout-sr-only">In a game now</span>
-        </span>
+        </>
       ) : null}
       {champion === undefined ? null : (
         <ChampionPortrait
