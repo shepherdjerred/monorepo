@@ -48,6 +48,8 @@ import {
   DISABLED_PERFORMANCE,
   type PerformanceOptions,
 } from "#src/performance-config.ts";
+import { cleanupSupersededPr } from "#src/superseded-pr.ts";
+import { cleanupSupersededMain } from "#src/supersede/superseded-main.ts";
 
 export type AppOptions = {
   readonly deliveryPublicationEnabled?: (branch: string) => Promise<boolean>;
@@ -87,6 +89,14 @@ export type AppOptions = {
     repoId: number,
     pipeline: Pipeline,
   ) => Promise<unknown>;
+  /** Gates pre-publication push main supersession (`AI-823`). */
+  readonly supersedeMainEnabled?: () => Promise<boolean>;
+  /** Best-effort pre-publication push main coalescing (`AI-823`). */
+  readonly cancelSupersededMain?: (
+    repoId: number,
+    pipeline: Pipeline,
+    defaultBranch: string,
+  ) => Promise<unknown>;
 };
 
 async function needsCredentiallessPrVerification(
@@ -122,23 +132,6 @@ async function resolveChangedFiles({
   return changedBase === undefined
     ? undefined
     : compare(`shepherdjerred/${repoName}`, changedBase, pipeline.commit);
-}
-
-async function cleanupSupersededPr(
-  options: AppOptions,
-  repoId: number,
-  pipeline: Pipeline,
-  credentialless = false,
-): Promise<void> {
-  if (credentialless || !isPrVerificationEvent(pipeline)) return;
-  try {
-    await options.cancelSupersededPr?.(repoId, pipeline);
-  } catch {
-    // An external cleanup failure must not suppress the replacement run.
-    console.warn(
-      "PR supersession cleanup failed; preserving full verification",
-    );
-  }
 }
 
 async function pipelineEmitter(
@@ -466,7 +459,7 @@ export function createApp(options: AppOptions): Hono {
     if (limited !== undefined) {
       const configs = emit(limited);
       await cleanupSupersededPr(
-        options,
+        options.cancelSupersededPr,
         repo.id,
         pipeline,
         credentiallessAutomation,
@@ -524,7 +517,14 @@ export function createApp(options: AppOptions): Hono {
     );
 
     const configs = emit(withPrCompletion(selected, options, pipeline, images));
-    await cleanupSupersededPr(options, repo.id, pipeline);
+    await cleanupSupersededPr(options.cancelSupersededPr, repo.id, pipeline);
+    await cleanupSupersededMain({
+      repoId: repo.id,
+      pipeline,
+      defaultBranch: repo.default_branch,
+      enabled: options.supersedeMainEnabled,
+      cancel: options.cancelSupersededMain,
+    });
     return context.json({ configs });
   });
 

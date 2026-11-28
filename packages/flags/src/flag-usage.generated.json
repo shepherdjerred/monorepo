@@ -2876,6 +2876,14 @@
         "kind": "call-argument",
         "count": 1
       }
+    ],
+    "woodpecker-supersede-main-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/supersede/supersede-main-config.ts",
+        "kind": "constant",
+        "count": 1
+      }
     ]
   },
   "unreferenced": ["alert-dashboard-email-from", "alert-dashboard-email-to"]

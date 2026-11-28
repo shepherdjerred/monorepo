@@ -9,6 +9,8 @@ import {
 } from "#src/woodpecker-api.ts";
 import { hasExactHeadApproval } from "#src/github-approval.ts";
 import { cancelSupersededPr } from "#src/superseded-pr.ts";
+import { cancelSupersededMain } from "#src/supersede/superseded-main.ts";
+import { supersedeMainEnabled } from "#src/supersede/supersede-main-config.ts";
 import { initFeatureFlags } from "@shepherdjerred/feature-flags";
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
@@ -78,6 +80,15 @@ const app = createApp({
     cancelSupersededPr(repoId, pipeline, {
       baseUrl: serverUrl,
       token: apiToken,
+    }),
+  supersedeMainEnabled,
+  cancelSupersededMain: (repoId, pipeline, defaultBranch) =>
+    cancelSupersededMain({
+      repoId,
+      defaultBranch,
+      current: pipeline,
+      woodpecker: { baseUrl: serverUrl, token: apiToken },
+      github: { repo: repoSlug, token: approvalReadToken },
     }),
   trustedGateImage,
   publicKey,

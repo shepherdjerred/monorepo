@@ -171,6 +171,18 @@
       ]
     },
     {
+      "key": "woodpecker-supersede-main-enabled",
+      "owner": "woodpecker",
+      "namespace": "woodpecker",
+      "source": "code",
+      "purpose": "Cancel queued and pre-publication running push pipelines on main during merge bursts while keeping at least one active verification pipeline for forward progress (AI-823).",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "delivery-writes-enabled",
       "owner": "delivery",
       "namespace": "delivery",

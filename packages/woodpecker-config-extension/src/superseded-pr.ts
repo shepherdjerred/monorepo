@@ -146,3 +146,21 @@ export async function cancelSupersededPr(
   }
   return cancelled;
 }
+
+export async function cleanupSupersededPr(
+  cancel:
+    ((repoId: number, pipeline: Pipeline) => Promise<unknown>) | undefined,
+  repoId: number,
+  pipeline: Pipeline,
+  credentialless = false,
+): Promise<void> {
+  if (credentialless || !isPrVerificationEvent(pipeline)) return;
+  try {
+    await cancel?.(repoId, pipeline);
+  } catch {
+    // An external cleanup failure must not suppress the replacement run.
+    console.warn(
+      "PR supersession cleanup failed; preserving full verification",
+    );
+  }
+}

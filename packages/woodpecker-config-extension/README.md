@@ -657,12 +657,34 @@ changed-path inputs so the infrastructure release also publishes its content.
 
 ## Pipeline cancellation
 
-Repository auto-cancellation includes `pull_request` only. Main push pipelines
-must finish even when another merge arrives: canceling them discards completed
-verification and leaves main without a completed verdict during busy periods.
-Release admission still supersedes stale deployment work. Woodpecker stores
-this repository setting in its database as `cancel_previous_pipeline_events`;
-read it back after changing it through the repository API.
+Repository auto-cancellation in Woodpecker includes `pull_request` only; native
+`push` auto-cancellation stays off because canceling every older `main` push
+unconditionally would discard completed verification and abort active release
+publication. Woodpecker stores that repository setting in its database as
+`cancel_previous_pipeline_events`; read it back after changing it through the
+repository API.
+
+Instead, when the typed `woodpecker-supersede-main-enabled` flag resolves `true`
+on `woodpecker/prod` (with fail-safe `false` if the Flags snapshot is stale or
+unavailable), `src/supersede/superseded-main.ts` coalesces queued and
+pre-publication `push` pipelines on the default branch during `/ciconfig`:
+
+- A candidate `main` push pipeline is classified as **publishing** once any
+  post-`verify` default-branch publication workflow derived from
+  `buildPipelineSteps` (`images`, `helm-push`, `delivery-publish`,
+  `ci-images-register`, site/Tofu/npm/TRMNL archive producers, or release lanes)
+  has started; root verification lanes such as `playwright-e2e` remain
+  pre-publication. Publishing pipelines are never canceled.
+- When zero active `main` push pipelines have started publication, the oldest
+  `running` pipeline is kept so `main` finishes a verification and release cycle
+  without resetting its timer during continuous merge bursts.
+- Every remaining older pre-publication candidate is canceled only after GitHub
+  `compare/<old>...<current>` confirms `status === "ahead"` (preventing
+  out-of-order webhook reverse-cancellation) and an immediate re-read of the
+  Woodpecker pipeline confirms no publication workflow started in the meantime.
+- Each run logs a structured `superseded-main` JSON summary (`currentPipeline`,
+  `canceledPipelines`, `keptPipelines`); cleanup errors log a warning and never
+  fail pipeline generation.
 
 ## Maintenance lanes
 
