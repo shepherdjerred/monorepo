@@ -128,6 +128,12 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
     const health = soraka.getByRole("meter", { name: / health$/ });
     await expect(health).toHaveAttribute("value", "673.7326049804688");
     await expect(health).toHaveAttribute("max", "799.505859375");
+    if (fixture.championExperience) {
+      const progress = soraka.getByRole("meter", { name: / experience$/ });
+      await expect(progress).toHaveAttribute("value", "320.5");
+      await expect(progress).toHaveAttribute("max", "478");
+      await expect(soraka.getByText("982.5 total XP")).toBeVisible();
+    }
     await shared.screenshot({ path: testInfo.outputPath("bloom-soraka.png") });
   } finally {
     await shared.close();

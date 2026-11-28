@@ -1402,7 +1402,9 @@ checks a timestamp and player camera shared with a fresh signed-out browser.
 It checks Soraka's recorded health and level on the shared frame. The replay
 worker supplies the recorded player names, scoreboard, and elimination jumps.
 The end-of-match check compares all ten player rows and the winner against the
-original ROFL footer. Bloom flow-map shading and combat presentation are incomplete.
+original ROFL footer. Include the pinned `data/maps/shipping/map12/map12.bin`
+as `experienceMap` to show total XP and progress from the original KIWI curve.
+Bloom flow-map shading and combat presentation are incomplete.
 
 ## Local Scout player demo
 

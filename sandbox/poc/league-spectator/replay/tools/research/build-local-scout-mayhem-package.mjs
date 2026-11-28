@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { openReplay } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/transport.mjs";
 import { writeLocalScoutTerrainPackage } from "../build-local-scout-terrain-package.mjs";
+import { readRecordedMayhemExperienceThresholds } from "./recorded-champion-experience.mjs";
 
 const map = { mapId: 12, gameMode: "KIWI", mayhemMapSkin: "Bloom" };
 const build = "16.23.841.8428";
@@ -143,6 +144,12 @@ async function buildPackage(inputs) {
   }
 
   const { min, max, x, z, step, movementOrigin } = terrain.navigation;
+  const thresholds =
+    inputs.experienceMap === undefined
+      ? undefined
+      : readRecordedMayhemExperienceThresholds(
+          await readPinned(inputs.experienceMap),
+        );
   const scene = {
     identity,
     mapBounds: { min, max },
@@ -159,11 +166,15 @@ async function buildPackage(inputs) {
     },
     navgrid: { columns: x, rows: z, step },
     minimap: true,
+    ...(thresholds === undefined
+      ? {}
+      : { championExperienceThresholds: thresholds }),
     workerMotion: {
       waypointOrigin: movementOrigin,
       allowCurrentBuild: true,
       decodeChampionStats: true,
       decodePlayerState: true,
+      ...(thresholds === undefined ? {} : { decodeChampionExperience: true }),
       championModelCatalog: {
         schema: catalog.schema,
         kind: catalog.kind,

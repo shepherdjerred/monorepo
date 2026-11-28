@@ -1,6 +1,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { decodeRegisteredState } from "../../latest-state-fields.mjs";
-import { readExactMap11Definition } from "../exact-map-bin.mjs";
+import {
+  readExactMap11Definition,
+  readExactMayhemMapDefinition,
+} from "../exact-map-bin.mjs";
 import { extractRecordedChampionLevelCaps } from "./recorded-champion-level-cap.mjs";
 import { recordedChampionReplication } from "./recorded-champion-replication.mjs";
 
@@ -18,14 +21,33 @@ export function readRecordedExperienceThresholds(bytes, build) {
     throw Error(
       "Map11 CLASSIC experience curve link differs from native registration",
     );
-  const curve = objects.find(({ pathHash }) => pathHash === "c6f6a84c");
+  return readExperienceCurve(objects, "c6f6a84c", "Map11 CLASSIC");
+}
+
+export function readRecordedMayhemExperienceThresholds(bytes) {
+  const { objects } = readExactMayhemMapDefinition(bytes);
+  const mode = objects.find(({ pathHash }) => pathHash === "8f4c3efd");
+  const link = mode?.fields.fde22db7;
+  if (
+    mode?.classHash !== "89ce9636" ||
+    mode.fields.bc476670?.value !== 0xbffdf499 ||
+    link?.type !== "ObjectLink" ||
+    link.value !== 0xd88e5d96
+  )
+    throw Error(
+      "Map12 KIWI experience curve link differs from native registration",
+    );
+  return readExperienceCurve(objects, "d88e5d96", "Map12 KIWI");
+}
+
+function readExperienceCurve(objects, curvePath, mode) {
+  const curve = objects.find(({ pathHash }) => pathHash === curvePath);
   const field = curve?.fields.bba38682;
   if (curve?.classHash !== "93f5c410" || field?.type !== "Container")
-    throw Error("Map11 CLASSIC experience curve definition differs");
-  // The native ExperienceCurveData constructor sets cap 18 at +0x48.
-  // CLASSIC omits the registered override and keeps that default.
+    throw Error(`${mode} experience curve definition differs`);
+  // Both admitted modes keep the original constructor's cap of 18.
   if (curve.fields.f1f3d846 !== undefined)
-    throw Error("Unexpected Map11 CLASSIC level cap override");
+    throw Error(`Unexpected ${mode} level cap override`);
   return field.elements.map(({ type, value }) => {
     if (type !== "F32") throw Error("Unexpected XP threshold type");
     return value;

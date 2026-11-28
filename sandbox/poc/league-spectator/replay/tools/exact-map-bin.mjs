@@ -84,6 +84,16 @@ export function readExactMap11Definition(bytes, build = "16.23.840.6595") {
   };
 }
 
+export function readExactMayhemMapDefinition(bytes) {
+  if (
+    !(bytes instanceof Uint8Array) ||
+    new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !==
+      "b0734c4fee0360593108147bb8ab62525607debff30c1eb17c60859009c5a57d"
+  )
+    throw Error("Exact 16.23.841.8428 Map12 definition required");
+  return readPropertyBin(bytes, "16.23.841.8428", false);
+}
+
 export function readExactClassicCameraDefaults(bytes) {
   if (
     !(bytes instanceof Uint8Array) ||
