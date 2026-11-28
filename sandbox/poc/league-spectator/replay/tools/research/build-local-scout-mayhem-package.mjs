@@ -162,6 +162,7 @@ async function buildPackage(inputs) {
     workerMotion: {
       waypointOrigin: movementOrigin,
       allowCurrentBuild: true,
+      decodeChampionStats: true,
       championModelCatalog: {
         schema: catalog.schema,
         kind: catalog.kind,

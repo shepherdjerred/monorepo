@@ -82,7 +82,7 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
   try {
     const share = new URL(replayPath, baseURL);
     share.search = new URLSearchParams({
-      t: "75",
+      t: "65",
       follow: "1073741892",
     }).toString();
     const sharedResponse = await shared.goto(share.href);
@@ -92,10 +92,14 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
     ).toBeEnabled();
     await expect(
       shared.getByRole("slider", { name: "Replay time" }),
-    ).toHaveValue("75");
+    ).toHaveValue("65");
     await expect(shared.getByRole("combobox", { name: "Camera" })).toHaveValue(
       "player:1073741892",
     );
+    const health = shared.getByRole("meter", { name: "Soraka health" });
+    await expect(health).toHaveAttribute("value", "673.7326049804688");
+    await expect(health).toHaveAttribute("max", "799.505859375");
+    await shared.screenshot({ path: testInfo.outputPath("bloom-soraka.png") });
   } finally {
     await shared.close();
   }
