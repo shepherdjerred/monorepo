@@ -135,6 +135,7 @@ function renderSectionText(section: EmailSection): string[] {
         section.heading,
         ...(section.paragraphs ?? []),
         ...(section.bullets ?? []).map((bullet) => `- ${bullet}`),
+        ...(section.code === undefined ? [] : [section.code]),
       ];
   }
 }

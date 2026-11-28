@@ -202,6 +202,9 @@ describe("alert comprehension and rendering", () => {
     expect(html).toContain("media-streambot-1, media-streambot-2");
     expect(html).not.toContain("10.244.0.57:9466");
     expect(html).toContain("Grafana");
+    // Sentence-case headings: no uppercase transform or letter-spacing.
+    expect(html).not.toContain("text-transform");
+    expect(html).not.toContain("letter-spacing");
 
     // Primary CTA appears above Technical details for fast mobile triage.
     expect(html.indexOf("Open Hub Alerts")).toBeLessThan(

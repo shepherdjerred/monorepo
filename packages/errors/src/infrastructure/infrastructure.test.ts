@@ -6,6 +6,7 @@ import { createInMemoryErrorsRepository } from "#infrastructure/in-memory-db.ts"
 import {
   createMailOutboxClient,
   dispatchPendingOutbox,
+  renderOutboxAlertEmail,
 } from "#infrastructure/mail-outbox.ts";
 import { CANONICAL_PROJECTS } from "#infrastructure/seed-projects.ts";
 import { createTrackerIssueClient } from "#infrastructure/tracker-client.ts";
@@ -375,5 +376,44 @@ describe("Outbound mail outbox and Tracker tRPC client", () => {
     });
     expect(capturedBody).toContain('"teamKey":"AI"');
     expect(capturedBody).toContain('"key":"service:errors"');
+  });
+});
+
+describe("renderOutboxAlertEmail", () => {
+  const item = {
+    id: "1",
+    issueId: "iss-1",
+    eventId: "evt-1",
+    kind: "REGRESSION" as const,
+    messageId: "msg-1",
+    attempts: 0,
+    projectSlug: "scout",
+    projectName: "Scout <API>",
+    issueType: "TypeError",
+    issueValue: "boom",
+    transaction: "POST /x",
+    release: "r1",
+    environment: null,
+    stacktraceMd: "TypeError: boom\n    at fn (a.ts:1:1)",
+  };
+
+  it("renders the shared email layout with escaped content and an intact plain body", () => {
+    const email = renderOutboxAlertEmail(item, "https://errors.example/");
+    expect(email.subject).toBe("[Errors] Regression in Scout <API>: TypeError");
+    expect(email.htmlBody).toContain("<!DOCTYPE html>");
+    expect(email.htmlBody).toContain("Regression in Scout &lt;API&gt;");
+    expect(email.htmlBody).toContain(
+      'href="https://errors.example/issues/iss-1"',
+    );
+    expect(email.htmlBody).toContain("Stack trace");
+    expect(email.htmlBody).toContain("at fn (a.ts:1:1)");
+    expect(email.htmlBody).toContain("POST /x");
+    expect(email.htmlBody).not.toContain("Environment");
+    expect(email.htmlBody).not.toContain("text-transform");
+    expect(email.plainBody).toContain("Project: Scout <API> (scout)");
+    expect(email.plainBody).toContain(
+      "Issue URL: https://errors.example/issues/iss-1",
+    );
+    expect(email.tag).toBe("errors-regression");
   });
 });

@@ -218,7 +218,7 @@ function renderItemList(
 }
 
 function sectionHeading(text: string, p: EditorialPalette): string {
-  return `<h2 class="e-muted" style="margin:22px 0 10px;font-size:11.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${p.mutedLight};">${escapeHtml(text)}</h2>`;
+  return `<h2 class="e-sec" style="margin:22px 0 10px;font-size:14px;font-weight:650;color:${p.secondaryInkLight};">${escapeHtml(text)}</h2>`;
 }
 
 function renderMetricsTable(
@@ -308,7 +308,11 @@ function renderProseBlock(
     section.bullets === undefined || section.bullets.length === 0
       ? ""
       : `<ul class="e-sec" style="margin:4px 0 0;padding-left:18px;font-size:14px;line-height:1.55;color:${p.secondaryInkLight};">${section.bullets.map((b) => `<li style="margin:4px 0;">${escapeHtml(b)}</li>`).join("")}</ul>`;
-  return `${sectionHeading(section.heading, p)}${paragraphs}${bullets}`;
+  const code =
+    section.code === undefined || section.code.length === 0
+      ? ""
+      : `<pre class="e-sub e-sec" style="margin:0;padding:12px;border:1px solid ${p.borderLight};border-radius:6px;background-color:${p.subtleLight};color:${p.secondaryInkLight};font-family:${p.fontMono};font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word;">${escapeHtml(section.code)}</pre>`;
+  return `${sectionHeading(section.heading, p)}${paragraphs}${bullets}${code}`;
 }
 
 function renderSection(section: EmailSection, p: EditorialPalette): string {
@@ -377,7 +381,7 @@ function renderTechnicalDetailsFooter(
       : `<p class="e-muted" style="margin:0 0 ${hasDetails ? "10px" : "0"};font-size:13px;color:${p.mutedLight};">${escapeHtml(doc.omittedNotice)}</p>`;
   if (!hasDetails && omitted.length === 0) return "";
   const heading = hasDetails
-    ? `<div class="e-muted" style="margin-bottom:8px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${p.mutedLight};">Technical details</div>`
+    ? `<div class="e-sec" style="margin-bottom:8px;font-size:13px;font-weight:650;color:${p.secondaryInkLight};">Technical details</div>`
     : "";
   return `<footer class="e-bd" style="margin-top:22px;padding-top:16px;border-top:1px solid ${p.borderLight};">${omitted}${heading}${renderDetailsRows(doc.details, p)}</footer>`;
 }
@@ -396,7 +400,7 @@ export function renderEmailHtml(
 
   const preheaderHtml = `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:transparent;">${escapeHtml(doc.preheader)}${"&#847; &zwnj; &nbsp; ".repeat(18)}</div>`;
   const headerBar = `<table role="presentation" cellpadding="0" cellspacing="0" style="${TABLE_STYLE}margin-bottom:8px;"><tr><td class="e-muted" style="padding:0;font-size:13px;line-height:1.4;color:${p.mutedLight};">${escapeHtml(doc.eyebrow)}</td><td style="padding:0 0 0 12px;text-align:right;white-space:nowrap;">${renderStatus(doc.tone, doc.badge, p)}</td></tr></table>`;
-  const headingHtml = `<h1 class="e-ink e-h1" style="margin:0;font-size:22px;font-weight:700;line-height:1.28;letter-spacing:-0.015em;color:${p.inkLight};">${escapeHtml(doc.heading)}</h1>`;
+  const headingHtml = `<h1 class="e-ink e-h1" style="margin:0;font-size:22px;font-weight:700;line-height:1.28;color:${p.inkLight};">${escapeHtml(doc.heading)}</h1>`;
   const leadHtml =
     doc.lead === undefined
       ? ""
