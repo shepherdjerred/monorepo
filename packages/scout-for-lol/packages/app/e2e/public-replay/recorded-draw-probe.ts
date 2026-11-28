@@ -132,7 +132,7 @@ export async function installRecordedDrawProbe(page: Page) {
       clear.call(this, mask);
     };
     gl.drawElements = function (mode, count, type, offset) {
-      if (particlesActive && count === 6 && mode === this.TRIANGLES)
+      if (particlesActive && count > 0 && mode === this.TRIANGLES)
         draw.recordedParticleDraws += 1;
       if (terrainActive && textured) {
         draw.texturedIndices += count;

@@ -19,6 +19,7 @@ type SamplingWindow = {
   perspective?: "blue" | "red";
   follow?: number;
   verifyParticleDraws?: true;
+  verifyIndexedParticleDraws?: true;
 };
 const reviewedScenes = [
   { label: "opening", timeSeconds: 15 },
@@ -54,6 +55,7 @@ type WorkerLifetime = { openedMs: number; closedMs: number | null };
 declare global {
   var recordedFrameStarts: number[];
   var recordedPerformanceParticleDraws: number;
+  var recordedPerformanceIndexedParticleDraws: number;
 }
 
 async function installFrameProbe(page: Page) {
@@ -61,6 +63,7 @@ async function installFrameProbe(page: Page) {
     const starts: number[] = [];
     globalThis.recordedFrameStarts = starts;
     globalThis.recordedPerformanceParticleDraws = 0;
+    globalThis.recordedPerformanceIndexedParticleDraws = 0;
     const gl = WebGL2RenderingContext.prototype;
     const clear = Reflect.get(gl, "clear");
     gl.clear = function (mask) {
@@ -96,11 +99,14 @@ async function installFrameProbe(page: Page) {
     gl.drawElements = function (mode, count, type, offset) {
       drawElements.call(this, mode, count, type, offset);
       if (
-        count === 6 &&
+        count > 0 &&
         mode === this.TRIANGLES &&
         activePrograms.get(this) === true
-      )
+      ) {
         globalThis.recordedPerformanceParticleDraws += 1;
+        if (count !== 6)
+          globalThis.recordedPerformanceIndexedParticleDraws += 1;
+      }
     };
   }, sceneLabel);
 }
@@ -223,6 +229,9 @@ async function currentRiftSamplingWindows(
             timeSeconds: 1714,
             follow: 1_073_742_170,
             verifyParticleDraws: true as const,
+            ...(track?.schema === 4
+              ? { verifyIndexedParticleDraws: true as const }
+              : {}),
           },
         ]
       : []),
@@ -287,6 +296,7 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
       perspective = "all",
       follow = null,
       verifyParticleDraws = false,
+      verifyIndexedParticleDraws = false,
     } = scene;
     await camera.selectOption(
       follow === null ? "free" : `player:${String(follow)}`,
@@ -300,6 +310,9 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
       await page
         .getByRole("combobox", { name: "Speed" })
         .selectOption(String(rate));
+      const indexedAtStart = await page.evaluate(
+        () => globalThis.recordedPerformanceIndexedParticleDraws,
+      );
       await play.click();
       await expect
         .poll(async () => Number(await clock.inputValue()))
@@ -325,11 +338,17 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
         sampleMilliseconds,
       );
       const finalTime = Number(await clock.inputValue());
+      const indexedParticleDraws = await page.evaluate(
+        (before) => globalThis.recordedPerformanceIndexedParticleDraws - before,
+        indexedAtStart,
+      );
       const workersAtEnd = page.workers().length;
       await page.getByRole("button", { name: "Pause", exact: true }).click();
       expect(starts.length).toBeGreaterThan(1);
       expect(finalTime).toBeGreaterThan(initialTime);
       if (verifyParticleDraws) expect(particleDraws).toBeGreaterThan(0);
+      if (verifyIndexedParticleDraws)
+        expect(indexedParticleDraws).toBeGreaterThan(0);
       samples.push({
         scene: label,
         requestedStartTime: sceneTime,
@@ -341,6 +360,7 @@ test("samples recorded replay frame submissions at 1080p and both playback rates
         workersAtStart,
         workersAtEnd,
         particleDraws,
+        indexedParticleDraws,
         ...summarizeFrameStarts(starts),
       });
     }
