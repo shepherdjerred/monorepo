@@ -8,7 +8,10 @@ import {
   type AdmissionStep,
   StepSchema,
 } from "./check-ci-admission-budget.ts";
-import { PooledAdmissionBudgetSchema as PooledBudgetSchema } from "../../lib/ci/admission-budget.ts";
+import {
+  PooledAdmissionBudgetSchema as PooledBudgetSchema,
+  queueWorkflows,
+} from "../../lib/ci/admission-budget.ts";
 import rawBudget from "../../../packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json" with { type: "json" };
 import {
   CHECKED_STEP_GRAPHS,
@@ -261,7 +264,7 @@ describe("pooled CI admission budget", () => {
     expect(
       pooledAdmissionBudgetViolations([compute], {
         ...budget,
-        maxWorkflows: 17,
+        maxWorkflows: budget.maxWorkflows + 1,
         gateQuota: { ...budget.gateQuota, cpu: "2" },
       }),
     ).toEqual([
@@ -290,6 +293,87 @@ describe("pooled CI admission budget", () => {
       expect.stringContaining("memory reserve"),
       expect.stringContaining("ephemeral-storage reserve"),
     ]);
+  });
+
+  /** Woodpecker holds a workflow no agent's labels match, without failing it. */
+  test("rejects a workflow routed to a pool with no agent", () => {
+    expect(
+      pooledAdmissionBudgetViolations(
+        [
+          compute,
+          step({ key: "orphan", agentLabels: { "ci-pool": "nightly" } }),
+        ],
+        budget,
+      ),
+    ).toEqual([
+      "orphan: routed to the nightly pool, which has no agent in the budget",
+    ]);
+  });
+
+  /**
+   * The maintenance agent takes only maintenance workflows, so its slots hold
+   * their services and never an ordinary workflow's. Both share compute quota.
+   */
+  describe("dedicated compute pools", () => {
+    // Charged to every compute slot, 2Gi of services would overflow the
+    // widened budget below; charged only to PR and main slots, it fits.
+    const largeServices = step({
+      services: [{ name: "db", resources: { ...SMALL, memoryRequest: "2Gi" } }],
+    });
+    const maintenance = step({
+      key: "maintenance-workspace-golden",
+      agentLabels: { "ci-pool": "maintenance" },
+    });
+    const widened = {
+      ...budget,
+      maxWorkflows: budget.maxWorkflows + 12,
+      pools: {
+        ...budget.pools,
+        maintenance: { ...budget.pools.maintenance, maxWorkflows: 13 },
+      },
+    };
+
+    test("do not hold an ordinary workflow's services", () => {
+      expect(
+        pooledAdmissionBudgetViolations([largeServices, maintenance], widened),
+      ).toEqual([]);
+    });
+
+    test("hold their own workflows' services against compute quota", () => {
+      expect(
+        pooledAdmissionBudgetViolations(
+          [
+            largeServices,
+            {
+              ...maintenance,
+              services: [
+                { name: "db", resources: { ...SMALL, memoryRequest: "4Gi" } },
+              ],
+            },
+          ],
+          widened,
+        ),
+      ).toEqual([
+        expect.stringContaining(
+          `memory: ${queueWorkflows(widened.pools, "default").toString()} workflows'`,
+        ),
+      ]);
+    });
+
+    test("still fit their largest step within compute quota", () => {
+      expect(
+        pooledAdmissionBudgetViolations(
+          [
+            largeServices,
+            {
+              ...maintenance,
+              resources: { ...TIER, memoryRequest: "71Gi" },
+            },
+          ],
+          budget,
+        ),
+      ).toEqual([expect.stringContaining("memory:")]);
+    });
   });
 
   test("keeps draft admission below ready PRs and main", () => {

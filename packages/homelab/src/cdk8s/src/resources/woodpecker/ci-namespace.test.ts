@@ -69,9 +69,13 @@ const EnvSchema = z.array(
   z.object({ name: z.string(), value: z.string().optional() }).loose(),
 );
 
-const AGENT_DEPLOYMENTS = ["completion", "main", "pr", "review"].map(
-  (pool) => `woodpecker-woodpecker-agent-${pool}`,
-);
+const AGENT_DEPLOYMENTS = [
+  "completion",
+  "main",
+  "maintenance",
+  "pr",
+  "review",
+].map((pool) => `woodpecker-woodpecker-agent-${pool}`);
 
 function agentEnvironment(name: string): Map<string, string | undefined> {
   const deployment = z
