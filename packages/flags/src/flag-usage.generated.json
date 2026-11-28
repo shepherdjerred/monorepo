@@ -1825,6 +1825,38 @@
         "count": 1
       }
     ],
+    "streambot-audio-dialog-downmix-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-audio-live-resync-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-audio-loudness-normalization-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-audio-track-ranking-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
     "streambot-automatic-channel-routing-enabled": [
       {
         "package": "@shepherdjerred/streambot",
@@ -1914,7 +1946,7 @@
         "package": "@shepherdjerred/streambot",
         "file": "packages/streambot/src/config/media-features.ts",
         "kind": "call-argument",
-        "count": 2
+        "count": 1
       }
     ],
     "streambot-player-card-repost-after-messages": [
