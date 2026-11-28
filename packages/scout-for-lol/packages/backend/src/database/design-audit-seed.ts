@@ -20,6 +20,7 @@ import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fi
 import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
 import { seedDesignAuditLiveGame } from "#src/testing/design-audit/live-roster.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
+import { deriveTestLaneResults } from "#src/testing/report-lake/test-lane-results.ts";
 import {
   designAuditMatchFixtures,
   designAuditHistoryFixtures,
@@ -481,6 +482,10 @@ export async function seedDesignAuditDatabase(
       friendPuuid: liveFriend.puuid,
       now: new Date(),
     });
+
+    // Lane results block: derive `lane_results` as a rebuild at the current
+    // schema would, so the matchup page and Player "Lately" line have data.
+    await deriveTestLaneResults(lakeDir);
   } finally {
     await prisma.$disconnect();
   }
