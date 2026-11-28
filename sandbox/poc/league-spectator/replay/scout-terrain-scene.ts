@@ -53,6 +53,8 @@ import {
   terrainPositionProtocol,
 } from "./tools/research/native-terrain-byte-codecs.mjs";
 import { createNavgridGroundHeight } from "./tools/research/native-terrain-ground.mjs";
+import { mayhemFlowMapControlSha256 } from "./tools/research/mayhem-flowmap-control-contract.mjs";
+import { loadFlowMapControl } from "./tools/research/native-terrain-flowmap.mjs";
 import { chaosTurretCollapseModelPath } from "./tools/research/native-terrain-turret-collapse-assets.mjs";
 import { sampleNativeTerrainMotion } from "./tools/research/native-terrain-motion-sample.mjs";
 import { sampleNativeTerrainWorldUnits } from "./tools/research/native-terrain-world-unit-sample.mjs";
@@ -717,6 +719,7 @@ const TerrainSceneFields = z.object({
     mayhemMapSkin: z.string().min(1).optional(),
   }),
   winningTeam: teamId.optional(),
+  mayhemFlowMapControl: z.literal(mayhemFlowMapControlSha256).optional(),
   teamVision: TeamVisionSchema.optional(),
   championAnimationCues: ChampionAnimationCuesSchema.optional(),
   championHealthTracks: ChampionHealthTracksSchema.optional(),
@@ -887,17 +890,29 @@ const TerrainSceneFields = z.object({
     .optional(),
 });
 export const SceneSchema = TerrainSceneFields.refine(
-  ({ identity, inhibitorModels }) =>
-    validInhibitorRanges(
-      inhibitorModels?.instances ?? [],
-      identity.durationMilliseconds / 1000,
-    ),
+  (scene) =>
+    scene.mayhemFlowMapControl === undefined ||
+    (scene.identity.build === currentTerrainPositionBuild &&
+      scene.identity.mayhemMapSkin === "Bloom" &&
+      scene.terrainMaterials !== undefined),
   {
-    path: ["inhibitorModels", "instances"],
+    path: ["mayhemFlowMapControl"],
     message:
-      "Recorded inhibitor inactive ranges must be ordered and within the replay.",
+      "The FlowMap comparison requires the reviewed textured Bloom scene.",
   },
 )
+  .refine(
+    ({ identity, inhibitorModels }) =>
+      validInhibitorRanges(
+        inhibitorModels?.instances ?? [],
+        identity.durationMilliseconds / 1000,
+      ),
+    {
+      path: ["inhibitorModels", "instances"],
+      message:
+        "Recorded inhibitor inactive ranges must be ordered and within the replay.",
+    },
+  )
   .refine(
     (scene) => {
       const catalog = scene.workerMotion?.nexusCatalog;
@@ -1261,6 +1276,7 @@ export type RendererModule = {
       >;
       turretCollapseAt?: Awaited<ReturnType<typeof loadRecordedTurretCollapse>>;
       recordedParticles?: LoadedTerrainParticles;
+      flowMapControl?: Awaited<ReturnType<typeof loadFlowMapControl>>;
     },
   ) => {
     draw: (
@@ -2800,7 +2816,11 @@ export async function loadRenderer(
   let inhibitorModels: LoadedChampionModels | undefined;
   let worldUnitModels: LoadedChampionModels | undefined;
   let recordedParticles: LoadedTerrainParticles | undefined;
+  let flowMapControl:
+    Awaited<ReturnType<typeof loadFlowMapControl>> | undefined;
   try {
+    if (scene.mayhemFlowMapControl !== undefined)
+      flowMapControl = await loadFlowMapControl(read);
     if (hasRecordedParticles)
       recordedParticles = await loadRecordedTerrainParticles(
         read,
@@ -2848,6 +2868,7 @@ export async function loadRenderer(
       animationPalettesAt,
       turretCollapseAt,
       recordedParticles,
+      flowMapControl,
     });
   } finally {
     if (championModels !== undefined)
@@ -2861,6 +2882,7 @@ export async function loadRenderer(
       render.closeChampionModelImages(worldUnitModels);
     await materials?.closeImages();
     recordedParticles?.closeImages();
+    flowMapControl?.closeImages();
   }
   return renderer;
 }

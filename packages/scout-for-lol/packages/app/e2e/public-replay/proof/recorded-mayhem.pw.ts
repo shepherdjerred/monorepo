@@ -17,6 +17,10 @@ import {
   readFooterScores,
   verifyFooterRoster,
 } from "./recorded-footer-score.ts";
+import {
+  observeMayhemFlowMap,
+  verifyMayhemFlowMap,
+} from "./recorded-mayhem-flowmap.ts";
 
 const mayhemReplaySha256 =
   "4bb0f94d3ceb19df374c0937a9e59dcc866a5b92e4727b81c6c7d5b3aca970b7";
@@ -105,6 +109,10 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
 
   const shared = await browser.newPage();
   try {
+    const flowControl = [...fixture.paths.values()].includes(
+      "flowmap-control/manifest.json",
+    );
+    if (flowControl) await observeMayhemFlowMap(shared);
     const share = new URL(replayPath, baseURL);
     share.search = new URLSearchParams({
       t: "65",
@@ -134,6 +142,7 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
       await expect(progress).toHaveAttribute("max", "478");
       await expect(soraka.getByText("982.5 total XP")).toBeVisible();
     }
+    if (flowControl) await verifyMayhemFlowMap(shared);
     await shared.screenshot({ path: testInfo.outputPath("bloom-soraka.png") });
   } finally {
     await shared.close();

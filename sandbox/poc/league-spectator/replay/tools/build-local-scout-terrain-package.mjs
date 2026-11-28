@@ -5,6 +5,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import { LocalScoutTerrainManifestSchema } from "../../../../../packages/scout-for-lol/packages/app/e2e/public-replay/local-scout-terrain-manifest.ts";
+import { mayhemFlowMapAsset } from "./research/mayhem-flowmap-control-contract.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const entrypoint = "engine.mjs";
@@ -222,6 +223,13 @@ export async function writeLocalScoutTerrainPackage({
   for (const [route, [body]] of routes) {
     assert.ok(route.startsWith("/"));
     const path = route.slice(1);
+    if (path.startsWith("flowmap-control/")) {
+      assert.equal(map.mapId, 12);
+      assert.equal(map.gameMode, "KIWI");
+      assert.equal(map.mayhemMapSkin, "Bloom");
+      assert.match(path.slice("flowmap-control/".length), mayhemFlowMapAsset);
+      resources.set(path, body);
+    }
     if (sceneFiles.has(path) || assetPath.test(path)) resources.set(path, body);
   }
   for (const path of sceneFiles)

@@ -20,6 +20,73 @@ foreach(var job in jobs){
  image.SaveAsPng(job.Value);
 }
 Console.WriteLine($"Converted {jobs.Count} exact-build textures");
+} else if (mode == "map-flow-river") {
+    if (args.Length != 2)
+        throw new ArgumentException("Usage: map-flow-river <Bloom.mapgeo> <output-directory>");
+
+    using var source = File.OpenRead(args[0]);
+    const string geometrySha256 = "7F6D1AB36747521130EB7D2E618E5A856D56A4544651BF40B9982CACEFD40BED";
+    if (Convert.ToHexString(SHA256.HashData(source)) != geometrySha256)
+        throw new InvalidDataException("Expected pinned 16.23.841.8428 Bloom geometry");
+
+    source.Position = 0;
+    using var map = new EnvironmentAsset(source);
+    Directory.CreateDirectory(args[1]);
+    using var riverWriter = new BinaryWriter(
+        File.Open(Path.Combine(args[1], "geometry.bin"), FileMode.CreateNew, FileAccess.Write));
+    var groups = new List<object>();
+    int meshIndex = -1;
+    foreach (var mesh in map.Meshes) {
+        if (((int)mesh.VisibilityFlags & 1) == 0)
+            continue;
+
+        meshIndex++;
+        var submeshes = mesh.Submeshes.Where(sub => sub.Material.StartsWith(
+            "Maps/KitPieces/Howling_Abyss/Bloom/Materials/Default/Bloom_FlowMapRiver_",
+            StringComparison.Ordinal)).ToArray();
+        if (submeshes.Length == 0)
+            continue;
+        if (mesh.Transform != Matrix4x4.Identity)
+            throw new InvalidDataException("Bloom FlowMapRiver geometry transform differs");
+
+        var positions = mesh.VerticesView.GetAccessor(ElementName.Position).AsVector3Array();
+        var normals = mesh.VerticesView.GetAccessor(ElementName.Normal).AsVector3Array();
+        var uv0 = mesh.VerticesView.GetAccessor(ElementName.Texcoord0).AsVector2Array();
+        long vertexOffset = riverWriter.BaseStream.Position;
+        for (int i = 0; i < positions.Count; i++) {
+            var position = positions[i];
+            var normal = normals[i];
+            var uv = uv0[i];
+            riverWriter.Write(position.X);
+            riverWriter.Write(position.Y);
+            riverWriter.Write(position.Z);
+            riverWriter.Write(normal.X);
+            riverWriter.Write(normal.Y);
+            riverWriter.Write(normal.Z);
+            riverWriter.Write(uv.X);
+            riverWriter.Write(uv.Y);
+        }
+        long indexOffset = riverWriter.BaseStream.Position;
+        foreach (var index in mesh.Indices)
+            riverWriter.Write((uint)index);
+
+        groups.Add(new {
+            meshIndex,
+            vertexOffset,
+            vertexCount = positions.Count,
+            indexOffset,
+            indexCount = mesh.Indices.Count,
+            submeshes = submeshes.Select(sub => new {
+                material = sub.Material,
+                start = sub.StartIndex,
+                count = sub.IndexCount,
+            }),
+        });
+    }
+    if (groups.Count != 9)
+        throw new InvalidDataException("Incomplete Bloom FlowMapRiver geometry");
+    using var geometryIndex = File.Open(Path.Combine(args[1], "geometry.json"), FileMode.CreateNew, FileAccess.Write);
+    JsonSerializer.Serialize(geometryIndex, new { vertexStride = 32, groups });
 }else if(mode=="map"){
 
 if (args.Length is < 2 or > 3 ||

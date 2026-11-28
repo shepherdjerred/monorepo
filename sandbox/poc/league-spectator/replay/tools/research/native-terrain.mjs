@@ -1,5 +1,6 @@
 import { PerspectiveCamera, Vector3 } from "/three.core.js";
 import { createChampionModelRenderer } from "./native-terrain-actors.mjs";
+import { createFlowMapRenderer } from "./native-terrain-flowmap.mjs";
 import { createRecordedParticleRenderer } from "./native-terrain-recorded-particles.mjs";
 import {
   createChampionOverhead,
@@ -323,15 +324,19 @@ export function createTerrainRenderer(
     animationPalettesAt,
     turretCollapseAt,
     recordedParticles,
+    flowMapControl,
   } = {},
 ) {
   const gl = canvas.getContext("webgl2", {
     alpha: false,
     depth: true,
-    antialias: true,
+    antialias: flowMapControl === undefined,
   });
-  if (!gl || !gl.getContextAttributes().depth)
+  const context = gl?.getContextAttributes();
+  if (!gl || !context?.depth)
     throw Error("WebGL2 with a depth buffer is required");
+  if (flowMapControl !== undefined && context.antialias)
+    throw Error("The FlowMap comparison requires a single-sample canvas");
   const program = createProgram(gl);
   gl.useProgram(program);
   const matrix = gl.getUniformLocation(program, "viewProjection");
@@ -373,6 +378,8 @@ export function createTerrainRenderer(
   }
   for (const group of groups) {
     if (omittedControllers.has(group.controllerId)) continue;
+    if (flowMapControl?.manifest.materials[group.material] !== undefined)
+      continue;
     const binding = materials.get(group.material);
     if (binding === undefined) continue;
     const pass =
@@ -473,9 +480,11 @@ export function createTerrainRenderer(
   );
   let disposed = false;
   let particleRenderer;
+  let flowMap;
   function dispose() {
     if (disposed) return;
     disposed = true;
+    flowMap?.dispose();
     particleRenderer?.dispose();
     overhead?.dispose();
     gl.bindVertexArray(null);
@@ -491,6 +500,8 @@ export function createTerrainRenderer(
     gl.deleteProgram(program);
   }
   try {
+    if (flowMapControl !== undefined)
+      flowMap = createFlowMapRenderer(gl, flowMapControl);
     if (recordedParticles !== undefined)
       particleRenderer = createRecordedParticleRenderer(
         gl,
@@ -621,6 +632,7 @@ export function createTerrainRenderer(
     const viewProjection = camera.projectionMatrix
       .clone()
       .multiply(camera.matrixWorldInverse);
+    flowMap?.begin(width, height);
     gl.useProgram(program);
     gl.uniformMatrix4fv(matrix, false, viewProjection.elements);
     gl.clearColor(...terrainClearColor);
@@ -636,6 +648,11 @@ export function createTerrainRenderer(
       gl.uniform1i(sourceAlphaBlend, 0);
       for (const group of opaqueTerrain)
         drawTerrainGroup(frame.timeSeconds, group);
+      if (flowMap !== undefined) {
+        flowMap.drawFlow(viewProjection.elements, frame.timeSeconds);
+        gl.useProgram(program);
+        gl.bindVertexArray(terrain);
+      }
       if (blendedTerrain.length > 0) {
         gl.uniform1i(sourceAlphaBlend, 1);
         gl.enable(gl.BLEND);
@@ -788,6 +805,7 @@ export function createTerrainRenderer(
         [54, 6],
       );
     }
+    flowMap?.present();
     const nameplateAt =
       options.focus === undefined ? undefined : options.championNameplateAt;
     if (

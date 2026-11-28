@@ -1404,7 +1404,21 @@ worker supplies the recorded player names, scoreboard, and elimination jumps.
 The end-of-match check compares all ten player rows and the winner against the
 original ROFL footer. Include the pinned `data/maps/shipping/map12/map12.bin`
 as `experienceMap` to show total XP and progress from the original KIWI curve.
-Bloom flow-map shading and combat presentation are incomplete.
+
+For the controlled Bloom river comparison, prepare the original FlowMapRiver
+geometry and materials in a fresh private cache directory using the same build's
+installation, the terrain exporter, and the exact shader translator.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-mayhem-flowmap-assets.mjs $installation $exporter $shaderTranslator $dotnet $output
+```
+
+Set `flowMapControl` to the prepared `manifest.json` and its SHA-256 using the
+same `{ "path": "…", "sha256": "…" }` input format. The browser checks an
+opaque color and depth copy followed by all nine authored river draws. The
+comparison uses explicit controls for the remaining native fog, color-space,
+normal-decoding, and shadow globals. Native global values and combat visuals
+still require verification.
 
 ## Local Scout player demo
 

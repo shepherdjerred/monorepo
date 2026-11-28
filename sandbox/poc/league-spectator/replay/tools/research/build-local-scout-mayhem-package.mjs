@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { openReplay } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/transport.mjs";
 import { writeLocalScoutTerrainPackage } from "../build-local-scout-terrain-package.mjs";
+import {
+  mayhemFlowMapAsset,
+  mayhemFlowMapControlSha256,
+} from "./mayhem-flowmap-control-contract.mjs";
 import { readRecordedMayhemExperienceThresholds } from "./recorded-champion-experience.mjs";
 
 const map = { mapId: 12, gameMode: "KIWI", mayhemMapSkin: "Bloom" };
@@ -150,6 +154,33 @@ async function buildPackage(inputs) {
       : readRecordedMayhemExperienceThresholds(
           await readPinned(inputs.experienceMap),
         );
+  let mayhemFlowMapControl;
+  if (inputs.flowMapControl !== undefined) {
+    const file = inputs.flowMapControl;
+    assert.equal(file.sha256, mayhemFlowMapControlSha256);
+    const controlBytes = await readPinned(file);
+    const control = JSON.parse(
+      new TextDecoder("utf-8", { fatal: true }).decode(controlBytes),
+    );
+    assert.equal(
+      control.source.geometrySha256,
+      materials.source.geometrySha256,
+    );
+    assert.equal(
+      control.source.materialsSha256,
+      materials.source.materialsSha256,
+    );
+    const prefix = "/flowmap-control/";
+    routes.set(prefix + "manifest.json", [controlBytes]);
+    for (const [asset, record] of Object.entries(control.contents)) {
+      assert.match(asset, mayhemFlowMapAsset);
+      await add(prefix + asset, {
+        path: join(dirname(file.path), asset),
+        sha256: record.sha256,
+      });
+    }
+    mayhemFlowMapControl = file.sha256;
+  }
   const scene = {
     identity,
     mapBounds: { min, max },
@@ -166,6 +197,7 @@ async function buildPackage(inputs) {
     },
     navgrid: { columns: x, rows: z, step },
     minimap: true,
+    ...(mayhemFlowMapControl === undefined ? {} : { mayhemFlowMapControl }),
     ...(thresholds === undefined
       ? {}
       : { championExperienceThresholds: thresholds }),
