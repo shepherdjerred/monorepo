@@ -3,8 +3,14 @@ import type { ReactNode } from "react";
 import type { Severity } from "@shepherdjerred/console-ui/tokens.ts";
 
 /**
- * The page kit: Hub's page layout inside the shell's inset panel. A page is a
- * `PageBody` holding a `PageHeading`, optional `SummaryGrid`, and `Card`s.
+ * DEPRECATED: the page kit, a copy of the old Hub look. Every export here is
+ * replaced by a piece of the one vocabulary and is deleted in K1:
+ *
+ * - `PageBody` → a plain `<main id="main">` inside `ConsoleShell`
+ * - `PageHeading` → `HeaderBar`
+ * - `SummaryGrid` → `FigureStrip`
+ * - `Card`, `CardToolbar` → `Section` and `.ui-toolbar`
+ * - `Tag` → `Chip`
  */
 
 export type PageBodyProps = {
@@ -12,7 +18,11 @@ export type PageBodyProps = {
   readonly className?: string;
 };
 
-/** The page's `<main>`: centred, padded, and a size container for its cards. */
+/**
+ * The page's `<main>`: centred, padded, and a size container for its cards.
+ *
+ * @deprecated Pages are unpadded: use a plain `<main id="main">` in `ConsoleShell`.
+ */
 export function PageBody({
   children,
   className,
@@ -31,6 +41,11 @@ export type PageHeadingProps = {
   readonly actions?: ReactNode;
 };
 
+/**
+ * Eyebrow, big title, description and actions.
+ *
+ * @deprecated Use `HeaderBar`: a 48px bar with a 15px title, no eyebrow.
+ */
 export function PageHeading({
   eyebrow,
   title,
@@ -65,7 +80,11 @@ export type SummaryGridProps = {
   readonly items: readonly SummaryItem[];
 };
 
-/** A row of headline figures, each in its own card. */
+/**
+ * A row of headline figures, each in its own card.
+ *
+ * @deprecated Use `FigureStrip`: figures split by hairlines, no cards.
+ */
 export function SummaryGrid({
   label,
   items,
@@ -94,7 +113,11 @@ export type CardProps = {
   readonly children: ReactNode;
 };
 
-/** A bordered, rounded surface on the page; tables and toolbars go inside. */
+/**
+ * A bordered, rounded surface on the page; tables and toolbars go inside.
+ *
+ * @deprecated The panel is the only card: use `Section`.
+ */
 export function Card({
   label,
   id,
@@ -108,7 +131,11 @@ export function Card({
   );
 }
 
-/** The filter row along the top of a card. */
+/**
+ * The filter row along the top of a card.
+ *
+ * @deprecated Use a `.ui-toolbar` row inside a `Section`.
+ */
 export function CardToolbar({
   children,
 }: {
@@ -123,7 +150,11 @@ export type TagProps = {
   readonly className?: string;
 };
 
-/** A small bordered label for a category, such as a link's source. */
+/**
+ * A small bordered label for a category, such as a link's source.
+ *
+ * @deprecated Use `Chip` with `children`.
+ */
 export function Tag({
   children,
   title,

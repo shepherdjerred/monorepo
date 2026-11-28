@@ -1,0 +1,151 @@
+/* The quiet sidebar: workspace switcher, 30px navigation rows, theme row. */
+@layer ui.components {
+  .ui-side {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    height: 100dvh;
+    padding: 10px var(--ui-space-2);
+    overflow-y: auto;
+  }
+  .ui-side > * {
+    flex-shrink: 0;
+  }
+  .ui-side-top {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-1);
+    margin-bottom: var(--ui-space-1);
+  }
+  .ui-nav {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .ui-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-top: 14px;
+  }
+  .ui-nav-group:first-child {
+    margin-top: 10px;
+  }
+  .ui-nav-label {
+    padding: var(--ui-space-1) var(--ui-space-2);
+    color: var(--ui-faint);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .ui-workspace,
+  .ui-icon-btn,
+  .ui-nav-item {
+    border-radius: var(--ui-radius-md);
+    cursor: pointer;
+  }
+  .ui-workspace {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--ui-space-2);
+    min-width: 0;
+    height: var(--ui-nav-row);
+    padding: 0 6px;
+    font-weight: var(--ui-weight-strong);
+    text-align: left;
+  }
+  .ui-workspace-mark {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--ui-radius-sm);
+    background: var(--ui-accent);
+    color: var(--ui-on-accent);
+    font-size: var(--ui-text-xs);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-workspace-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-workspace-icon {
+    width: 12px;
+    height: 12px;
+    flex: none;
+    color: var(--ui-muted);
+  }
+  .ui-icon-btn {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: var(--ui-nav-row);
+    height: var(--ui-nav-row);
+    color: var(--ui-muted);
+  }
+  .ui-icon-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+  .ui-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    height: var(--ui-nav-row);
+    padding: 0 var(--ui-space-2);
+    color: var(--ui-ink-2);
+    font-weight: var(--ui-weight-medium);
+    text-align: left;
+  }
+  .ui-nav-icon {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    color: var(--ui-muted);
+  }
+  .ui-nav-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-nav-count {
+    margin-left: auto;
+    color: var(--ui-faint);
+    font-size: var(--ui-text-sm);
+    font-weight: var(--ui-weight-regular);
+    font-variant-numeric: tabular-nums;
+  }
+  .ui-workspace:hover,
+  .ui-icon-btn:hover,
+  .ui-nav-item:hover {
+    background: var(--ui-side-hover);
+  }
+  .ui-nav-item[aria-current] {
+    background: var(--ui-active);
+    color: var(--ui-ink);
+  }
+  .ui-nav-item[aria-current] .ui-nav-icon {
+    color: var(--ui-accent);
+  }
+  /* --ui-faint is only text-safe on panel surfaces; the darker sidebar fills use muted. */
+  .ui-nav-item:hover .ui-nav-count,
+  .ui-nav-item[aria-current] .ui-nav-count {
+    color: var(--ui-muted);
+  }
+  .ui-side-foot {
+    margin-top: var(--ui-space-2);
+  }
+}

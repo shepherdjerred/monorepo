@@ -1,0 +1,42 @@
+/* Popup menus: the app switcher today, every Base UI menu later. */
+@layer ui.components {
+  .ui-menu-positioner {
+    z-index: var(--ui-z-popover);
+    outline: 0;
+  }
+  .ui-menu {
+    min-width: 212px;
+    padding: var(--ui-space-1);
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    box-shadow: var(--ui-shadow-menu);
+    outline: 0;
+  }
+  .ui-menu-group + .ui-menu-group {
+    margin-top: var(--ui-space-1);
+    padding-top: var(--ui-space-1);
+    border-top: 1px solid var(--ui-line-soft);
+  }
+  .ui-menu-label {
+    padding: var(--ui-space-1) var(--ui-space-2);
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-menu-item {
+    display: flex;
+    align-items: center;
+    height: var(--ui-nav-row);
+    padding: 0 var(--ui-space-2);
+    border-radius: var(--ui-radius-sm);
+    font-weight: var(--ui-weight-medium);
+    outline: 0;
+  }
+  .ui-menu-item[data-highlighted] {
+    background: var(--ui-hover);
+  }
+  .ui-menu-item[aria-current] {
+    color: var(--ui-accent);
+  }
+}

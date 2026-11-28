@@ -1,11 +1,9 @@
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import { THEME_ICON } from "@shepherdjerred/console-ui/icons.ts";
 import {
   nextThemePreference,
   type ThemePreference,
   type ThemeStore,
 } from "@shepherdjerred/console-ui/theme.ts";
-
-const ICON = { system: MonitorIcon, light: SunIcon, dark: MoonIcon } as const;
 
 export type ThemeRowProps = {
   readonly store: ThemeStore;
@@ -14,7 +12,7 @@ export type ThemeRowProps = {
 /** The sidebar's bottom row: cycles the theme through system → light → dark. */
 export function ThemeRow({ store }: ThemeRowProps): React.JSX.Element {
   const preference: ThemePreference = store.useThemePreference();
-  const Icon = ICON[preference];
+  const Icon = THEME_ICON[preference];
   return (
     <button
       type="button"

@@ -1,13 +1,9 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import type { LucideIcon } from "lucide-react";
-
-/** What a router link must render to look and behave like a sidebar row. */
-export type SidebarLinkProps = {
-  readonly href: string;
-  readonly className: string;
-  readonly "aria-current": "page" | undefined;
-  readonly children: ReactNode;
-};
+import {
+  plainLink,
+  type RenderLinkProps,
+} from "@shepherdjerred/console-ui/components/link.tsx";
 
 export type SidebarItemProps = {
   readonly href: string;
@@ -20,21 +16,8 @@ export type SidebarItemProps = {
    */
   readonly current?: boolean;
   /** Renders the anchor, e.g. `(props) => <NavLink to={props.href} {...props} />`. */
-  readonly renderLink?: (props: SidebarLinkProps) => ReactElement;
+  readonly renderLink?: (props: RenderLinkProps) => ReactElement;
 };
-
-function defaultLink({
-  href,
-  className,
-  "aria-current": ariaCurrent,
-  children,
-}: SidebarLinkProps): ReactElement {
-  return (
-    <a href={href} className={className} aria-current={ariaCurrent}>
-      {children}
-    </a>
-  );
-}
 
 /** One navigation row: `<li><a>` with an icon, a label and an optional count. */
 export function SidebarItem({
@@ -43,7 +26,7 @@ export function SidebarItem({
   icon,
   count,
   current = false,
-  renderLink = defaultLink,
+  renderLink = plainLink,
 }: SidebarItemProps): React.JSX.Element {
   const Icon = icon;
   return (
