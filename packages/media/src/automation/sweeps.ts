@@ -11,6 +11,7 @@ import { observeRequesterWatch, queueRetentionCheck } from "./watch.ts";
 import { sweepDownloads } from "./reconciliation/downloads.ts";
 import { sweepFeeds } from "./reconciliation/feeds.ts";
 import { sweepInventory } from "./reconciliation/inventory.ts";
+import { sweepPlexLeavingSoon } from "./retention/collection/sweep.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { queueMediaSubtitleTargets } from "./subtitles/queue.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
@@ -48,6 +49,8 @@ export function createSweepActivities(
   return {
     async sweepMediaWork(input) {
       const invocation = movieManagementContext(context);
+      if (input.kind === "watch" && input.cursor === null)
+        await sweepPlexLeavingSoon(context);
       if (
         input.kind === "watch" &&
         input.cursor?.startsWith(SERIES_PACK_NATIVE_TV_WATCH_CURSOR) === true

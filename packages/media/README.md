@@ -46,6 +46,19 @@ or interested requester remains, removal still requires the existing identity,
 playback, ownership and file-cohort checks, a seven-day Leaving Soon period,
 and seven days of recoverable quarantine before purge.
 
+After Maintainerr and the other legacy writers have handed off, the Media
+watch sweep also projects Leaving Soon into the existing Plex Movies going
+away and Shows going away collections. A show can appear when one of its
+episodes is leaving. Media removes its own verified additions when no
+qualifying warning or grace period remains. Existing Plex collection entries
+are kept.
+
+Manage → Activity shows a Leaving Soon collection change as **Reconciling**
+while its result is uncertain. Media records the exact attempt before calling
+Plex and completes the record after verified readback. An unresolved result
+holds automatic changes for that collection member. Other memberships can
+continue to reconcile.
+
 The authenticated read APIs are bounded and do not create acquisition or
 removal authority:
 

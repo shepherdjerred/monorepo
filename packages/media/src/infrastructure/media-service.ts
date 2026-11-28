@@ -1,6 +1,7 @@
 import type { MediaActor } from "#application/auth.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { requireOwner } from "#application/errors.ts";
+import { LEAVING_SOON_ATTEMPT_KIND } from "#automation/retention/collection/attempt.ts";
 import type { MediaApplication } from "#application/ports.ts";
 import type { MovieLifecycleApplicationV4 } from "#application/movie-lifecycle-ports-v4.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
@@ -285,19 +286,37 @@ export class PrismaMediaApplication
   }
 
   async activity(actor: MediaActor) {
-    const operations = await this.db.operation.findMany({
-      where: actor.role === "owner" ? {} : { userId: actor.id },
-      orderBy: { updatedAt: "desc" },
-      take: 100,
-      select: {
-        id: true,
-        kind: true,
-        targetId: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const select = {
+      id: true,
+      kind: true,
+      targetId: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    } as const;
+    const unresolved = {
+      kind: LEAVING_SOON_ATTEMPT_KIND,
+      status: "reconciling",
+    } as const;
+    const owner = actor.role === "owner";
+    const pending = owner
+      ? await this.db.operation.findMany({
+          where: unresolved,
+          orderBy: { updatedAt: "desc" },
+          take: 100,
+          select,
+        })
+      : [];
+    const recent =
+      pending.length < 100
+        ? await this.db.operation.findMany({
+            where: owner ? { NOT: unresolved } : { userId: actor.id },
+            orderBy: { updatedAt: "desc" },
+            take: 100 - pending.length,
+            select,
+          })
+        : [];
+    const operations = [...pending, ...recent];
     const mediaTargets = operations.filter((operation) =>
       [
         "reconcile_media",
