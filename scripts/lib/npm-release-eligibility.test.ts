@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, test } from "vitest";
@@ -8,10 +8,13 @@ import {
   classifyConsumerChanges,
   classifyPackageRelease,
   classifyPackageReleaseRange,
-  fetchNpmPackageTags,
   NPM_PACKAGE_POLICIES,
   packageJsonHasConsumerChange,
 } from "./npm-release-eligibility.ts";
+import {
+  fetchNpmPackageTags,
+  openReleaseHistory,
+} from "../release/release-history.ts";
 
 const webringPath = "packages/webring";
 const astroPath = "packages/astro-opengraph-images";
@@ -263,6 +266,9 @@ async function historicalRepository(
   const root = await mkdtemp(path.join(tmpdir(), "npm-release-history-"));
   try {
     await fixtureGit(root, "init", "--quiet");
+    // Honour `--filter=blob:none`; without this the origin sends full blobs and
+    // the blobless path is never exercised.
+    await fixtureGit(root, "config", "uploadpack.allowFilter", "true");
     for (const [after, tag] of [
       [false, fixture.previousTag],
       [true, fixture.tag],
@@ -319,6 +325,66 @@ describe("historical release regressions", () => {
     }
   });
 
+  test("reads release history from a scratch repository, leaving the checkout untouched", async () => {
+    const fixture = releaseHistory[0];
+    if (fixture === undefined) throw new Error("Release fixture is missing");
+    const policy = NPM_PACKAGE_POLICIES.find(
+      (candidate) => candidate.name === fixture.packageName,
+    );
+    if (policy === undefined) throw new Error("Package policy is missing");
+    const origin = await historicalRepository(fixture);
+    const checkout = await mkdtemp(
+      path.join(tmpdir(), "npm-release-checkout-"),
+    );
+    let scratch: string | undefined;
+    try {
+      await fixtureGit(checkout, "init", "--quiet");
+      await fixtureGit(checkout, "remote", "add", "origin", origin);
+      const history = await openReleaseHistory(checkout);
+      scratch = history.path;
+      // The scratch repository is blobless: Git reports blobs it has not
+      // fetched as missing ("?" entries) rather than holding them.
+      const missingBefore =
+        await Bun.$`git -C ${history.path} rev-list --objects --all --missing=print`.text();
+      const missingBlobs = missingBefore
+        .split("\n")
+        .filter((line) => line.startsWith("?"));
+      expect(missingBlobs.length).toBeGreaterThan(0);
+      // The same decision (the package.json reads fetch their blobs lazily) as reading the origin directly.
+      const viaHistory = await classifyPackageReleaseRange(
+        history.path,
+        policy,
+        fixture.previousTag,
+        fixture.tag,
+      );
+      expect(viaHistory).toEqual(
+        await classifyPackageReleaseRange(
+          origin,
+          policy,
+          fixture.previousTag,
+          fixture.tag,
+        ),
+      );
+      // Tags live only in the scratch repository, which is promisor and bare.
+      const scratchTags = await Bun.$`git -C ${history.path} tag --list`.text();
+      const checkoutTags = await Bun.$`git -C ${checkout} tag --list`.text();
+      const promisor =
+        await Bun.$`git -C ${history.path} config remote.origin.promisor`.text();
+      expect(scratchTags.trim()).not.toBe("");
+      expect(checkoutTags.trim()).toBe("");
+      expect(promisor.trim()).toBe("true");
+      await history.cleanup();
+      expect(await Bun.file(path.join(history.path, "HEAD")).exists()).toBe(
+        false,
+      );
+    } finally {
+      if (scratch !== undefined)
+        await rm(scratch, { recursive: true, force: true });
+      await rm(checkout, { recursive: true, force: true });
+      await rm(origin, { recursive: true, force: true });
+    }
+  });
+
   test("fetches package tags from a local Git remote", async () => {
     const fixture = releaseHistory[0];
     if (fixture === undefined) throw new Error("Release fixture is missing");
@@ -335,6 +401,64 @@ describe("historical release regressions", () => {
     } finally {
       await rm(root, { recursive: true, force: true });
       await rm(origin, { recursive: true, force: true });
+    }
+  });
+
+  test("fails loudly when the remote has no matching release tags", async () => {
+    const fixture = releaseHistory[0];
+    if (fixture === undefined) throw new Error("Release fixture is missing");
+    const origin = await historicalRepository(fixture);
+    const root = await mkdtemp(path.join(tmpdir(), "npm-release-notags-"));
+    try {
+      // Remove every tag so the remote has nothing matching a package prefix.
+      for (const tag of [fixture.previousTag, fixture.tag]) {
+        await fixtureGit(origin, "tag", "--delete", tag);
+      }
+      await fixtureGit(root, "init", "--quiet");
+      await fixtureGit(root, "remote", "add", "origin", origin);
+      await fetchNpmPackageTags(root);
+      const fetchedTags = await Bun.$`git -C ${root} tag --list`.text();
+      expect(fetchedTags.trim()).toBe("");
+      const policy = NPM_PACKAGE_POLICIES.find(
+        (candidate) => candidate.name === fixture.packageName,
+      );
+      if (policy === undefined) throw new Error("Package policy is missing");
+      await expect(classifyPackageRelease(root, policy)).rejects.toThrow(
+        `No release tag found for ${fixture.packageName}`,
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+      await rm(origin, { recursive: true, force: true });
+    }
+  });
+
+  test("removes the scratch repository when opening it fails", async () => {
+    const checkout = await mkdtemp(
+      path.join(tmpdir(), "npm-release-badremote-"),
+    );
+    const scratchBase = await mkdtemp(
+      path.join(tmpdir(), "npm-release-scratchbase-"),
+    );
+    const previousTmpdir = Bun.env["TMPDIR"];
+    try {
+      await fixtureGit(checkout, "init", "--quiet");
+      await fixtureGit(
+        checkout,
+        "remote",
+        "add",
+        "origin",
+        path.join(checkout, "does-not-exist.git"),
+      );
+      // Scratch repositories are created under TMPDIR; isolate it so the
+      // assertion sees only this call's directory.
+      Bun.env["TMPDIR"] = scratchBase;
+      await expect(openReleaseHistory(checkout)).rejects.toThrow();
+      expect(await readdir(scratchBase)).toEqual([]);
+    } finally {
+      if (previousTmpdir === undefined) delete Bun.env["TMPDIR"];
+      else Bun.env["TMPDIR"] = previousTmpdir;
+      await rm(checkout, { recursive: true, force: true });
+      await rm(scratchBase, { recursive: true, force: true });
     }
   });
 });

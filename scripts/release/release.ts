@@ -23,10 +23,9 @@ import { requireEnv, run } from "../lib/run.ts";
 import { setupGitAuth } from "../lib/github-auth.ts";
 import {
   classifyAllPackageReleases,
-  fetchNpmPackageTags,
-  fetchReleaseTarget,
   type PackageReleaseDecision,
 } from "../lib/npm-release-eligibility.ts";
+import { fetchReleaseTarget, openReleaseHistory } from "./release-history.ts";
 import { runReleaseRefiner } from "../lib/release-refiner.ts";
 import { runMain } from "../lib/transient.ts";
 import {
@@ -62,19 +61,23 @@ function repoRoot(): string {
  * Resolve the exact main revision this release-please phase will read, and
  * classify npm eligibility at that same revision.
  *
+ * `history` is the throwaway blobless repository that holds the release tags
+ * and the target (see `openReleaseHistory`), not the depth-one CI workspace.
+ *
  * The runner calls this after its clone completes for each phase. Neither
  * cloning nor CHANGELOG refinement belongs inside the guarded revision window.
  * Eligibility, manifest reads, and mutations still share one exact revision;
  * any subsequent main movement continues to fail closed.
  */
 async function resolveReleaseTarget(
-  root: string,
+  history: string,
   env: Record<string, string>,
 ): Promise<ReleasePleaseTarget> {
-  const targetBranchSha = await fetchReleaseTarget(root, env);
+  const targetBranchSha = await fetchReleaseTarget(history, env);
   const releaseDecisions = await classifyAllPackageReleases(
-    root,
+    history,
     "refs/remotes/origin/main",
+    env,
   );
   printReleaseDecisions(releaseDecisions);
   return {
@@ -119,11 +122,18 @@ async function main(): Promise<void> {
   const root = repoRoot();
   const auth = await setupGitAuth(root);
   const env = auth.env;
+  // The canonical CI checkout is depth-one and intentionally uses --no-tags.
+  // Fetch the authoritative package tags before the fail-closed eligibility
+  // preflight, into a blobless repository of their own rather than the
+  // checkout, which they would fill with about a gigabyte of history.
+  const history = await openReleaseHistory(root, env).catch(
+    async (error: unknown) => {
+      await auth.cleanup();
+      throw error;
+    },
+  );
 
   try {
-    // The canonical CI checkout intentionally uses --no-tags. Fetch the
-    // authoritative package tags before the fail-closed eligibility preflight.
-    await fetchNpmPackageTags(root, env);
     const releasePr =
       phase === "github-release"
         ? undefined
@@ -149,7 +159,7 @@ async function main(): Promise<void> {
         token: auth.token,
         repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
         targetBranch: "main",
-        resolveTarget: () => resolveReleaseTarget(root, env),
+        resolveTarget: () => resolveReleaseTarget(history.path, env),
         canUpdateDraft: async () => {
           const current = await readMaintenancePr(
             "release-please--branches--main",
@@ -190,7 +200,7 @@ async function main(): Promise<void> {
         token: auth.token,
         repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
         targetBranch: "main",
-        resolveTarget: () => resolveReleaseTarget(root, env),
+        resolveTarget: () => resolveReleaseTarget(history.path, env),
       });
     }
     console.log("--- release-please complete");
@@ -199,6 +209,7 @@ async function main(): Promise<void> {
         `CI_MAINTENANCE_RESULT ${JSON.stringify({ status: maintenanceDeferred ? "deferred" : "completed" })}`,
       );
   } finally {
+    await history.cleanup();
     await auth.cleanup();
   }
 }

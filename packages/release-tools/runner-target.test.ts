@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -396,5 +396,39 @@ describe("blobless partial clone initialization", () => {
       "main",
     );
     expect(await git(targetDir, "rev-parse", "HEAD")).toBe(initialSha);
+  });
+
+  test("initializePartialClone materializes only release-please's configuration, yet reads every file through Git", async () => {
+    await mkdir(path.join(origin, "packages/example"), { recursive: true });
+    await Bun.write(
+      path.join(origin, "packages/example/payload.txt"),
+      "payload-".repeat(1024),
+    );
+    await git(origin, "add", "packages/example/payload.txt");
+    await git(origin, "commit", "-m", "fix: add a package file");
+    const targetDir = await mkdtemp(path.join(fixtureRoot, "sparse-partial-"));
+    await initializePartialClone(targetDir, pathToFileURL(origin).href, "main");
+
+    const onDisk = (await readdir(targetDir)).filter(
+      (entry) => entry !== ".git",
+    );
+    expect(onDisk.toSorted()).toEqual([
+      ".release-please-manifest.json",
+      "release-please-config.json",
+    ]);
+    // The checkout leaves the files out of the working tree, not out of the
+    // commit: release-please reads them with `git show` and `git ls-tree`.
+    expect(
+      await git(targetDir, "show", "HEAD:packages/example/payload.txt"),
+    ).toBe("payload-".repeat(1024));
+    expect(
+      await git(targetDir, "ls-tree", "-r", "--name-only", "HEAD"),
+    ).toContain("packages/example/payload.txt");
+    // A later `checkout` and `reset --hard`, as LocalGitHub runs them, keep it.
+    await git(targetDir, "checkout", "main");
+    await git(targetDir, "reset", "--hard", "origin/main");
+    expect(
+      (await readdir(targetDir)).filter((entry) => entry !== ".git"),
+    ).toHaveLength(2);
   });
 });
