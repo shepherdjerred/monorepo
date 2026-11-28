@@ -43,20 +43,25 @@ guarantee a dependency-closed set, which the emitter then relies on.
 ## Dependency caches
 
 When the typed `woodpecker-ram-scratch-enabled` flag is on, the ordinary
-`verify` and `playwright-e2e` execution pods carry their lane's profile from
-`src/pipeline/ram-scratch.ts`. Verify mounts an 8Gi tmpfs TMPDIR and a 4Gi
-private Gradle home; the browser lane mounts a 4Gi TMPDIR. Each profile
-reserves its whole tmpfs allowance above the lane's own tier: verify requests
-30Gi with a 36Gi limit, and browser requests 10Gi with a 16Gi limit.
-Kueue admits on those requests. The 70Gi compute quota therefore runs at most
-two scratch verify pods and one scratch browser pod at once, and the node
-cannot be oversubscribed. Homelab admission adds memory-backed volumes only to
+`verify`, `tofu-validate` and `playwright-e2e` execution pods carry their lane's
+profile from `src/pipeline/ram-scratch.ts`. Verify mounts an 8Gi tmpfs TMPDIR
+and a 4Gi private Gradle home; the browser and OpenTofu validation lanes mount a
+4Gi TMPDIR (OpenTofu validation holds the provider plugin cache, about 1.5 GiB
+for every pinned provider). tmpfs pages count against the container's memory, so
+each profile adds its whole tmpfs allowance to the lane's memory limit: verify's
+limit is 36Gi, the browser lane's 16Gi and OpenTofu validation's 16Gi, while each
+request stays at the lane's tier.
+Kueue admits on the requests, which are the lanes' measured tiers with tmpfs pages
+included (verify 20Gi, browser 4Gi, OpenTofu validation 2Gi), so the 70Gi compute
+quota runs three scratch verify pods alongside smaller lanes. The limit is the
+per-container backstop that keeps a full tmpfs from squeezing a process below its
+tier. Homelab admission adds memory-backed volumes only to
 a profiled lane's single execution container, preserving clone, service,
 checkout, and report storage. The production inventory enables the flag, while
 the runtime fallback stays off. Owner manual benchmarks on `ci-canary/`
 branches still accept the `scratch` feature only for the `verify` profile.
 
-The admission graph includes the canary and both scratch lanes when inspected
+The admission graph includes the canary and every scratch lane when inspected
 with `bun src/dump-steps.ts --include-canaries`; the root admission-budget
 check uses that graph to verify coexistence with ordinary workflows.
 
@@ -173,6 +178,19 @@ work events (`woodpecker-source-cache-enabled`). Credentialless automation
 pipelines, non-work events and prepared-seed steps (performance pipelines) clear
 or never clone the golden and fetch as before. A main more than 100 commits past
 the golden sends the same bytes as before, never more.
+
+The golden step also runs `uv sync --locked --compile-bytecode` for The Storm's
+Python learning project (`packages/the-storm/tools/learning`), with the shared
+uv cache mounted as verify mounts it, after the Bun install and before the
+history fetch. A workspace then inherits the roughly 1 GB environment instead of
+writing it when verify's learning tasks miss the Turbo cache. uv picks the mise
+toolchain's Python, so the venv links to that install rather than to the cache's
+`UV_PYTHON_INSTALL_DIR`; packages are copied out of the cache, so site-packages
+are self-contained. Those tasks still run `uv run --locked`, which finds the
+environment in sync and changes nothing until the lockfile moves; if the
+interpreter link ever stops resolving it only rebuilds the environment, as
+before. A failing `uv sync` fails the refresh loudly and publishes no golden;
+there is no fallback.
 
 Incremental source misses copy and verify recent immutable objects before
 advertising a temporary negotiation ref. Fetch still requests the exact SHA;

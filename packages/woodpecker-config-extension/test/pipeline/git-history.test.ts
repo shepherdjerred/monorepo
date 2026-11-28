@@ -54,8 +54,9 @@ test("the golden refresh fetches its history by commit, names it, and compacts b
   const commands = maintenanceSteps(TEST_IMAGES, "workspace-golden")[0]
     ?.commands;
   if (commands === undefined) throw new Error("golden step missing");
-  const install = commands.indexOf(
-    "ci/scripts/bun-install.sh --frozen-lockfile",
+  // The history comes last, after every install the golden snapshots.
+  const install = commands.findIndex((command) =>
+    command.startsWith("uv sync"),
   );
   const publish = commands.findIndex((command) =>
     command.includes("publish-workspace-golden.ts"),

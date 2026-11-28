@@ -164,16 +164,17 @@ limits. A regression in any layer becomes a failed step, not CI on torvalds.
 
 ## Why RAM scratch consumes admission capacity
 
-When its flag is on, the verify and browser lanes keep temporary files in
-bounded RAM storage. Verify also keeps its private Gradle home there. The
-checkout and reports remain on the workflow's persistent volume. Clone pods and
-service pods keep their existing storage.
+When its flag is on, the verify, OpenTofu validation and browser lanes keep
+temporary files in bounded RAM storage. Verify also keeps its private Gradle
+home there. The checkout and reports remain on the workflow's persistent volume.
+Clone pods and service pods keep their existing storage.
 
 RAM storage competes with compilers and test processes for container memory.
-Each lane's profile adds its entire storage allowance to both the request and
-limit. Kueue therefore reserves that memory before execution starts. Two
-scratch verify pods and one scratch browser pod fill the compute memory quota,
-so other lanes wait instead of overcommitting the node.
+Each lane's profile adds its entire storage allowance to the memory limit, so a
+full scratch volume can never squeeze the process below its tier. The request
+stays the lane's tier, which is measured with the storage pages included, so
+admission reserves what the lane really uses rather than every byte it could. Three scratch verify pods fit the compute memory quota beside
+smaller lanes.
 The [scratch admission policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/ram-scratch-policy.ts)
 rejects a marked pod unless it is the single execution container of the lane
 its profile names.
@@ -210,7 +211,9 @@ at least daily, then snapshots it. A mutating admission policy gives each new
 workspace claim that snapshot as its data source. The clone costs constant
 time and writes nothing until the workflow changes a file. Checkout then
 moves the clone to the requested commit, writing only the files that differ.
-Each lane's own frozen install still decides its dependencies.
+Each lane's own frozen install still decides its dependencies. The snapshot
+also carries The Storm's locked Python environment, which verify's `uv run
+--locked` leaves untouched until its lockfile changes.
 
 The policy's parameter is a ConfigMap Temporal owns. Emptying it makes new
 workspaces start empty again; no workflow depends on a clone. Gate workspaces

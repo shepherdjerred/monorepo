@@ -8,7 +8,11 @@ import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
 import { RAM_SCRATCH, ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
-import { BROWSER_TIER, TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import {
+  BROWSER_TIER,
+  MEDIUM_TIER,
+  TURBO_VERIFY_TIER,
+} from "#src/pipeline/tiers.ts";
 import { MISE_INSTALLS } from "#src/pipeline/cache.ts";
 import { credentiallessHostedAutomationSteps } from "#src/pipeline/steps.ts";
 import { PipelineSchema } from "#src/schemas.ts";
@@ -204,19 +208,25 @@ test("shared mise installs mount wherever the toolchain is sourced, only when en
   for (const step of credentialless)
     expect(step.volumes ?? [], step.key).toEqual([]);
 });
-test("ordinary verify and browser execution pods carry their own scratch profile only when enabled", () => {
+test("ordinary verify, OpenTofu validation and browser execution pods carry their own scratch profile only when enabled", () => {
   const steps = testPipelineSteps();
   const scratched = performanceSteps(steps, enabled, true, false);
   expect(
     scratched
       .filter((step) => step.ramScratch === true)
       .map((step) => step.key),
-  ).toEqual(["verify", "playwright-e2e"]);
+  ).toEqual(["verify", "tofu-validate", "playwright-e2e"]);
+  const tiers: Readonly<Record<string, typeof MEDIUM_TIER>> = {
+    verify: TURBO_VERIFY_TIER,
+    "tofu-validate": MEDIUM_TIER,
+    "playwright-e2e": BROWSER_TIER,
+  };
   for (const step of scratched.filter((candidate) => candidate.ramScratch)) {
     const profile = ramScratchProfile(step.key);
     if (profile === undefined) throw new Error("Missing scratch profile");
     expect(step.resources).toEqual(profile.resources);
-    const tier = step.key === "verify" ? TURBO_VERIFY_TIER : BROWSER_TIER;
+    const tier = tiers[step.key];
+    if (tier === undefined) throw new Error("Missing lane tier");
     // The limit carries exactly the tmpfs allowance above the lane's tier; the
     // request is the tier's, measured with tmpfs pages included.
     const tmpfs = profile.volumes.reduce(
