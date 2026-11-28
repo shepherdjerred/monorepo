@@ -186,14 +186,16 @@ function terrainArrays(metadata, bytes, expected, bindings, visibilityTracks) {
   let vertexOffset = 0;
   let indexOffset = 0;
   for (const mesh of meshes) {
-    const infernalReplacement =
-      mesh.flags === 2 &&
-      mesh.controller === 0xd1a17399 &&
+    const exactReplacement =
+      ((mesh.flags === 2 && mesh.controller === 0xd1a17399) ||
+        (mesh.flags === 4 &&
+          (mesh.controller === 0x1804e2e4 ||
+            mesh.controller === 0x48106271))) &&
       visibilityTracks.has(mesh.controller) &&
       bindings !== undefined &&
       mesh.submeshes.every(({ material }) => bindings.has(material));
     if (
-      ((mesh.flags & 1) !== 1 && !infernalReplacement) ||
+      ((mesh.flags & 1) !== 1 && !exactReplacement) ||
       !Number.isSafeInteger(mesh.vertexCount) ||
       mesh.vertexCount < 1 ||
       !Number.isSafeInteger(mesh.indexCount) ||

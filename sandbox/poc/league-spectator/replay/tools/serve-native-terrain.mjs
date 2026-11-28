@@ -64,6 +64,7 @@ const { positionals, values } = parseArgs({
     "terrain-visibility-sha256": { type: "string" },
     "terrain-visibility-from-replay": { type: "string" },
     "infernal-terrain-export": { type: "string" },
+    "mountain-terrain-export": { type: "string" },
     "champion-models": { type: "string" },
     "champion-catalog-sha256": { type: "string" },
     "champion-models-from-replay": { type: "boolean" },
@@ -543,6 +544,7 @@ async function loadTerrainMaterials(manifestPath, meshes, proof, assetDigests) {
       "b621b18ba10f4979f50acf562cf5e42a8c750caf6e31060fc55a31a07b7112e1",
       "ac8454d98df0416515f0ac4618050af121668ee00e1511c8ed866daf6f02518b",
       "c4ccce86cabfe3f8c47e39eb60588c35ff605c75dd118d0fd898f99f9eea1340",
+      "12a412d96d08f7fec511f3a6547d3fb8f0dbd2fe1673592ff8567e1e0895d6fc",
     ].includes(sha256(manifestBytes)),
     "Terrain materials do not match the pinned preview export",
   );
@@ -559,6 +561,34 @@ async function loadTerrainMaterials(manifestPath, meshes, proof, assetDigests) {
     mapMetadataSha256: assetDigests["map/map.json"],
     mapMeshSha256: assetDigests["map/map.bin"],
   });
+  const mountainMeshes = meshes.filter(({ flags }) => flags === 4);
+  if (mountainMeshes.length > 0) {
+    const source = manifest.mountainSource;
+    assert.equal(source?.build, "16.23.841.8428");
+    assert.equal(
+      source.wadSha256,
+      "61a9f97a360ab80853f8fc8fb13c4891433c1b74f8d7217f5fc34addb2414a07",
+    );
+    assert.equal(
+      source.baseManifestSha256,
+      "b621b18ba10f4979f50acf562cf5e42a8c750caf6e31060fc55a31a07b7112e1",
+    );
+    assert.equal(source.geometrySha256, manifest.source.geometrySha256);
+    assert.equal(source.materialsSha256, manifest.source.materialsSha256);
+    const replacements = new Set(
+      mountainMeshes.flatMap(({ submeshes }) =>
+        submeshes.map(({ material }) => material),
+      ),
+    );
+    assert.equal(replacements.size, 12);
+    assert.equal(Object.keys(source.textures).length, replacements.size);
+    for (const material of replacements)
+      assert.ok(
+        Object.hasOwn(source.textures, material) &&
+          Object.hasOwn(manifest.bindings, material),
+        "Mountain replacements require their original texture bindings",
+      );
+  }
   const used = new Set();
   let texturedTriangles = 0;
   for (const mesh of meshes) {
@@ -1490,30 +1520,42 @@ if (shortFixture) {
 }
 assert.equal(proof.staticMesh.sha256, localDigests["map/map.bin"]);
 const infernalTerrainExport = values["infernal-terrain-export"];
+const mountainTerrainExport = values["mountain-terrain-export"];
+assert.ok(
+  infernalTerrainExport === undefined || mountainTerrainExport === undefined,
+  "Select one authored terrain export",
+);
+const variantTerrainExport = mountainTerrainExport ?? infernalTerrainExport;
+const mountainTerrain = mountainTerrainExport !== undefined;
 let metadata = baseMetadata;
 let mesh = baseMesh;
 let staticMesh = proof.staticMesh;
 let terrainAssetDigests = localDigests;
-if (infernalTerrainExport !== undefined) {
+if (variantTerrainExport !== undefined) {
   assert.ok(
     (terrainVisibilityPath !== undefined ||
       terrainControllerMaterialsPath !== undefined) &&
-      values["terrain-materials"] !== undefined,
-    "Infernal geometry requires matching recorded visibility and materials",
+      values["terrain-materials"] !== undefined &&
+      (!mountainTerrain || currentBuild),
+    "Variant geometry requires its reviewed build, recorded visibility and materials",
   );
   [metadata, mesh] = await Promise.all([
-    readFile(join(infernalTerrainExport, "map.json")),
-    readFile(join(infernalTerrainExport, "map.bin")),
+    readFile(join(variantTerrainExport, "map.json")),
+    readFile(join(variantTerrainExport, "map.bin")),
   ]);
   const metadataDigest = sha256(metadata);
   const meshDigest = sha256(mesh);
   assert.equal(
     metadataDigest,
-    "4a8b2432fa3316647092fee062ff84c198f5e085ea11860aa4584082f46a889d",
+    mountainTerrain
+      ? "5b3ed6a403893e7c4f38aab225aeadb96c625283956ffd010d649de9b80a3ccc"
+      : "4a8b2432fa3316647092fee062ff84c198f5e085ea11860aa4584082f46a889d",
   );
   assert.equal(
     meshDigest,
-    "c0419c77f44277f4e0257c1dae73a24d355461b87640318231e351cba208c61c",
+    mountainTerrain
+      ? "437bb9c7fd9ea99268b0d2f6c417fe7af447c5645d451ee11daa7b9653d56636"
+      : "c0419c77f44277f4e0257c1dae73a24d355461b87640318231e351cba208c61c",
   );
   assert.ok(mesh.subarray(0, baseMesh.length).equals(baseMesh));
   const original = JSON.parse(baseMetadata);
@@ -1522,12 +1564,25 @@ if (infernalTerrainExport !== undefined) {
     expanded.meshes.slice(0, original.meshes.length),
     original.meshes,
   );
-  assert.equal(expanded.meshes.length - original.meshes.length, 3);
-  assert.ok(
-    expanded.meshes
-      .slice(-3)
-      .every((entry) => entry.controller === 0xd1a17399 && entry.flags === 2),
-  );
+  const replacements = expanded.meshes.slice(original.meshes.length);
+  assert.equal(replacements.length, mountainTerrain ? 12 : 3);
+  if (mountainTerrain) {
+    assert.ok(replacements.every((entry) => entry.flags === 4));
+    assert.equal(
+      replacements.filter(({ controller }) => controller === 0x48106271).length,
+      9,
+    );
+    assert.equal(
+      replacements.filter(({ controller }) => controller === 0x1804e2e4).length,
+      3,
+    );
+  } else {
+    assert.ok(
+      replacements.every(
+        (entry) => entry.controller === 0xd1a17399 && entry.flags === 2,
+      ),
+    );
+  }
   staticMesh = {
     ...staticMesh,
     exportedMeshes: expanded.meshes.length,

@@ -22,19 +22,20 @@ foreach(var job in jobs){
 Console.WriteLine($"Converted {jobs.Count} exact-build textures");
 }else if(mode=="map"){
 
-if (args.Length is < 2 or > 3 || (args.Length == 3 && args[2] != "infernal-overlays"))
- throw new ArgumentException("Usage: map <input> <output-directory> [infernal-overlays]");
-bool includeInfernalOverlays = args.Length == 3;
+if (args.Length is < 2 or > 3 ||
+    (args.Length == 3 && args[2] is not ("infernal-overlays" or "mountain-overlays")))
+ throw new ArgumentException("Usage: map <input> <output-directory> [infernal-overlays|mountain-overlays]");
+string? overlayProfile = args.Length == 3 ? args[2] : null;
 using var mapStream = File.OpenRead(args[0]);
-if (includeInfernalOverlays) {
+if (overlayProfile is not null) {
  const string map11Hash = "D6D8D434B977EE43BBC05AEB61D586476C692585DA9CF7B2971906091539D1A5";
  if (Convert.ToHexString(SHA256.HashData(mapStream)) != map11Hash)
-  throw new InvalidDataException("Infernal overlays require the pinned Map11 geometry");
+  throw new InvalidDataException("Overlay profiles require the pinned Map11 geometry");
  mapStream.Position = 0;
 }
 using var asset = new EnvironmentAsset(mapStream);
 var selectedMeshes = asset.Meshes.Where(mesh => ((int)mesh.VisibilityFlags & 1) != 0).ToList();
-if (includeInfernalOverlays) {
+if (overlayProfile == "infernal-overlays") {
  var materials = new HashSet<string>(StringComparer.Ordinal) {
   "Maps/KitPieces/SRS/Base/Materials/Default/Ground_D4_DragonPit_Fire_A_MAT",
   "Maps/KitPieces/SRS/Base/Materials/Default/Order_Dragon_Fire_B_MAT",
@@ -46,6 +47,15 @@ if (includeInfernalOverlays) {
  if (overlays.Length != materials.Count ||
      !materials.SetEquals(overlays.Select(mesh => mesh.Submeshes.Single().Material)))
   throw new InvalidDataException("Pinned Map11 geometry is missing an Infernal overlay");
+ selectedMeshes.AddRange(overlays);
+}
+if (overlayProfile == "mountain-overlays") {
+ var overlays = asset.Meshes.Where(mesh =>
+  (int)mesh.VisibilityFlags == 4 &&
+  mesh.VisibilityControllerPathHash is 0x48106271u or 0x1804e2e4u).ToArray();
+ if (overlays.Length != 12 ||
+     overlays.Count(mesh => mesh.VisibilityControllerPathHash == 0x48106271u) != 9)
+  throw new InvalidDataException("Pinned Map11 geometry is missing a Mountain overlay");
  selectedMeshes.AddRange(overlays);
 }
 Directory.CreateDirectory(args[1]);

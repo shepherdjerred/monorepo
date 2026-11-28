@@ -703,6 +703,20 @@ to the local server command. The preview uses a diffuse shader with authored
 alpha cutoffs. The preview omits the translucent FaeLights pass pending its
 original shader. Water, lighting, and compositing parity are still unverified.
 
+For the reviewed `.8428` Mountain transition, select `mountain-overlays` in
+the map exporter. This appends 12 original replacement ranges to the base
+geometry. Prepare their textures from the matching on-disk archive and the
+reviewed base material manifest.
+
+```powershell
+bun tools/prepare-native-terrain-mountain-materials.mjs $installation $mountainGeometry $baseMaterials (Join-Path $textureExporterDirectory TerrainTextureMips.dll) $privateMountainMaterials
+```
+
+Pass the output `materials.json` to `--terrain-materials`, the expanded map
+directory to `--mountain-terrain-export`, and the reviewed material definition
+to `--terrain-visibility-from-replay`. The worker follows the two recorded
+Mountain controller clocks and keeps unresolved intervals explicit.
+
 To prepare the champions' original mesh and rig inputs, read the skin
 selectors from the replay's opening hero creation packets. The exporter uses
 the matching Windows installation on disk and does not launch it.

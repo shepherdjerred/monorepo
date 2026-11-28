@@ -17,12 +17,17 @@ async function verifyLaterCue(
     actor: string;
     indexCount: number;
     clocks: readonly [number, number];
+    absentAt?: readonly [number, number];
     screenshot: string;
   }>,
 ) {
   await page
     .getByRole("combobox", { name: "Camera" })
     .selectOption(`player:${cue.actor}`);
+  if (cue.absentAt !== undefined)
+    expect(
+      await paletteAt(page, cue.absentAt[0], cue.indexCount),
+    ).toBeUndefined();
   const first = await paletteAt(page, cue.clocks[0], cue.indexCount);
   const later = await paletteAt(page, cue.clocks[1], cue.indexCount);
   expect(first).toBeDefined();
@@ -32,6 +37,10 @@ async function verifyLaterCue(
   await page
     .getByLabel("League of Legends replay scene")
     .screenshot({ path: testInfo.outputPath(cue.screenshot) });
+  if (cue.absentAt !== undefined)
+    expect(
+      await paletteAt(page, cue.absentAt[1], cue.indexCount),
+    ).toBeUndefined();
 }
 
 export async function verifyRecordedChampionAnimation(
@@ -52,6 +61,8 @@ export async function verifyRecordedChampionAnimation(
       actor: "1073742164",
       indexCount: 20_190,
       clocks: [864.1, 864.8],
+      // The pinned native Reload window is 863.8930903320313–865.7300903320313.
+      absentAt: [863.8, 865.8],
       screenshot: "recorded-current-jhin-reload.png",
     });
     return;

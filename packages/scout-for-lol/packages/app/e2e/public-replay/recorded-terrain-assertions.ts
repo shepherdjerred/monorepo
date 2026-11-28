@@ -9,6 +9,7 @@ const meshRanges = z.object({
   meshes: z.array(
     z.object({
       controller: z.number().int().nonnegative(),
+      flags: z.number().int().nonnegative().optional(),
       indexCount: z.number().int().positive(),
       submeshes: z.array(
         z.object({
@@ -45,9 +46,18 @@ export async function readRecordedTerrainRanges(
     await Bun.file(path.join(fixture.root, "map.json")).json(),
   );
   let offset = 0;
+  const mountainOffsets: number[] = [];
   const ranges = meshes.flatMap((mesh) => {
     const firstIndex = offset;
     offset += mesh.indexCount;
+    if (
+      mesh.flags === 4 &&
+      [0x18_04_e2_e4, 0x48_10_62_71].includes(mesh.controller)
+    ) {
+      mountainOffsets.push(
+        ...mesh.submeshes.map(({ start }) => (firstIndex + start) * 4),
+      );
+    }
     return mesh.submeshes
       .filter(({ material }) => materialNames.has(material))
       .map(({ start, count, material }) => ({
@@ -57,7 +67,7 @@ export async function readRecordedTerrainRanges(
         blend: blendedNames.has(material),
       }));
   });
-  return (time: number) =>
+  const rangesAt = (time: number) =>
     ranges.filter(({ controller }) => {
       if (omitted.has(controller)) return false;
       if (
@@ -76,6 +86,7 @@ export async function readRecordedTerrainRanges(
         throw new Error("Terrain coverage has no opening controller state.");
       return active[1];
     });
+  return Object.assign(rangesAt, { mountainOffsets });
 }
 
 type TerrainRanges = NonNullable<
@@ -90,12 +101,20 @@ export function verifyOpeningTerrain(
 ) {
   expect(opening.textures).toBeGreaterThan(0);
   expect(opening.texturedIndices).toBeGreaterThan(0);
-  expect(sourceAlphaBlendMaterials).toEqual(
-    Bun.env["SCOUT_REPLAY_E2E_EXPECT_GROMP_DECALS"] === "1" ||
-      sourceAlphaBlendMaterials.length > 0
-      ? ["Earth_Order_GrompDecal_A_MAT", "Earth_Chaos_GrompDecal_A_MAT"]
-      : [],
-  );
+  if (rangesAt !== undefined && rangesAt.mountainOffsets.length > 0) {
+    expect(sourceAlphaBlendMaterials.toSorted()).toEqual([
+      "Earth_Chaos_KrugDecal_A_MAT",
+      "Earth_Order_KrugDecal_A_MAT",
+      "Earth_Order_RaptorDecal_A_MAT",
+    ]);
+  } else {
+    expect(sourceAlphaBlendMaterials).toEqual(
+      Bun.env["SCOUT_REPLAY_E2E_EXPECT_GROMP_DECALS"] === "1" ||
+        sourceAlphaBlendMaterials.length > 0
+        ? ["Earth_Order_GrompDecal_A_MAT", "Earth_Chaos_GrompDecal_A_MAT"]
+        : [],
+    );
+  }
   if (rangesAt !== undefined) {
     verifyTerrainRanges(opening, rangesAt(0));
     return;
@@ -174,6 +193,7 @@ export async function verifyRecordedTerrainTransitions(
         after: at / 10,
       });
     }
+    await verifyMountainReplacementDraws(page, rangesAt, testInfo);
     return;
   }
   if (Bun.env["SCOUT_REPLAY_E2E_EXPECT_INFERNAL_TERRAIN"] === "1") {
@@ -192,6 +212,58 @@ export async function verifyRecordedTerrainTransitions(
     original: [0xf4_96_86_31],
     replacement: 0x68_fe_76_44,
   });
+}
+
+async function verifyMountainReplacementDraws(
+  page: Page,
+  rangesAt: TerrainRanges,
+  testInfo: TestInfo,
+) {
+  const { mountainOffsets } = rangesAt;
+  if (mountainOffsets.length === 0) return;
+  expect(mountainOffsets).toHaveLength(12);
+  const activeMountainOffsets = (time: number) => {
+    const submitted = new Set(
+      rangesAt(time).map(({ byteOffset }) => byteOffset),
+    );
+    return mountainOffsets.filter((offset) => submitted.has(offset));
+  };
+  expect(activeMountainOffsets(883.3)).toEqual([]);
+  expect(activeMountainOffsets(900.3)).toEqual(mountainOffsets);
+  // The overview screenshots are captured by the regular transition and late
+  // draw assertions. Check actual fragment coverage in the former interior gap.
+  for (const name of [
+    "terrain-transition-9003-terrain-after",
+    "late-match-overview",
+  ]) {
+    const bytes = await Bun.file(testInfo.outputPath(`${name}.png`)).bytes();
+    const covered = await page.evaluate(async (png) => {
+      const frame = new globalThis.Image();
+      frame.src = `data:image/png;base64,${png}`;
+      await frame.decode();
+      const canvas = globalThis.document.createElement("canvas");
+      canvas.width = frame.width;
+      canvas.height = frame.height;
+      const context = canvas.getContext("2d");
+      if (context === null) throw new Error("Cannot inspect the replay frame.");
+      context.drawImage(frame, 0, 0);
+      const sky = context.getImageData(0, 0, 1, 1).data;
+      const x = Math.round((520 * frame.width) / 1214);
+      const y = Math.round((448 * frame.height) / 683);
+      const pixels = context.getImageData(x - 2, y - 2, 5, 5).data;
+      let terrainPixels = 0;
+      for (let i = 0; i < pixels.length; i += 4) {
+        const rgb = pixels.slice(i, i + 3);
+        if (
+          rgb.some((value, channel) => value !== sky[channel]) &&
+          rgb.some((value) => value !== 0)
+        )
+          terrainPixels += 1;
+      }
+      return terrainPixels;
+    }, Buffer.from(bytes).toString("base64"));
+    expect(covered, name).toBeGreaterThanOrEqual(23);
+  }
 }
 
 async function verifyRecordedTerrainTransition(
