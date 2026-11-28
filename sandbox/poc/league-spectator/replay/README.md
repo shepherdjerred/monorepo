@@ -927,6 +927,18 @@ uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/
 bun sandbox/poc/league-spectator/replay/tools/research/verify-rift-navmesh-mask-source.mjs $newPrivateMaskReceipt
 ```
 
+The filter controls extract the original post-process vertex program and the
+fade and blur pixel programs from the exact Windows shader archive. The macOS
+parameter probe checks the original floating-point stores, including a clock
+reset on rewind, both blur axes, and the two-second update window. Each probe
+uses supplied inputs. Playback still needs to establish the actual update
+clocks and retained surface for a masked draw.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-rift-navmesh-filter-shaders.mjs $installation $shaderPrepareExecutable $newPrivateShaderDirectory
+uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-navmesh-filter.py $macGameExecutable $newPrivateMaskFilterReceipt
+```
+
 Capture continuous 1× playback of the reviewed fight from a signed-out
 loopback Scout preview. The video and timeline cover 28:32–28:41. The timeline
 records the package digest, follow camera, actor draws, and particle draws at
