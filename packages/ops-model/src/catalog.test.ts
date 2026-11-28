@@ -49,6 +49,39 @@ test("separate CP chart ownership does not alias its original Temporal image pro
   ).toThrow("requires its canonical image owner");
 });
 
+/**
+ * Registered first-party images that must have an owner: every image in the
+ * registry except a private one whose Docker Hub repository is provisioned
+ * ahead of its owner and build target (`pendingPrivateImages`, retired by
+ * `scripts/checks/service-registration.ts` once the image is claimed).
+ */
+async function ownedRegistryImages(): Promise<string[]> {
+  const registry = z
+    .object({ images: z.array(z.object({ name: z.string() })) })
+    .parse(
+      await Bun.file(
+        new URL(
+          "../../version-catalog/src/image-registry.json",
+          import.meta.url,
+        ),
+      ).json(),
+    );
+  const { pendingPrivateImages } = z
+    .object({ pendingPrivateImages: z.record(z.string(), z.string()) })
+    .parse(
+      await Bun.file(
+        new URL(
+          "../../../scripts/checks/service-registration-exemptions.json",
+          import.meta.url,
+        ),
+      ).json(),
+    );
+  return registry.images
+    .map((image) => image.name)
+    .filter((name) => !(name in pendingPrivateImages))
+    .sort();
+}
+
 describe("service catalog", () => {
   test.each(["unknown", "apps", "argocd"])(
     "rejects a delegation to %s",
@@ -112,18 +145,8 @@ describe("service catalog", () => {
   });
 
   test("every registered first-party image has exactly one service owner", async () => {
-    const registry = z
-      .object({ images: z.array(z.object({ name: z.string() })) })
-      .parse(
-        await Bun.file(
-          new URL(
-            "../../version-catalog/src/image-registry.json",
-            import.meta.url,
-          ),
-        ).json(),
-      );
     const index = new ServiceIndex();
-    const registered = registry.images.map((image) => image.name).sort();
+    const registered = await ownedRegistryImages();
     expect(
       SERVICE_CATALOG.services.flatMap((service) => service.images).sort(),
     ).toEqual(registered);

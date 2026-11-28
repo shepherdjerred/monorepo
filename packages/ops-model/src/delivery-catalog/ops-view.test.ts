@@ -51,9 +51,25 @@ describe("catalog core", () => {
     ).toEqual(["scout-for-lol/prod", "starlight-karma-bot/prod"]);
   });
 
-  test("every first-party image has exactly one producing service", () => {
+  test("every first-party image has exactly one producing service", async () => {
+    // Private images provisioned ahead of their owner and build target are
+    // claimed by a later change (scripts/checks/service-registration.ts).
+    const pending = z
+      .object({ pendingPrivateImages: z.record(z.string(), z.string()) })
+      .parse(
+        await Bun.file(
+          new URL(
+            "../../../../scripts/checks/service-registration-exemptions.json",
+            import.meta.url,
+          ),
+        ).json(),
+      ).pendingPrivateImages;
     for (const image of imageRegistry.images)
-      expect(firstPartyOwner(`image:${image.name}`), image.name).toBeDefined();
+      if (!(image.name in pending))
+        expect(
+          firstPartyOwner(`image:${image.name}`),
+          image.name,
+        ).toBeDefined();
   });
 
   test("ci holds only the runtime images CI and stage runners select; the public cross-compilers are their own services", () => {

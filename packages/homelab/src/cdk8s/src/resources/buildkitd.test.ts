@@ -111,16 +111,17 @@ describe("buildkitd daemon image", () => {
     expect(daemonImage(chart)).toMatch(/^moby\/buildkit:v0\.35\.1@sha256:/u);
   });
 
-  it("binds the rewrite-reuse image only through a registered Delivery recipe", () => {
+  it("binds the rewrite-reuse image through its Delivery recipe", () => {
     const chart = new Chart(new App(), "buildkitd", {
       namespace: "buildkitd",
       disableResourceNameHashes: true,
     });
-    // The patched image is not registered or published yet, so choosing it
-    // fails synthesis instead of rendering an unpinned reference.
-    expect(() => {
-      createBuildkitdDeployment(chart, { image: "rewrite-reuse" });
-    }).toThrow("Unregistered first-party image: buildkitd");
+    createBuildkitdDeployment(chart, { image: "rewrite-reuse" });
+    // The app's binding pass replaces the recipe with the Delivery-selected
+    // immutable reference; synthesis never renders a mutable tag.
+    expect(daemonImage(chart)).toBe(
+      "docker.io/shepherdjerred/buildkitd:delivery-recipe",
+    );
   });
 });
 
