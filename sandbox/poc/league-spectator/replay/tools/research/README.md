@@ -772,6 +772,48 @@ private package builder for browser-derived playback. Compare the reader with
 the original packet receipt and timed cue artifact using
 `verify-current-animation-cues.mjs`.
 
+### Recorded basic attack inputs
+
+The `.8428` reader recovers the target, requested attack slot, and signed
+centisecond offset from the reviewed compact opcode 98 and 992 bodies. A
+requested slot can be overridden by the native actor. Animation timing also
+uses live state. The packet and asset proofs are separate prerequisites for
+rendering an attack.
+
+From the monorepo root, use fresh private output paths and an exact archived
+macOS client. Use the SHA-256 of the original replay and the prepared terrain
+byte maps for verification.
+
+```powershell
+$attackTools = "sandbox/poc/league-spectator/replay/tools/research"
+bun "$attackTools/verify-recorded-basic-attacks.mjs" $originalRofl $replaySha256 | Set-Content -Encoding utf8 $attackCorpus
+Get-Content -Raw $attackCorpus | uv run --offline --with unicorn python "$attackTools/probe-recorded-basic-attacks.py" $macArchive | Set-Content -Encoding utf8 $attackReceipt
+bun "$attackTools/verify-recorded-basic-attacks.mjs" $originalRofl $replaySha256 $positionCodecs $attackReceipt
+```
+
+The asset census reads the equipped skins from the recorded opening and
+checks each original character record, spell, graph, and rig. The optional
+proofs supply the native default spell names and the animation default for
+an absent field. The report identifies direct clips and unresolved graph
+selectors. It supplies no playback clocks.
+
+```powershell
+$attackDefaultsSha256 = uv run --offline --with unicorn python "$attackTools/probe-exact-attack-defaults.py" $macArchive $attackDefaults
+bun "$attackTools/census-recorded-attack-animations.mjs" $installation $originalRofl $championManifest $championManifestSha256 $attackAssetCensus --attack-defaults $attackDefaults $attackDefaultsSha256 --spell-animation-default $macArchive
+```
+
+### Verify recorded seek windows
+
+From the repository root, compare the indexed seek reader with a sequential
+packet traversal for exact `.3489` and `.8428` recordings. The proof checks
+the original headers and payload bytes at each keyframe, between keyframes,
+and at the end of the match. It repeats the queries in reverse order and
+rejects canceled or out-of-range seeks.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prove-recorded-seek-corpus.mjs $originalRofl $replaySha256 .cache/reviewed-seek.json
+```
+
 ## Recorded terrain fog provider packets
 
 From the monorepo root, use the saved short and long Summoner's Rift ROFLs
