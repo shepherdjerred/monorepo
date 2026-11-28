@@ -13,35 +13,22 @@ import {
   type CategoryRow,
   type IdRow,
 } from "./store-sql.ts";
-import { validateHttpUrl, validateOptionalAutoRead } from "./store-shared.ts";
+import {
+  requireUserFeed,
+  validateNewUserFeed,
+  validateUserFeedEdit,
+} from "./store-shared.ts";
 import type { StoredFeed, StoreMutationFailure } from "./types.ts";
 
 export function createUserFeedInDb(
   db: Database,
   body: CreateUserFeedBody,
 ): { readonly ok: true; readonly feed: StoredFeed } | StoreMutationFailure {
-  const urlCheck = validateHttpUrl(body.url);
-  if ("ok" in urlCheck) {
-    return urlCheck;
-  }
-  if (body.htmlUrl !== undefined) {
-    const htmlCheck = validateHttpUrl(body.htmlUrl);
-    if ("ok" in htmlCheck) {
-      return htmlCheck;
-    }
-  }
-  const ruleErr = validateOptionalAutoRead(body.autoRead);
-  if (ruleErr !== null) {
-    return ruleErr;
+  const valid = validateNewUserFeed(body);
+  if ("ok" in valid) {
+    return valid;
   }
   const categoryLabel = body.category.trim();
-  if (categoryLabel === "") {
-    return {
-      ok: false,
-      kind: "invalid",
-      message: "Category cannot be empty",
-    };
-  }
   if (getFeedByUrlFromDb(db, body.url) !== undefined) {
     return {
       ok: false,
@@ -50,7 +37,7 @@ export function createUserFeedInDb(
     };
   }
   const rawTitle = body.title === undefined ? "" : body.title.trim();
-  const title = rawTitle === "" ? urlCheck.host : rawTitle;
+  const title = rawTitle === "" ? valid.host : rawTitle;
   const newId = db.transaction(() => {
     const cat = ensureCategoryInDb(db, categoryLabel, 0, 100);
     const autoJson =
@@ -84,40 +71,18 @@ export function updateUserFeedInDb(
   id: number,
   body: UpdateUserFeedBody,
 ): { readonly ok: true; readonly feed: StoredFeed } | StoreMutationFailure {
-  const existing = getFeedByIdFromDb(db, id);
-  if (existing === undefined) {
-    return { ok: false, kind: "not-found", message: "Feed not found" };
+  const existing = requireUserFeed(getFeedByIdFromDb(db, id), "modified");
+  if ("ok" in existing) {
+    return existing;
   }
-  if (existing.source !== "user") {
-    return {
-      ok: false,
-      kind: "forbidden",
-      message: "Code-managed feeds cannot be modified",
-    };
-  }
-  if (body.url !== undefined) {
-    const check = validateHttpUrl(body.url);
-    if ("ok" in check) {
-      return check;
-    }
-    const conflict = getFeedByUrlFromDb(db, body.url);
-    if (conflict !== undefined && conflict.id !== id) {
-      return {
-        ok: false,
-        kind: "conflict",
-        message: "Feed URL already exists",
-      };
-    }
-  }
-  if (body.htmlUrl !== undefined && body.htmlUrl !== null) {
-    const check = validateHttpUrl(body.htmlUrl);
-    if ("ok" in check) {
-      return check;
-    }
-  }
-  const ruleErr = validateOptionalAutoRead(body.autoRead);
-  if (ruleErr !== null) {
-    return ruleErr;
+  const invalid = validateUserFeedEdit({
+    id,
+    body,
+    urlOwnerId:
+      body.url === undefined ? undefined : getFeedByUrlFromDb(db, body.url)?.id,
+  });
+  if (invalid !== null) {
+    return invalid;
   }
   db.transaction(() => {
     const categoryId =
@@ -160,16 +125,9 @@ export function deleteUserFeedInDb(
   db: Database,
   id: number,
 ): { readonly ok: true } | StoreMutationFailure {
-  const existing = getFeedByIdFromDb(db, id);
-  if (existing === undefined) {
-    return { ok: false, kind: "not-found", message: "Feed not found" };
-  }
-  if (existing.source !== "user") {
-    return {
-      ok: false,
-      kind: "forbidden",
-      message: "Code-managed feeds cannot be deleted",
-    };
+  const existing = requireUserFeed(getFeedByIdFromDb(db, id), "deleted");
+  if ("ok" in existing) {
+    return existing;
   }
   db.transaction(() => {
     db.query("DELETE FROM feeds WHERE id = ?").run(id);

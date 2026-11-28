@@ -9,10 +9,16 @@ import {
   EnclosureSchema,
   normalizeAutoReadRules,
   type AutoReadRule,
+  type CreateUserFeedBody,
   type EntryView,
   type ManagedCategory,
+  type UpdateUserFeedBody,
 } from "@shepherdjerred/feeds/shared/contract.ts";
-import type { ParsedFeedEntry, StoreMutationFailure } from "./types.ts";
+import type {
+  ParsedFeedEntry,
+  StoredFeed,
+  StoreMutationFailure,
+} from "./types.ts";
 
 export const DEFAULT_MAX_READ_PER_FEED = 5000;
 export const DEFAULT_PRUNE_MIN_AGE_SECONDS = 120 * 24 * 60 * 60;
@@ -119,4 +125,79 @@ export function validateOptionalAutoRead(
     }
   }
   return null;
+}
+
+/**
+ * Checks a new user feed's fields in the order the stores always reported
+ * them, and returns the URL's host for a default title.
+ */
+export function validateNewUserFeed(
+  body: CreateUserFeedBody,
+): { readonly host: string } | StoreMutationFailure {
+  const urlCheck = validateHttpUrl(body.url);
+  if ("ok" in urlCheck) {
+    return urlCheck;
+  }
+  const htmlCheck =
+    body.htmlUrl === undefined ? undefined : validateHttpUrl(body.htmlUrl);
+  if (htmlCheck !== undefined && "ok" in htmlCheck) {
+    return htmlCheck;
+  }
+  const ruleErr = validateOptionalAutoRead(body.autoRead);
+  if (ruleErr !== null) {
+    return ruleErr;
+  }
+  return body.category.trim() === ""
+    ? { ok: false, kind: "invalid", message: "Category cannot be empty" }
+    : { host: urlCheck.host };
+}
+
+/** A user feed that exists and may be changed, or why it may not. */
+export function requireUserFeed(
+  existing: StoredFeed | undefined,
+  action: "modified" | "deleted",
+): StoredFeed | StoreMutationFailure {
+  if (existing === undefined) {
+    return { ok: false, kind: "not-found", message: "Feed not found" };
+  }
+  return existing.source === "user"
+    ? existing
+    : {
+        ok: false,
+        kind: "forbidden",
+        message: `Code-managed feeds cannot be ${action}`,
+      };
+}
+
+/**
+ * Checks an edit's fields in the stores' order: URL, URL ownership, site
+ * URL, then auto-read rule. `urlOwnerId` is the feed that already has
+ * `body.url`, if any.
+ */
+export function validateUserFeedEdit(input: {
+  readonly id: number;
+  readonly body: UpdateUserFeedBody;
+  readonly urlOwnerId: number | undefined;
+}): StoreMutationFailure | null {
+  const { id, body, urlOwnerId } = input;
+  if (body.url !== undefined) {
+    const check = validateHttpUrl(body.url);
+    if ("ok" in check) {
+      return check;
+    }
+    if (urlOwnerId !== undefined && urlOwnerId !== id) {
+      return {
+        ok: false,
+        kind: "conflict",
+        message: "Feed URL already exists",
+      };
+    }
+  }
+  if (body.htmlUrl !== undefined && body.htmlUrl !== null) {
+    const check = validateHttpUrl(body.htmlUrl);
+    if ("ok" in check) {
+      return check;
+    }
+  }
+  return validateOptionalAutoRead(body.autoRead);
 }

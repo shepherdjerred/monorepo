@@ -14,8 +14,9 @@ import {
   UNCATEGORIZED_LABEL,
   UNCATEGORIZED_SORT_ORDER,
   USER_CATEGORY_SORT_ORDER,
-  validateHttpUrl,
-  validateOptionalAutoRead,
+  requireUserFeed,
+  validateNewUserFeed,
+  validateUserFeedEdit,
 } from "@shepherdjerred/feeds/server/store-shared.ts";
 import type {
   FeedMutationResult,
@@ -35,33 +36,11 @@ function readBack(feed: StoredFeed | undefined, action: string): StoredFeed {
   return feed;
 }
 
-function validateCreate(
-  body: CreateUserFeedBody,
-): { readonly host: string } | StoreMutationFailure {
-  const urlCheck = validateHttpUrl(body.url);
-  if ("ok" in urlCheck) {
-    return urlCheck;
-  }
-  if (body.htmlUrl !== undefined) {
-    const htmlCheck = validateHttpUrl(body.htmlUrl);
-    if ("ok" in htmlCheck) {
-      return htmlCheck;
-    }
-  }
-  const ruleErr = validateOptionalAutoRead(body.autoRead);
-  if (ruleErr !== null) {
-    return ruleErr;
-  }
-  return body.category.trim() === ""
-    ? { ok: false, kind: "invalid", message: "Category cannot be empty" }
-    : { host: urlCheck.host };
-}
-
 export async function createUserFeed(
   inTransaction: InTransaction,
   body: CreateUserFeedBody,
 ): Promise<FeedMutationResult> {
-  const valid = validateCreate(body);
+  const valid = validateNewUserFeed(body);
   if ("ok" in valid) {
     return valid;
   }
@@ -109,38 +88,13 @@ async function validateUpdate(
   id: number,
   body: UpdateUserFeedBody,
 ): Promise<StoredFeed | StoreMutationFailure> {
-  const existing = await getFeedById(db, id);
-  if (existing === undefined) {
-    return { ok: false, kind: "not-found", message: "Feed not found" };
+  const existing = requireUserFeed(await getFeedById(db, id), "modified");
+  if ("ok" in existing) {
+    return existing;
   }
-  if (existing.source !== "user") {
-    return {
-      ok: false,
-      kind: "forbidden",
-      message: "Code-managed feeds cannot be modified",
-    };
-  }
-  if (body.url !== undefined) {
-    const check = validateHttpUrl(body.url);
-    if ("ok" in check) {
-      return check;
-    }
-    const conflict = await getFeedByUrl(db, body.url);
-    if (conflict !== undefined && conflict.id !== id) {
-      return {
-        ok: false,
-        kind: "conflict",
-        message: "Feed URL already exists",
-      };
-    }
-  }
-  if (body.htmlUrl !== undefined && body.htmlUrl !== null) {
-    const check = validateHttpUrl(body.htmlUrl);
-    if ("ok" in check) {
-      return check;
-    }
-  }
-  return validateOptionalAutoRead(body.autoRead) ?? existing;
+  const owner =
+    body.url === undefined ? undefined : await getFeedByUrl(db, body.url);
+  return validateUserFeedEdit({ id, body, urlOwnerId: owner?.id }) ?? existing;
 }
 
 export async function updateUserFeed(
@@ -195,20 +149,9 @@ export async function deleteUserFeed(
   id: number,
 ): Promise<OkMutationResult> {
   return await inTransaction(async (tx) => {
-    const existing = await getFeedById(tx, id);
-    if (existing === undefined) {
-      return {
-        ok: false,
-        kind: "not-found",
-        message: "Feed not found",
-      } as const;
-    }
-    if (existing.source !== "user") {
-      return {
-        ok: false,
-        kind: "forbidden",
-        message: "Code-managed feeds cannot be deleted",
-      } as const;
+    const existing = requireUserFeed(await getFeedById(tx, id), "deleted");
+    if ("ok" in existing) {
+      return existing;
     }
     await tx.feed.delete({ where: { id } });
     await bumpSubscriptionsEtag(tx);
