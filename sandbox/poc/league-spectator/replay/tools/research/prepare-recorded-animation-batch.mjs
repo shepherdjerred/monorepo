@@ -8,6 +8,7 @@ import {
 } from "node:fs/promises";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
 import { zstdDecompressSync } from "node:zlib";
 import { openReplay } from "../../transport.mjs";
 import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/prepare.mjs";
@@ -20,10 +21,14 @@ import {
   recoverTerrainByteSubstitution,
 } from "./native-terrain-byte-codecs.mjs";
 import {
+  openChampionModelCatalog,
   readChampionModelSelections,
   verifyNativeCatalogOpening,
 } from "./native-terrain-champion-model-catalog.mjs";
-import { createExactTerrainByteCodecs } from "./native-terrain-positions-944.mjs";
+import {
+  createExactTerrainByteCodecs,
+  prepareExactTerrainDecoder,
+} from "./native-terrain-positions-944.mjs";
 import {
   recordedAnimationRequests,
   supportsRecordedAnimationRequest,
@@ -40,10 +45,24 @@ const [
   output,
   ...extra
 ] = process.argv.slice(2);
-const current = extra.length === 1 && extra[0] === "--current-build";
-if (!output || (extra.length && !current))
+const { values: flags } = parseArgs({
+  args: extra,
+  options: {
+    "current-build": { type: "boolean" },
+    "equipped-roster": { type: "string" },
+    "equipped-roster-sha256": { type: "string" },
+  },
+});
+const current = flags["current-build"] === true;
+const rosterPath = flags["equipped-roster"];
+const rosterPin = flags["equipped-roster-sha256"];
+if (
+  !output ||
+  (rosterPath === undefined) !== (rosterPin === undefined) ||
+  (rosterPath !== undefined && (!current || !/^[a-f0-9]{64}$/u.test(rosterPin)))
+)
   throw Error(
-    "Usage: bun prepare-recorded-animation-batch.mjs <exact Windows installation> <original ROFL> <archived macOS executable> <champion source manifest> <ordinal model manifest> <AnimationPack.dll> <new private .cache subdirectory> [--current-build]",
+    "Usage: bun prepare-recorded-animation-batch.mjs <exact Windows installation> <original ROFL> <archived macOS executable> <champion source manifest> <ordinal model manifest> <AnimationPack.dll> <new private .cache subdirectory> [--current-build [--equipped-roster <receipt.json> --equipped-roster-sha256 <SHA-256>]]",
   );
 
 const sha = (bytes) =>
@@ -77,10 +96,11 @@ const models = await json(modelsFile);
 for (const manifest of [sources, models]) {
   assertExactTerrainReplay(manifest, options);
   assert.equal(manifest.build, replay.build);
-  assert.equal(
-    current ? manifest.nativeOpening?.replaySha256 : manifest.replaySha256,
-    replaySha256,
-  );
+  if (rosterPath === undefined)
+    assert.equal(
+      current ? manifest.nativeOpening?.replaySha256 : manifest.replaySha256,
+      replaySha256,
+    );
 }
 assert.equal(models.sourceManifestSha256, await digest(championsFile));
 const exporterPath = await realpath(exporter);
@@ -94,6 +114,7 @@ const decompress = (input, target) =>
 const skinKey = ({ champion, skinId }) => `${champion.toLowerCase()}-${skinId}`;
 let selected = sources.actors;
 let substitution;
+let verifiedOpening;
 if (current) {
   assert.deepEqual(sources.nativeOpening, models.nativeOpening);
   const prepared = prepareReplayForSeek(
@@ -101,22 +122,66 @@ if (current) {
     decompress,
     options,
   );
-  const codecs = createExactTerrainByteCodecs(
-    await readFile(executable),
-    replay,
-    options,
-  );
+  const executableBytes = await readFile(executable);
+  const codecs = createExactTerrainByteCodecs(executableBytes, replay, options);
   substitution = recoverTerrainByteSubstitution(codecs);
   const originalSelections = readChampionModelSelections(
     prepared,
     codecs,
     options,
   );
-  verifyNativeCatalogOpening(
-    sources.nativeOpening,
-    originalSelections,
-    replaySha256,
-  );
+  if (rosterPath === undefined) {
+    verifyNativeCatalogOpening(
+      sources.nativeOpening,
+      originalSelections,
+      replaySha256,
+    );
+  } else {
+    const bytes = await readFile(rosterPath);
+    assert.equal(sha(bytes), rosterPin, "Equipped roster digest differs");
+    const roster = JSON.parse(bytes);
+    assert.deepEqual(
+      [roster.build, roster.protocol, roster.replaySha256],
+      [replay.build, replay.protocol, replaySha256],
+    );
+    assert.equal(
+      roster.decoderSha256,
+      sha(prepareExactTerrainDecoder(executableBytes, replay, options)),
+    );
+    assert.equal(sources.selectionKind, "archive");
+    assert.equal(sources.nativeOpening, undefined);
+    assert.equal(sources.sourceCensusSha256, roster.censusSha256);
+    assert.equal(roster.verifiedModels, 10);
+    const { catalog, readModel } = await openChampionModelCatalog(
+      modelsFile,
+      roster.catalogSha256,
+      replay,
+      originalSelections,
+      { requireArchive: true },
+    );
+    assert.equal(catalog.sourceCensusSha256, roster.censusSha256);
+    const rows = new Map(roster.rows.map((row) => [row.context, row]));
+    assert.equal(roster.rows.length, 10);
+    assert.equal(rows.size, 10);
+    for (const actor of originalSelections) {
+      const row = rows.get(actor.context);
+      const key = skinKey(actor);
+      assert.deepEqual(
+        [row?.champion, row?.skinId, row?.key],
+        [actor.champion, actor.skinId, key],
+      );
+      const skin = sources.skins.find(
+        (candidate) => skinKey(candidate) === key,
+      );
+      assert.deepEqual(
+        [skin?.archive, skin?.archiveIndexSha256],
+        [row.archive, row.archiveIndexSha256],
+      );
+      assert.equal(catalog.assets[key].model.sha256, row.modelSha256);
+      await readModel(actor);
+    }
+    verifiedOpening = { replaySha256, rows: originalSelections };
+  }
   const footerRows = new Map(
     prepared.observations.binding.verified.map(({ context, footerRow }) => [
       context,
@@ -222,6 +287,7 @@ const audit = await auditChampionAnimation(
   names,
   {
     includeEvents: true,
+    verifiedOpening,
     ...options,
   },
 );

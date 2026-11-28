@@ -20,7 +20,7 @@ export async function auditChampionAnimation(
   manifestPath,
   replayBytes,
   nameProbes,
-  { includeEvents = false, allowCurrentBuild = false } = {},
+  { includeEvents = false, allowCurrentBuild = false, verifiedOpening } = {},
 ) {
   const manifestBytes = await readFile(manifestPath);
   const manifest = JSON.parse(manifestBytes);
@@ -29,9 +29,10 @@ export async function auditChampionAnimation(
   );
   const replaySha256 = hash(replayBytes);
   const current = allowCurrentBuild && manifest.build === currentChampionBuild;
+  const opening = verifiedOpening ?? manifest.nativeOpening;
   const selected =
-    current && manifest.nativeOpening?.replaySha256 === replaySha256
-      ? manifest.nativeOpening.rows.map(({ context, champion, skinId }) => ({
+    current && opening?.replaySha256 === replaySha256
+      ? opening.rows.map(({ context, champion, skinId }) => ({
           ...manifest.skins.find(
             (skin) => skin.champion === champion && skin.skinId === skinId,
           ),
@@ -40,10 +41,14 @@ export async function auditChampionAnimation(
       : manifest.actors;
   if (
     manifest.schema !== 1 ||
+    (verifiedOpening !== undefined &&
+      (!current ||
+        manifest.selectionKind !== "archive" ||
+        manifest.nativeOpening !== undefined)) ||
     (!current && manifest.build !== archivedChampionBuild) ||
     executableSha256 !== championArchiveExecutableHashes[manifest.build] ||
     manifest.installedExeSha256 !== executableSha256 ||
-    (current ? manifest.nativeOpening?.replaySha256 : manifest.replaySha256) !==
+    (current ? opening?.replaySha256 : manifest.replaySha256) !==
       replaySha256 ||
     selected?.length !== 10 ||
     new Set(selected.map(({ context }) => context)).size !== 10

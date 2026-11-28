@@ -13,6 +13,7 @@ import {
   mayhemLaneMaterialsSha256,
   verifyMayhemLaneCatalog,
 } from "./mayhem-lane-minion-catalog.mjs";
+import { readCurrentChampionAnimationModelCatalog } from "./recorded-champion-animation-resources.mjs";
 import { readRecordedMayhemExperienceThresholds } from "./recorded-champion-experience.mjs";
 
 const map = { mapId: 12, gameMode: "KIWI", mayhemMapSkin: "Bloom" };
@@ -250,6 +251,26 @@ async function buildPackage(inputs) {
     }
     mayhemFlowMapControl = file.sha256;
   }
+  let championAnimationModelCatalog;
+  if (inputs.championAnimationCatalog !== undefined) {
+    const { path, sha256 } = inputs.championAnimationCatalog;
+    const animation = await readCurrentChampionAnimationModelCatalog(
+      path,
+      sha256,
+      {
+        modelManifestPath: inputs.catalog.path,
+        modelManifestSha256: inputs.catalog.sha256,
+        identity,
+      },
+    );
+    for (const model of animation.championAnimationModelCatalog.models)
+      assert.ok(
+        routes.has(model.model),
+        "Animation model is not equipped in the replay",
+      );
+    for (const [route, asset] of animation.routes) routes.set(route, asset);
+    championAnimationModelCatalog = animation.championAnimationModelCatalog;
+  }
   const scene = {
     identity,
     mapBounds: { min, max },
@@ -286,6 +307,9 @@ async function buildPackage(inputs) {
         selectionKind: catalog.selectionKind,
         assets,
       },
+      ...(championAnimationModelCatalog === undefined
+        ? {}
+        : { championAnimationModelCatalog }),
     },
   };
   routes.set("/scene.json", [JSON.stringify(scene)]);

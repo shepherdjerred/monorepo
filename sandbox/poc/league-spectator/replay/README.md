@@ -1488,6 +1488,20 @@ with `--component maokai-sphere --geometry`, then pass its `source`, pinned
 inputs. Other emitters and the original replay random state require their own
 evidence.
 
+To include recorded champion animation, prepare clips using the exact replay
+and the archived executable. Use the source and ordinal model manifests bound
+to the same SHA-256-pinned equipped roster receipt.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-animation-batch.mjs $installation $rofl $macGameExecutable $championSourceManifest $ordinalModelManifest $animationExporter $animationOutput --current-build --equipped-roster $equippedRoster --equipped-roster-sha256 $equippedRosterSha256
+```
+
+Set `championAnimationCatalog` to the resulting
+`champion-animation-catalog.json` path and SHA-256. The package pins rigs,
+clips, and joint bindings to the equipped models. The replay worker derives
+supported animation windows from recorded requests. Use `omissions.json` to
+identify requests that the batch could not render.
+
 ## Local Scout player demo
 
 `scout-demo.tsx` mounts the app's `ReplaySessionPlayer` with
