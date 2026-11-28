@@ -25,6 +25,7 @@ import { randomSecret, secretDigest } from "#src/scout-client/secrets.ts";
 import { computeSha256Digest } from "#src/storage/object-integrity.ts";
 import type * as StorageModule from "#src/storage/s3-client.ts";
 import { buildReplayContainerFixture } from "#src/testing/replay-container-fixture.ts";
+import { admittedReplayRenderPackageFixture } from "./testing/render-package-fixture.ts";
 import {
   createTestDatabase,
   dropTestDatabase,
@@ -230,6 +231,7 @@ beforeEach(async () => {
     where: { riotMatchId: matchId },
   });
   await prisma.replayPatchObservation.deleteMany();
+  await prisma.replayRenderPackage.deleteMany();
   await prisma.scoutClientReplayArtifact.deleteMany({
     where: { id: { not: replayId } },
   });
@@ -565,7 +567,7 @@ test.each([
     reason: "patch_unobserved",
   },
   {
-    headerVersion: "16.23.840.6595",
+    headerVersion: "16.23.841.8428",
     protocol: "8bbfcd5af2bc92db",
     latestPatch: "16.23",
     reason: "render_package_unavailable",
@@ -599,9 +601,8 @@ test.each([
       protocol,
     });
 
-    const availability = await anonymousReplay(
-      `/api/replays?platformId=${match.info.platformId}&gameId=${gameId}`,
-    );
+    const matchPath = `/api/replays?platformId=${match.info.platformId}&gameId=${gameId}`;
+    const availability = await anonymousReplay(matchPath);
     expect(availability.status).toBe(200);
     expect(
       PublicReplayAvailabilitySchema.parse(await availability.json()).replay,
@@ -618,6 +619,55 @@ test.each([
       PublicReplayTimelineResponseSchema.parse(await analysis.json()).timeline
         ?.events,
     ).toHaveLength(2);
+
+    if (latestPatch !== null) {
+      const admitted = admittedReplayRenderPackageFixture({
+        gameBuild: headerVersion,
+        protocol,
+        publishedAt: seededCompletion,
+        admittedAt: seededCompletion,
+      });
+      await prisma.replayRenderPackage.create({ data: admitted });
+
+      const descriptor = await anonymousReplay(`/api/replays/${stored.id}`);
+      expect(descriptor.status).toBe(200);
+      const available = PublicReplayDescriptorSchema.parse(
+        await descriptor.json(),
+      );
+      expect(available).toMatchObject({
+        replayId: stored.id,
+        sha256: digest,
+        gameBuild: headerVersion,
+        protocol,
+        playback: {
+          status: "available",
+          latestPatch,
+          package: {
+            url: admitted.manifestPath,
+            sha256: admitted.manifestSha256,
+          },
+        },
+      });
+      const matchLookup = await anonymousReplay(matchPath);
+      expect(matchLookup.status).toBe(200);
+      expect(
+        PublicReplayAvailabilitySchema.parse(await matchLookup.json()).replay,
+      ).toEqual(available);
+
+      await prisma.replayPatchObservation.update({
+        where: { platformId: result.info.platformId },
+        data: { patch: "16.24", gameBuild: "16.24.842.1000" },
+      });
+      const superseded = await anonymousReplay(`/api/replays/${stored.id}`);
+      expect(superseded.status).toBe(200);
+      expect(
+        PublicReplayDescriptorSchema.parse(await superseded.json()).playback,
+      ).toEqual({
+        status: "incompatible",
+        latestPatch: "16.24",
+        reason: "older_patch",
+      });
+    }
   },
 );
 

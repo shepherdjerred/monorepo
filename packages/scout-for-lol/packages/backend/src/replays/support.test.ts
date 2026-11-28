@@ -4,6 +4,7 @@ import {
   ReplayRenderPackageManifestSchema,
   type ReplayPatchObservation,
 } from "@scout-for-lol/domain/artifacts/replay-support.ts";
+import { admittedReplayRenderPackageFixture } from "./testing/render-package-fixture.ts";
 
 const database = vi.hoisted(() => ({
   observation: vi.fn(),
@@ -50,47 +51,12 @@ const renderPackage = vi.fn();
 const deps = { observation: readObservation, renderPackage, now: () => now };
 
 function admittedPackage() {
-  const manifest = {
-    schemaVersion: 1,
-    gameBuild: replay.gameBuild,
-    protocol: replay.protocol,
-    entrypoint: "runtime/index.js",
-    capabilities: {
-      mapId: 11,
-      gameMode: "CLASSIC",
-      teamSizes: [5, 5],
-      rosterCoverage: "all-legal-lineups-and-skins",
-      rosterInventorySha256: "d".repeat(64),
-    },
-    files: [{ path: "runtime/index.js", sha256: "e".repeat(64), bytes: 32 }],
-  };
-  const manifestJson = JSON.stringify(manifest);
-  const manifestSha256 = new Bun.CryptoHasher("sha256")
-    .update(manifestJson)
-    .digest("hex");
-  return {
+  return admittedReplayRenderPackageFixture({
     gameBuild: "16.22.830.1",
     protocol: "b".repeat(16),
-    manifestSha256,
-    manifestPath: `/replay-assets/16.22.830.1/${manifestSha256}/manifest.json`,
-    manifestJson,
-    publishedSha256: manifestSha256,
     publishedAt: new Date("2026-11-13T19:00:00Z"),
     admittedAt: new Date("2026-11-13T19:30:00Z"),
-    admissionJson: {
-      schemaVersion: 1,
-      manifestSha256,
-      rosterInventorySha256: "d".repeat(64),
-      nativeComparison: {
-        gameBuild: "16.22.830.1",
-        reportPath: `/replay-evidence/${"f".repeat(64)}/report.json`,
-        reportSha256: "f".repeat(64),
-        referenceCaptureSha256: "1".repeat(64),
-        result: "perceptual-equivalence",
-        coverage: "whole-match-visual-audio-and-spectator-controls",
-      },
-    },
-  };
+  });
 }
 
 beforeEach(() => {
