@@ -33,7 +33,7 @@ a test file when any step in either tier selects it.
 | -------------------------------------- | ------------------------------------------------------- | --------------------------------- | --------------------------------------------------------- |
 | `@shepherdjerred/media`                | Vitest `src`, no integration files                      | `integration`                     | Private PostgreSQL per file; ffmpeg                       |
 | `@shepherdjerred/temporal`             | `ha-schema` (shared); Bun Vitest, no integration files  | `integration`; `workflows` (Node) | Delivery PostgreSQL; media fixtures; Temporal test server |
-| `@scout-for-lol/backend`               | Vitest, no integration files                            | `integration`                     | Shared dev PostgreSQL (`createTestDatabase`)              |
+| `@scout-for-lol/backend`               | Vitest groups `free-1`, `free-2`, `db`, no integration  | `integration` (group `db`)        | Shared dev PostgreSQL (`createTestDatabase`)              |
 | `@scout-for-lol/temporal`              | Vitest `src`, no `src/workflows`                        | `workflows` (Node)                | Temporal test server                                      |
 | `@shepherdjerred/delivery`             | `generate` (shared); Vitest `src`, no integration files | `integration`                     | `delivery-pg-*` PostgreSQL per process                    |
 | `@shepherdjerred/discord-video-stream` | Vitest, no integration files                            | `integration`                     | ffmpeg, node-av, a real player                            |
