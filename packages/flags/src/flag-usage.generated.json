@@ -23,6 +23,20 @@
         "count": 1
       }
     ],
+    "alert-dashboard-ci-jobs-enabled": [
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
     "alert-dashboard-daily-digest-quiet-clear": [
       {
         "package": "@shepherdjerred/alert-dashboard",
@@ -710,7 +724,7 @@
         "package": "@shepherdjerred/delivery",
         "file": "packages/delivery/src/infrastructure/config.ts",
         "kind": "call-argument",
-        "count": 2
+        "count": 5
       },
       {
         "package": "@shepherdjerred/delivery",
@@ -1426,6 +1440,20 @@
       }
     ],
     "scout-participant-crawl-enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-rank-refresh-enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
       {
         "package": "@scout-for-lol/backend",
         "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
