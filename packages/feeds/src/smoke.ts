@@ -2,6 +2,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { FeedsStore } from "./server/store.ts";
+import { runPackageCommand, startSmokePostgres } from "./smoke-postgres.ts";
 
 function reservePort(): number {
   const listener = Bun.listen({
@@ -21,8 +23,67 @@ function reservePort(): number {
 const SubscriptionsSchema = z.object({
   subscriptions: z.array(z.object({ id: z.string() })),
 });
+const ImportOutcomeSchema = z.looseObject({ status: z.string() });
+const ItemRefsSchema = z.object({
+  itemRefs: z.array(z.object({ id: z.string() })),
+});
 
 const root = await mkdtemp(path.join(tmpdir(), "feeds-smoke-"));
+const packageRoot = path.join(import.meta.dirname, "..");
+const SMOKE_ENTRY_ID = 1_795_569_203_477_068;
+
+// The deployment path: migrate an empty PostgreSQL, import a SQLite file in
+// --cutover mode, then serve from PostgreSQL.
+const postgres = await startSmokePostgres(root);
+const dbEnv = { DATABASE_URL: postgres.databaseUrl };
+await runPackageCommand(
+  ["bun", "x", "--no-install", "prisma", "migrate", "deploy"],
+  dbEnv,
+);
+const sqlitePath = path.join(root, "feeds.sqlite");
+const seeded = FeedsStore.open(sqlitePath);
+seeded.reconcileCatalog();
+const userFeed = seeded.createUserFeed({
+  url: "https://smoke.example/rss?token=synthetic",
+  title: "Smoke user feed",
+  category: "Smoke",
+  hidden: false,
+});
+if (!userFeed.ok) {
+  throw new Error("smoke could not seed a user feed");
+}
+seeded.importRawEntry({
+  id: SMOKE_ENTRY_ID,
+  feedId: userFeed.feed.id,
+  guid: "smoke-entry",
+  url: "https://smoke.example/1",
+  title: "Smoke entry",
+  author: "Smoke",
+  contentHtml: "<p>smoke</p>",
+  publishedAt: 1_795_569_203,
+  crawledAtMs: 1_795_569_203_477,
+  enclosures: [],
+  isRead: false,
+  isStarred: false,
+});
+seeded.close();
+const imported = ImportOutcomeSchema.parse(
+  JSON.parse(
+    await runPackageCommand(
+      [
+        "bun",
+        path.join(packageRoot, "src/migration/import-sqlite.ts"),
+        "--from",
+        sqlitePath,
+        "--cutover",
+      ],
+      dbEnv,
+    ),
+  ),
+);
+if (imported.status !== "cut-over") {
+  throw new Error(`smoke cutover import ended ${imported.status}`);
+}
 const consolePort = reservePort();
 const readerPort = reservePort();
 const consoleOrigin = `http://127.0.0.1:${String(consolePort)}`;
@@ -41,7 +102,7 @@ const child = Bun.spawn(
       HOST: "127.0.0.1",
       PORT: String(consolePort),
       FEEDS_READER_PORT: String(readerPort),
-      FEEDS_DATABASE_PATH: path.join(root, "feeds.sqlite"),
+      ...dbEnv,
       FEEDS_PUBLIC_ORIGIN: consoleOrigin,
       FEEDS_TRUSTED_PROXIES: "127.0.0.1",
       FEEDS_OPERATOR_LOGINS: "smoke@example.com",
@@ -136,13 +197,23 @@ try {
     throw new Error("ReaderAPI subscription/list failed during smoke check");
   }
   const subs = SubscriptionsSchema.parse(await subsRes.json());
-  if (subs.subscriptions.length !== 65) {
+  if (subs.subscriptions.length !== 66) {
     throw new Error(
-      `Expected 65 seeded catalog feeds, got ${String(subs.subscriptions.length)}`,
+      `Expected 65 catalog feeds and 1 imported user feed, got ${String(subs.subscriptions.length)}`,
     );
+  }
+
+  const idsRes = await fetch(
+    `${readerOrigin}/api/greader.php/reader/api/0/stream/items/ids?s=user/-/state/com.google/reading-list&n=10`,
+    { headers: { authorization: `GoogleLogin auth=${auth}` }, signal },
+  );
+  const ids = ItemRefsSchema.parse(await idsRes.json());
+  if (!ids.itemRefs.some((ref) => ref.id === String(SMOKE_ENTRY_ID))) {
+    throw new Error("imported entry missing from the reading list");
   }
 } finally {
   child.kill("SIGTERM");
   await child.exited;
+  await postgres.stop();
   await rm(root, { recursive: true, force: true });
 }

@@ -6,7 +6,7 @@ sidebar:
 ---
 
 Manage public engineering, AI, and personal blog subscriptions in code, and keep
-private or ad-hoc subscriptions in the live Feeds SQLite database.
+private or ad-hoc subscriptions in the live Feeds PostgreSQL database.
 
 [`@shepherdjerred/feeds`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/README.md)
 reconciles the code-owned `Engineering & Infra`, `AI`, and
@@ -31,7 +31,7 @@ Use `autoRead` in
 (evaluated by
 [`auto-read.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/src/server/auto-read.ts))
 or `hidden` (enforced by
-[`store-sql.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/src/server/store-sql.ts))
+[`store-shared.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/src/server/store-shared.ts))
 when adding high-volume feeds:
 
 - Apply `STRICT_RELEASE_RULES` to raw release feeds so only `x.y.0` releases

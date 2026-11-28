@@ -5,12 +5,20 @@ import {
   SummaryResponseSchema,
 } from "./shared/contract.ts";
 import { startServer, type FeedsServer } from "./server.ts";
+import { asyncFeedsRepository } from "./server/sqlite-repository.ts";
+import { FeedsStore } from "./server/store.ts";
+import type { FeedsRepository } from "./server/types.ts";
 
 const SubscriptionsBodySchema = z.object({
   subscriptions: z.array(z.object({ id: z.string() })),
 });
 
 const activeServers: FeedsServer[] = [];
+
+/** An empty in-memory store; PostgreSQL behaviour is covered by the store contract. */
+function memoryStore(): FeedsRepository {
+  return asyncFeedsRepository(FeedsStore.open(":memory:"));
+}
 
 afterEach(async () => {
   while (activeServers.length > 0) {
@@ -25,7 +33,6 @@ async function bootDualListenerServer(): Promise<FeedsServer> {
   const server = await startServer(0, "127.0.0.1", {
     env: {
       FEEDS_READER_PORT: "0",
-      FEEDS_DATABASE_PATH: ":memory:",
       FEEDS_PUBLIC_ORIGIN: "https://feeds.tailnet-1a49.ts.net",
       FEEDS_TRUSTED_PROXIES: "127.0.0.1",
       FEEDS_OPERATOR_LOGINS: "shepherdjerred@gmail.com",
@@ -36,6 +43,7 @@ async function bootDualListenerServer(): Promise<FeedsServer> {
       FEATURE_FLAGS_MODE: "disabled",
     },
     shouldRefresh: async () => false,
+    store: memoryStore(),
   });
   activeServers.push(server);
   return server;
@@ -162,7 +170,6 @@ function baseConsoleEnv(
   overrides: Record<string, string | undefined>,
 ): NodeJS.ProcessEnv {
   return {
-    FEEDS_DATABASE_PATH: ":memory:",
     FEEDS_PUBLIC_ORIGIN: "https://feeds.tailnet-1a49.ts.net",
     FEEDS_TRUSTED_PROXIES: "127.0.0.1",
     FEEDS_OPERATOR_LOGINS: "shepherdjerred@gmail.com",
@@ -177,6 +184,7 @@ async function bootFlaggedConsoleServer(
   let fetchCalls = 0;
   const server = await startServer(0, "127.0.0.1", {
     env: baseConsoleEnv(overrides),
+    store: memoryStore(),
     fetchFeed: (url) => {
       fetchCalls += 1;
       return Promise.resolve({
@@ -197,6 +205,16 @@ async function postInternalRefresh(port: number): Promise<Response> {
     headers: { authorization: "Bearer machine-secret-token" },
   });
 }
+
+describe("feeds storage", () => {
+  test("refuses to start without DATABASE_URL", async () => {
+    await expect(
+      startServer(0, "127.0.0.1", {
+        env: baseConsoleEnv({ FEATURE_FLAGS_MODE: "disabled" }),
+      }),
+    ).rejects.toThrow("DATABASE_URL is required");
+  });
+});
 
 describe("feeds-refresh-enabled feature-flag evaluation", () => {
   test("skips polling when feeds-refresh-enabled resolves to explicit false", async () => {
@@ -253,6 +271,7 @@ describe("feeds-refresh-enabled feature-flag evaluation", () => {
             "feeds-refresh-enabled": { nested: true },
           }),
         }),
+        store: memoryStore(),
       }),
     ).rejects.toThrow();
 

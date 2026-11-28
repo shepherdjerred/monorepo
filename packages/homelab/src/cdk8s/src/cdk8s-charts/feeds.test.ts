@@ -29,6 +29,7 @@ const ContainerSchema = z.looseObject({
 
 const DeploymentSchema = z.looseObject({
   spec: z.looseObject({
+    strategy: z.unknown(),
     template: z.looseObject({
       spec: z.looseObject({
         initContainers: z.array(ContainerSchema),
@@ -67,7 +68,7 @@ describe("feeds cdk8s chart", () => {
     );
   });
 
-  test("provisions feeds-postgresql, migrates it before the server, and lets only Feeds reach it", () => {
+  test("provisions feeds-postgresql, migrates and imports before the server, and lets only Feeds reach it", () => {
     const manifests = z
       .array(K8sManifestHeaderSchema)
       .parse(createFeedsChart(new App()).toJson());
@@ -89,7 +90,16 @@ describe("feeds cdk8s chart", () => {
     const pod = deployment.spec.template.spec;
     expect(pod.initContainers.map((container) => container.name)).toEqual([
       "prisma-migrate",
+      "sqlite-import",
     ]);
+    expect(pod.initContainers[1]?.command).toEqual([
+      "bun",
+      "src/migration/import-sqlite.ts",
+      "--from",
+      "/var/lib/feeds/feeds.sqlite",
+      "--cutover",
+    ]);
+    expect(deployment.spec.strategy).toEqual({ type: "Recreate" });
     expect(pod.initContainers[0]?.command).toEqual([
       "bunx",
       "--no-install",
@@ -117,10 +127,10 @@ describe("feeds cdk8s chart", () => {
       }
     }
     expect(
-      pod.containers[0]?.env.find(
+      pod.containers[0]?.env.some(
         (entry) => entry.name === "FEEDS_DATABASE_PATH",
-      )?.value,
-    ).toBe("/var/lib/feeds/feeds.sqlite");
+      ),
+    ).toBe(false);
   });
 
   test("emits only the inactive ConfigMap marker when explicitly gated off", () => {

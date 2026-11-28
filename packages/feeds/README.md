@@ -1,6 +1,6 @@
 # Feeds
 
-First-party RSS and Atom aggregator (`@shepherdjerred/feeds`) backed by `bun:sqlite` (WAL + FTS5), moving to Prisma on its own PostgreSQL cluster (`feeds-postgresql`), with a Tailscale-only listing console (`@shepherdjerred/console-ui`) and an isolated Google Reader API listener tailored to NetNewsWire (`ReaderAPICaller`).
+First-party RSS and Atom aggregator (`@shepherdjerred/feeds`) backed by Prisma on its own PostgreSQL cluster (`feeds-postgresql`), with a Tailscale-only listing console (`@shepherdjerred/console-ui`) and an isolated Google Reader API listener tailored to NetNewsWire (`ReaderAPICaller`).
 
 ## HTTP Surfaces
 
@@ -18,17 +18,16 @@ The server exposes two listeners with strict surface separation:
 
 ## Subscription Ownership
 
-- **Code-owned (`source = 'code'`):** Public feeds across `Engineering & Infra`, `AI`, and `Essays & Personal Blogs` live in `src/catalog/catalog.ts` alongside typed single or multi-clause `AutoReadRule` definitions matching `title`, `url`, or parsed RSS/Atom `<category>` tags (`STRICT_RELEASE_RULES`, `BLOG_PRERELEASE_RULE`, negated `AI_SDK_ONLY_RULE`, vendor noise rules, and `hidden: true`). Server startup reconciles `source = 'code'` categories and feeds transactionally into SQLite, removes obsolete managed categories, and retroactively sweeps unstarred unread entries against updated `autoRead` rules without touching user feeds. Reader API and UI mutations against `code` feeds return `403`.
-- **User-owned (`source = 'user'`):** Private credential-bearing feeds (such as LWN subscriber URLs) and feeds added via NetNewsWire `quickadd` or the console dialog live in SQLite. Query strings on `user` feed URLs are redacted (`?[REDACTED]`) in logs, error messages, and console listing responses.
+- **Code-owned (`source = 'code'`):** Public feeds across `Engineering & Infra`, `AI`, and `Essays & Personal Blogs` live in `src/catalog/catalog.ts` alongside typed single or multi-clause `AutoReadRule` definitions matching `title`, `url`, or parsed RSS/Atom `<category>` tags (`STRICT_RELEASE_RULES`, `BLOG_PRERELEASE_RULE`, negated `AI_SDK_ONLY_RULE`, vendor noise rules, and `hidden: true`). Server startup reconciles `source = 'code'` categories and feeds transactionally into PostgreSQL, removes obsolete managed categories, and retroactively sweeps unstarred unread entries against updated `autoRead` rules without touching user feeds. Reader API and UI mutations against `code` feeds return `403`.
+- **User-owned (`source = 'user'`):** Private credential-bearing feeds (such as LWN subscriber URLs) and feeds added via NetNewsWire `quickadd` or the console dialog live in PostgreSQL. Query strings on `user` feed URLs are redacted (`?[REDACTED]`) in logs, error messages, and console listing responses.
 
 ## Storage
 
-The server reads and writes through `FeedsRepository` (`src/server/types.ts`). Two implementations keep the same behaviour, checked by one contract suite (`src/server/contract/`):
+The server reads and writes through `FeedsRepository` (`src/server/types.ts`), served by `PostgresFeedsStore` (`src/server/postgres/store.ts`): Prisma on `DATABASE_URL` (required), with schema and migrations in `prisma/`. Writes run one at a time, each in its own transaction, so entry IDs stay newest-highest.
 
-- `FeedsStore` (`src/server/store.ts`): the SQLite file at `FEEDS_DATABASE_PATH`, which production still serves from.
-- `PostgresFeedsStore` (`src/server/postgres/store.ts`): Prisma on `DATABASE_URL`, schema and migrations in `prisma/`. Writes run one at a time in their own transactions, as on SQLite, so entry IDs stay newest-highest.
+The SQLite `FeedsStore` (`src/server/store.ts`) stays only so the cutover import can compare the two stores. One contract suite (`src/server/contract/`) checks that both behave the same.
 
-Search matches titles and authors. PostgreSQL stores a tsvector literal built by `src/server/search/search-tokens.ts`, which tokenizes exactly as SQLite FTS5's `unicode61` tokenizer did (its per-code-point table, `unicode61-table.json`, is checked against SQLite for every code point by `search-tokens.test.ts`; `bun run generate:unicode61` rewrites it). The same query therefore returns the same entries on both stores, newest first.
+Search matches titles and authors. PostgreSQL stores a tsvector literal built by `src/server/search/search-tokens.ts`, which tokenizes exactly as SQLite FTS5's `unicode61` tokenizer did (its per-code-point table, `unicode61-table.json`, is checked against SQLite for every code point by `search-tokens.test.ts`; `bun run generate:unicode61` rewrites it). The same query therefore returns the same entries that SQLite returned, newest first.
 
 ### Moving data to PostgreSQL
 
@@ -44,7 +43,7 @@ kubectl --context admin@torvalds -n feeds exec deploy/feeds -c feeds -- \
   bun src/migration/import-sqlite.ts --from /var/lib/feeds/feeds.sqlite
 ```
 
-A rehearsal replaces PostgreSQL's rows and exits non-zero when a gate fails. `--cutover` does the same against a quiescent file and then records the `storage_cutover` marker in `meta`; once that marker exists the importer leaves PostgreSQL alone and a rehearsal refuses to run.
+A rehearsal replaces PostgreSQL's rows and exits non-zero when a gate fails. In production the `sqlite-import` init container runs `--cutover` against the quiescent file (the `Recreate` strategy stops the old pod first) before the server starts. A failed gate keeps the pod from starting and leaves the file untouched. Once the gates pass it records the `storage_cutover` marker in `meta`. From then on the importer leaves PostgreSQL alone and a rehearsal refuses to run.
 
 ## Commands
 
