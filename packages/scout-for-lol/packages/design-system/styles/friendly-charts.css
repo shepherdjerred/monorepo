@@ -1,0 +1,402 @@
+/* Charts and page states on the soft surfaces. Series colours are the chart
+   tokens; the viewer's line is the brand colour. */
+
+/* ---------- climb chart ---------- */
+
+.scout-climb {
+  margin: 0;
+}
+
+.scout-climb [data-series="brand"] {
+  --scout-climb: var(--scout-color-primary);
+}
+
+.scout-climb [data-series="1"] {
+  --scout-climb: var(--scout-color-chart1);
+}
+
+.scout-climb [data-series="2"] {
+  --scout-climb: var(--scout-color-chart2);
+}
+
+.scout-climb [data-series="3"] {
+  --scout-climb: var(--scout-color-chart3);
+}
+
+.scout-climb [data-series="4"] {
+  --scout-climb: var(--scout-color-chart4);
+}
+
+.scout-climb [data-series="5"] {
+  --scout-climb: var(--scout-color-chart5);
+}
+
+.scout-climb [data-series="6"] {
+  --scout-climb: var(--scout-color-chart6);
+}
+
+.scout-climb [data-series="7"] {
+  --scout-climb: var(--scout-color-chart7);
+}
+
+.scout-climb [data-series="8"] {
+  --scout-climb: var(--scout-color-chart8);
+}
+
+.scout-climb__plot {
+  position: relative;
+  height: 128px;
+  margin: 22px 9px 0;
+}
+
+.scout-climb[data-count="many"] .scout-climb__plot {
+  height: 180px;
+}
+
+.scout-climb__plot svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.scout-climb__line {
+  fill: none;
+  stroke: var(--scout-climb);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.scout-climb[data-count="many"] .scout-climb__line {
+  stroke-width: 2.5;
+}
+
+.scout-climb[data-count="many"] [data-you="true"] .scout-climb__line {
+  stroke-width: 4;
+}
+
+.scout-climb__area {
+  fill: color-mix(in srgb, var(--scout-climb) 10%, transparent);
+  stroke: none;
+}
+
+.scout-climb__dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scout-climb__dot {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: var(--scout-color-surface);
+  box-shadow: inset 0 0 0 4px var(--scout-climb);
+}
+
+.scout-climb__dot[data-end="now"] {
+  background: var(--scout-climb);
+  box-shadow: 0 0 0 4px var(--scout-color-surface);
+}
+
+.scout-climb[data-count="many"] .scout-climb__dot {
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+}
+
+.scout-climb[data-count="many"] .scout-climb__dot[data-end="now"] {
+  box-shadow: 0 0 0 3px var(--scout-color-surface);
+}
+
+.scout-climb__mark {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.scout-climb__mark i {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--scout-color-surface);
+  box-shadow: inset 0 0 0 3px var(--scout-color-primary);
+}
+
+.scout-climb__mark span {
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  color: var(--scout-color-text-muted);
+  font: 600 13px/1.2 var(--scout-font-body);
+  white-space: nowrap;
+}
+
+.scout-climb__ends {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px -6px 0;
+}
+
+.scout-climb__end-now {
+  text-align: right;
+}
+
+.scout-climb__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-climb__legend li {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.scout-climb__swatch {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--scout-climb);
+}
+
+.scout-climb__legend-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scout-climb__legend b {
+  flex: none;
+  font: 700 16px/1.3 var(--scout-font-display);
+  white-space: nowrap;
+}
+
+/* ---------- gold lead chart ---------- */
+
+.scout-gold-chart {
+  padding: 16px 18px;
+  border-radius: var(--scout-radius-panel);
+  background: var(--scout-surface-inset);
+  box-shadow: var(--scout-ring);
+  color: var(--scout-color-text);
+}
+
+.scout-gold-chart__axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--scout-color-text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.scout-gold-chart svg {
+  display: block;
+  width: 100%;
+  height: 10rem;
+}
+
+.scout-gold-chart__zero {
+  stroke: color-mix(in srgb, var(--scout-color-text-muted) 45%, transparent);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.scout-gold-chart__area[data-side="positive"] {
+  fill: color-mix(in srgb, var(--scout-color-chart1) 26%, transparent);
+}
+
+.scout-gold-chart__area[data-side="negative"] {
+  fill: color-mix(in srgb, var(--scout-color-chart4) 26%, transparent);
+}
+
+.scout-gold-chart__line {
+  fill: none;
+  stroke: var(--scout-color-text);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.scout-gold-chart__cursor {
+  stroke: var(--scout-color-text);
+  stroke-dasharray: 5 5;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.scout-gold-chart__values {
+  margin-top: 12px;
+}
+
+.scout-gold-chart__values summary {
+  min-height: 44px;
+  padding-block: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.scout-gold-chart__values > div {
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.scout-gold-chart__values table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.scout-gold-chart__values th,
+.scout-gold-chart__values td {
+  padding: 3px 12px 3px 0;
+  font-weight: 400;
+}
+
+.scout-gold-chart__values thead th {
+  color: var(--scout-color-text-muted);
+  font-size: 13px;
+}
+
+/* ---------- page states ---------- */
+
+.scout-page-state {
+  display: grid;
+  justify-items: start;
+}
+
+.scout-page-state__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--scout-surface-inset-strong);
+  color: var(--scout-color-text-muted);
+}
+
+.scout-page-state__title {
+  margin: 0;
+  font: 700 24px/1.2 var(--scout-font-display);
+}
+
+.scout-page-state__lead {
+  max-width: 24em;
+  margin: 10px 0 0;
+  font: 500 32px/1.2 var(--scout-font-display);
+  text-wrap: balance;
+}
+
+.scout-page-state__detail {
+  max-width: 58ch;
+  margin: 8px 0 0;
+  color: var(--scout-color-text-muted);
+  text-wrap: pretty;
+}
+
+.scout-page-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.scout-page-loading {
+  display: grid;
+  gap: 14px;
+}
+
+.scout-page-loading__bar {
+  display: block;
+  height: 16px;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset-strong);
+}
+
+.scout-soft-panel--open .scout-page-loading__bar {
+  background: color-mix(
+    in srgb,
+    var(--scout-color-text) 10%,
+    var(--scout-color-canvas)
+  );
+}
+
+.scout-page-loading__bar[data-part="title"] {
+  width: min(300px, 80%);
+  height: 32px;
+  border-radius: calc(var(--scout-radius-panel) * 0.5);
+}
+
+.scout-page-loading__bar[data-part="lead"] {
+  width: min(330px, 90%);
+  height: 26px;
+}
+
+.scout-page-loading__bar[data-part="line"] {
+  width: min(360px, 100%);
+}
+
+.scout-page-loading__bar[data-part="block"] {
+  height: 128px;
+  border-radius: calc(var(--scout-radius-panel) * 0.6);
+}
+
+.scout-page-loading__rows {
+  display: grid;
+  gap: 14px;
+}
+
+.scout-page-loading__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scout-page-loading__bar[data-part="face"] {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scout-page-loading__bar {
+    animation: scout-page-wait 1.6s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes scout-page-wait {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.55;
+  }
+}
+
+@media (max-width: 720px) {
+  .scout-page-state__lead {
+    font-size: 27px;
+  }
+}
