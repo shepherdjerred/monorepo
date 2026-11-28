@@ -95,13 +95,10 @@ based on the whole branch, not the latest commit.
 - Wait exits distinguish CI failure (1), errors (2), human intervention (3),
   head changes (4), PR ready but main red (5), timeout (6), and closed/merged
   PRs (7). `pr land` adds 0 for merged and 8 for a failed merge. A red main
-  never ends a wait early. If `main` or Delivery is red, inspect failure
-  evidence and active threads with `toolkit forum list --json`. Follow an
-  existing owner (`toolkit forum watch <FM-N> --until-resolved`) rather than
-  duplicating recovery. You must repair failures your changes caused, and may
-  pick up an unowned failure you did not cause when it blocks your PR or
-  release, no better active owner is handling it, and nobody else is working on
-  it — claim or post a `notice` (`--owner me`) first, then resolve it with
+  never ends a wait early. If `main` or Delivery is red, the wait report names
+  the open incident; follow `incident-response`: `toolkit incident take` when
+  you caused it (mandatory), otherwise hold `toolkit incident wait` rather than
+  duplicating recovery, and declare it when nothing is open. Resolve with
   authoritative CI or Delivery evidence (`delivery-recovery` for Delivery).
   Otherwise continue your assigned work. A timeout is not CI failure.
   A changed head requires an explicit new wait.

@@ -428,7 +428,7 @@ toolkit forum list --kind notice
 toolkit forum inbox
 toolkit forum scopes
 toolkit forum search "CI cache" --scope ci --sort votes
-toolkit forum post --kind notice --title "Repairing main" --scope main --owner me --body "Own change caused the failure; investigating." --condition "Main's authoritative CI passes."
+toolkit forum post --kind notice --title "Holding shared test PostgreSQL for a migration rehearsal" --scope test-postgres --owner me --body "Exclusive use while rehearsing." --condition "Rehearsal finished and the database is released."
 toolkit forum post --kind question --title "Which S3 bucket holds CI diagnostics?" --body-file /tmp/question.md --attach /tmp/trace.log
 toolkit forum post --kind decision --title "Standardize on FM-<N> short references" --body-file /tmp/decision.md --pinned
 toolkit forum view FM-12
@@ -1041,11 +1041,9 @@ to its verdict. A manual run must include verification, release admission,
 image publication, chart publication and ArgoCD reconciliation without skipped
 workflows; partial manual jobs cannot clear a failure. A failed last completed
 run keeps main red while its recovery build is pending. Keep working if main is
-red; check the main-ci incident the report names (`toolkit incident wait`,
-or `take` if you caused it), read active forum threads (`toolkit forum list --json`) and failure
-evidence, follow an owned recovery, repair failures your changes caused, or
-claim/post a `notice` (`--owner me`) before picking up an unowned blocker with
-no better active owner; otherwise continue your task. `ci explain --main` is an
+red; the report names the main-ci incident: `toolkit incident take` it if you
+caused it, otherwise hold `toolkit incident wait` on it (see
+[Incidents](#incidents)); otherwise continue your task. `ci explain --main` is an
 alias for `ci main`. To wait for main itself, use `ci wait --main`.
 
 | Wait exit | Meaning                                                         |
@@ -1055,7 +1053,7 @@ alias for `ci main`. To wait for main itself, use `ci wait --main`.
 | 2         | Usage, authentication, API, or contract error                   |
 | 3         | Human intervention (review, draft, pipeline approval)           |
 | 4         | PR head changed; explicitly start a new wait for the new head   |
-| 5         | PR ready but main red; follow forum or claim unowned blocker    |
+| 5         | PR ready but main red; take or wait on the main-ci incident     |
 | 6         | Requested timeout; this does not mean CI failed                 |
 | 7         | PR closed or already merged                                     |
 

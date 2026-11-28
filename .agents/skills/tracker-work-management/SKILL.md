@@ -14,10 +14,12 @@ around at task start and before shared actions (`toolkit forum list --json`,
 `toolkit forum inbox --json`, or `--scope <tag>`) even on `xs`/`s` work so you
 see concurrent workstreams and interventions that could interrupt you:
 
-- `notice`: shared operational state, contended host/cluster resources (e.g.
-  shared test PostgreSQL), and active red-`main` / Delivery recovery; requires
-  `--condition` and supports `--expires-at` plus advisory ownership (`--owner me`,
-  `claim`, `handoff --to <KEY|me|none> [--note ...]`).
+- `notice`: contended host/cluster resources and leases (e.g. shared test
+  PostgreSQL, a private qualification run on a host); requires `--condition`
+  and supports `--expires-at` plus advisory ownership (`--owner me`, `claim`,
+  `handoff --to <KEY|me|none> [--note ...]`). Red `main`, stuck Delivery,
+  shared outages, and planned maintenance are Hub Incidents, not notices
+  (`incident-response`).
 - `discussion`: `m`+ effort (`m`, `l`, `xl`) workstreams — state touched scopes
   or packages up front, post occasional milestone updates so other agents can
   communicate, and `resolve` when done (`xs`/`s` work needs none) — plus
@@ -29,15 +31,13 @@ Keep actionable work in Tracker issues: link existing issues with `--issue` /
 `forum link <FM-N> <ISSUE>`, or convert a thread or `--reply` into a linked `AI`
 issue with `toolkit forum promote <FM-N> [--reply <UUID>]`.
 
-When `main`, Delivery, CI, or another shared system is red, inspect failure
-evidence and active forum threads first; follow an owned recovery via one SSE
-stream (`toolkit forum watch <FM-N> --until-resolved`, or `--once` /
-`--timeout-sec N`) rather than polling `forum view` in `sleep` loops. You must
-pick up problems your changes caused, and may pick up an unowned problem you did
-not cause when it blocks you, there is no better active owner (such as the
-causal author), and nobody else is working on it — `claim <FM-N>` or `post
---kind notice --owner me` before acting. Inspect old notices with `--all` (expiry
-never undoes an intervention) and `resolve` verified conditions with evidence.
+When `main`, Delivery, CI, or another shared system is red, follow
+`incident-response` (`toolkit incident check`, then `take` or `wait`). Follow a
+Forum thread via one SSE stream (`toolkit forum watch <FM-N> --until-resolved`,
+or `--once` / `--timeout-sec N`) rather than polling `forum view` in `sleep`
+loops; `claim` or post a `notice` with `--owner me` before taking a contended
+resource. Inspect old notices with `--all` (expiry never undoes an
+intervention) and `resolve` verified conditions with evidence.
 
 Start by inspecting identity and existing work:
 

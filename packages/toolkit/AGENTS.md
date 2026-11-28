@@ -20,11 +20,9 @@ reference.
 
 - `ci wait` owns one foreground wait pinned to a PR head. Recheck merge inputs
   before reporting ready; never turn queue latency or a requested timeout into
-  a CI failure. If main is red, read the main-ci incident the report names,
-  active forum threads, and failure evidence:
-  follow an owned recovery, repair failures your changes caused, or claim/post
-  a `notice` (`--owner me`) before picking up an unowned blocker with no better
-  active owner; otherwise continue your task.
+  a CI failure. If main is red, the report names the main-ci incident: take it
+  when you caused it, otherwise `incident wait` on it (`incident-response`);
+  otherwise continue your task.
 - `artifacts wait` claims over the service's tRPC, subscribes to its event
   stream first, re-claims on every wake and reconnect, and acknowledges only
   after stdout is flushed; a dropped stream never ends it. The CLI imports only
