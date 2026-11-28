@@ -2586,11 +2586,13 @@ model MatchProcessingReceipt {
   scopeAccountId Int?
   scopeKey       String // receiptScopeKey(scope), e.g. "guild:123"
   evidence       String? // JSON, opaque to SQL
+  writerGitSha   String? // First inserting build. Unknown and legacy writers leave it null.
   recordedAt     DateTime
   createdAt      DateTime @default(now())
 
   @@unique([riotMatchId, kind, version, scopeKey])
   @@index([kind, recordedAt])
+  @@index([writerGitSha, createdAt(sort: Desc), id(sort: Desc)])
 }
 
 /// One durable notification intent (domain NotificationIntent). The state

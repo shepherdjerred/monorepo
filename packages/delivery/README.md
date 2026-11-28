@@ -883,7 +883,9 @@ cannot, the deployment ends recovery-required with its locks and barrier held.
 A recipe's oracle may declare a monitor: one image component, alarm matchers
 that include an `environment` label, evidence queries with thresholds, and an
 `automatic` or `hold` policy ([4.19](docs/model.md#419-monitor)). Queries may
-use only `$window`, `$version` and `$gitSha`.
+use only `$window`, `$version`, `$gitSha` and `$acceptedAt`. The latter is the
+deployment's acceptance time as an unquoted Unix timestamp in seconds, with
+millisecond precision.
 
 Acceptance starts the monitor: `watching` when the frozen recipe declares one,
 otherwise `unmonitored`. The dispatch workflow lists `GET /monitors/watching`,

@@ -25,6 +25,7 @@ async function observe(client: PrometheusClient, watching: WatchingMonitor) {
   const now = new Date();
   const values = {
     window: monitorWindow(watching.acceptedAt, now),
+    acceptedAt: Date.parse(watching.acceptedAt) / 1000,
     version: watching.artifact.version,
     gitSha: watching.artifact.gitSha,
   };

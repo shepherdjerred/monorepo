@@ -1,18 +1,39 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
 
 const api = vi.hoisted(() => {
   const applications: unknown[] = [];
   const drift: string[] = [];
   const reads: string[] = [];
-  return { applications, drift, reads, broken: new Set<string>() };
+  const watching: unknown[] = [];
+  const observations: unknown[] = [];
+  return {
+    applications,
+    drift,
+    reads,
+    watching,
+    observations,
+    broken: new Set<string>(),
+  };
 });
 vi.mock("#lib/delivery/client.ts", () => ({
   deliveryRequest: vi.fn(
-    (path: string, schema: { parse: (raw: unknown) => unknown }) => {
+    (
+      path: string,
+      schema: { parse: (raw: unknown) => unknown },
+      body?: unknown,
+    ) => {
       if (path === "drift/self-healing")
         return Promise.resolve(
           schema.parse({ applications: api.applications }),
         );
+      if (path === "monitors/watching") {
+        return Promise.resolve(schema.parse(api.watching));
+      }
+      if (path.endsWith("/monitor/observations")) {
+        api.observations.push({ path, body });
+        return Promise.resolve(undefined);
+      }
       api.drift.push(path);
       return Promise.resolve(undefined);
     },
@@ -35,7 +56,67 @@ vi.mock("#lib/delivery/argo-client.ts", () => ({
   }),
 }));
 
-const { observeDeliveryDrift } = await import("./monitor.ts");
+const { observeDeliveryDrift, observeDeliveryMonitors } =
+  await import("./monitor.ts");
+
+test("observeDeliveryMonitors renders the accepted timestamp independently of observation time", async () => {
+  const gitSha = "a".repeat(40);
+  api.watching.push({
+    deploymentId: "accepted-deployment",
+    environmentId: "example/prod",
+    serviceId: "example",
+    acceptedAt: "2026-10-22T00:00:00.123Z",
+    monitor: {
+      component: "image:example",
+      alarms: { matchers: { environment: "prod" } },
+      evidence: [
+        {
+          key: "accepted-receipts",
+          query:
+            'sum(increase(x{version="$version",git_sha="$gitSha"}[$window])) and on() sum(timestamp(x) >= $acceptedAt)',
+          threshold: 50,
+        },
+      ],
+      policy: "automatic",
+    },
+    artifact: {
+      component: "image:example",
+      version: "1.2.3",
+      gitSha,
+      digest: `sha256:${"b".repeat(64)}`,
+    },
+  });
+  vi.setSystemTime(new Date("2026-10-22T00:00:30.456Z"));
+  const query = vi
+    .spyOn(PrometheusClient.prototype, "query")
+    .mockRejectedValue(new Error("Unexpected Prometheus query"))
+    .mockResolvedValueOnce([])
+    .mockResolvedValueOnce([{ metric: {}, value: 51 }]);
+  try {
+    await expect(observeDeliveryMonitors()).resolves.toEqual({ observed: 1 });
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query).toHaveBeenLastCalledWith(
+      `sum(increase(x{version="1.2.3",git_sha="${gitSha}"}[120s])) and on() sum(timestamp(x) >= 1792627200.123)`,
+      undefined,
+    );
+    expect(api.observations).toEqual([
+      {
+        path: "deployments/accepted-deployment/monitor/observations",
+        body: {
+          observedAt: "2026-10-22T00:00:30.456Z",
+          window: "120s",
+          alarms: [],
+          evidence: { "accepted-receipts": 51 },
+        },
+      },
+    ]);
+  } finally {
+    query.mockRestore();
+    vi.useRealTimers();
+    api.watching.length = 0;
+    api.observations.length = 0;
+  }
+});
 
 function selfHealing(count: number) {
   return Array.from({ length: count }, (_, index) => ({

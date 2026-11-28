@@ -201,6 +201,39 @@ export const scoutDurableReceiptsRecorded = new Counter({
 });
 
 /**
+ * Durable first writes for this process's build, newest first. Rank is
+ * bounded to the five receipts the beta promotion gate requires. Values are
+ * DB insertion times, so a first scrape can observe writes that already
+ * happened without treating the first sample of a counter as a baseline.
+ */
+export const scoutDurableRecentAppliedReceiptTimestamp = new Gauge({
+  name: "scout_durable_recent_applied_receipt_timestamp_seconds",
+  help: "Insertion times of the five newest match processing receipts first written by this build.",
+  labelNames: ["rank"] as const,
+  registers: [registry],
+});
+
+async function collectRecentAppliedReceiptMetrics(db: Db): Promise<void> {
+  try {
+    const { listRecentAppliedReceiptTimes } =
+      await import("#src/database/durable/receipt-repository.ts");
+    const timestamps = await listRecentAppliedReceiptTimes(db);
+    scoutDurableRecentAppliedReceiptTimestamp.reset();
+    for (const [index, timestamp] of timestamps.entries()) {
+      scoutDurableRecentAppliedReceiptTimestamp.set(
+        { rank: String(index + 1) },
+        timestamp.getTime() / 1000,
+      );
+    }
+  } catch (error) {
+    scoutDurableRecentAppliedReceiptTimestamp.reset();
+    logger.error("Failed to read durable applied receipt timestamps", {
+      error,
+    });
+  }
+}
+
+/**
  * Workflow-start acceptances by the answer the durable handoff gave.
  *
  * This exists to measure ONE of its three series. `answered-by-another-run` is
@@ -297,6 +330,7 @@ function ageSeconds(oldest: Date | null, now: number): number {
  * stranger claim than no series at all. Their alert guards on `absent()`.
  */
 export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
+  await collectRecentAppliedReceiptMetrics(db);
   try {
     const { NOTIFICATION_INTENT_STATE_KINDS, RECOVERY_BATCH_STATE_KINDS } =
       await import("#src/database/durable/pipeline-scan.ts");
