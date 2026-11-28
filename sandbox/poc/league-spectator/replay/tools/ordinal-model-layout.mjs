@@ -35,6 +35,7 @@ export function readOriginalRigOrdinalSource(bytes) {
     sourceJoints.push({
       rigId: view.getInt16(at + 2, true),
       parentId: view.getInt16(at + 4, true),
+      nameHash: view.getUint32(at + 8, true),
       name: new TextDecoder("utf-8", { fatal: true }).decode(
         bytes.subarray(nameStart, end),
       ),

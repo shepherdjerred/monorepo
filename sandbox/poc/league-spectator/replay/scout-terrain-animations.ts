@@ -195,18 +195,23 @@ export async function loadRecordedChampionAnimations(
     ),
   );
   const active = new Map<number, Float32Array>();
-  return (
+  function activeCueAt(timeSeconds: number, participantId: number) {
+    const timeline = animations.get(participantId);
+    if (timeline === undefined) return;
+    const cue:
+      (Cue & { sampler: ClipSampler; palette: Float32Array }) | undefined =
+      latestAt(timeline, timeSeconds);
+    if (cue === undefined || timeSeconds >= cue.endSeconds) return;
+    return cue;
+  }
+  function palettesAt(
     timeSeconds: number,
     markers: readonly { participantId: number }[],
-  ) => {
+  ) {
     active.clear();
     for (const { participantId } of markers) {
-      const timeline = animations.get(participantId);
-      if (timeline === undefined) continue;
-      const cue:
-        (Cue & { sampler: ClipSampler; palette: Float32Array }) | undefined =
-        latestAt(timeline, timeSeconds);
-      if (cue === undefined || timeSeconds >= cue.endSeconds) continue;
+      const cue = activeCueAt(timeSeconds, participantId);
+      if (cue === undefined) continue;
       active.set(
         cue.participantId,
         cue.sampler.sample(
@@ -216,5 +221,21 @@ export async function loadRecordedChampionAnimations(
       );
     }
     return active;
-  };
+  }
+  return Object.assign(palettesAt, {
+    copyJointModelFrameAt(
+      timeSeconds: number,
+      participantId: number,
+      joint: string | number | { nameHash: number },
+      target: Matrix4,
+    ) {
+      const cue = activeCueAt(timeSeconds, participantId);
+      if (cue === undefined) return false;
+      return cue.sampler.copyJointModelFrame(
+        (timeSeconds - cue.timeSeconds) * cue.rate,
+        joint,
+        target,
+      );
+    },
+  });
 }

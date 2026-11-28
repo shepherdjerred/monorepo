@@ -52,6 +52,18 @@ export function createOrdinalClipSampler(
       poseJointIndex,
     ]),
   );
+  const byOriginalName = new Map();
+  const byOriginalHash = new Map();
+  function addJointIdentity(index, key, ordinal) {
+    index.set(key, index.has(key) ? undefined : ordinal);
+  }
+  for (const { originalName, poseJointIndex } of bindings.joints) {
+    // Only unique original names and stored SKL keys identify a joint.
+    addJointIdentity(byOriginalName, originalName, poseJointIndex);
+    const { nameHash } = sourceRig.sourceJoints[poseJointIndex];
+    if (nameHash !== 0 && nameHash !== undefined)
+      addJointIdentity(byOriginalHash, nameHash, poseJointIndex);
+  }
   const joints = bindings.joints.map(({ parentRigId, nodeIndex }) => {
     const { matrix, translation, rotation, scale } = gltf.nodes[nodeIndex];
     const position = new Vector3(...(translation ?? [0, 0, 0]));
@@ -93,6 +105,27 @@ export function createOrdinalClipSampler(
   const vector = new Vector3();
   const quaternion = new Quaternion();
   const skinMatrix = new Matrix4();
+  let sampledFrame = -1;
+  function evaluatePose(seconds) {
+    if (!Number.isFinite(seconds))
+      throw Error("Invalid ordinal animation time");
+    const frame = Math.max(0, Math.min(seconds, clip.duration)) * clip.fps;
+    if (sampledFrame === frame) return;
+    for (const track of clip.tracks) {
+      const value = joints[track.jointId][track.channel];
+      const { a, b, fraction } = sampleAnimationFrame(track, frame);
+      if (track.channel === "quaternion")
+        value.fromArray(a).slerp(quaternion.fromArray(b), fraction).normalize();
+      else value.fromArray(a).lerp(vector.fromArray(b), fraction);
+    }
+    for (const joint of ordered) {
+      joint.local.compose(joint.position, joint.quaternion, joint.scale);
+      if (joint.parent === -1) joint.world.copy(joint.local);
+      else
+        joint.world.multiplyMatrices(joints[joint.parent].world, joint.local);
+    }
+    sampledFrame = frame;
+  }
   return {
     duration: clip.duration,
     frames: clip.frames,
@@ -101,28 +134,11 @@ export function createOrdinalClipSampler(
     trackCount: tracks.size,
     sample(seconds, palette = new Float32Array(skin.joints.length * 16)) {
       if (
-        !Number.isFinite(seconds) ||
         !(palette instanceof Float32Array) ||
         palette.length !== skin.joints.length * 16
       )
         throw Error("Invalid ordinal animation sample");
-      const frame = Math.max(0, Math.min(seconds, clip.duration)) * clip.fps;
-      for (const track of clip.tracks) {
-        const value = joints[track.jointId][track.channel];
-        const { a, b, fraction } = sampleAnimationFrame(track, frame);
-        if (track.channel === "quaternion")
-          value
-            .fromArray(a)
-            .slerp(quaternion.fromArray(b), fraction)
-            .normalize();
-        else value.fromArray(a).lerp(vector.fromArray(b), fraction);
-      }
-      for (const joint of ordered) {
-        joint.local.compose(joint.position, joint.quaternion, joint.scale);
-        if (joint.parent === -1) joint.world.copy(joint.local);
-        else
-          joint.world.multiplyMatrices(joints[joint.parent].world, joint.local);
-      }
+      evaluatePose(seconds);
       for (const [index, node] of skin.joints.entries()) {
         skinMatrix.multiplyMatrices(
           joints[byNode.get(node)].world,
@@ -131,6 +147,23 @@ export function createOrdinalClipSampler(
         skinMatrix.toArray(palette, index * 16);
       }
       return palette;
+    },
+    // The joint frame is cumulative in model space, before inverse bind.
+    // Copy to caller-owned storage so later renders and seeks cannot alter it.
+    copyJointModelFrame(seconds, identity, target) {
+      let ordinal = identity;
+      if (typeof identity === "string") ordinal = byOriginalName.get(identity);
+      if (identity && typeof identity === "object")
+        ordinal = byOriginalHash.get(identity.nameHash);
+      if (
+        !Number.isSafeInteger(ordinal) ||
+        ordinal < 0 ||
+        ordinal >= joints.length
+      )
+        return false;
+      evaluatePose(seconds);
+      target.copy(joints[ordinal].world);
+      return true;
     },
   };
 }

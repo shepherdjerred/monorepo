@@ -1005,6 +1005,34 @@ request. An identified parent still needs a native attachment transform.
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-rift-effect-catalog.mjs --replay $replayPath --position-codecs $exactPositionCodecs --installation $installation --resources $equippedSkinResourceReceipt --resources-sha256 $equippedSkinResourceSha256 --creation $nativeFightCreationReceipt --creation-sha256 $nativeFightCreationSha256 --stop $nativeFightStopReceipt --stop-sha256 $nativeFightStopSha256 --out $freshFightCatalog
 ```
 
+The archived attachment probe runs the original creation handler on the Rift
+corpus with controlled registry and model services. It compares the descriptor
+when the requested parent is present with the missing-parent path. The
+retained provider control checks the separate actor position and orientation
+inputs for a zero-key attachment. A second control checks the packet direction
+override for the Lee Sin R impact. Replay poses, actual object lifetimes, and
+emitter rendering are separate from these controlled inputs.
+
+```powershell
+$corpus = bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath
+if ($LASTEXITCODE) { throw "Could not prepare the recorded creation corpus" }
+[IO.File]::WriteAllText($creationCorpus, $corpus + [char]10)
+uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-rift-attachment-placement.py $macGameExecutable $creationCorpus $freshFightCatalog
+```
+
+The recorded animation provider can copy a model-space joint frame from an
+active cue. Callers identify the joint by its original name, authored SKL
+hash, or original ordinal. The provider uses the same pose as the skinning
+palette, including joints outside that palette. The verifier reconstructs a
+joint frame from the palette and inverse bind data, checks the two Kai’Sa
+missile sockets and the impact target socket, and repeats the queries across
+rewind and cue cutoff.
+An attachment in the scene also needs the replay actor's world transform.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/verify-recorded-joint-frames.mjs $localReplayPackageDirectory $recordedAnimationBatchDirectory $threeCorePath
+```
+
 The reviewed particle track derives three fixed billboard components for
 Heimerdinger W and Kai’Sa E from their authored curves. The producer compares
 the computed vertices with the retained original samples byte for byte before
