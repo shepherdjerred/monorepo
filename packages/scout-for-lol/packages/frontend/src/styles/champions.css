@@ -182,11 +182,6 @@
   margin-top: 16px;
 }
 
-/* The verdict wraps before it reaches the art, so its text stays on the panel. */
-.champions-hero .champions-verdict > span:last-child {
-  max-width: 17ch;
-}
-
 .champions-tier {
   display: grid;
   flex: none;

@@ -37,6 +37,20 @@ export const WithoutLane: Story = {
   args: { champion: "Ahri", winRate: 51.8, games: 12_480 },
 };
 
+/** Face, name, lane and tier only: a card that points at a champion. */
+export const WithoutStats: Story = {
+  render: () => (
+    <div style={{ maxWidth: "13rem" }}>
+      <ChampionCard
+        champion="Jinx"
+        href="#jinx"
+        lane={{ label: "Bot", icon: "adc" }}
+        tier="S tier"
+      />
+    </div>
+  ),
+};
+
 export const LongName: Story = {
   render: oneColumn,
   args: {
