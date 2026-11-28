@@ -1,6 +1,18 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import {
+  copyFile,
+  lstat,
+  mkdir,
+  readdir,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
+import {
+  DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES,
+  DELIVERY_JOB_GIT_ENVIRONMENT,
+  DELIVERY_JOB_INSTALL_MARKER,
+} from "#shared/delivery-job.ts";
 import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
 import {
   requireReplayCheckout,
@@ -145,6 +157,9 @@ export function workerCandidateEnvironment(namespace: string) {
       "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
     TEMPORAL_NAMESPACE: namespace,
     TEMPORAL_TLS: "false",
+    // The job home is on the kept claim; a candidate test could leave Git
+    // configuration there that runs code or hides a changed tracked file.
+    ...DELIVERY_JOB_GIT_ENVIRONMENT,
   };
 }
 
@@ -165,21 +180,198 @@ export type ExecutorCheckout = { root: string; revision: string };
 
 const MONOREPO = "https://github.com/shepherdjerred/monorepo.git";
 
+/** Whether a filesystem error says the path does not exist. */
+function missing(error: unknown) {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
+/** Whether anything, even a dangling symlink, is at `target`. */
+async function present(target: string) {
+  return await lstat(target).then(
+    () => true,
+    (error: unknown) => {
+      if (missing(error)) return false;
+      throw error;
+    },
+  );
+}
+
+/** `target` with every symlink in its existing part resolved; it need not exist. */
+async function canonical(target: string): Promise<string> {
+  const absolute = path.resolve(target);
+  try {
+    return await realpath(absolute);
+  } catch (error) {
+    if (!missing(error)) throw error;
+    const parent = path.dirname(absolute);
+    return parent === absolute
+      ? absolute
+      : path.join(await canonical(parent), path.basename(absolute));
+  }
+}
+
+/**
+ * Remove every `.git` in `root`'s tree except its own and those inside
+ * `node_modules`. `git clean` never lists one under a tracked directory, and a
+ * Git command run below it would otherwise answer from that repository.
+ */
+async function removeNestedRepositories(root: string) {
+  const pending = [root];
+  for (
+    let directory = pending.pop();
+    directory !== undefined;
+    directory = pending.pop()
+  )
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const entryPath = path.join(directory, entry.name);
+      if (directory !== root && entry.name === ".git")
+        await rm(entryPath, { recursive: true, force: true });
+      else if (
+        entry.isDirectory() &&
+        entry.name !== ".git" &&
+        entry.name !== "node_modules"
+      )
+        pending.push(entryPath);
+    }
+}
+
+/** Whether `child` is `parent` or lies under it. */
+function within(child: string, parent: string) {
+  return child === parent || child.startsWith(`${parent}${path.sep}`);
+}
+
+/**
+ * Make `candidateRoot` a real directory that neither is, nor contains, nor
+ * lies inside the executor's checkout, whose tree and repository the
+ * candidate's reset and clean would otherwise rewrite or remove. Anything
+ * else kept at the candidate root, such as a symlink a candidate test left,
+ * is removed first (a symlink itself, never what it names).
+ */
+async function prepareCandidateRoot(
+  candidateRoot: string,
+  executorRoot: string,
+) {
+  if (await present(candidateRoot)) {
+    const kept = await lstat(candidateRoot);
+    if (!kept.isDirectory()) await rm(candidateRoot);
+  }
+  const [candidate, executor] = await Promise.all([
+    canonical(candidateRoot),
+    canonical(executorRoot),
+  ]);
+  if (within(candidate, executor) || within(executor, candidate))
+    throw new Error("Candidate checkout must not replace the executor's");
+  await mkdir(candidateRoot, { recursive: true });
+}
+
+/**
+ * Bring the kept candidate tree at `directory` to exactly `source`, writing
+ * only what differs from the previous candidate.
+ *
+ * The repository metadata is created fresh, as the bootstrap does for the
+ * executor, and every Git command reads only its configuration
+ * (workerCandidateEnvironment): its objects come from the executor's
+ * repository (and through it the claim's verified store) by alternates, so a
+ * blobless fetch negotiates against the executor's revision and adds only the
+ * candidate's new commit and trees, and the checkout fetches just the blobs
+ * neither holds. The index starts with no stat data, so
+ * `update-index --refresh` hashes every tracked file's exact bytes
+ * (DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES) against the candidate's tree.
+ * Everything untracked except `node_modules`, nested repositories and a stray
+ * `.gitattributes` included, is then removed, as is any `.git` below the root
+ * outside `node_modules`, and `reset --hard` rewrites
+ * exactly the files whose bytes differ, with the candidate's own attributes.
+ * `node_modules` is kept only when the previous candidate's install
+ * completed (DELIVERY_JOB_INSTALL_MARKER); otherwise every `node_modules` is
+ * removed with the rest. `requireReplayCheckout` still proves the revision
+ * and a clean tracked tree afterwards.
+ */
+async function prepareCandidateCheckout(
+  directory: string,
+  source: string,
+  executor: ExecutorCheckout,
+  run: RolloutCommandRunner,
+) {
+  const git = path.join(directory, ".git");
+  const marker = path.join(directory, DELIVERY_JOB_INSTALL_MARKER);
+  const installed = await Bun.file(marker).exists();
+  await rm(git, { recursive: true, force: true });
+  await run(["git", "init", "--quiet"]);
+  // Nothing has touched node_modules yet; the install removes this again.
+  if (installed) await writeFile(marker, "");
+  await mkdir(path.join(git, "objects/info"), { recursive: true });
+  await writeFile(
+    path.join(git, "objects/info/alternates"),
+    `${path.join(executor.root, ".git/objects")}\n`,
+  );
+  // The executor's revision is shallow; without its boundary Git would walk
+  // to that revision's missing parent while negotiating.
+  const shallow = path.join(executor.root, ".git/shallow");
+  if (await Bun.file(shallow).exists())
+    await copyFile(shallow, path.join(git, "shallow"));
+  for (const [key, value] of [
+    // Git reads ~/.config/git/attributes unless configuration names a file.
+    ["core.attributesFile", "/dev/null"],
+    ["remote.origin.url", MONOREPO],
+    ["remote.origin.promisor", "true"],
+    ["remote.origin.partialclonefilter", "blob:none"],
+  ] as const)
+    await run(["git", "config", key, value]);
+  await run([
+    "git",
+    "fetch",
+    "--quiet",
+    "--no-tags",
+    "--depth=1",
+    "--filter=blob:none",
+    "origin",
+    source,
+  ]);
+  await run(["git", "update-ref", "--no-deref", "HEAD", source]);
+  await run(["git", "read-tree", "HEAD"]);
+  const attributes = path.join(git, "info/attributes");
+  await mkdir(path.dirname(attributes), { recursive: true });
+  await writeFile(attributes, `${DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES}\n`);
+  await run(["git", "update-index", "-q", "--refresh"]);
+  await rm(attributes);
+  if (!installed && (await present(path.join(directory, "node_modules"))))
+    console.warn(
+      JSON.stringify({
+        kind: "delivery-stage-workspace",
+        event: "install-reset",
+        checkout: "candidate",
+        detail:
+          "node_modules has no completed install; this Job removes it and installs from scratch",
+      }),
+    );
+  await run([
+    "git",
+    "clean",
+    "-ffdxq",
+    ...(installed ? ["-e", "node_modules"] : []),
+  ]);
+  await removeNestedRepositories(directory);
+  await run(["git", "reset", "-q", "--hard"]);
+}
+
 /**
  * Prepare the exact candidate source without moving controller HEAD.
  *
  * A candidate at the executor's revision reuses the checkout the bootstrap
- * already installed and generated. Any other candidate becomes a detached
- * worktree of the executor's object store: a blobless fetch adds only its
- * commit and trees, and checkout downloads just the blobs the executor lacks.
- * Its install shares the Job's Bun cache on the same filesystem, so packages
- * the executor already extracted are linked rather than written again.
+ * already installed and generated. Any other candidate is prepared in
+ * `candidateRoot`, a tree the stage claim keeps across Jobs beside the
+ * executor's (see prepareCandidateCheckout): consecutive Jobs of one rollout
+ * name the same candidate and successive rollouts' candidates differ by a few
+ * commits, so the checkout and `bun install --frozen-lockfile` write only that
+ * difference instead of a whole tree and `node_modules`. Its install shares
+ * the Job's Bun cache.
  */
 export async function withWorkerCandidateCheckout<T>(
   checkout: {
     sourceRevision: unknown;
     target: z.infer<typeof WorkerDeploymentRolloutTargetSchema>;
     executor: ExecutorCheckout;
+    candidateRoot: string;
   },
   use: (candidate: RolloutCommandRunner) => Promise<T>,
   effects: {
@@ -196,15 +388,13 @@ export async function withWorkerCandidateCheckout<T>(
       candidateCommand(argv, cwd, workerReplayRoute(target).namespace));
   const replayArguments = effects.replayArguments ?? workerReplayArguments;
   const reuse = source === executor.revision;
-  const directory = reuse
-    ? executor.root
-    : await mkdtemp(path.join(tmpdir(), "delivery-worker-candidate-"));
+  const directory = reuse ? executor.root : checkout.candidateRoot;
+  if (!reuse) await prepareCandidateRoot(directory, executor.root);
   const run: RolloutCommandRunner = (argv) => execute(argv, directory);
-  const inExecutor: RolloutCommandRunner = (argv) =>
-    execute(argv, executor.root);
   const cwd = path.join(directory, "packages/temporal");
   const candidate: RolloutCommandRunner = async (argv) => {
-    if (argv[0] === "git") return await execute(argv, cwd);
+    // Git answers for the candidate tree's own repository, at its root.
+    if (argv[0] === "git") return await execute(argv, directory);
     const family = candidateCommandFamily(argv);
     const flag = argv.indexOf("--namespace");
     const namespace = flag === -1 ? undefined : argv[flag + 1];
@@ -219,80 +409,45 @@ export async function withWorkerCandidateCheckout<T>(
     );
   };
   const preparation = { reuse: String(reuse) };
-  const added = { worktree: false };
-  try {
-    await timedWorkerPhase("candidate-checkout", preparation, async () => {
-      if (!reuse) {
-        for (const [key, value] of [
-          ["remote.origin.url", MONOREPO],
-          ["remote.origin.promisor", "true"],
-          ["remote.origin.partialclonefilter", "blob:none"],
-        ] as const)
-          await inExecutor(["git", "config", key, value]);
-        await inExecutor([
-          "git",
-          "fetch",
-          "--quiet",
-          "--no-tags",
-          "--depth=1",
-          "--filter=blob:none",
-          "origin",
-          source,
-        ]);
-        await inExecutor([
-          "git",
-          "worktree",
-          "add",
-          "--quiet",
-          "--detach",
-          directory,
-          source,
-        ]);
-        added.worktree = true;
-      }
-      await requireReplayCheckout(source, run);
-    });
+  // The kept candidate tree is not removed afterwards: the next Job resets it
+  // to its own candidate before using it (prepareCandidateCheckout).
+  await timedWorkerPhase("candidate-checkout", preparation, async () => {
     if (!reuse)
-      await timedWorkerPhase("candidate-install", preparation, async () => {
-        await run(["mise", "trust", ".mise.toml"]);
-        await run(["mise", "install", "--yes", "bun", "node"]);
-        await run([
-          "mise",
-          "exec",
-          "--",
-          "bun",
-          "install",
-          "--frozen-lockfile",
-        ]);
-        await run([
-          "mise",
-          "exec",
-          "--",
-          "bunx",
-          "turbo",
-          "run",
-          "generate",
-          "--filter=@shepherdjerred/temporal^...",
-        ]);
-      });
-    await timedWorkerPhase("candidate-build", preparation, async () => {
-      for (const packageName of [
-        "home-assistant",
-        "llm-models",
-        "glitter-context",
-      ])
-        await execute(
-          ["mise", "exec", "--", "bun", "run", "build"],
-          path.join(directory, "packages", packageName),
-        );
+      await prepareCandidateCheckout(directory, source, executor, run);
+    await requireReplayCheckout(source, run);
+  });
+  if (!reuse)
+    await timedWorkerPhase("candidate-install", preparation, async () => {
+      // Absent from here until the install completes, so an install cut
+      // short leaves no marker and the next Job starts it from scratch.
+      const marker = path.join(directory, DELIVERY_JOB_INSTALL_MARKER);
+      await rm(marker, { force: true });
+      await run(["mise", "trust", ".mise.toml"]);
+      await run(["mise", "install", "--yes", "bun", "node"]);
+      await run(["mise", "exec", "--", "bun", "install", "--frozen-lockfile"]);
+      await writeFile(marker, "");
+      await run([
+        "mise",
+        "exec",
+        "--",
+        "bunx",
+        "turbo",
+        "run",
+        "generate",
+        "--filter=@shepherdjerred/temporal^...",
+      ]);
     });
-    await requireReplayCheckout(source, candidate);
-    return await use(candidate);
-  } finally {
-    if (!reuse) {
-      if (added.worktree)
-        await inExecutor(["git", "worktree", "remove", "--force", directory]);
-      await rm(directory, { recursive: true, force: true });
-    }
-  }
+  await timedWorkerPhase("candidate-build", preparation, async () => {
+    for (const packageName of [
+      "home-assistant",
+      "llm-models",
+      "glitter-context",
+    ])
+      await execute(
+        ["mise", "exec", "--", "bun", "run", "build"],
+        path.join(directory, "packages", packageName),
+      );
+  });
+  await requireReplayCheckout(source, candidate);
+  return await use(candidate);
 }

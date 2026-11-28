@@ -86,6 +86,51 @@ export type DeliveryJobReceipt = z.infer<typeof DeliveryJobReceiptSchema>;
 
 export const DELIVERY_JOB_RESULT_PREFIX = "DELIVERY_JOB_RESULT_V1=";
 
+/**
+ * Where a worker rollout Job prepares a candidate revision other than its own:
+ * a tree the stage claim keeps across Jobs beside `/workspace/source`, so each
+ * candidate writes only its difference from the previous one.
+ */
+export const DELIVERY_JOB_CANDIDATE_CHECKOUT = "/workspace/candidate";
+
+/**
+ * Git configuration a stage Job and its candidates read: only the
+ * repository's own, which each Job writes fresh. `/workspace/home` is kept on
+ * the claim, and anything a Job or candidate test wrote there (a hooks path,
+ * an fsmonitor, a template directory, an attributes file with a clean filter)
+ * would otherwise run code or change what Git reports as clean. The
+ * repository also sets `core.attributesFile` to `/dev/null`, because Git reads
+ * `~/.config/git/attributes` without any configuration naming it.
+ */
+export const DELIVERY_JOB_GIT_ENVIRONMENT = {
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1",
+} as const;
+
+/**
+ * Attributes that make Git hash a tracked file's bytes exactly as they are,
+ * written to `.git/info/attributes` (which outranks every `.gitattributes`)
+ * only while the index is refreshed. With the repository's
+ * `* text=auto eol=lf`, a CRLF copy of an LF blob otherwise hashes as that
+ * blob and counts as unchanged. The file is removed again before
+ * `reset --hard`, so the files it rewrites get the repository's own
+ * end-of-line conversion.
+ */
+export const DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES =
+  "* -text -filter -ident -working-tree-encoding";
+
+/**
+ * Says a kept checkout's `node_modules` is a completed install. It lives in
+ * the checkout's `.git`, which every bootstrap, earlier ones included,
+ * deletes: a Job reads it before deleting `.git`, carries it into the fresh
+ * repository, removes it before its own install starts and writes it again
+ * once that install completes. A Job that finds `node_modules` without it (an
+ * install cut short by a deadline, a full disk or an eviction, or any run of
+ * an earlier bootstrap, which never writes it) removes every `node_modules`
+ * and installs from scratch.
+ */
+export const DELIVERY_JOB_INSTALL_MARKER = ".git/delivery-install-complete";
+
 /** Archive bytes are read from the artifact store and verified by digest before use. */
 export const DELIVERY_ARCHIVE_ENDPOINT =
   "https://seaweedfs-s3.tailnet-1a49.ts.net";
@@ -119,15 +164,56 @@ export const DELIVERY_JOB_AWS_TOOLS = "awscli";
  * (`deliveryStageWorkspaceClaim`), reused by every Job of that profile. The
  * lock serializes Jobs that share it: Kueue admits one stage Job at a time,
  * and the lock covers a Job still queued on the CI-shared LocalQueue. Each Job
- * discards the previous Job's scratch, repository and extracted stack archive
- * (a stale member, such as HCL a stack no longer has, would otherwise join the
- * next archive's configuration), then checks out its
- * exact revision over the previous checkout and removes everything untracked
- * except `node_modules`, so the tree equals the revision and only what the
- * lockfile changed is written. A depth-1 fetch downloads the whole tree
- * whether or not an earlier revision's objects are present, so a fresh
- * repository costs nothing and keeps the claim from filling with every
- * revision ever fetched. The image toolchain is re-linked, not copied: version
+ * discards the previous Job's scratch and extracted stack archive (a stale
+ * member, such as HCL a stack no longer has, would otherwise join the next
+ * archive's configuration).
+ *
+ * Source. Every Git command reads only the repository's own configuration
+ * (DELIVERY_JOB_GIT_ENVIRONMENT). `/workspace/git` is a bare object store
+ * kept across Jobs, so a depth-1 fetch negotiates against the previous
+ * revision (its `delivery-checkout` branch) and downloads only what changed;
+ * with no ref to offer, the same fetch downloads the whole ~670 MB tree. Only
+ * its objects, shallow boundary and that one ref survive: every other file in
+ * it (configuration, hooks, locks, alternates, derived indexes, an interrupted
+ * fetch's temporary packs) is removed and rebuilt, and `git fsck --full` must
+ * verify every kept object, or the Job writes a `git-store-reset` event to
+ * stderr and starts from an empty store. `/workspace/source/.git` is created
+ * fresh for every Job and borrows the store's objects through alternates, so
+ * nothing a Job does in its repository (a candidate's fetch or configuration)
+ * outlives it, and a `.git` left anywhere else in the tree outside
+ * `node_modules`, which `git clean` never lists, is removed so no command run
+ * from a subdirectory finds another repository. The checkout starts from an
+ * index with no stat data:
+ * `update-index --refresh` hashes every tracked file's exact bytes
+ * (DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES) against the revision's tree, so only
+ * files whose bytes differ lose their place in the index. Everything untracked
+ * except `node_modules`, nested repositories and a stray `.gitattributes`
+ * included, is then removed, and `reset --hard` rewrites exactly the files
+ * that differ, with the revision's own attributes. The tree therefore equals
+ * the revision whatever an earlier Job left, an unchanged file is never
+ * rewritten, and the tracked tree must report no modification. A file the
+ * revision's attributes convert on checkout (`eol=crlf`) differs from its blob
+ * byte for byte, so it is rewritten every Job; one whose bytes still equal its
+ * blob because only its attributes changed keeps them, as `git checkout`
+ * would. `node_modules` is kept only
+ * when the previous install completed (DELIVERY_JOB_INSTALL_MARKER); otherwise
+ * every `node_modules` is removed with the rest and an `install-reset` event
+ * says so. The store is repacked to the current revision's objects once it
+ * holds more than eight packs, and unreachable loose objects are pruned, so it
+ * holds about one revision.
+ *
+ * Generated code, `llm-models`' runtime build and the toolkit binary depend
+ * only on the checked-out revision, its lockfile's `node_modules`, the runner
+ * image and this script, which together form the prepared-outputs key. A full
+ * install that generated them keeps hard links to every untracked output and
+ * the binary in `/workspace/prepared` with a sha256 manifest and that key. A
+ * later Job with the same key restores them as hard links only if every file
+ * still matches the manifest, nothing was added and no kept path is or lies
+ * under a tracked path, `.git` or `node_modules`; otherwise it regenerates as
+ * before. The tracked tree must still report no modification after a restore,
+ * or the Job fails and discards the kept outputs, so the next Job regenerates.
+ * Test recipes, which generate more, always regenerate and discard
+ * the kept outputs. The image toolchain is re-linked, not copied: version
  * directories hold symlinks into the read-only image, while mise's per-tool
  * metadata and alias links are real copies, so mise still sees every image
  * tool as installed and adds only a version the image lacks. Image provenance
@@ -140,17 +226,57 @@ unset OP_SERVICE_ACCOUNT_TOKEN
 exec 9>/workspace/.lock
 flock 9
 rm -rf /workspace/tmp /workspace/bin /workspace/buildx /workspace/stack
-mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
+mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise /workspace/git/objects/pack
 cp -Rsf /opt/mise/. /workspace/mise/
 (cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
 export MISE_DATA_DIR=/workspace/mise
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export GIT_CONFIG_GLOBAL=${DELIVERY_JOB_GIT_ENVIRONMENT.GIT_CONFIG_GLOBAL} GIT_CONFIG_NOSYSTEM=${DELIVERY_JOB_GIT_ENVIRONMENT.GIT_CONFIG_NOSYSTEM}
+previous=
+[ ! -f /workspace/git/refs/heads/delivery-checkout ] || previous=$(cat /workspace/git/refs/heads/delivery-checkout)
+find /workspace/git -mindepth 1 -maxdepth 1 ! -name objects ! -name shallow -exec rm -rf {} +
+rm -rf /workspace/git/objects/info
+find /workspace/git/objects/pack -type f ! -name 'pack-*.idx' ! -name 'pack-*.pack' -delete
+for pack in /workspace/git/objects/pack/pack-*.pack; do [ -e "$(dirname "$pack")/$(basename "$pack" .pack).idx" ] || rm -f "$pack"; done
+git init -q --bare --initial-branch=delivery-checkout /workspace/git
+if [ -n "$previous" ] && ! { [[ $previous =~ ^[0-9a-f]{40}$ ]] && git --git-dir=/workspace/git update-ref refs/heads/delivery-checkout "$previous" && git --git-dir=/workspace/git fsck --full --no-dangling --no-progress; }; then
+  echo '{"kind":"delivery-stage-workspace","event":"git-store-reset","detail":"the kept Git object store failed verification; this Job fetches a fresh one"}' >&2
+  previous=
+fi
+if [ -z "$previous" ]; then
+  rm -rf /workspace/git
+  git init -q --bare --initial-branch=delivery-checkout /workspace/git
+fi
+git --git-dir=/workspace/git fetch --quiet --no-tags --no-auto-maintenance --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
+git --git-dir=/workspace/git update-ref refs/heads/delivery-checkout "$DELIVERY_SOURCE_REVISION"
+installed=
+[ ! -f /workspace/source/${DELIVERY_JOB_INSTALL_MARKER} ] || installed=1
 rm -rf /workspace/source/.git
 git init -q /workspace/source
-git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
-git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD
-git -C /workspace/source clean -fdxq -e node_modules
+[ -z "$installed" ] || touch /workspace/source/${DELIVERY_JOB_INSTALL_MARKER}
+git -C /workspace/source config core.attributesFile /dev/null
+echo /workspace/git/objects >/workspace/source/.git/objects/info/alternates
+[ ! -f /workspace/git/shallow ] || cp /workspace/git/shallow /workspace/source/.git/shallow
+git -C /workspace/source update-ref --no-deref HEAD "$DELIVERY_SOURCE_REVISION"
+git -C /workspace/source read-tree HEAD
+mkdir -p /workspace/source/.git/info
+echo '${DELIVERY_JOB_BYTE_EXACT_ATTRIBUTES}' >/workspace/source/.git/info/attributes
+git -C /workspace/source update-index -q --refresh
+rm /workspace/source/.git/info/attributes
+if [ -n "$installed" ]; then
+  git -C /workspace/source clean -ffdxq -e node_modules
+else
+  [ ! -e /workspace/source/node_modules ] || echo '{"kind":"delivery-stage-workspace","event":"install-reset","checkout":"source","detail":"node_modules has no completed install; this Job removes it and installs from scratch"}' >&2
+  git -C /workspace/source clean -ffdxq
+fi
+find /workspace/source -mindepth 1 \( -path /workspace/source/.git -o -name node_modules \) -prune -o -name .git -prune -exec rm -rf {} +
+git -C /workspace/source reset -q --hard
 test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
+test -z "$(git -C /workspace/source status --porcelain=v1 --untracked-files=no)"
+if [ "$(find /workspace/git/objects/pack -name 'pack-*.pack' | wc -l)" -gt 8 ]; then
+  git --git-dir=/workspace/git -c repack.writeBitmaps=false repack -a -d -q
+fi
+git --git-dir=/workspace/git prune --expire=now
 cd /workspace/source
 mise trust .mise.toml
 MISE_LOCKED=1 mise install --yes jq
@@ -171,13 +297,27 @@ MISE_LOCKED=1 mise install --yes $tools
 tool_paths=$(mise bin-paths $tools)
 test -n "$tool_paths"
 export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
+rm -f ${DELIVERY_JOB_INSTALL_MARKER}
 if [ "$recipe" = worker-images ]; then
   bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
+  touch ${DELIVERY_JOB_INSTALL_MARKER}
 else
   bun install --frozen-lockfile
-  bunx turbo run generate --filter=@shepherdjerred/temporal^...
-  bun run --cwd packages/llm-models build:runtime
-  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
+  touch ${DELIVERY_JOB_INSTALL_MARKER}
+  prepared_key=$(printf '%s\n' "$DELIVERY_SOURCE_REVISION" "$(jq -er '.runnerImage' <<< "$DELIVERY_JOB_REQUEST")" "$BASH_EXECUTION_STRING" | sha256sum | cut -d' ' -f1)
+  if [ "$recipe" != test ] && bun packages/temporal/scripts/jobs/prepared-outputs.ts restore "$prepared_key"; then
+    if [ -n "$(git status --porcelain=v1 --untracked-files=no)" ]; then
+      rm -rf /workspace/prepared
+      echo '{"kind":"delivery-stage-workspace","event":"prepared-outputs-reset","detail":"restored prepared outputs changed tracked files; the kept outputs are discarded and this Job fails"}' >&2
+      exit 1
+    fi
+  else
+    rm -rf /workspace/prepared
+    bunx turbo run generate --filter=@shepherdjerred/temporal^...
+    bun run --cwd packages/llm-models build:runtime
+    bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
+    [ "$recipe" = test ] || bun packages/temporal/scripts/jobs/prepared-outputs.ts keep "$prepared_key" || echo "Delivery stage workspace: prepared outputs were not kept" >&2
+  fi
   export PATH="/workspace/bin:$PATH"
 fi
 if [ "$recipe" = test ]; then
@@ -196,263 +336,3 @@ fi
 cd packages/temporal
 bun scripts/jobs/run-delivery-job.ts
 `;
-
-/**
- * Bootstraps of earlier releases, accepted only when adopting or recovering a
- * Job one of them created; a new Job always runs DELIVERY_JOB_BOOTSTRAP.
- * Remove an entry once no retained Job or recovery receipt can still name it.
- */
-export const PREVIOUS_DELIVERY_JOB_BOOTSTRAPS: readonly string[] = [
-  // Prepared a fresh emptyDir workspace on the OS disk for every Job.
-  String.raw`set -euo pipefail
-unset OP_SERVICE_ACCOUNT_TOKEN
-mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
-cp -Rs /opt/mise/. /workspace/mise/
-(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
-export MISE_DATA_DIR=/workspace/mise
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-git init -q /workspace/source
-git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
-git -C /workspace/source checkout --quiet --detach FETCH_HEAD
-test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
-cd /workspace/source
-mise trust .mise.toml
-MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
-tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
-test -n "$tool_paths"
-export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
-recipe=$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")
-if [ "$recipe" = worker-images ]; then
-  bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
-else
-  bun install --frozen-lockfile
-  bunx turbo run generate --filter=@shepherdjerred/temporal^...
-  bun run --cwd packages/llm-models build:runtime
-  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
-  export PATH="/workspace/bin:$PATH"
-fi
-if [ "$recipe" = test ]; then
-  test_workspace=$(jq -er '.input.workspace' <<< "$DELIVERY_JOB_REQUEST")
-  bunx turbo run generate --filter="{./$test_workspace}..."
-fi
-archive_uri=$(jq -r '.input.archive.uri // empty' <<< "$DELIVERY_JOB_REQUEST")
-if [ -n "$archive_uri" ]; then
-  archive_digest=$(jq -er '.input.archive.digest' <<< "$DELIVERY_JOB_REQUEST")
-  mkdir -p /workspace/stack
-  AWS_ACCESS_KEY_ID="$DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=us-east-1 AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED aws --endpoint-url ${DELIVERY_ARCHIVE_ENDPOINT} s3 cp "$archive_uri" /workspace/tmp/stack-archive.tar --no-progress
-  observed_digest="sha256:$(sha256sum /workspace/tmp/stack-archive.tar | cut -d' ' -f1)"
-  test "$observed_digest" = "$archive_digest"
-  tar -xf /workspace/tmp/stack-archive.tar -C /workspace/stack
-  export DELIVERY_STACK_ARCHIVE_DIR=/workspace/stack
-fi
-cd packages/temporal
-bun scripts/jobs/run-delivery-job.ts
-`,
-  // Linked the image toolchain; ran no test-workspace or stack-archive step.
-  String.raw`set -euo pipefail
-unset OP_SERVICE_ACCOUNT_TOKEN
-mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
-cp -Rs /opt/mise/. /workspace/mise/
-(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
-export MISE_DATA_DIR=/workspace/mise
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-git init -q /workspace/source
-git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
-git -C /workspace/source checkout --quiet --detach FETCH_HEAD
-test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
-cd /workspace/source
-mise trust .mise.toml
-MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
-tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
-test -n "$tool_paths"
-export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
-if [ "$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")" = worker-images ]; then
-  bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
-else
-  bun install --frozen-lockfile
-  bunx turbo run generate --filter=@shepherdjerred/temporal^...
-  bun run --cwd packages/llm-models build:runtime
-  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
-  export PATH="/workspace/bin:$PATH"
-fi
-cd packages/temporal
-bun scripts/jobs/run-delivery-job.ts
-`,
-  // Copied the whole image toolchain and installed every workspace for image provenance.
-  `set -euo pipefail
-unset OP_SERVICE_ACCOUNT_TOKEN
-mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
-cp -R /opt/mise/. /workspace/mise/
-export MISE_DATA_DIR=/workspace/mise
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-git init -q /workspace/source
-git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
-git -C /workspace/source checkout --quiet --detach FETCH_HEAD
-test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
-cd /workspace/source
-mise trust .mise.toml
-MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
-tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
-test -n "$tool_paths"
-export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
-bun install --frozen-lockfile
-if [ "$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")" != worker-images ]; then
-  bunx turbo run generate --filter=@shepherdjerred/temporal^...
-  bun run --cwd packages/llm-models build:runtime
-  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
-  export PATH="/workspace/bin:$PATH"
-fi
-cd packages/temporal
-bun scripts/jobs/run-delivery-job.ts
-`,
-  // Kept every fetched revision's objects in the claim's repository.
-  String.raw`set -euo pipefail
-unset OP_SERVICE_ACCOUNT_TOKEN
-exec 9>/workspace/.lock
-flock 9
-rm -rf /workspace/tmp /workspace/bin /workspace/buildx
-mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
-cp -Rsf /opt/mise/. /workspace/mise/
-(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
-export MISE_DATA_DIR=/workspace/mise
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-git init -q /workspace/source
-git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
-git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD
-git -C /workspace/source worktree prune
-git -C /workspace/source clean -fdxq -e node_modules
-test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
-cd /workspace/source
-mise trust .mise.toml
-MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
-tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
-test -n "$tool_paths"
-export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
-recipe=$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")
-if [ "$recipe" = worker-images ]; then
-  bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
-else
-  bun install --frozen-lockfile
-  bunx turbo run generate --filter=@shepherdjerred/temporal^...
-  bun run --cwd packages/llm-models build:runtime
-  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
-  export PATH="/workspace/bin:$PATH"
-fi
-if [ "$recipe" = test ]; then
-  test_workspace=$(jq -er '.input.workspace' <<< "$DELIVERY_JOB_REQUEST")
-  bunx turbo run generate --filter="{./$test_workspace}..."
-fi
-archive_uri=$(jq -r '.input.archive.uri // empty' <<< "$DELIVERY_JOB_REQUEST")
-if [ -n "$archive_uri" ]; then
-  archive_digest=$(jq -er '.input.archive.digest' <<< "$DELIVERY_JOB_REQUEST")
-  mkdir -p /workspace/stack
-  AWS_ACCESS_KEY_ID="$DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=us-east-1 AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED aws --endpoint-url ${DELIVERY_ARCHIVE_ENDPOINT} s3 cp "$archive_uri" /workspace/tmp/stack-archive.tar --no-progress
-  observed_digest="sha256:$(sha256sum /workspace/tmp/stack-archive.tar | cut -d' ' -f1)"
-  test "$observed_digest" = "$archive_digest"
-  tar -xf /workspace/tmp/stack-archive.tar -C /workspace/stack
-  export DELIVERY_STACK_ARCHIVE_DIR=/workspace/stack
-fi
-cd packages/temporal
-bun scripts/jobs/run-delivery-job.ts
-`,
-  // Extracted a stack archive over the previous Job's extracted stack.
-  String.raw`set -euo pipefail
-unset OP_SERVICE_ACCOUNT_TOKEN
-exec 9>/workspace/.lock
-flock 9
-rm -rf /workspace/tmp /workspace/bin /workspace/buildx
-mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
-cp -Rsf /opt/mise/. /workspace/mise/
-(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
-export MISE_DATA_DIR=/workspace/mise
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-rm -rf /workspace/source/.git
-git init -q /workspace/source
-git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
-git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD
-git -C /workspace/source clean -fdxq -e node_modules
-test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
-cd /workspace/source
-mise trust .mise.toml
-MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
-tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
-test -n "$tool_paths"
-export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
-recipe=$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")
-if [ "$recipe" = worker-images ]; then
-  bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
-else
-  bun install --frozen-lockfile
-  bunx turbo run generate --filter=@shepherdjerred/temporal^...
-  bun run --cwd packages/llm-models build:runtime
-  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
-  export PATH="/workspace/bin:$PATH"
-fi
-if [ "$recipe" = test ]; then
-  test_workspace=$(jq -er '.input.workspace' <<< "$DELIVERY_JOB_REQUEST")
-  bunx turbo run generate --filter="{./$test_workspace}..."
-fi
-archive_uri=$(jq -r '.input.archive.uri // empty' <<< "$DELIVERY_JOB_REQUEST")
-if [ -n "$archive_uri" ]; then
-  archive_digest=$(jq -er '.input.archive.digest' <<< "$DELIVERY_JOB_REQUEST")
-  mkdir -p /workspace/stack
-  AWS_ACCESS_KEY_ID="$DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=us-east-1 AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED aws --endpoint-url ${DELIVERY_ARCHIVE_ENDPOINT} s3 cp "$archive_uri" /workspace/tmp/stack-archive.tar --no-progress
-  observed_digest="sha256:$(sha256sum /workspace/tmp/stack-archive.tar | cut -d' ' -f1)"
-  test "$observed_digest" = "$archive_digest"
-  tar -xf /workspace/tmp/stack-archive.tar -C /workspace/stack
-  export DELIVERY_STACK_ARCHIVE_DIR=/workspace/stack
-fi
-cd packages/temporal
-bun scripts/jobs/run-delivery-job.ts
-`,
-  // Installed the full tool set, awscli included, for every recipe.
-  String.raw`set -euo pipefail
-unset OP_SERVICE_ACCOUNT_TOKEN
-exec 9>/workspace/.lock
-flock 9
-rm -rf /workspace/tmp /workspace/bin /workspace/buildx /workspace/stack
-mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
-cp -Rsf /opt/mise/. /workspace/mise/
-(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
-export MISE_DATA_DIR=/workspace/mise
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-rm -rf /workspace/source/.git
-git init -q /workspace/source
-git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
-git -C /workspace/source checkout --quiet --detach --force FETCH_HEAD
-git -C /workspace/source clean -fdxq -e node_modules
-test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
-cd /workspace/source
-mise trust .mise.toml
-MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
-tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
-test -n "$tool_paths"
-export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
-recipe=$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")
-if [ "$recipe" = worker-images ]; then
-  bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
-else
-  bun install --frozen-lockfile
-  bunx turbo run generate --filter=@shepherdjerred/temporal^...
-  bun run --cwd packages/llm-models build:runtime
-  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
-  export PATH="/workspace/bin:$PATH"
-fi
-if [ "$recipe" = test ]; then
-  test_workspace=$(jq -er '.input.workspace' <<< "$DELIVERY_JOB_REQUEST")
-  bunx turbo run generate --filter="{./$test_workspace}..."
-fi
-archive_uri=$(jq -r '.input.archive.uri // empty' <<< "$DELIVERY_JOB_REQUEST")
-if [ -n "$archive_uri" ]; then
-  archive_digest=$(jq -er '.input.archive.digest' <<< "$DELIVERY_JOB_REQUEST")
-  mkdir -p /workspace/stack
-  AWS_ACCESS_KEY_ID="$DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=us-east-1 AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED aws --endpoint-url ${DELIVERY_ARCHIVE_ENDPOINT} s3 cp "$archive_uri" /workspace/tmp/stack-archive.tar --no-progress
-  observed_digest="sha256:$(sha256sum /workspace/tmp/stack-archive.tar | cut -d' ' -f1)"
-  test "$observed_digest" = "$archive_digest"
-  tar -xf /workspace/tmp/stack-archive.tar -C /workspace/stack
-  export DELIVERY_STACK_ARCHIVE_DIR=/workspace/stack
-fi
-cd packages/temporal
-bun scripts/jobs/run-delivery-job.ts
-`,
-];

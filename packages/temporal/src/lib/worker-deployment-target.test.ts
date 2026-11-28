@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
@@ -272,6 +272,15 @@ const ok = (source: string) => (argv: readonly string[]) => ({
   stdout: argv[0] === "git" && argv[1] === "rev-parse" ? source : "",
   stderr: "",
 });
+/** A kept candidate tree for one test, removed afterwards. */
+async function withCandidateRoot<T>(use: (root: string) => Promise<T>) {
+  const root = await mkdtemp(path.join(tmpdir(), "candidate-checkout-"));
+  try {
+    return await use(root);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
 
 describe("candidate child environment", () => {
   test("gives the actual child a fixed Linux identity without inheriting credentials", async () => {
@@ -290,8 +299,15 @@ describe("candidate child environment", () => {
         "TEMPORAL_ADDRESS",
         "TEMPORAL_NAMESPACE",
         "TEMPORAL_TLS",
+        "GIT_CONFIG_GLOBAL",
+        "GIT_CONFIG_NOSYSTEM",
       ].sort(),
     );
+    // Git configuration in the kept job home never reaches a candidate.
+    expect(environment).toMatchObject({
+      GIT_CONFIG_GLOBAL: "/dev/null",
+      GIT_CONFIG_NOSYSTEM: "1",
+    });
     const result = await candidateSourceCommand(
       [
         "bun",
@@ -333,8 +349,11 @@ describe("isolated immutable candidate source", () => {
       runId = crypto.randomUUID();
     const calls: { argv: readonly string[]; cwd: string }[] = [];
     let directory = "";
+    const candidateRoot = await mkdtemp(
+      path.join(tmpdir(), "candidate-checkout-"),
+    );
     await withWorkerCandidateCheckout(
-      { sourceRevision: source, target: "scout-beta", executor },
+      { sourceRevision: source, target: "scout-beta", executor, candidateRoot },
       async (candidate) => {
         await candidate([
           "bun",
@@ -382,7 +401,11 @@ describe("isolated immutable candidate source", () => {
         runId,
       ],
     });
-    await expect(stat(directory)).rejects.toMatchObject({ code: "ENOENT" });
+    // The candidate tree is kept for the next Job, which resets it.
+    expect(directory).toBe(candidateRoot);
+    const kept = await stat(directory);
+    expect(kept.isDirectory()).toBe(true);
+    await rm(candidateRoot, { recursive: true, force: true });
   });
   test("discovers actual runtime exports without evaluating Workflow code", () => {
     expect(
@@ -620,13 +643,16 @@ describe("replay target selection and candidate failures", () => {
 
 describe("candidate checkout identity", () => {
   test.each(["valid", "wrong-sha", "dirty", "replay-failure"])(
-    "checks and cleans %s candidate checkout",
+    "checks %s candidate checkout and keeps its tree for the next Job",
     async (mode) => {
       const source = "b".repeat(40);
       const calls: { argv: readonly string[]; cwd: string }[] = [];
       let root = "";
+      const candidateRoot = await mkdtemp(
+        path.join(tmpdir(), "candidate-checkout-"),
+      );
       const proof = withWorkerCandidateCheckout(
-        { sourceRevision: source, target: "central", executor },
+        { sourceRevision: source, target: "central", executor, candidateRoot },
         async (candidate) => {
           await candidate(["bun", "run", "test:workflows"]);
           if (mode === "replay-failure") throw new Error("Replay failed");
@@ -654,7 +680,11 @@ describe("candidate checkout identity", () => {
       );
       if (mode === "valid") await expect(proof).resolves.toBe("candidate-only");
       else await expect(proof).rejects.toThrow();
-      await expect(stat(root)).rejects.toMatchObject({ code: "ENOENT" });
+      // Kept, not removed: the next Job resets it before any use.
+      expect(root).toBe(candidateRoot);
+      const kept = await stat(root);
+      expect(kept.isDirectory()).toBe(true);
+      await rm(candidateRoot, { recursive: true, force: true });
       expect(
         calls.some(
           ({ argv }) => argv.includes("fetch") && argv.at(-1) === source,
@@ -686,6 +716,7 @@ describe("candidate checkout reuse", () => {
           sourceRevision: source,
           target: "central",
           executor: { root, revision: source },
+          candidateRoot: path.join(root, "never-used"),
         },
         async (candidate) => {
           await candidate(["bun", "run", "test:workflows"]);
@@ -721,63 +752,141 @@ describe("candidate checkout reuse", () => {
         calls.find(({ argv }) => argv.includes("test:workflows"))?.cwd,
       ).toBe(`${root}/packages/temporal`);
       expect(calls.filter(({ argv }) => argv[1] === "status")).toHaveLength(2);
-      // The executor's own checkout survives its candidate proof.
+      // Git answers from the checkout's root, never from a subdirectory that
+      // could hold another repository.
+      expect(
+        calls.filter(({ argv }) => argv[0] === "git").map(({ cwd }) => cwd),
+      ).toEqual([root, root, root, root]);
+      // The executor's own checkout survives its candidate proof, and the
+      // candidate tree is never created.
       const kept = await stat(root);
       expect(kept.isDirectory()).toBe(true);
+      await expect(stat(path.join(root, "never-used"))).rejects.toMatchObject({
+        code: "ENOENT",
+      });
     } finally {
       await rm(root, { recursive: true, force: true });
     }
   });
-  test("adds another revision as a blobless worktree of the executor object store", async () => {
-    const source = "b".repeat(40);
-    const calls: { argv: readonly string[]; cwd: string }[] = [];
-    const respond = ok(source);
-    let directory = "";
-    await withWorkerCandidateCheckout(
-      { sourceRevision: source, target: "central", executor },
-      async (candidate) => {
-        await candidate(["bun", "run", "test:workflows"]);
-      },
-      {
-        execute: async (argv, cwd) => {
-          if (cwd !== executor.root) directory ||= cwd;
-          calls.push({ argv, cwd });
-          return respond(argv);
+});
+
+describe("kept candidate tree", () => {
+  test("prepares another revision in the kept candidate tree over the executor's objects", async () => {
+    await withCandidateRoot(async (candidateRoot) => {
+      const source = "b".repeat(40);
+      const calls: { argv: readonly string[]; cwd: string }[] = [];
+      const respond = ok(source);
+      // A previous Job's repository metadata, which must not survive.
+      await mkdir(path.join(candidateRoot, ".git/hooks"), { recursive: true });
+      await writeFile(path.join(candidateRoot, ".git/hooks/post-checkout"), "");
+      await withWorkerCandidateCheckout(
+        { sourceRevision: source, target: "central", executor, candidateRoot },
+        async (candidate) => {
+          await candidate(["bun", "run", "test:workflows"]);
         },
-      },
-    );
-    expect(
-      calls.filter(({ cwd }) => cwd === executor.root).map(({ argv }) => argv),
-    ).toEqual([
-      [
-        "git",
-        "config",
-        "remote.origin.url",
-        "https://github.com/shepherdjerred/monorepo.git",
-      ],
-      ["git", "config", "remote.origin.promisor", "true"],
-      ["git", "config", "remote.origin.partialclonefilter", "blob:none"],
-      [
-        "git",
-        "fetch",
-        "--quiet",
-        "--no-tags",
-        "--depth=1",
-        "--filter=blob:none",
-        "origin",
-        source,
-      ],
-      ["git", "worktree", "add", "--quiet", "--detach", directory, source],
-      ["git", "worktree", "remove", "--force", directory],
-    ]);
-    expect(
-      calls.find(({ argv }) => argv.includes("--frozen-lockfile"))?.cwd,
-    ).toBe(directory);
-    expect(calls.find(({ argv }) => argv.includes("test:workflows"))?.cwd).toBe(
-      `${directory}/packages/temporal`,
-    );
-    await expect(stat(directory)).rejects.toMatchObject({ code: "ENOENT" });
+        {
+          execute: async (argv, cwd) => {
+            calls.push({ argv, cwd });
+            return respond(argv);
+          },
+        },
+      );
+      // Nothing runs in, or writes to, the executor's repository.
+      expect(calls.some(({ cwd }) => cwd === executor.root)).toBe(false);
+      expect(
+        calls
+          .filter(({ cwd }) => cwd === candidateRoot)
+          .map(({ argv }) => argv)
+          .filter((argv) => argv[0] === "git"),
+      ).toEqual([
+        ["git", "init", "--quiet"],
+        ["git", "config", "core.attributesFile", "/dev/null"],
+        [
+          "git",
+          "config",
+          "remote.origin.url",
+          "https://github.com/shepherdjerred/monorepo.git",
+        ],
+        ["git", "config", "remote.origin.promisor", "true"],
+        ["git", "config", "remote.origin.partialclonefilter", "blob:none"],
+        [
+          "git",
+          "fetch",
+          "--quiet",
+          "--no-tags",
+          "--depth=1",
+          "--filter=blob:none",
+          "origin",
+          source,
+        ],
+        ["git", "update-ref", "--no-deref", "HEAD", source],
+        ["git", "read-tree", "HEAD"],
+        ["git", "update-index", "-q", "--refresh"],
+        // No completed install was kept, so every node_modules goes too.
+        ["git", "clean", "-ffdxq"],
+        ["git", "reset", "-q", "--hard"],
+        ["git", "rev-parse", "HEAD"],
+        ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+        // The candidate runner's own checks, also at the tree's root.
+        ["git", "rev-parse", "HEAD"],
+        ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+      ]);
+      expect(
+        await Bun.file(
+          path.join(candidateRoot, ".git/objects/info/alternates"),
+        ).text(),
+      ).toBe("/workspace/source/.git/objects\n");
+      await expect(
+        stat(path.join(candidateRoot, ".git/hooks/post-checkout")),
+      ).rejects.toMatchObject({ code: "ENOENT" });
+      expect(
+        calls.find(({ argv }) => argv.includes("--frozen-lockfile"))?.cwd,
+      ).toBe(candidateRoot);
+      expect(
+        calls.find(({ argv }) => argv.includes("test:workflows"))?.cwd,
+      ).toBe(`${candidateRoot}/packages/temporal`);
+      const kept = await stat(candidateRoot);
+      expect(kept.isDirectory()).toBe(true);
+      // The byte-exact attributes are gone before the reset; the install
+      // completed, so the next Job keeps node_modules.
+      await expect(
+        stat(path.join(candidateRoot, ".git/info/attributes")),
+      ).rejects.toMatchObject({ code: "ENOENT" });
+      expect(
+        await Bun.file(
+          path.join(candidateRoot, ".git/delivery-install-complete"),
+        ).exists(),
+      ).toBe(true);
+    });
   });
+  test.each([
+    ["the executor's checkout", `${executor.root}/`],
+    ["inside the executor's checkout", `${executor.root}/packages/candidate`],
+    ["a directory holding the executor's checkout", "/workspace"],
+  ])("refuses a candidate tree that is %s", async (_name, candidateRoot) => {
+    const calls: (readonly string[])[] = [];
+    await expect(
+      withWorkerCandidateCheckout(
+        {
+          sourceRevision: "b".repeat(40),
+          target: "central",
+          executor,
+          candidateRoot,
+        },
+        async () => "unreachable",
+        {
+          execute: async (argv) => {
+            calls.push(argv);
+            return ok("b".repeat(40))(argv);
+          },
+        },
+      ),
+    ).rejects.toThrow("must not replace the executor's");
+    expect(calls).toEqual([]);
+  });
+});
+
+describe("candidate preparation phase logging", () => {
   test("logs each preparation and candidate command phase with its duration", async () => {
     const lines: string[] = [];
     const warn = vi.spyOn(console, "warn").mockImplementation((line) => {
@@ -785,8 +894,11 @@ describe("candidate checkout reuse", () => {
     });
     try {
       const source = "b".repeat(40);
+      const candidateRoot = await mkdtemp(
+        path.join(tmpdir(), "candidate-checkout-"),
+      );
       await withWorkerCandidateCheckout(
-        { sourceRevision: source, target: "central", executor },
+        { sourceRevision: source, target: "central", executor, candidateRoot },
         async (candidate) => {
           await candidate(["bun", "run", "test:workflows"]);
           await candidate(["bun", "run", "replay:candidate-histories"]);
@@ -807,6 +919,7 @@ describe("candidate checkout reuse", () => {
           ],
         },
       );
+      await rm(candidateRoot, { recursive: true, force: true });
     } finally {
       warn.mockRestore();
     }

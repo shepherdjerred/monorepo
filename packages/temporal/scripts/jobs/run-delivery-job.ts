@@ -6,6 +6,7 @@ import type { WorkerRolloutSnapshot } from "@shepherdjerred/delivery/contract";
 import { z } from "zod";
 import {
   DeliveryJobRequestSchema,
+  DELIVERY_JOB_CANDIDATE_CHECKOUT,
   DELIVERY_JOB_RESULT_PREFIX,
 } from "#shared/delivery-job.ts";
 import {
@@ -14,6 +15,7 @@ import {
 } from "#lib/delivery/workers/worker-image-proof.ts";
 import { renderControlPlaneTemplates } from "#lib/delivery/workers/worker-control-plane.ts";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
+import { STAGE_WORKSPACE } from "#lib/delivery/prepared-outputs.ts";
 import { WorkerDeploymentRolloutTargetSchema } from "#lib/worker-deployment-target.ts";
 import { WorkerRoutingInputSchema } from "#lib/delivery/workers/worker-acceptance.ts";
 import { redactSecrets } from "#shared/redact.ts";
@@ -180,12 +182,19 @@ async function main() {
       },
     );
   }
-  const checkout = await command(["git", "rev-parse", "HEAD"]);
+  // The bootstrap's checkout, named rather than discovered from the working
+  // directory, so no other repository below it can answer.
+  const checkout = await command([
+    "git",
+    "-C",
+    STAGE_WORKSPACE.source,
+    "rev-parse",
+    "HEAD",
+  ]);
   if (checkout.stdout.trim() !== request.sourceRevision)
     throw new Error(
       "Delivery Job checkout differs from qualified source revision",
     );
-  const toplevel = await command(["git", "rev-parse", "--show-toplevel"]);
   // Worker candidates reuse or share this prepared checkout's objects and cache.
   const candidateCheckout = (snapshot: WorkerRolloutSnapshot) => ({
     sourceRevision: snapshot.deployment.workerSnapshot?.candidateBuildId,
@@ -193,9 +202,10 @@ async function main() {
       snapshot.deployment.workerSnapshot?.target,
     ),
     executor: {
-      root: toplevel.stdout.trim(),
+      root: STAGE_WORKSPACE.source,
       revision: request.sourceRevision,
     },
+    candidateRoot: DELIVERY_JOB_CANDIDATE_CHECKOUT,
   });
   let result: unknown;
   switch (request.recipe) {
