@@ -111,6 +111,25 @@ describe("application image reproducibility", () => {
           instruction.includes("packages/*/package.json"),
         );
       expect(leaks, file).toEqual([]);
+      // The root install inputs reach installs only as the closure's
+      // projection: the manifests stage reads the full files, nothing else
+      // copies them from the build context.
+      const manifestsCopy = byName
+        .get("manifests")
+        ?.instructions.find((instruction) =>
+          instruction.endsWith(" /workspace/"),
+        );
+      expect(manifestsCopy, file).toContain(" bun.lock patches/ ");
+      const contextRootInputs = stages
+        .filter((stage) => stage.name !== "manifests")
+        .flatMap((stage) => stage.instructions)
+        .filter(
+          (instruction) =>
+            instruction.startsWith("COPY ") &&
+            !instruction.includes("--from=") &&
+            / (?:bun\.lock|patches\/?)(?: |$)/.test(instruction),
+        );
+      expect(contextRootInputs, file).toEqual([]);
       const installing = stages.filter((stage) => installs(stage).length > 0);
       const unprojected = installing.filter((stage) => !copiesClosure(stage));
       expect(

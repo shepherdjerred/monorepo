@@ -45,6 +45,8 @@
     "quality-ratchet": "bun scripts/tools/quality-ratchet.ts",
     "compliance-check": "bun scripts/checks/compliance-check.ts",
     "lockfile-check": "bun install --frozen-lockfile --dry-run",
+    "check-image-install-projection": "bun ci/scripts/images/install-projection/check-install-projection.ts frozen",
+    "test:extended": "bun ci/scripts/images/install-projection/check-install-projection.ts drift",
     "merge-conflicts": "bun scripts/checks/check-merge-conflicts.ts",
     "env-var-names": "bun scripts/checks/ci/check-env-var-names.ts",
     "line-endings": "bun scripts/checks/check-line-endings.ts",

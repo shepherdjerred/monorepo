@@ -592,6 +592,50 @@
         "!**/node_modules/**"
       ]
     },
+    // Every application image installs from a projection of the root install
+    // inputs onto its closure. Bun must accept each projection under
+    // --frozen-lockfile; only a change to what a projection reads reruns this.
+    "//#check-image-install-projection": {
+      "inputs": [
+        "bun.lock",
+        "bunfig.toml",
+        "package.json",
+        "packages/**/package.json",
+        "scripts/package.json",
+        "patches/**",
+        "docker-bake.hcl",
+        "packages/**/Dockerfile",
+        "ci/scripts/images/install-projection/**",
+        "ci/scripts/images/workspace-manifests.ts",
+        "ci/scripts/selectors/select-image-targets-lockfile.ts",
+        "ci/scripts/selectors/select-image-targets-workspaces.ts",
+        "!**/node_modules/**"
+      ]
+    },
+    // Extended tier (about seven minutes, over the three-minute p50 bar): every
+    // image install runs for real from the full lockfile and from its
+    // projection, and anything beyond an audited optional-peer change
+    // (install-projection/optional-peer-baseline.json) fails. Same inputs as
+    // the check above; the tier itself is uncached.
+    "//#test:extended": {
+      "dependsOn": [],
+      "inputs": [
+        "bun.lock",
+        "bunfig.toml",
+        "package.json",
+        "packages/**/package.json",
+        "scripts/package.json",
+        "patches/**",
+        "docker-bake.hcl",
+        "packages/**/Dockerfile",
+        "ci/scripts/images/install-projection/**",
+        "ci/scripts/images/workspace-manifests.ts",
+        "ci/scripts/selectors/select-image-targets-lockfile.ts",
+        "ci/scripts/selectors/select-image-targets-workspaces.ts",
+        "!**/node_modules/**"
+      ],
+      "cache": false
+    },
     "//#merge-conflicts": {
       "inputs": [
         ".conflictignore",

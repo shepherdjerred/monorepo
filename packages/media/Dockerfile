@@ -4,7 +4,7 @@ WORKDIR /app
 
 FROM base AS manifests
 COPY --parents \
-  package.json scripts/package.json \
+  package.json bun.lock patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
@@ -12,6 +12,7 @@ COPY --parents \
   /workspace/
 COPY --parents \
   ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/images/install-projection/install-projection.ts \
   ci/scripts/selectors/select-image-targets-workspaces.ts \
   ci/scripts/selectors/select-image-targets-lockfile.ts \
   /tools/
@@ -19,7 +20,7 @@ RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
   '@shepherdjerred/media'
 
 FROM base AS deps
-COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --parents bunfig.toml ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/media'
 
@@ -28,7 +29,7 @@ COPY --parents tsconfig.base.json packages/media packages/config packages/featur
 RUN cd packages/media && bun run generate && bun run build
 
 FROM base AS prod-deps
-COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --parents bunfig.toml ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/media'
 COPY ci/scripts/images/complete-bin-links.ts /tools/

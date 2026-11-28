@@ -1,0 +1,461 @@
+{
+  "$comment": "Optional-peer changes a closure projection makes against today's full-lockfile install, each audited for a runtime load path. check-install-projection.ts drift fails on any change not listed here.",
+  "entries": [
+    {
+      "dependent": "@base-ui/react",
+      "peer": "date-fns",
+      "change": "drop",
+      "reason": "Only the opt-in internals/temporal-adapter-date-fns export loads date-fns; no workspace imports it.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/alert-dashboard --production --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/delivery --production --filter @shepherdjerred/delivery",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/errors --production --filter @shepherdjerred/errors",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/mail --filter @shepherdjerred/mail",
+        "packages/mail --production --filter @shepherdjerred/mail",
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/tracker --production --filter @shepherdjerred/tracker"
+      ]
+    },
+    {
+      "dependent": "@exodus/bytes",
+      "peer": "@noble/hashes",
+      "change": "drop",
+      "reason": "Only @exodus/bytes/base58check imports @noble/hashes; build-stage jsdom and whatwg-url use its text encoders.",
+      "installs": [
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/streambot --filter @shepherdjerred/streambot"
+      ]
+    },
+    {
+      "dependent": "@radix-ui/react-primitive",
+      "peer": "@types/react-dom",
+      "change": "drop",
+      "reason": "Type-only peer; nothing loads an @types package at runtime.",
+      "installs": [
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/starlight-karma-bot --production --filter starlight-karma-bot"
+      ]
+    },
+    {
+      "dependent": "@radix-ui/react-toggle",
+      "peer": "@types/react-dom",
+      "change": "drop",
+      "reason": "Type-only peer; nothing loads an @types package at runtime.",
+      "installs": [
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/starlight-karma-bot --production --filter starlight-karma-bot"
+      ]
+    },
+    {
+      "dependent": "@sentry/bundler-plugins",
+      "peer": "webpack",
+      "change": "drop",
+      "reason": "Only the opt-in @sentry/bundler-plugins/webpack entry imports webpack; @sentry/bun and @sentry/node use the core, which only names webpack for version metadata.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/alert-dashboard --production --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/arcade --production --filter @arcade/backend",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/birmel --production --filter @shepherdjerred/birmel",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/delivery --production --filter @shepherdjerred/delivery",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-mario-kart --production --filter @discord-plays-mario-kart/backend",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/discord-plays-pokemon --production --filter @discord-plays-pokemon/backend",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/golink --production --filter @shepherdjerred/golink",
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/starlight-karma-bot --production --filter starlight-karma-bot",
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/streambot --production --filter @shepherdjerred/streambot",
+        "packages/tasknotes-server --production --filter tasknotes-server",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/tracker --production --filter @shepherdjerred/tracker",
+        "packages/trmnl-dashboard --production --filter @shepherdjerred/trmnl-dashboard"
+      ]
+    },
+    {
+      "dependent": "@sentry/react",
+      "peer": "react-router",
+      "change": "drop",
+      "reason": "Only the @sentry/react/react-router subpath imports react-router, and no workspace imports that subpath.",
+      "installs": [
+        "packages/arcade --filter @arcade/*",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*"
+      ]
+    },
+    {
+      "dependent": "@spectrum-ts/core",
+      "peer": "ffmpeg-static",
+      "change": "drop",
+      "reason": "Falls back to ffmpeg on PATH, which the temporal image installs with apt and smoke-checks.",
+      "installs": [
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/temporal --production --filter @shepherdjerred/temporal"
+      ]
+    },
+    {
+      "dependent": "@trpc/server",
+      "peer": "@types/aws-lambda",
+      "change": "drop",
+      "reason": "Type-only peer of tRPC's Lambda adapter; nothing loads an @types package at runtime.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/alert-dashboard --production --filter @shepherdjerred/alert-dashboard",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/delivery --production --filter @shepherdjerred/delivery",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/golink --production --filter @shepherdjerred/golink",
+        "packages/scout-for-lol/packages/backend --filter @scout-for-lol/backend",
+        "packages/scout-for-lol/packages/backend --production --filter @scout-for-lol/backend",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/tracker --production --filter @shepherdjerred/tracker"
+      ]
+    },
+    {
+      "dependent": "@trpc/server",
+      "peer": "@types/express",
+      "change": "drop",
+      "reason": "Type-only peer of tRPC's Express adapter; nothing loads an @types package at runtime.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/alert-dashboard --production --filter @shepherdjerred/alert-dashboard",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/delivery --production --filter @shepherdjerred/delivery",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/golink --production --filter @shepherdjerred/golink",
+        "packages/scout-for-lol/packages/backend --filter @scout-for-lol/backend",
+        "packages/scout-for-lol/packages/backend --production --filter @scout-for-lol/backend",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/temporal --production --filter @shepherdjerred/temporal",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/tracker --production --filter @shepherdjerred/tracker"
+      ]
+    },
+    {
+      "dependent": "@trpc/server",
+      "peer": "@types/ws",
+      "change": "drop",
+      "reason": "Type-only peer of tRPC's WebSocket adapter; nothing loads an @types package at runtime.",
+      "installs": [
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/delivery --production --filter @shepherdjerred/delivery",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/golink --production --filter @shepherdjerred/golink",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/tracker --production --filter @shepherdjerred/tracker"
+      ]
+    },
+    {
+      "dependent": "debug",
+      "peer": "supports-color",
+      "change": "rebind",
+      "reason": "Color support only; supports-color 7.2.0 is allowlisted in install-drift.ts.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/alert-dashboard --production --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/arcade --production --filter @arcade/backend",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/birmel --production --filter @shepherdjerred/birmel",
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/delivery --production --filter @shepherdjerred/delivery",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-mario-kart --production --filter @discord-plays-mario-kart/backend",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/discord-plays-pokemon --production --filter @discord-plays-pokemon/backend",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/errors --production --filter @shepherdjerred/errors",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/golink --production --filter @shepherdjerred/golink",
+        "packages/mail --filter @shepherdjerred/mail",
+        "packages/media --filter @shepherdjerred/media",
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/storm-stats --filter @shepherdjerred/storm-stats",
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/streambot --production --filter @shepherdjerred/streambot",
+        "packages/tasknotes-server --filter @shepherdjerred/tasknotes-web",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/tracker --production --filter @shepherdjerred/tracker",
+        "packages/trmnl-dashboard --filter @shepherdjerred/home-assistant"
+      ]
+    },
+    {
+      "dependent": "jsdom",
+      "peer": "@napi-rs/canvas",
+      "change": "drop",
+      "reason": "jsdom renders <canvas> only when the package is present; build-stage tests never run in the image build.",
+      "installs": [
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/streambot --filter @shepherdjerred/streambot"
+      ]
+    },
+    {
+      "dependent": "minimizer-webpack-plugin",
+      "peer": "csso",
+      "change": "drop",
+      "reason": "Opt-in minimizer; @temporalio/worker bundles workflows with webpack in development mode, so no minimizer runs.",
+      "installs": [
+        "packages/scout-for-lol/packages/backend --filter @scout-for-lol/backend",
+        "packages/scout-for-lol/packages/backend --production --filter @scout-for-lol/backend",
+        "packages/storm-forum --production --filter @shepherdjerred/storm-forum",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/temporal --production --filter @shepherdjerred/temporal"
+      ]
+    },
+    {
+      "dependent": "minimizer-webpack-plugin",
+      "peer": "esbuild",
+      "change": "drop",
+      "reason": "Opt-in minimizer; @temporalio/worker bundles workflows with webpack in development mode, so no minimizer runs.",
+      "installs": [
+        "packages/storm-forum --production --filter @shepherdjerred/storm-forum",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/temporal --production --filter @shepherdjerred/temporal"
+      ]
+    },
+    {
+      "dependent": "minimizer-webpack-plugin",
+      "peer": "svgo",
+      "change": "drop",
+      "reason": "Opt-in minimizer; @temporalio/worker bundles workflows with webpack in development mode, so no minimizer runs.",
+      "installs": [
+        "packages/scout-for-lol/packages/backend --filter @scout-for-lol/backend",
+        "packages/scout-for-lol/packages/backend --production --filter @scout-for-lol/backend",
+        "packages/storm-forum --production --filter @shepherdjerred/storm-forum",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/temporal --production --filter @shepherdjerred/temporal"
+      ]
+    },
+    {
+      "dependent": "minimizer-webpack-plugin",
+      "peer": "uglify-js",
+      "change": "drop",
+      "reason": "Opt-in minimizer; @temporalio/worker bundles workflows with webpack in development mode, so no minimizer runs.",
+      "installs": [
+        "packages/storm-forum --production --filter @shepherdjerred/storm-forum"
+      ]
+    },
+    {
+      "dependent": "posthog-node",
+      "peer": "rxjs",
+      "change": "drop",
+      "reason": "Only posthog-node/extensions/nestjs loads rxjs; streambot imports the main entry.",
+      "installs": [
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/streambot --production --filter @shepherdjerred/streambot"
+      ]
+    },
+    {
+      "dependent": "prism-media",
+      "peer": "ffmpeg-static",
+      "change": "drop",
+      "reason": "Falls back to ffmpeg on PATH, which the temporal image installs with apt and smoke-checks.",
+      "installs": [
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/temporal --production --filter @shepherdjerred/temporal"
+      ]
+    },
+    {
+      "dependent": "unplugin",
+      "peer": "esbuild",
+      "change": "drop",
+      "reason": "unplugin loads a bundler only when used as that bundler's plugin; the image builds run Vite.",
+      "installs": [
+        "packages/arcade --filter @arcade/*",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*"
+      ]
+    },
+    {
+      "dependent": "unplugin",
+      "peer": "webpack",
+      "change": "drop",
+      "reason": "unplugin loads a bundler only when used as that bundler's plugin; the image builds run Vite.",
+      "installs": [
+        "packages/arcade --filter @arcade/*",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*"
+      ]
+    },
+    {
+      "dependent": "vite",
+      "peer": "esbuild",
+      "change": "drop",
+      "reason": "Vite 8 transforms and minifies with Oxc and Rolldown; no image's vite config selects esbuild.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/mail --filter @shepherdjerred/mail",
+        "packages/media --filter @shepherdjerred/media",
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/storm-stats --filter @shepherdjerred/storm-stats",
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/tasknotes-server --filter @shepherdjerred/tasknotes-web",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/trmnl-dashboard --filter @shepherdjerred/home-assistant"
+      ]
+    },
+    {
+      "dependent": "vite",
+      "peer": "sass",
+      "change": "drop",
+      "reason": "Loaded only to compile .scss/.sass; no image's source has any (only sjer.red, which has no image).",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/mail --filter @shepherdjerred/mail",
+        "packages/media --filter @shepherdjerred/media",
+        "packages/scout-for-lol/packages/backend --filter @scout-for-lol/backend",
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/storm-stats --filter @shepherdjerred/storm-stats",
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/tasknotes-server --filter @shepherdjerred/tasknotes-web",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/trmnl-dashboard --filter @shepherdjerred/home-assistant"
+      ]
+    },
+    {
+      "dependent": "vite",
+      "peer": "terser",
+      "change": "drop",
+      "reason": "Loaded only for build.minify: 'terser'; no image's vite config selects it.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/mail --filter @shepherdjerred/mail",
+        "packages/media --filter @shepherdjerred/media",
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/storm-stats --filter @shepherdjerred/storm-stats",
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/tasknotes-server --filter @shepherdjerred/tasknotes-web",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/trmnl-dashboard --filter @shepherdjerred/home-assistant"
+      ]
+    },
+    {
+      "dependent": "vitest",
+      "peer": "@opentelemetry/api",
+      "change": "drop",
+      "reason": "Opt-in test tracing; no image's Vitest run enables it.",
+      "installs": [
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/media --filter @shepherdjerred/media"
+      ]
+    },
+    {
+      "dependent": "vitest",
+      "peer": "happy-dom",
+      "change": "drop",
+      "reason": "Opt-in test environment; no Vitest run inside an image build (streambot's test:integration smoke included) selects it.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/flags --filter @shepherdjerred/flags",
+        "packages/golink --filter @shepherdjerred/golink",
+        "packages/mail --filter @shepherdjerred/mail",
+        "packages/media --filter @shepherdjerred/media",
+        "packages/scout-for-lol/packages/backend --filter @scout-for-lol/backend",
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/storm-stats --filter @shepherdjerred/storm-stats",
+        "packages/streambot --filter @shepherdjerred/streambot",
+        "packages/tasknotes-server --filter @shepherdjerred/tasknotes-web",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/trmnl-dashboard --filter @shepherdjerred/home-assistant"
+      ]
+    },
+    {
+      "dependent": "vitest",
+      "peer": "jsdom",
+      "change": "drop",
+      "reason": "Opt-in test environment; no Vitest run inside an image build (streambot's test:integration smoke included) selects it.",
+      "installs": [
+        "packages/alert-dashboard --filter @shepherdjerred/alert-dashboard",
+        "packages/arcade --filter @arcade/*",
+        "packages/birmel --filter @shepherdjerred/birmel",
+        "packages/charts --filter @shepherdjerred/charts",
+        "packages/ci-cache --filter @shepherdjerred/ci-cache",
+        "packages/delivery --filter @shepherdjerred/delivery",
+        "packages/discord-plays-mario-kart --filter @discord-plays-mario-kart/*",
+        "packages/discord-plays-pokemon --filter @discord-plays-pokemon/*",
+        "packages/errors --filter @shepherdjerred/errors",
+        "packages/feeds --filter @shepherdjerred/feeds",
+        "packages/mail --filter @shepherdjerred/mail",
+        "packages/media --filter @shepherdjerred/media",
+        "packages/scout-for-lol/packages/backend --filter @scout-for-lol/backend",
+        "packages/starlight-karma-bot --filter starlight-karma-bot",
+        "packages/storm-stats --filter @shepherdjerred/storm-stats",
+        "packages/tasknotes-server --filter @shepherdjerred/tasknotes-web",
+        "packages/temporal --filter @shepherdjerred/temporal --filter @homelab/cdk8s --filter @shepherdjerred/toolkit",
+        "packages/tracker --filter @shepherdjerred/tracker",
+        "packages/trmnl-dashboard --filter @shepherdjerred/home-assistant"
+      ]
+    }
+  ]
+}

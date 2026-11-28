@@ -335,7 +335,11 @@
     },
     "packages/scout-for-lol/packages/backend": {
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"],
+      // Voice playback transcodes through @discordjs/voice -> prism-media,
+      // which loads ffmpeg-static with require() at runtime; the image has no
+      // system ffmpeg, so the binary is a declared runtime dependency.
+      "ignoreDependencies": ["ffmpeg-static"]
     },
     "packages/scout-for-lol/packages/data": {
       "entry": ["scripts/**/*.ts"],

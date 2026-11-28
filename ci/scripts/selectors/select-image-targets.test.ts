@@ -119,6 +119,18 @@ test("selects tasknotes-server when the baked web client changes", async () => {
   ]);
 });
 
+const SHARED_APPLICATION_INPUT_PATHS = [
+  "ci/application-image-smoke.Dockerfile",
+  "ci/scripts/images/application-image-runtime.ts",
+  "ci/scripts/images/smoke-app-in-image.ts",
+  "ci/scripts/images/complete-bin-links.ts",
+  "ci/scripts/images/workspace-manifests.ts",
+  "ci/scripts/images/install-projection/install-projection.ts",
+  ".dockerignore",
+  "bunfig.toml",
+  "tsconfig.base.json",
+];
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([
@@ -259,16 +271,7 @@ describe("selectImageTargets", () => {
   });
 
   test("selects only applications for shared application image inputs", async () => {
-    for (const path of [
-      "ci/application-image-smoke.Dockerfile",
-      "ci/scripts/images/application-image-runtime.ts",
-      "ci/scripts/images/smoke-app-in-image.ts",
-      "ci/scripts/images/complete-bin-links.ts",
-      "ci/scripts/images/workspace-manifests.ts",
-      ".dockerignore",
-      "bunfig.toml",
-      "tsconfig.base.json",
-    ]) {
+    for (const path of SHARED_APPLICATION_INPUT_PATHS) {
       const result = await selectWithReasons([path]);
       expect(result.targets).toEqual(APPLICATION_IMAGE_TARGETS);
       expect(result.targets).not.toContain("infra");

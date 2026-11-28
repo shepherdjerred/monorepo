@@ -93,12 +93,14 @@ RUN mkdir -p /out/torch-inputs/include /out/torch-inputs/meta /out/fonts \
 FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 WORKDIR /app
 
-# ── manifests: only the install closure's workspace manifests ───────────────
-# Every manifest reaches this cheap stage; installs copy only its output, so an
-# edit to a package outside the closure keeps their cache keys and layers.
+# ── manifests: the install closure's manifests and projected lockfile ───────
+# Every manifest, bun.lock and patch reaches this cheap stage; installs copy only
+# its output (the closure's manifests plus root package.json, bun.lock and
+# patches projected onto the closure), so a change outside the closure keeps
+# their cache keys and layers.
 FROM base AS manifests
 COPY --parents \
-  package.json scripts/package.json \
+  package.json bun.lock patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
@@ -106,6 +108,7 @@ COPY --parents \
   /workspace/
 COPY --parents \
   ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/images/install-projection/install-projection.ts \
   ci/scripts/selectors/select-image-targets-workspaces.ts \
   ci/scripts/selectors/select-image-targets-lockfile.ts \
   /tools/
@@ -116,7 +119,7 @@ RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
 # trustedDependencies (node-datachannel, node-av, sharp) run their native
 # postinstalls during the frozen install.
 FROM base AS deps
-COPY --parents bun.lock bunfig.toml patches/ packages/discord-video-stream/prebuilds-patched/ ./
+COPY --parents bunfig.toml packages/discord-video-stream/prebuilds-patched/ ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@discord-plays-mario-kart/*'
 
@@ -150,7 +153,7 @@ RUN cd packages/discord-plays-mario-kart/packages/frontend && bun run build
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps
-COPY --parents bun.lock bunfig.toml patches/ packages/discord-video-stream/prebuilds-patched/ ./
+COPY --parents bunfig.toml packages/discord-video-stream/prebuilds-patched/ ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@discord-plays-mario-kart/backend'
 # Bun can skip the .bin links between dependency-cycle members on a cold

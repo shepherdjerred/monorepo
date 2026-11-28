@@ -11,12 +11,14 @@
 FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 WORKDIR /app
 
-# ── manifests: only the install closure's workspace manifests ───────────────
-# Every manifest reaches this cheap stage; installs copy only its output, so an
-# edit to a package outside the closure keeps their cache keys and layers.
+# ── manifests: the install closure's manifests and projected lockfile ───────
+# Every manifest, bun.lock and patch reaches this cheap stage; installs copy only
+# its output (the closure's manifests plus root package.json, bun.lock and
+# patches projected onto the closure), so a change outside the closure keeps
+# their cache keys and layers.
 FROM base AS manifests
 COPY --parents \
-  package.json scripts/package.json \
+  package.json bun.lock patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
@@ -24,6 +26,7 @@ COPY --parents \
   /workspace/
 COPY --parents \
   ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/images/install-projection/install-projection.ts \
   ci/scripts/selectors/select-image-targets-workspaces.ts \
   ci/scripts/selectors/select-image-targets-lockfile.ts \
   /tools/
@@ -31,14 +34,14 @@ RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
   'tasknotes-server' '@shepherdjerred/tasknotes-web'
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
-# Copying just the closure's package.json files (plus the lockfile, bunfig, and
-# patches) means this filtered install only invalidates when a closure
-# manifest/lockfile/patch changes — not on every source edit. The
-# tasknotes-server filter includes its workspace dependency closure.
+# Copying just the closure's package.json files and its projected lockfile and
+# patches (plus bunfig) means this filtered install only invalidates when the
+# closure's manifests, locked packages or patches change — not on every source
+# edit. The tasknotes-server filter includes its workspace dependency closure.
 # The root .dockerignore keeps
 # node_modules/dist/.git out of context.
 FROM base AS prod-deps
-COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --parents bunfig.toml ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter 'tasknotes-server'
 # Bun can skip the .bin links between dependency-cycle members on a cold
@@ -50,7 +53,7 @@ RUN bun /tools/complete-bin-links.ts node_modules/.bun
 # Same projected closure as the server install. This stage keeps dev
 # dependencies so Vite can build; the runtime image does not copy them.
 FROM base AS web-deps
-COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --parents bunfig.toml ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/tasknotes-web'
 
