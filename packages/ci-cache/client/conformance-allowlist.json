@@ -1,0 +1,26 @@
+[
+  {
+    "rule": "theme-store-key",
+    "file": "client/main.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. CI cache moves onto the shared pieces in C1."
+  },
+  {
+    "rule": "local-copy",
+    "file": "client/styles.css",
+    "count": 5,
+    "reason": "Baseline at CU1. CI cache moves onto the shared pieces in C1."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "client/styles.css",
+    "count": 10,
+    "reason": "Baseline at CU1. CI cache moves onto the shared pieces in C1."
+  },
+  {
+    "rule": "theme-color",
+    "file": "index.html",
+    "count": 2,
+    "reason": "Baseline at CU1. CI cache moves onto the shared pieces in C1."
+  }
+]

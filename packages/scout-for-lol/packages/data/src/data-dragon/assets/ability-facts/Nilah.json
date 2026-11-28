@@ -27,7 +27,44 @@
         ]
       },
       "resolvedDescription": "Nilah gains increased experience from last-hitting minions along with the ability to enhance and share nearby healing and shielding from her allies.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "nilahpmissile",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "nilahpmissilesmall",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Formless Blade",
@@ -145,7 +182,30 @@
         "critarmorpen",
         "critlifesteal",
         "damagecalc"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": 80,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "nilaheqmis",
+            "width": 125,
+            "movement": "FixedSpeedMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Jubilant Veil",
@@ -217,7 +277,15 @@
         ]
       },
       "resolvedDescription": "Nilah envelops herself in mist for 2.25 seconds, becoming Ghosted, gaining 15/17.5/20/22.5/25% Move Speed, dodging Attacks, and reducing magic damage taken by 25%. While active, touching allied champions envelops them in mist, granting the same benefits for 1.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.013,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Slipstream",
@@ -268,7 +336,15 @@
         ]
       },
       "resolvedDescription": "Nilah dashes through a unit, dealing 60/70/80/90/100 (+20% bonus AD) physical damage to any enemies she passes through.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Target",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": 50,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Apotheosis",
@@ -335,7 +411,15 @@
       "unresolved": [
         "champhealingpercent",
         "spell.nilahq:critlifesteal"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

@@ -115,11 +115,20 @@ export const MovieTargetAssetV4Schema = z.strictObject({
   captionsTruncated: z.boolean(),
   subtitleStatus: SubtitlePolicySatisfactionSchema.nullable().default(null),
 });
+export const MovieDiscoveryStatusSchema = z.enum([
+  "searching",
+  "retrying",
+  "waiting_for_release",
+  "plex_exclusion_proof_required",
+  "acquisition_disabled",
+  "external_library_protected",
+]);
+export type MovieDiscoveryStatus = z.infer<typeof MovieDiscoveryStatusSchema>;
 export const MovieTargetProgressV4Schema = MediaVisibilitySchema.pick({
   attempts: true,
   torrents: true,
   historyTruncated: true,
-});
+}).extend({ discovery: MovieDiscoveryStatusSchema.optional() });
 const CommonTarget = {
   schemaVersion: z.literal(4),
   scope: MovieEditionScopeSchema,

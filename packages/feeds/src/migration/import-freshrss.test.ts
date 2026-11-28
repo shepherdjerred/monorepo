@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
@@ -165,11 +165,7 @@ describe("FreshRSS SQLite importer", () => {
   });
 
   test("maps code feeds, imports private user feeds, skips FreshRSS Releases, preserves microsecond IDs, and runs idempotently", async () => {
-    const dir = path.join(
-      tmpdir(),
-      `feeds-freshrss-test-${String(Date.now())}`,
-    );
-    await Bun.write(path.join(dir, ".keep"), "");
+    const dir = await mkdtemp(path.join(tmpdir(), "feeds-freshrss-test-"));
     const snapshotPath = path.join(dir, "freshrss.sqlite");
     createSampleFreshRssSnapshot(snapshotPath);
 
@@ -272,8 +268,7 @@ describe("FreshRSS SQLite importer", () => {
   });
 
   test("CLI prints summary JSON only and never leaks feed URLs or secret tokens", async () => {
-    const dir = path.join(tmpdir(), `feeds-freshrss-cli-${String(Date.now())}`);
-    await Bun.write(path.join(dir, ".keep"), "");
+    const dir = await mkdtemp(path.join(tmpdir(), "feeds-freshrss-cli-"));
     const snapshotPath = path.join(dir, "freshrss.sqlite");
     const targetPath = path.join(dir, "feeds.sqlite");
     createSampleFreshRssSnapshot(snapshotPath);

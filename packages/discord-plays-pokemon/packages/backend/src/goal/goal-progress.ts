@@ -35,7 +35,8 @@ export class GoalIntervalReporter {
   // spawn, before GoalManager.active is set) buffer here; activate() drains
   // them through the forwarder. Undefined once active.
   private pendingMilestones: string[] | undefined = [];
-  private forward: ((text: string) => void) | undefined;
+  private forward: ((text: string) => Promise<void>) | undefined;
+  private readonly milestonePublications = new Set<Promise<void>>();
 
   constructor(private readonly options: GoalIntervalReporterOptions) {
     this.lastIntervalCheckAt = options.now();
@@ -48,17 +49,39 @@ export class GoalIntervalReporter {
       this.pendingMilestones.push(text);
       return;
     }
-    this.forward?.(text);
+    this.publishMilestone(text);
   };
 
   /** Start forwarding milestones (and drain any buffered ones). */
-  activate(forward: (text: string) => void): void {
+  activate(forward: (text: string) => Promise<void>): void {
     this.forward = forward;
     const pending = this.pendingMilestones ?? [];
     this.pendingMilestones = undefined;
     for (const text of pending) {
-      forward(text);
+      this.publishMilestone(text);
     }
+  }
+
+  private publishMilestone(text: string): void {
+    const publication = this.forward?.(text);
+    if (publication === undefined) return;
+    this.milestonePublications.add(publication);
+    void this.finishMilestone(publication);
+  }
+
+  private async finishMilestone(publication: Promise<void>): Promise<void> {
+    try {
+      await publication;
+    } catch (error) {
+      logger.warn(`goal milestone forward failed: ${String(error)}`);
+    } finally {
+      this.milestonePublications.delete(publication);
+    }
+  }
+
+  /** Drain admitted progress before terminal state is persisted and announced. */
+  async drainMilestones(): Promise<void> {
+    await Promise.allSettled(this.milestonePublications);
   }
 
   recordToolCall(

@@ -1,4 +1,9 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  cancelStuckMaintenance,
+  queuedMaintenanceEvidence,
+  WoodpeckerQueueSchema,
+} from "./ci-maintenance-age-out.ts";
 import {
   findMaintenanceReceipt,
   maintenanceAdmissionBusy,
@@ -348,5 +353,318 @@ test("distinguishes pre-command errors and cancellations from started command fa
     source: verifiedSource,
     status: "failure",
     startedWork: true,
+  });
+});
+
+type QueueTaskFixture = {
+  pipeline_number: number;
+  repo_id: number;
+  labels: Record<string, string> | null;
+  created: number;
+  concurrency_group?: string;
+};
+const task = (
+  pipeline: number,
+  created: number,
+  pool = "pr",
+  extra: Partial<QueueTaskFixture> = {},
+): QueueTaskFixture => ({
+  pipeline_number: pipeline,
+  repo_id: 1,
+  labels: { "ci-pool": pool, "kueue.x-k8s.io/priority-class": "ci-ready" },
+  created,
+  ...extra,
+});
+// The golden refresh queued at 1795754121 behind a long pr-pool backlog, as on 2026-11-27.
+const golden = task(19_837, 1_795_754_121, "pr", {
+  labels: { "ci-pool": "pr", "kueue.x-k8s.io/priority-class": "ci-draft" },
+  concurrency_group: "1//ci-maintenance",
+});
+const backlogQueue = () =>
+  WoodpeckerQueueSchema.parse({
+    paused: false,
+    pending: [task(19_795, 1_795_749_340), golden, task(19_900, 1_795_759_000)],
+    waiting_on_deps: null,
+    running: [task(19_762, 1_795_739_964), task(19_784, 1_795_748_765)],
+  });
+
+/** The backlog with a newer pr-pool task running ahead of the golden refresh. */
+function bypassed() {
+  const queue = backlogQueue();
+  queue.running.push(task(19_901, 1_795_759_100));
+  return queue;
+}
+
+describe("queued maintenance evidence", () => {
+  test("a request behind a long FIFO backlog is slow, not stuck", () => {
+    expect(queuedMaintenanceEvidence(backlogQueue(), 19_837, 1)).toEqual({
+      stuck: false,
+      reason: "1 older pr-pool task(s) are ahead of it in the queue",
+    });
+  });
+
+  test("newer work in its pool running ahead of it is stuck", () => {
+    const queue = backlogQueue();
+    queue.running.push(task(19_901, 1_795_759_100));
+    expect(queuedMaintenanceEvidence(queue, 19_837, 1)).toEqual({
+      stuck: true,
+      reason:
+        "1 newer pr-pool task(s) started ahead of it, so no agent takes it",
+    });
+  });
+
+  test("newer work in another pool is not evidence", () => {
+    const queue = backlogQueue();
+    queue.running.push(task(19_896, 1_795_758_872, "main"));
+    expect(queuedMaintenanceEvidence(queue, 19_837, 1).stuck).toBe(false);
+  });
+
+  test("heading an idle pool is stuck; an idle pool with older work waiting is an outage, not this request", () => {
+    expect(
+      queuedMaintenanceEvidence(
+        WoodpeckerQueueSchema.parse({
+          paused: false,
+          pending: [golden],
+          waiting_on_deps: null,
+          running: null,
+        }),
+        19_837,
+        1,
+      ),
+    ).toEqual({
+      stuck: true,
+      reason: "it heads an idle pr pool, so no connected agent matches it",
+    });
+    expect(
+      queuedMaintenanceEvidence(
+        WoodpeckerQueueSchema.parse({
+          paused: false,
+          pending: [task(19_795, 1_795_749_340), golden],
+          waiting_on_deps: null,
+          running: [],
+        }),
+        19_837,
+        1,
+      ).stuck,
+    ).toBe(false);
+  });
+
+  test("a busy concurrency group, a paused queue, dependencies, or an agent taking it is not stuck", () => {
+    const busyGroup = backlogQueue();
+    busyGroup.running.push(
+      task(19_950, 1_795_759_500, "pr", {
+        concurrency_group: "1//ci-maintenance",
+      }),
+    );
+    expect(queuedMaintenanceEvidence(busyGroup, 19_837, 1)).toEqual({
+      stuck: false,
+      reason: "its concurrency group 1//ci-maintenance is busy",
+    });
+    expect(
+      queuedMaintenanceEvidence({ ...backlogQueue(), paused: true }, 19_837, 1)
+        .stuck,
+    ).toBe(false);
+    const waiting = backlogQueue();
+    waiting.pending = waiting.pending.filter(
+      (entry) => entry.pipeline_number !== 19_837,
+    );
+    waiting.waiting_on_deps.push(golden);
+    expect(queuedMaintenanceEvidence(waiting, 19_837, 1).stuck).toBe(false);
+    const taken = backlogQueue();
+    taken.running.push(golden);
+    expect(queuedMaintenanceEvidence(taken, 19_837, 1).stuck).toBe(false);
+  });
+
+  test("a queued pipeline with no task in the queue cannot run", () => {
+    const orphaned = backlogQueue();
+    orphaned.pending = orphaned.pending.filter(
+      (entry) => entry.pipeline_number !== 19_837,
+    );
+    expect(queuedMaintenanceEvidence(orphaned, 19_837, 1)).toEqual({
+      stuck: true,
+      reason: "Woodpecker's queue holds no task for it",
+    });
+  });
+});
+
+/** Serves the pipeline reads in order, the queue, and the cancel response. */
+function serveAgeOut(input: {
+  pipelines: readonly object[];
+  queue: object;
+  cancel: number | Error;
+}) {
+  const calls: string[] = [];
+  let reads = 0;
+  vi.spyOn(globalThis, "fetch").mockImplementation((request, init) => {
+    const url = nativeUrl(request);
+    calls.push(`${init?.method ?? "GET"} ${url.pathname}`);
+    if (url.pathname === "/api/queue/info")
+      return Promise.resolve(Response.json(input.queue));
+    if (url.pathname.endsWith("/cancel"))
+      return input.cancel instanceof Error
+        ? Promise.reject(input.cancel)
+        : Promise.resolve(new Response(null, { status: input.cancel }));
+    const pipeline =
+      input.pipelines[Math.min(reads, input.pipelines.length - 1)];
+    reads++;
+    return Promise.resolve(Response.json(pipeline));
+  });
+  return calls;
+}
+
+describe("stuck-only age-out cancel", () => {
+  const request: MaintenanceRequest = {
+    kind: "workspace-golden",
+    source: verifiedSource,
+    fingerprint: "golden-v1",
+    frozen: false,
+    requestId: "request-queued",
+    pipeline: 19_837,
+  };
+  const queued = {
+    ...canary,
+    number: 19_837,
+    status: "pending",
+    branch: "main",
+    ref: "refs/heads/main",
+    message: "ci-maintenance/request-queued",
+    workflows: [
+      {
+        name: "maintenance-workspace-golden",
+        state: "pending",
+        children: [
+          { id: 1, name: "clone", type: "clone", state: "pending" },
+          {
+            id: 2,
+            name: "maintenance-workspace-golden",
+            type: "commands",
+            state: "pending",
+          },
+        ],
+      },
+    ],
+  };
+
+  test("long backlog: reads the queue and does not cancel", async () => {
+    const calls = serveAgeOut({
+      pipelines: [queued],
+      queue: backlogQueue(),
+      cancel: 204,
+    });
+    await expect(cancelStuckMaintenance(request)).resolves.toEqual({
+      outcome: "waiting",
+      detail: "1 older pr-pool task(s) are ahead of it in the queue",
+    });
+    expect(calls).toEqual([
+      "GET /api/repos/1/pipelines/19837",
+      "GET /api/queue/info",
+    ]);
+  });
+
+  test("bypassed: re-reads the pipeline and cancels it", async () => {
+    const calls = serveAgeOut({
+      pipelines: [queued, queued],
+      queue: bypassed(),
+      cancel: 204,
+    });
+    await expect(cancelStuckMaintenance(request)).resolves.toEqual({
+      outcome: "canceled",
+      detail:
+        "1 newer pr-pool task(s) started ahead of it, so no agent takes it",
+    });
+    expect(calls).toEqual([
+      "GET /api/repos/1/pipelines/19837",
+      "GET /api/queue/info",
+      "GET /api/repos/1/pipelines/19837",
+      "POST /api/repos/1/pipelines/19837/cancel",
+    ]);
+  });
+
+  test("a step that started before the cancel stops it, because cancel kills running work", async () => {
+    const cloning = {
+      ...queued,
+      workflows: [
+        {
+          ...queued.workflows[0],
+          children: [
+            {
+              id: 1,
+              name: "clone",
+              type: "clone",
+              state: "running",
+              started: 1_795_760_000,
+            },
+          ],
+        },
+      ],
+    };
+    const calls = serveAgeOut({
+      pipelines: [queued, cloning],
+      queue: bypassed(),
+      cancel: 204,
+    });
+    await expect(cancelStuckMaintenance(request)).resolves.toEqual({
+      outcome: "not-queued",
+      detail: "it is pending",
+    });
+    expect(calls).not.toContain("POST /api/repos/1/pipelines/19837/cancel");
+  });
+
+  test.each([400, 403, 409, 500])(
+    "a refused cancel (HTTP %i) is classified by read-back, never assumed",
+    async (status) => {
+      serveAgeOut({
+        pipelines: [queued, queued, queued],
+        queue: bypassed(),
+        cancel: status,
+      });
+      await expect(cancelStuckMaintenance(request)).resolves.toEqual({
+        outcome: "uncertain",
+        detail: `cancel returned HTTP ${status.toString()}; still queued`,
+      });
+    },
+  );
+
+  test("read-back after a refused cancel tells canceled from started", async () => {
+    serveAgeOut({
+      pipelines: [queued, queued, { ...queued, status: "killed" }],
+      queue: bypassed(),
+      cancel: 409,
+    });
+    await expect(cancelStuckMaintenance(request)).resolves.toMatchObject({
+      outcome: "canceled",
+    });
+    vi.restoreAllMocks();
+    serveAgeOut({
+      pipelines: [queued, queued, { ...queued, status: "running" }],
+      queue: bypassed(),
+      cancel: new Error("socket hang up"),
+    });
+    await expect(cancelStuckMaintenance(request)).resolves.toEqual({
+      outcome: "not-queued",
+      detail: "it is running",
+    });
+  });
+
+  test("a pipeline that left the queue, or belongs to another request, is never canceled", async () => {
+    const calls = serveAgeOut({
+      pipelines: [{ ...queued, status: "running" }],
+      queue: bypassed(),
+      cancel: 204,
+    });
+    await expect(cancelStuckMaintenance(request)).resolves.toEqual({
+      outcome: "not-queued",
+      detail: "it is running",
+    });
+    expect(calls).toEqual(["GET /api/repos/1/pipelines/19837"]);
+    vi.restoreAllMocks();
+    serveAgeOut({
+      pipelines: [{ ...queued, message: "ci-maintenance/another-request" }],
+      queue: bypassed(),
+      cancel: 204,
+    });
+    await expect(cancelStuckMaintenance(request)).rejects.toThrow(
+      "identity mismatch",
+    );
   });
 });

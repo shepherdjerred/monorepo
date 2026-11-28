@@ -3,7 +3,12 @@ import {
   createStatPanel,
   createTimeseriesPanel,
 } from "@shepherdjerred/homelab/cdk8s/grafana/shared/dashboard-panels.ts";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import {
+  CI_POOL_DAILY_WRITE_TARGET_BYTES,
+  CI_POOL_WRITER_ALERT_THRESHOLD_BYTES,
+  CI_POOL_WRITER_TARGET_BYTES,
+  CI_POOL_WRITER_LOGICAL_BYTES_24H,
   CI_STEP_WORKSPACE_LOGICAL_BYTES_24H,
   CI_STEP_WORKSPACES_24H,
   CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
@@ -29,6 +34,7 @@ function bySerial(metric: string): string {
 }
 
 const DATA_UNIT_BYTES = 512_000;
+const BYTES_PER_GB = 1_000_000_000;
 
 export function addNvmePanels(builder: dashboard.DashboardBuilder): void {
   builder.withRow(new dashboard.RowBuilder("NVMe Lifetime & Write Health"));
@@ -318,6 +324,37 @@ function addWriteBudgetPanels(builder: dashboard.DashboardBuilder): void {
       ],
       gridPos: { x: 0, y: 115, w: 12, h: 8 },
       unit: "bytes",
+    }),
+  );
+
+  const targetGb = String(CI_POOL_DAILY_WRITE_TARGET_BYTES / BYTES_PER_GB);
+  const targetLegend = `${targetGb} GB/day target`;
+  const physicalLegend = "pool physical writes (24h)";
+  const describeGb = (bytesByWriter: Record<string, number>) =>
+    Object.entries(bytesByWriter)
+      .map(([writer, bytes]) => `${writer} ${String(bytes / BYTES_PER_GB)}`)
+      .join(", ");
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "CI Pool Writes by Writer (24h)",
+      description: `Logical bytes written to the CI pool in the trailing 24h, stacked by writer, against the pool drive's ${targetGb} GB/day target. Targets in GB/day: ${describeGb(CI_POOL_WRITER_TARGET_BYTES)}. Alerts are regression guards set just above each writer's recent p90 (GB/day: ${describeGb(CI_POOL_WRITER_ALERT_THRESHOLD_BYTES)}); a writer over its threshold for 6 hours raises its own alert, and the thresholds ratchet down to the targets as the CI write program lands.`,
+      targets: [
+        {
+          query: CI_POOL_WRITER_LOGICAL_BYTES_24H,
+          legend: "{{writer}}",
+        },
+        {
+          query: `vector(${String(CI_POOL_DAILY_WRITE_TARGET_BYTES)})`,
+          legend: targetLegend,
+        },
+        {
+          query: `${ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H}{node="${CI_NODE_HOSTNAME}"}`,
+          legend: physicalLegend,
+        },
+      ],
+      gridPos: { x: 0, y: 123, w: 24, h: 9 },
+      unit: "decbytes",
+      stacked: { referenceLegends: [targetLegend, physicalLegend] },
     }),
   );
 }

@@ -258,6 +258,54 @@ export async function lookupTiers(
     : { ok: true, value: { manifest: manifest.value, file } };
 }
 
+export type ChampionMatchupsLookup = {
+  buildId: string;
+  championId: number;
+  championName: string;
+  context: Resolved & { queue: string };
+  /** One slice per role the champion has matchups in, every listed opponent in each. */
+  slices: MatchupFile["slices"];
+};
+
+/** Every listed opponent of one champion in a (patch, queue, bracket), per role. */
+export async function lookupChampionMatchups(
+  reader: MetaReader,
+  championId: number,
+  selection: MetaSelection,
+): Promise<MetaResult<ChampionMatchupsLookup>> {
+  const manifest = await manifestOrFailure(reader);
+  if (!manifest.ok) return manifest;
+  const champion = championInManifest(manifest.value, championId);
+  if (champion === undefined) return unknownChampion(championId);
+  const wanted = resolveMetaSelection(manifest.value, selection);
+  if (wanted === undefined) return UNAVAILABLE;
+  const file = await reader.matchups(championId);
+  const slices = (file?.slices ?? []).filter(
+    (slice) =>
+      sameSlice(slice.context, wanted) &&
+      (selection.role === undefined || slice.context.role === selection.role),
+  );
+  if (file === undefined || slices.length === 0) {
+    return failure(
+      "matchup_not_found",
+      `${champion.name} has no matchups with enough games in patch ${wanted.patch}, queue ${wanted.queueId.toString()}, bracket ${wanted.bracket}`,
+    );
+  }
+  return {
+    ok: true,
+    value: {
+      buildId: file.buildId,
+      championId,
+      championName: champion.name,
+      context: {
+        ...wanted,
+        queue: META_QUEUE_LABELS[wanted.queueId] ?? wanted.queueId.toString(),
+      },
+      slices,
+    },
+  };
+}
+
 export type MatchupLookup = {
   buildId: string;
   championId: number;
@@ -270,6 +318,7 @@ export type MatchupLookup = {
     games: number;
     wins: number;
     winRate: MatchupFile["slices"][number]["opponents"][number]["winRate"];
+    lane?: MatchupFile["slices"][number]["opponents"][number]["lane"];
   }[];
 };
 
@@ -304,6 +353,7 @@ export async function lookupMatchup(
             games: entry.games,
             wins: entry.wins,
             winRate: entry.winRate,
+            ...(entry.lane === undefined ? {} : { lane: entry.lane }),
           },
         ];
   });

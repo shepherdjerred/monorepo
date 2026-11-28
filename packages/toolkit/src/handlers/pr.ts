@@ -20,15 +20,17 @@ function printHealthUsage(): void {
   console.log("Usage: toolkit pr health [PR_NUMBER] [--json]");
 }
 
-const LAND_USAGE = `Usage: toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--json]
+const LAND_USAGE = `Usage: toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--allow-stale-base] [--json]
 
-Wait for exact-head merge readiness, then squash-merge with git-spice. Merge
-only when the task authorizes it. A red main keeps the wait open until main
-recovers unless --allow-red-main is passed.
+Wait for exact-head merge readiness, verify that main has not advanced with
+overlapping workspace or global changes since merge-base, then squash-merge
+with git-spice. Merge only when the task authorizes it. A red main keeps the
+wait open until main recovers unless --allow-red-main is passed;
+--allow-stale-base bypasses the merge-time overlap freshness guard.
 
-Exits: 0 merged, 1 check failure/conflict, 2 upstream/usage error, 3 human
-intervention, 4 head changed, 6 timeout, 7 PR closed/merged, 8 merge command
-failed after readiness. After a fix and push, run pr land again.`;
+Exits: 0 merged, 1 check failure/conflict/stale overlap, 2 upstream/usage error,
+3 human intervention, 4 head changed, 6 timeout, 7 PR closed/merged, 8 merge
+command failed after readiness. After a fix and push, run pr land again.`;
 
 function printAssetUsage(): void {
   console.log(
@@ -96,6 +98,7 @@ function parseLandRequest(args: string[]): {
       head: { type: "string" },
       timeout: { type: "string" },
       "allow-red-main": { type: "boolean", default: false },
+      "allow-stale-base": { type: "boolean", default: false },
     },
     allowPositionals: true,
   });
@@ -113,6 +116,7 @@ function parseLandRequest(args: string[]): {
       timeoutMs:
         values.timeout === undefined ? undefined : parseTimeout(values.timeout),
       allowRedMain: values["allow-red-main"],
+      allowStaleBase: values["allow-stale-base"],
     },
   };
 }
@@ -264,6 +268,7 @@ Options:
   --head <SHA>          (land) Pin the full PR head SHA
   --timeout <duration>  (land) Optional deadline (e.g. 2h); default: unlimited
   --allow-red-main      (land) Merge while main is red instead of waiting
+  --allow-stale-base    (land) Bypass merge-time stale-base overlap check
   --markdown            (asset) Emit type-appropriate markdown (inline image
                         tags for images, an inline GIF linked to the player
                         for .cast files, labeled links for video/demo pages)

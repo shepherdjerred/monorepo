@@ -83,6 +83,148 @@ const stateDirectory = join(
   smokeRunID,
 );
 
+export interface LaunchdSessionProbeResult {
+  status: number;
+  stdout: string;
+}
+
+export interface ConsoleUserSessionRecord {
+  readonly kCGSSessionUserIDKey?: number;
+  readonly kCGSSessionOnConsoleKey?: boolean;
+  readonly CGSSessionScreenIsLocked?: boolean;
+}
+
+export async function probeLaunchdManagerName(): Promise<LaunchdSessionProbeResult> {
+  const child = Bun.spawn(["/bin/launchctl", "managername"], {
+    stdout: "pipe",
+    stderr: "ignore",
+    timeout: 5_000,
+  });
+  const [stdout, status] = await Promise.all([
+    new Response(child.stdout).text(),
+    child.exited,
+  ]);
+  return { status, stdout };
+}
+
+export async function probeConsoleUsers(): Promise<
+  readonly ConsoleUserSessionRecord[]
+> {
+  const ioreg = Bun.spawn(["/usr/sbin/ioreg", "-n", "Root", "-d1", "-a"], {
+    stdout: "pipe",
+    stderr: "ignore",
+    timeout: 5_000,
+  });
+  const [plistBytes, ioregStatus] = await Promise.all([
+    new Response(ioreg.stdout).arrayBuffer(),
+    ioreg.exited,
+  ]);
+  if (ioregStatus !== 0 || plistBytes.byteLength === 0) return [];
+  const plutil = Bun.spawn(
+    ["/usr/bin/plutil", "-extract", "IOConsoleUsers", "json", "-o", "-", "-"],
+    {
+      stdin: new Uint8Array(plistBytes),
+      stdout: "pipe",
+      stderr: "ignore",
+      timeout: 5_000,
+    },
+  );
+  const [jsonText, plutilStatus] = await Promise.all([
+    new Response(plutil.stdout).text(),
+    plutil.exited,
+  ]);
+  if (plutilStatus !== 0) return [];
+  const parsed: unknown = JSON.parse(jsonText);
+  return Array.isArray(parsed) ? (parsed as ConsoleUserSessionRecord[]) : [];
+}
+
+/**
+ * AppKit/SwiftUI apps launched via Launch Services (`open -g -j -n`) require an
+ * unlocked on-console `Aqua` GUI session so WindowServer realizes the
+ * `WindowGroup` scene and runs `.task { await store.start() }`. Headless local
+ * agent shells either run in `Background`/`System` launchd domains or on a
+ * screen-locked remote Mac (`CGSSessionScreenIsLocked = true`).
+ */
+export async function inspectAquaGuiSession(options?: {
+  probe?: () => Promise<LaunchdSessionProbeResult>;
+  consoleUsers?: () => Promise<readonly ConsoleUserSessionRecord[]>;
+  uid?: number | undefined;
+}): Promise<{ available: true } | { available: false; reason: string }> {
+  const probe = options?.probe ?? probeLaunchdManagerName;
+  let result: LaunchdSessionProbeResult;
+  try {
+    result = await probe();
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      available: false,
+      reason: `/bin/launchctl managername failed (${detail})`,
+    };
+  }
+  const manager = result.stdout.trim();
+  if (result.status !== 0 || manager !== "Aqua") {
+    const observed =
+      result.status === 0
+        ? `launchd manager domain "${manager || "<empty>"}"`
+        : `/bin/launchctl managername exited ${String(result.status)}`;
+    return { available: false, reason: `current process is in ${observed}` };
+  }
+  if (options?.consoleUsers !== undefined || options?.probe === undefined) {
+    try {
+      const uid = options?.uid ?? process.getuid?.();
+      const users = await (options?.consoleUsers ?? probeConsoleUsers)();
+      const match =
+        uid === undefined
+          ? users[0]
+          : users.find((entry) => entry.kCGSSessionUserIDKey === uid);
+      if (match?.kCGSSessionOnConsoleKey === false) {
+        return {
+          available: false,
+          reason:
+            "console session is off-console (kCGSSessionOnConsoleKey=false)",
+        };
+      }
+      if (match?.CGSSessionScreenIsLocked === true) {
+        return {
+          available: false,
+          reason:
+            "macOS console screen is locked (CGSSessionScreenIsLocked=true; SwiftUI WindowGroup scenes do not realize while locked)",
+        };
+      }
+    } catch {
+      // Fall through if ioreg/plutil is unavailable in synthetic test environments.
+    }
+  }
+  return { available: true };
+}
+
+export async function hasAquaGuiSession(
+  probe: () => Promise<LaunchdSessionProbeResult> = probeLaunchdManagerName,
+  consoleUsers?: () => Promise<readonly ConsoleUserSessionRecord[]>,
+): Promise<boolean> {
+  const status = await inspectAquaGuiSession({
+    probe,
+    ...(consoleUsers === undefined ? {} : { consoleUsers }),
+  });
+  return status.available;
+}
+
+export async function requireAquaGuiSession(
+  probe: () => Promise<LaunchdSessionProbeResult> = probeLaunchdManagerName,
+  consoleUsers?: () => Promise<readonly ConsoleUserSessionRecord[]>,
+): Promise<void> {
+  const status = await inspectAquaGuiSession({
+    probe,
+    ...(consoleUsers === undefined ? {} : { consoleUsers }),
+  });
+  if (!status.available) {
+    fail(
+      `Release launch smoke requires an unlocked macOS Aqua GUI session to realize WindowServer scenes, ` +
+        `but ${status.reason}. Run mac:smoke from an unlocked interactive desktop session.`,
+    );
+  }
+}
+
 /** A live PID and successful engine/account startup must belong to this UUID. */
 export function requireStartupMarker(
   runID: string,
@@ -571,6 +713,7 @@ async function main(
 }
 
 async function execute(): Promise<void> {
+  await requireAquaGuiSession();
   const uid = process.getuid?.();
   if (uid === undefined)
     throw new Error("Release smoke requires a current POSIX UID");
@@ -657,6 +800,14 @@ function reportFailure(error: unknown): void {
 }
 
 if (import.meta.main) {
+  if (Bun.argv.includes("--skip-if-no-gui")) {
+    const session = await inspectAquaGuiSession();
+    if (!session.available) {
+      console.error(`mac-bundle-verify: skipping (${session.reason})`);
+      process.exit(0);
+    }
+    process.exit(1);
+  }
   try {
     await execute();
   } catch (error) {

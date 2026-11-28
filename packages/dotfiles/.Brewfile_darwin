@@ -1,13 +1,12 @@
 tap "anthropics/tap"
 tap "artginzburg/tap"
 tap "catppuccin/tap", trusted: true
-tap "cirruslabs/cli", trusted: { formulae: ["tart"] }
 tap "cormacrelf/tap"
 tap "dsully/tap"
 tap "jdx/tap", trusted: true
 tap "lightpanda-io/browser"
 tap "mobile-dev-inc/tap"
-tap "openai/tools", trusted: { formulae: ["softnet"] }
+tap "openai/tools", trusted: { formulae: ["softnet", "tart"] }
 tap "pinchtab/tap"
 tap "rsteube/tap"
 tap "schpet/tap"
@@ -63,6 +62,8 @@ brew "eza"
 brew "fd"
 # Play, record, convert, and stream select audio and video codecs
 brew "ffmpeg"
+# Play, record, convert, and stream many audio and video codecs
+brew "ffmpeg-full"
 # User-friendly command-line shell for UNIX-like operating systems
 brew "fish"
 # Fast Lexical Analyzer, generates Scanners (tokenizers)

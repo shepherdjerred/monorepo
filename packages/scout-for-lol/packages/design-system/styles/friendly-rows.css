@@ -1,0 +1,616 @@
+/* Rows and cards on the soft surfaces: friends, games, stickers, setups, tips
+   and champions. Values follow d9.css, d10.css and d11*.css; colour comes from
+   the tokens and the variables in friendly.css. */
+
+.scout-row-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row that is a link tints on hover; its faces keep their ring in step. */
+.scout-friend-row,
+.scout-game-row,
+.scout-sticker,
+.scout-champion-card {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.scout-friend-row:hover,
+a.scout-game-row:hover {
+  background: var(--scout-surface-inset);
+}
+
+a.scout-friend-row:hover .scout-face,
+a.scout-friend-row:hover .scout-person,
+a.scout-game-row:hover .scout-face,
+a.scout-game-row:hover .scout-person {
+  --scout-face-ground: var(--scout-surface-inset);
+}
+
+/* ---------- friend row ---------- */
+
+.scout-friend-row {
+  display: grid;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 20px 7px 12px;
+  border-radius: var(--scout-radius-pill);
+}
+
+.scout-friend-row[data-layout="list"] {
+  grid-template-columns: 46px minmax(0, 1fr) 11rem;
+}
+
+.scout-friend-row[data-layout="ladder"] {
+  grid-template-columns: 28px 46px minmax(0, 1fr) auto;
+  padding-right: 18px;
+}
+
+.scout-friend-row[data-you="true"] {
+  background: var(--scout-brand-soft);
+}
+
+.scout-friend-row[data-you="true"] .scout-person {
+  --scout-face-ground: var(--scout-brand-soft);
+}
+
+.scout-friend-row__place {
+  color: var(--scout-color-text-muted);
+  font: 700 19px/1 var(--scout-font-display);
+  text-align: center;
+}
+
+.scout-friend-row[data-you="true"] .scout-friend-row__place {
+  color: var(--scout-color-text);
+}
+
+.scout-friend-row__id {
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.scout-friend-row__name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.scout-friend-row__name b {
+  min-width: 0;
+  font: 700 20px/1.3 var(--scout-font-display);
+}
+
+a.scout-friend-row:hover .scout-friend-row__name b {
+  color: var(--scout-color-primary);
+}
+
+.scout-friend-row__you {
+  flex: none;
+  padding: 1px 9px;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-color-primary);
+  color: var(--scout-color-primary-text);
+  font: 700 13px/20px var(--scout-font-body);
+}
+
+.scout-friend-row__latest,
+.scout-friend-row__unranked {
+  color: var(--scout-color-text-muted);
+}
+
+.scout-friend-row__latest[data-live="true"] {
+  color: var(--scout-color-text);
+  font-weight: 600;
+}
+
+.scout-friend-row__rank {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.scout-friend-row__rank img {
+  flex: none;
+}
+
+.scout-friend-row__rank > span {
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.scout-friend-row__rank b {
+  font: 700 18px/1.3 var(--scout-font-display);
+  white-space: nowrap;
+}
+
+.scout-friend-row__rank > span > span {
+  color: var(--scout-color-text-muted);
+}
+
+.scout-friend-row[data-layout="ladder"] .scout-friend-row__rank {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.scout-friend-row[data-layout="ladder"] .scout-friend-row__rank b {
+  font-size: 19px;
+}
+
+/* ---------- game sentence row ---------- */
+
+.scout-game-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 16px 9px 14px;
+  border-radius: var(--scout-radius-pill);
+}
+
+.scout-game-row__text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.scout-game-row__text b {
+  font-weight: 700;
+}
+
+/* A person's name leads the sentence: it is cut with an ellipsis rather than
+   wrapping the row. The full name stays in the text and the title. */
+.scout-game-row__lead {
+  display: inline-block;
+  max-width: 11em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.scout-game-row__detail,
+.scout-game-row__when {
+  color: var(--scout-color-text-muted);
+}
+
+.scout-game-row__when {
+  white-space: nowrap;
+}
+
+.scout-game-row__spark {
+  display: inline-flex;
+  margin-left: 7px;
+  color: var(--scout-color-primary);
+  vertical-align: -1px;
+}
+
+/* ---------- sticker ---------- */
+
+.scout-sticker {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 24px 8px 8px;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-color-surface);
+  box-shadow: var(--scout-shadow-float);
+}
+
+a.scout-sticker:hover {
+  background: var(--scout-brand-soft);
+}
+
+a.scout-sticker:hover .scout-sticker__mark,
+a.scout-sticker:hover .scout-person,
+a.scout-sticker:hover .scout-face {
+  --scout-face-ground: var(--scout-brand-soft);
+}
+
+.scout-sticker__face {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
+.scout-sticker__mark {
+  --scout-face-ground: var(--scout-color-surface);
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--scout-color-primary);
+  box-shadow: 0 0 0 2.5px var(--scout-face-ground);
+  color: var(--scout-color-primary-text);
+}
+
+.scout-sticker__text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.scout-sticker__text b {
+  font-weight: 600;
+}
+
+.scout-sticker__text span {
+  color: var(--scout-color-text-muted);
+}
+
+/* ---------- asset icon ---------- */
+
+.scout-asset-icon {
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  border-radius: calc(var(--scout-radius-large) * 0.8);
+}
+
+.scout-asset-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.scout-asset-icon[data-kind="rune"] {
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--scout-surface-inset);
+}
+
+.scout-asset-icon[data-kind="lane"] {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--scout-surface-inset-strong);
+}
+
+.scout-asset-icon[data-kind="lane"] img {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- setup row ---------- */
+
+.scout-setup-row {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0;
+}
+
+.scout-setup-row + .scout-setup-row {
+  box-shadow: 0 -1px 0
+    color-mix(in srgb, var(--scout-color-text) 7%, transparent);
+}
+
+.scout-setup-row__title {
+  margin: 0;
+  font: 700 20px/1.25 var(--scout-font-display);
+}
+
+.scout-setup-row__items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-setup-row__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 16px/1.3 var(--scout-font-body);
+}
+
+.scout-setup-row__item[data-keystone="true"] .scout-asset-icon {
+  padding: 0;
+}
+
+.scout-setup-row__then {
+  display: grid;
+  place-items: center;
+  margin: 0 -12px;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-setup-row__break {
+  height: 0;
+  margin: -6px 0;
+  flex-basis: 100%;
+}
+
+.scout-setup-row__note {
+  margin-left: 2px;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-setup-row__proof {
+  margin: 0;
+  color: var(--scout-color-text-muted);
+  line-height: 1.3;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.scout-setup-row__proof b {
+  margin-right: 4px;
+  color: var(--scout-color-text);
+  font: 700 22px/1.3 var(--scout-font-display);
+}
+
+.scout-setup-row__proof span {
+  display: block;
+}
+
+/* ---------- tip list ---------- */
+
+.scout-tip-list__rows {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-tip-list__tip {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 0;
+}
+
+.scout-tip-list__tip + .scout-tip-list__tip {
+  box-shadow: 0 -1px 0
+    color-mix(in srgb, var(--scout-color-text) 7%, transparent);
+}
+
+.scout-tip-list__tip:last-child {
+  padding-bottom: 2px;
+}
+
+.scout-tip-list__icons {
+  display: flex;
+  flex: none;
+  min-width: 92px;
+  gap: 8px;
+}
+
+.scout-tip-list__text {
+  min-width: 0;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.scout-tip-list__flip {
+  margin-top: 16px;
+  border-radius: var(--scout-radius-panel);
+  background: var(--scout-color-surface);
+  box-shadow: var(--scout-shadow-float);
+}
+
+.scout-tip-list__flip > summary {
+  display: flex;
+  min-height: 84px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px 16px 20px;
+  border-radius: var(--scout-radius-panel);
+  cursor: pointer;
+  list-style: none;
+}
+
+.scout-tip-list__flip > summary::-webkit-details-marker {
+  display: none;
+}
+
+.scout-tip-list__flip > summary:hover {
+  background: var(--scout-brand-soft);
+}
+
+.scout-tip-list__flip-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.scout-tip-list__flip-text b {
+  font: 700 21px/1.35 var(--scout-font-display);
+}
+
+.scout-tip-list__flip-text span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--scout-color-text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.scout-tip-list__chevron {
+  flex: none;
+  color: var(--scout-color-text-muted);
+  transition: transform var(--scout-motion-duration-normal)
+    var(--scout-motion-easing);
+}
+
+.scout-tip-list__flip[open] .scout-tip-list__chevron {
+  transform: rotate(180deg);
+}
+
+.scout-tip-list__flip-body {
+  padding: 0 36px 26px;
+}
+
+/* ---------- champion card ---------- */
+
+.scout-champion-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 10px 18px;
+  border-radius: var(--scout-radius-panel);
+  background: var(--scout-color-surface);
+  box-shadow: var(--scout-shadow-float);
+  text-align: center;
+}
+
+.scout-champion-card:hover {
+  background: var(--scout-brand-soft);
+}
+
+.scout-champion-card__name {
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+  font: 700 21px/1.25 var(--scout-font-display);
+  text-wrap: balance;
+}
+
+.scout-champion-card__lane {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-champion-card__lane img {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.scout-champion-card__win {
+  margin-top: 10px;
+  color: var(--scout-color-text-muted);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.scout-champion-card__win b {
+  margin-right: 3px;
+  color: var(--scout-color-text);
+  font: 700 20px/1.3 var(--scout-font-display);
+}
+
+.scout-champion-card__from {
+  color: var(--scout-color-text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.scout-champion-card__lane-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 4px;
+}
+
+.scout-champion-card__tier-slot {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.scout-champion-card__tier {
+  display: inline-block;
+  padding: 2px 11px;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset);
+  color: var(--scout-color-text-muted);
+  font: 600 13px/20px var(--scout-font-body);
+  white-space: nowrap;
+}
+
+/* ---------- narrower ---------- */
+
+@media (max-width: 720px) {
+  .scout-friend-row {
+    border-radius: var(--scout-radius-panel);
+    padding: 10px 14px;
+  }
+
+  .scout-friend-row[data-layout="list"] {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .scout-friend-row__place,
+  .scout-friend-row > .scout-person {
+    grid-row: 1 / span 2;
+  }
+
+  .scout-friend-row[data-layout="list"] .scout-friend-row__rank {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .scout-friend-row[data-layout="ladder"] {
+    grid-template-columns: 24px 46px minmax(0, 1fr);
+  }
+
+  .scout-friend-row[data-layout="ladder"] .scout-friend-row__rank {
+    flex-direction: row;
+    grid-column: 3;
+    grid-row: 2;
+    text-align: left;
+  }
+
+  .scout-game-row {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    padding: 10px 14px;
+    border-radius: var(--scout-radius-panel);
+  }
+
+  .scout-game-row__when {
+    grid-column: 2;
+    margin-top: -10px;
+  }
+
+  .scout-sticker {
+    border-radius: var(--scout-radius-panel);
+  }
+
+  .scout-setup-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 16px;
+    padding: 20px 0;
+  }
+
+  .scout-setup-row__items {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    gap: 12px 18px;
+  }
+
+  .scout-tip-list__tip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .scout-tip-list__flip > summary {
+    align-items: flex-start;
+    padding: 16px 18px;
+  }
+
+  .scout-tip-list__flip-body {
+    padding: 0 20px 22px;
+  }
+}

@@ -83,27 +83,36 @@ async function tofu(
 }
 
 /**
- * `lock` with each provider's `constraints` taken from `previous`.
+ * `lock` with each provider's `constraints` reconciled against `previous`.
  *
  * A lock records the version constraint of the configuration it was made
  * for. The pinned versions are locked from a scratch module that requires
- * exactly them, so its constraints are those exact versions; the stack's own
- * constraints are the ones its previous lock recorded.
+ * exactly them, so its constraints are those exact versions; a stack's range
+ * constraint (such as `~> 7.0`) comes from `previous`, while an exact-version
+ * constraint matching the previous locked version advances to the new pin.
  */
 export function withConstraintsOf(lock: string, previous: string): string {
-  const constraints = new Map<string, string>();
+  const previousProviders = new Map<
+    string,
+    { locked: string; constraints: string }
+  >();
   for (const match of previous.matchAll(
-    /^provider "(?<address>[^"]+)" \{\n\s*version\s*=\s*"[^"]+"\n\s*constraints\s*=\s*"(?<constraints>[^"]+)"/gmu,
+    /^provider "(?<address>[^"]+)" \{\n\s*version\s*=\s*"(?<version>[^"]+)"\n\s*constraints\s*=\s*"(?<constraints>[^"]+)"/gmu,
   )) {
-    const { address, constraints: value } = match.groups ?? {};
-    if (address !== undefined && value !== undefined)
-      constraints.set(address, value);
+    const { address, version, constraints: value } = match.groups ?? {};
+    if (address !== undefined && version !== undefined && value !== undefined)
+      previousProviders.set(address, { locked: version, constraints: value });
   }
   return lock.replaceAll(
-    /^(?<head>provider "(?<address>[^"]+)" \{\n\s*version\s*=\s*"[^"]+"\n\s*constraints\s*=\s*)"[^"]+"/gmu,
-    (block: string, head: string, address: string) => {
-      const value = constraints.get(address);
-      return value === undefined ? block : `${head}"${value}"`;
+    /^(?<head>provider "(?<address>[^"]+)" \{\n\s*version\s*=\s*"(?<pinned>[^"]+)"\n\s*constraints\s*=\s*)"[^"]+"/gmu,
+    (block: string, head: string, address: string, pinned: string) => {
+      const prior = previousProviders.get(address);
+      if (prior === undefined || prior.constraints === prior.locked) {
+        return block;
+      }
+      return prior.constraints === `= ${prior.locked}`
+        ? `${head}"= ${pinned}"`
+        : `${head}"${prior.constraints}"`;
     },
   );
 }
@@ -211,13 +220,15 @@ async function synthesizedStacks(): Promise<string[]> {
   return files.map((file) => path.dirname(file)).sort();
 }
 
-async function main(): Promise<void> {
-  const args = Bun.argv.slice(2);
-  const check = args.includes("--check");
-  const named = args.filter((argument) => !argument.startsWith("--"));
-  const stacks = named.length > 0 ? named : await synthesizedStacks();
-  const pins = await loadProviderPins();
+async function collectStaleLocks(
+  stacks: readonly string[],
+  pins: readonly ProviderPin[],
+): Promise<{
+  stale: Map<string, LockChange[]>;
+  previousLocks: Map<string, string>;
+}> {
   const stale = new Map<string, LockChange[]>();
+  const previousLocks = new Map<string, string>();
   for (const stack of stacks) {
     const lock = Bun.file(path.join(TOFU_ROOT, stack, ".terraform.lock.hcl"));
     if (!(await lock.exists())) {
@@ -226,9 +237,34 @@ async function main(): Promise<void> {
       console.log(`${stack}: no committed lock file, nothing to refresh`);
       continue;
     }
-    const changes = staleLockEntries(await lock.text(), pins);
-    if (changes.length > 0) stale.set(stack, changes);
+    const text = await lock.text();
+    const changes = staleLockEntries(text, pins);
+    if (changes.length > 0) {
+      stale.set(stack, changes);
+      previousLocks.set(stack, text);
+    }
   }
+  return { stale, previousLocks };
+}
+
+async function restorePreviousLocks(
+  previousLocks: ReadonlyMap<string, string>,
+): Promise<void> {
+  for (const [stack, previous] of previousLocks) {
+    await Bun.write(
+      path.join(TOFU_ROOT, stack, ".terraform.lock.hcl"),
+      previous,
+    );
+  }
+}
+
+async function main(): Promise<void> {
+  const args = Bun.argv.slice(2);
+  const check = args.includes("--check");
+  const named = args.filter((argument) => !argument.startsWith("--"));
+  const stacks = named.length > 0 ? named : await synthesizedStacks();
+  const pins = await loadProviderPins();
+  const { stale, previousLocks } = await collectStaleLocks(stacks, pins);
   for (const [stack, changes] of stale) {
     for (const change of changes)
       console.log(
@@ -245,9 +281,17 @@ async function main(): Promise<void> {
     console.log("lock files match the provider pins");
     return;
   }
-  for (const stack of stale.keys()) await refreshLock(stack, pins);
+  // Regenerate bindings and re-synthesize `main.tf.json` before `refreshLock`
+  // runs `tofu init -backend=false -lockfile=readonly`, so exact-pin stacks
+  // already carry the new pinned version in `required_providers`.
   await runPackageScript("generate");
   await runPackageScript("synth");
+  try {
+    for (const stack of stale.keys()) await refreshLock(stack, pins);
+  } catch (error) {
+    await restorePreviousLocks(previousLocks);
+    throw error;
+  }
   console.log(
     `refreshed ${stale.size.toString()} lock file(s), the provider bindings and every synthesized stack`,
   );

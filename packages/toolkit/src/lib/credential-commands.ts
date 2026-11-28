@@ -56,8 +56,6 @@ export function requiredCredentialsFor(
       return ["GRAFANA_API_KEY"];
     case "cf":
       return ["CF_API_TOKEN"];
-    case "bugsink":
-      return ["BUGSINK_TOKEN"];
     case "discord":
       if (args.includes("--password-login")) return [];
       return args.includes("--user-only")

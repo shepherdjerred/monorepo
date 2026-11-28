@@ -42,16 +42,24 @@ async function check(
   return runCheckStatuses([statuses], pageSize);
 }
 
+type WoodpeckerPipelineMock = {
+  number: number;
+  commit: string;
+  workflows: readonly { name: string; state: string }[];
+};
+
 /** Runs the ci-complete script against a paginated GitHub statuses fake. */
 async function runCheckStatuses(
   timeline: readonly (readonly CommitStatus[])[],
   pageSize: number,
   useEtags = false,
+  woodpeckerPipeline?: WoodpeckerPipelineMock,
 ): Promise<CheckResult> {
   const source = [
     `const timeline = ${JSON.stringify(timeline)};`,
     `const pageSize = ${String(pageSize)};`,
     `const useEtags = ${String(useEtags)};`,
+    `const woodpeckerPipeline = ${JSON.stringify(woodpeckerPipeline ?? null)};`,
     `const sleeps = [];`,
     `const ifNoneMatchHeaders = [];`,
     `let pollIndex = 0;`,
@@ -59,6 +67,12 @@ async function runCheckStatuses(
     String.raw`process.on("exit", () => { console.error("\n__META__:" + JSON.stringify({ sleeps, ifNoneMatchHeaders }) + "\n"); });`,
     `globalThis.fetch = async (input, init) => {
       const url = new URL(String(input));
+      if (url.hostname !== "api.github.com") {
+        if (!woodpeckerPipeline || url.pathname !== "/api/repos/1/pipelines/1200") {
+          return new Response("not found", { status: 404 });
+        }
+        return Response.json(woodpeckerPipeline);
+      }
       const page = Number(url.searchParams.get("page") ?? "1");
       const statuses = timeline[Math.min(pollIndex, timeline.length - 1)];
       const start = (page - 1) * pageSize;
@@ -151,43 +165,60 @@ describe("complete PR status", () => {
     "packages/delivery/src/client/app.tsx",
     "packages/delivery/e2e/delivery.spec.ts",
     "packages/delivery/prisma/schema.prisma",
-  ])("requires browser acceptance for Delivery-only change %s", (path) => {
-    const selected = selectSteps(testPipelineSteps(), {
-      event: "pull_request",
-      branch: "feature/delivery",
-      defaultBranch: "main",
-      changedFiles: [path],
-    });
-    expect(selected.some((step) => step.key === "playwright-e2e")).toBe(true);
-    expect(completionStep(selected, TEST_IMAGES.base).dependsOn).toContain(
-      "playwright-e2e",
-    );
-  });
+  ])(
+    "does not require browser acceptance of Delivery-only change %s on a PR",
+    (path) => {
+      const selected = selectSteps(testPipelineSteps(), {
+        event: "pull_request",
+        branch: "feature/delivery",
+        defaultBranch: "main",
+        changedFiles: [path],
+      });
+      expect(selected.some((step) => step.key === "playwright-e2e")).toBe(
+        false,
+      );
+      expect(
+        completionStep(selected, TEST_IMAGES.base).dependsOn,
+      ).not.toContain("playwright-e2e");
+    },
+  );
 
-  test("browser work runs independently but completion and sites wait for both gates", () => {
+  test("browser work is a main-only gate that sites waits on, and a PR gate never lists it", () => {
     const steps = testPipelineSteps();
-    const selected = selectSteps(steps, {
+    const changedFiles = ["packages/sjer.red/src/pages/index.astro"];
+    const pr = selectSteps(steps, {
+      event: "pull_request",
+      branch: "feature/sjer",
+      defaultBranch: "main",
+      changedFiles,
+    });
+    expect(pr.some((step) => step.key === "playwright-e2e")).toBe(false);
+    const prComplete = completionStep(pr, TEST_IMAGES.base);
+    expect(prComplete.dependsOn).not.toContain("playwright-e2e");
+    expect(
+      JSON.parse(prComplete.environment?.["CI_EXPECTED_CONTEXTS"] ?? "[]"),
+    ).not.toContain("ci/woodpecker/pr/playwright-e2e");
+
+    // A pull request whose target branch is main reports branch "main"; the
+    // lane is still not selected because the event is not a push.
+    const prToMain = selectSteps(steps, {
       event: "pull_request",
       branch: "main",
       defaultBranch: "main",
-      changedFiles: ["packages/sjer.red/src/pages/index.astro"],
+      changedFiles,
     });
-    const browser = selected.find((step) => step.key === "playwright-e2e");
+    expect(prToMain.some((step) => step.key === "playwright-e2e")).toBe(false);
+
+    const main = selectSteps(steps, {
+      event: "push",
+      branch: "main",
+      defaultBranch: "main",
+      changedFiles,
+    });
+    const browser = main.find((step) => step.key === "playwright-e2e");
     expect(browser).toBeDefined();
     expect(browser?.dependsOn).toBeUndefined();
-    const complete = completionStep(selected, TEST_IMAGES.base);
-    expect(complete.dependsOn).toEqual(
-      expect.arrayContaining(["verify", "playwright-e2e"]),
-    );
-    expect(
-      JSON.parse(complete.environment?.["CI_EXPECTED_CONTEXTS"] ?? "[]"),
-    ).toEqual(
-      expect.arrayContaining([
-        "ci/woodpecker/pr/verify",
-        "ci/woodpecker/pr/playwright-e2e",
-      ]),
-    );
-    expect(steps.find((step) => step.key === "sites")?.dependsOn).toEqual(
+    expect(main.find((step) => step.key === "sites")?.dependsOn).toEqual(
       expect.arrayContaining(["verify", "playwright-e2e"]),
     );
   });
@@ -366,6 +397,89 @@ describe("complete PR status polling", () => {
       5_400_000,
     );
     expect(stuckRunning.stderr).toContain("no completed status");
+  });
+});
+
+describe("complete PR status Woodpecker reconciliation", () => {
+  test("reconciles dropped terminal GitHub statuses via Woodpecker pipeline state", async () => {
+    const okPipeline: WoodpeckerPipelineMock = {
+      number: 1200,
+      commit: SHA,
+      workflows: [
+        { name: "verify", state: "success" },
+        { name: "pr-dryrun", state: "success" },
+      ],
+    };
+    const verifyOk = {
+      context: "ci/woodpecker/pr/verify",
+      state: "success",
+      target_url: `${PIPELINE}/1`,
+    };
+    const stuckPending = {
+      context: "ci/woodpecker/pr/pr-dryrun",
+      state: "pending",
+      description: "Workflow is running",
+      target_url: `${PIPELINE}/2`,
+    };
+    const droppedPending = await runCheckStatuses(
+      [[verifyOk, stuckPending]],
+      100,
+      false,
+      okPipeline,
+    );
+    expect(droppedPending.code).toBe(0);
+    expect(droppedPending.sleeps).toEqual([]);
+
+    const droppedMissing = await runCheckStatuses(
+      [[verifyOk]],
+      100,
+      false,
+      okPipeline,
+    );
+    expect(droppedMissing.code).toBe(0);
+    expect(droppedMissing.sleeps).toEqual(
+      Array.from({ length: 20 }, () => 3000),
+    );
+  });
+
+  test("rejects Woodpecker reconciliation on commit mismatch or failed workflow", async () => {
+    const partial = [
+      [
+        {
+          context: "ci/woodpecker/pr/verify",
+          state: "success",
+          target_url: `${PIPELINE}/1`,
+        },
+        {
+          context: "ci/woodpecker/pr/pr-dryrun",
+          state: "pending",
+          description: "Workflow is running",
+          target_url: `${PIPELINE}/2`,
+        },
+      ],
+    ];
+    const wrongCommit = await runCheckStatuses(partial, 100, false, {
+      number: 1200,
+      commit: BASE,
+      workflows: [
+        { name: "verify", state: "success" },
+        { name: "pr-dryrun", state: "success" },
+      ],
+    });
+    expect(wrongCommit.code).not.toBe(0);
+    expect(wrongCommit.stderr).toContain("no completed status");
+
+    const failedWorkflow = await runCheckStatuses(partial, 100, false, {
+      number: 1200,
+      commit: SHA,
+      workflows: [
+        { name: "verify", state: "success" },
+        { name: "pr-dryrun", state: "canceled" },
+      ],
+    });
+    expect(failedWorkflow.code).not.toBe(0);
+    expect(failedWorkflow.sleeps).toEqual([]);
+    expect(failedWorkflow.stderr).toContain("Required workflows failed");
   });
 });
 

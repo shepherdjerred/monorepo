@@ -85,3 +85,74 @@ test("every agent-host cask exists in the workstation dump", async () => {
   );
   expect(missing).toEqual([]);
 });
+
+test("workstation dump omits broken cirruslabs/cli tap and trusts installed tap formulae (AI-372)", async () => {
+  const dumpText = await Bun.file(
+    path.join(sourceDirectory, ".Brewfile_darwin"),
+  ).text();
+  expect(dumpText).not.toContain("cirruslabs/cli");
+
+  const tapTrustedFormulae = new Map<string, Set<string> | "all" | "default">();
+  const tapBrews: { tap: string; formula: string }[] = [];
+
+  for (const line of dumpText.split("\n")) {
+    const tapMatch = /^tap "([^"]+)"(.*)$/u.exec(line);
+    if (tapMatch?.[1] !== undefined) {
+      const tapName = tapMatch[1];
+      const rest = tapMatch[2] ?? "";
+      const listMatch = /formulae:\s*\[([^\]]*)\]/u.exec(rest);
+      if (listMatch?.[1] !== undefined) {
+        const parsed = [...listMatch[1].matchAll(/"([^"]+)"/gu)].flatMap((m) =>
+          m[1] === undefined ? [] : [m[1]],
+        );
+        tapTrustedFormulae.set(tapName, new Set(parsed));
+      } else if (/trusted:\s*true/u.test(rest)) {
+        tapTrustedFormulae.set(tapName, "all");
+      } else {
+        tapTrustedFormulae.set(tapName, "default");
+      }
+      continue;
+    }
+
+    const brewMatch = /^brew "([^"/]+\/[^"/]+\/[^"/]+)"/u.exec(line);
+    if (brewMatch?.[1] !== undefined) {
+      const parts = brewMatch[1].split("/");
+      const tap = `${parts[0] ?? ""}/${parts[1] ?? ""}`;
+      const formula = parts[2] ?? "";
+      tapBrews.push({ tap, formula });
+    }
+  }
+
+  expect(tapBrews).toContainEqual({ tap: "openai/tools", formula: "tart" });
+  for (const { tap, formula } of tapBrews) {
+    const trust = tapTrustedFormulae.get(tap);
+    expect(trust, `missing tap "${tap}" for ${tap}/${formula}`).toBeDefined();
+    if (trust instanceof Set) {
+      expect(
+        trust.has(formula),
+        `tap "${tap}" trusted.formulae omits installed formula "${formula}"`,
+      ).toBe(true);
+    }
+  }
+});
+
+test("every non-stdlib go package in .Brewfile_darwin is listed in dot_default-go-packages (AI-904)", async () => {
+  const [dumpText, defaultGoText] = await Promise.all([
+    Bun.file(path.join(sourceDirectory, ".Brewfile_darwin")).text(),
+    Bun.file(path.join(sourceDirectory, "dot_default-go-packages")).text(),
+  ]);
+  const defaultGoPackages = new Set(
+    defaultGoText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith("#")),
+  );
+  const dumpedGoPackages = [...dumpText.matchAll(/^go "([^"]+)"/gmu)].flatMap(
+    (match) =>
+      match[1] === undefined || match[1].startsWith("cmd/") ? [] : [match[1]],
+  );
+
+  expect(dumpedGoPackages.length).toBeGreaterThan(0);
+  const missing = dumpedGoPackages.filter((pkg) => !defaultGoPackages.has(pkg));
+  expect(missing).toEqual([]);
+});

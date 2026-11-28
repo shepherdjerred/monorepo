@@ -131,7 +131,6 @@ export function createMailDeployment(chart: Chart) {
           },
           {
             from: [
-              nsPeer("bugsink"),
               ...["storm-forum", "storm-forum-beta"].flatMap((namespace) =>
                 ["web", "release"].map((component) => ({
                   ...nsPeer(namespace),

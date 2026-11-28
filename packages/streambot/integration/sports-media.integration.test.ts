@@ -5,6 +5,7 @@ import path from "node:path";
 import { probeMedia } from "@shepherdjerred/streambot/sources/probe.ts";
 import { runWithPreparedSportsInput } from "@shepherdjerred/streambot/sources/prepared-sports.ts";
 import { buildPlaybackPrepareOptions } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
+import { audioProcessingFlags } from "@shepherdjerred/streambot/config/media-features.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -314,6 +315,7 @@ describe("sports media demux and decode", () => {
           startSeconds: 0,
           volumePercent: 100,
           pipelineMode: "sw",
+          audioProcessing: await audioProcessingFlags("integration"),
         });
         if (
           resolved.ffmpegInput === undefined ||

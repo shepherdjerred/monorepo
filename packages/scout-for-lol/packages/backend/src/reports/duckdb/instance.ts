@@ -281,6 +281,17 @@ async function getInstance(pool: DuckDBPool): Promise<DuckDBInstance> {
 
 type ConnectionOptions = { timeoutMs?: number; abortSignal?: AbortSignal };
 
+let reportSlotsTaken = 0;
+
+/**
+ * How many report-pool slots this process has taken. A page that promises one
+ * lake slot per request asserts the difference across a call; nothing else
+ * should read it.
+ */
+export function countReportSlotsTaken(): number {
+  return reportSlotsTaken;
+}
+
 /**
  * Run `fn` with a fresh report connection. Every statement issued through the
  * session shares one timeout budget; when it expires the connection is
@@ -341,6 +352,7 @@ async function withPooledConnection<T>(
     options.abortSignal?.removeEventListener("abort", abortWaiting);
   }
 
+  if (pool.name === "report") reportSlotsTaken++;
   try {
     return await withDuckDBConnectionSlot(pool, fn, {
       ...options,

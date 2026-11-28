@@ -1,0 +1,128 @@
+[
+  {
+    "rule": "theme-color",
+    "file": "index.html",
+    "count": 2,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/app.tsx",
+    "count": 3,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/deployment-heading.tsx",
+    "count": 2,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-class",
+    "file": "src/client/flag-table.tsx",
+    "count": 2,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/flag-table.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/link-button.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "theme-store-key",
+    "file": "src/client/main.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/sidebar.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles.css",
+    "count": 7,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/client/styles.css",
+    "count": 8,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-class",
+    "file": "src/client/views/compare-page.tsx",
+    "count": 3,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/compare-page.tsx",
+    "count": 7,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/views/compare-page.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/drift-chip.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/drift-page.tsx",
+    "count": 5,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/views/drift-page.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-class",
+    "file": "src/client/views/home-page.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/home-page.tsx",
+    "count": 4,
+    "reason": "Baseline at CU1. Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "theme-store-key",
+    "file": "src/client/app-harness.test-support.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1 (added by #5325 after the first baseline). Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/archive-page.tsx",
+    "count": 4,
+    "reason": "Baseline at CU1 (added by #5325 after the first baseline). Flags moves onto the shared pieces in FL1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/views/history-panel.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1 (added by #5325 after the first baseline). Flags moves onto the shared pieces in FL1."
+  }
+]

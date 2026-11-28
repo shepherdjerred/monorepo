@@ -4,6 +4,7 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import type { Principal } from "#shared/contract.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import { MachineCredentialSchema } from "#infrastructure/config.ts";
+import { deploymentDetailV2 } from "#infrastructure/selection/views.ts";
 import { createTestApp } from "#testing/http-app.ts";
 import {
   arcadePipeline,
@@ -48,13 +49,17 @@ async function operatorRunDeployment() {
 
 test("an operator attests each declared stage of an operator-run deployment", async () => {
   const deployment = await operatorRunDeployment();
+  const initialView = await deploymentDetailV2(context.delivery, deployment.id);
+  expect(initialView.pendingAttestationStages).toEqual(["bootstrap", "verify"]);
   await expect(
     context.delivery.attestStage(
       deployment.id,
-      { stage: "unknown", evidence: ran },
+      { stage: "step-attestation", evidence: ran },
       operatorTool,
     ),
-  ).rejects.toThrow(/not one the recipe asks/u);
+  ).rejects.toThrow(
+    /not one the recipe asks the operator to attest \(expected: bootstrap, verify\)/u,
+  );
   // Only the distinct attestor identity attests: never a human session, the
   // executor, or a credential carrying execute alongside attest.
   for (const actor of [
@@ -107,6 +112,8 @@ test("an operator attests each declared stage of an operator-run deployment", as
   });
   // A replay records nothing new.
   await context.delivery.attestStage(deployment.id, attestation, operatorTool);
+  const midView = await deploymentDetailV2(context.delivery, deployment.id);
+  expect(midView.pendingAttestationStages).toEqual(["verify"]);
   const detail = await context.delivery.detail(deployment.id);
   expect(detail.stages).toContainEqual(
     expect.objectContaining({
@@ -125,10 +132,14 @@ test("an operator attests each declared stage of an operator-run deployment", as
     operatorTool,
   );
   expect(verified.operationId).toMatch(/^sha256:[a-f0-9]{64}$/u);
+  const finalView = await deploymentDetailV2(context.delivery, deployment.id);
+  expect(finalView.pendingAttestationStages).toEqual([]);
 });
 
 test("a deployment of another recipe kind takes no attestation", async () => {
   const deployment = await requestOnProd(context, "deploy");
+  const view = await deploymentDetailV2(context.delivery, deployment.id);
+  expect(view.pendingAttestationStages).toBeUndefined();
   await expect(
     context.delivery.attestStage(
       deployment.id,

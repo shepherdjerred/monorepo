@@ -4,6 +4,7 @@ import { minecraftUpgradeOf } from "#shared/model/recipe-view.ts";
 import {
   PLAN_APPROVAL_STAGE_KEY,
   attestationStageKey,
+  stepStageKey,
 } from "#shared/model/stage-keys.ts";
 import type {
   FinishDeployment,
@@ -30,7 +31,14 @@ import {
 import { acceptWorkerRetirement } from "#infrastructure/worker-pool/retirement.ts";
 import { acceptWorkerBaseline } from "#infrastructure/worker-pool/baseline.ts";
 import { validateSpecializedSuccess } from "#infrastructure/specialized-success.ts";
-import { validatePlatformSuccess } from "#infrastructure/platform/lifecycle.ts";
+import {
+  holdPlatformLock,
+  validatePlatformSuccess,
+} from "#infrastructure/platform/lifecycle.ts";
+import {
+  defersPlatformLockToApply,
+  requireNoSelfHostedBarrierHolder,
+} from "#infrastructure/execution/admission.ts";
 import { validateControlPlaneSuccess } from "#infrastructure/control-plane/lifecycle.ts";
 import { recomposeTracking } from "#infrastructure/composition/automatic.ts";
 import { acceptanceMonitor } from "#infrastructure/monitor/monitor.ts";
@@ -65,6 +73,7 @@ const DECISION_STAGE_KEYS: ReadonlySet<string> = new Set([
  * approve its own operator-run work.
  */
 const ATTESTATION_STAGE_PREFIX = attestationStageKey("");
+const APPLY_STEP_KEY = stepStageKey("step", "apply");
 
 function refuseReservedStage(key: string) {
   if (DECISION_STAGE_KEYS.has(key))
@@ -79,6 +88,31 @@ function refuseReservedStage(key: string) {
     );
 }
 
+async function acquireDeferredApplyLock(
+  tx: Transaction,
+  row: { id: string; pipelineRevisionId: string },
+  existing: { status: string } | null,
+  input: { key: string; status: string },
+) {
+  if (
+    input.key !== APPLY_STEP_KEY ||
+    (input.status !== "running" && input.status !== "succeeded")
+  )
+    return;
+  const pipeline = PipelineRevisionSchema.parse(
+    wire(
+      required(
+        await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),
+        "Pipeline",
+      ),
+    ),
+  );
+  if (!defersPlatformLockToApply(pipeline.definition)) return;
+  if (input.status === "running")
+    await requireNoSelfHostedBarrierHolder(tx, row.id);
+  await holdPlatformLock(tx, row.id, existing !== null);
+}
+
 export async function stage(
   this: Delivery,
   deploymentId: string,
@@ -90,6 +124,7 @@ export async function stage(
   refuseReservedStage(input.key);
   const leaseSeconds = await this.policy.leaseSeconds();
   return this.database.$transaction(async (tx) => {
+    if (input.key === APPLY_STEP_KEY) await lock(tx, "delivery:claim");
     const row = await runningDeployment(
       tx,
       deploymentId,
@@ -119,6 +154,7 @@ export async function recordStageIn(
   input: StageInput,
   { actor, leaseSeconds }: { actor: Principal; leaseSeconds: number | null },
 ) {
+  if (input.key === APPLY_STEP_KEY) await lock(tx, "delivery:claim");
   const row = await runningDeployment(
     tx,
     deploymentId,
@@ -143,6 +179,7 @@ export async function recordStageIn(
     (existing.status !== input.status || existing.message !== input.message)
   )
     throw new DeliveryError("CONFLICT", "Completed stage cannot be rewritten");
+  await acquireDeferredApplyLock(tx, row, existing, input);
   const { evidence: items, ...data } = input;
   // A preservation attempt's evidence is append-only for a Minecraft
   // upgrade, whether a v1 pipeline or a model recipe's verified-restore
@@ -320,8 +357,24 @@ export async function finish(
     // accepting transaction (R7).
     if (accepted && observesApplication(row)) await recomposeTracking(tx, row);
     // A stopped deployment never takes its pending decision, such as a plan
-    // approval whose saved plan expired undecided: the approval expires.
-    if (input.status !== "succeeded")
+    // approval whose saved plan expired undecided: the approval expires. A
+    // succeeded zero-change tofu deploy whose override was cleared settles its
+    // pending approval row cleanly.
+    if (input.status === "succeeded")
+      await tx.approval.updateMany({
+        where: {
+          deploymentId,
+          status: "pending",
+          overrideDecidedAt: { not: null },
+        },
+        data: {
+          status: "granted",
+          actor: "delivery/zero-change-plan",
+          reason: "Saved plan proposed zero changes",
+          decidedAt: now,
+        },
+      });
+    else
       await tx.approval.updateMany({
         where: { deploymentId, status: "pending" },
         data: { status: "expired", decidedAt: now },

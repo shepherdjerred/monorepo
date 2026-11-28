@@ -1,6 +1,6 @@
 ---
 title: Why Hub is one app built from modules
-description: Why the homelab's personal tools share one Hub web app composed of modules, why Delivery stays a separate app that Hub only links to, and why Hub is still deployed as alert-dashboard.
+description: Why the homelab's personal tools share one Hub web app composed of modules, why Incidents may take writes inside Hub while Delivery stays a separate app, and why Hub is still deployed as alert-dashboard.
 sidebar:
   order: 4
 ---
@@ -9,26 +9,33 @@ Hub is the one web app for the homelab's personal tools. It began as the
 operations overview and the alert ledger, and further tools join it as modules
 rather than as separate apps.
 
-Hub keeps a single shell, theme, Home page, and ⌘K palette. Delivery stays a
-separate app, and Hub only links to it. Hub's deployed identity is still
+Hub keeps a single shell, theme, Home page, and ⌘K palette. Its modules may
+record and coordinate, as Incidents does, but none holds authority over the
+systems it describes. Delivery holds that authority, so it stays a separate
+app that Hub only links to. Hub's deployed identity is still
 `alert-dashboard`, because renaming it would put the alert ledger at risk.
 
 ```mermaid
 flowchart LR
   accTitle: Hub, its modules, and Delivery
-  accDescr: The hub tailnet host reaches one alert-dashboard Service. Inside it, the core module serves the operations overview and the alert ledger, and other modules mount beside it. The Temporal ops snapshot feeds the core module. Delivery is a separate app that Hub reaches only through browser links.
+  accDescr: The hub tailnet host reaches one alert-dashboard Service. Inside it, the core module serves the operations overview and the alert ledger, the incidents module writes to its own PostgreSQL database, and other modules mount beside them. The Temporal ops snapshot feeds the core module and sends main-ci signals to incidents. Delivery is a separate app that Hub reaches only through browser links.
 
   HOSTS[Tailnet host\nhub]
   SVC[alert-dashboard Service\none process]
   CORE[core module\nOps overview and alert ledger]
+  INC[incidents module\nrecords and coordinates]
+  INCDB[(incidents PostgreSQL)]
   MODS[Other modules\nunder their own path]
   SNAP[Temporal ops snapshot]
   DELIVERY[Delivery web app]
 
   HOSTS --> SVC
   SVC --> CORE
+  SVC --> INC
   SVC --> MODS
+  INC --> INCDB
   SNAP -->|ingest| CORE
+  SNAP -->|main-ci signal| INC
   CORE -.->|link only| DELIVERY
 ```
 
@@ -90,21 +97,60 @@ choices contain that risk.
   forbid a module from importing another module or the core domain,
   application, and infrastructure layers.
 - Storage stays outside. A module that needs its own database lives in its own
-  workspace package and plugs into Hub through an adapter.
+  workspace package and plugs into Hub through an adapter. Incidents is the
+  first: its
+  [adapter](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/src/modules/incidents/server.ts)
+  only checks the package's object against the server contract.
 
 The process already had memory trouble before modules existed. The
 [deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/alert-dashboard/index.ts)
 records why its limit was raised. Every module's memory footprint therefore
 counts against the ledger's headroom, not only its own.
 
+## Incidents takes writes, and why that is acceptable
+
+Hub began read-only. The
+[operations overview](/explanation/homelab/operations-overview/) links to
+native tools and never acts on them. Incidents breaks the read-only part on
+purpose. People and agents declare incidents, take command, post updates, and
+resolve them, from the browser and from `toolkit incident`.
+
+Coordination needs a shared, writable record. Agents blocked by the same
+broken system used to pile up Forum notices. Nobody knew who was fixing it.
+One incident per system, with one commander, answers that question.
+
+The writes are acceptable inside Hub for three reasons.
+
+- **The writes stay outside the ledger.** Incidents keeps its own PostgreSQL
+  database, separate from the alert ledger's SQLite. It reports readiness only
+  at `/readyz/incidents`. A database outage stops incident writes; the
+  overview and the ledger keep serving.
+- **Actors are attribution, not authorization.** As with Tracker, the tailnet
+  is the access boundary and the actor is self-asserted. A browser write is
+  attributed to the Tailscale user Hub's ingress names, as the
+  [viewer rule](https://github.com/shepherdjerred/monorepo/blob/main/packages/incidents/src/server/viewer.ts)
+  shows.
+- **Incidents holds no control-plane authority.** It records and coordinates.
+  It never deploys, rolls back, approves, retries CI, or pages anyone. A bad
+  write leaves a wrong record or a wrong commander, and a person corrects it.
+
+The line Hub draws is therefore authority, not reads versus writes. A Hub
+module may keep its own record of the work. It may not change the systems the
+record describes. The
+[incidents package README](https://github.com/shepherdjerred/monorepo/blob/main/packages/incidents/README.md)
+covers its contract and coordination rules.
+
 ## Why Delivery stays separate
 
 Delivery is the release control plane. It owns PostgreSQL state, approvals,
-and the decisions that move a version into an environment. Hub is read-only by
-design, as the
-[operations overview](/explanation/homelab/operations-overview/) explains.
-Folding a write-heavy control plane into a read-only page would mix two very
-different trust levels in one process.
+and the decisions that move a version into an environment. Its writes act on
+the cluster. Incidents' writes only describe it. Folding Delivery into Hub
+would put a process that releases software beside pages any tailnet device can
+write to. That mixes two very different trust levels in one process.
+
+An incident about Delivery shows the difference. Incidents records who is
+fixing a stuck release and links the deployment. The fix itself happens in
+Delivery, under Delivery's own authority.
 
 Even a read-only Delivery panel in Hub would cost more than it looks. Hub would
 need its own credential for Delivery, a 1Password grant, a network egress rule,
@@ -129,8 +175,9 @@ deployment. What they share is `@shepherdjerred/console-ui`, a package of styles
 tokens and small components that each app bundles into its own client.
 
 Sharing a package rather than a process keeps the reasons above intact. Go
-link, Flags and Mail own their own data and writes, as Delivery does, so folding
-them into Hub would mix trust levels in one process. A shared look costs them
+link, Flags and Mail own their own data, and their writes act: a flag changes
+live behaviour, and Mail sends. Like Delivery, folding them into Hub would mix
+trust levels in one process. A shared look costs them
 nothing at runtime: there is no shared server to call and no shared outage.
 
 The app switcher and Hub's launcher both read one list of consoles,
@@ -164,6 +211,7 @@ the same path under `hub` does.
 
 - [Operations overview](/explanation/homelab/operations-overview/)
 - [Alerts and incident history](/explanation/homelab/alerts/)
+- [Incidents package README](https://github.com/shepherdjerred/monorepo/blob/main/packages/incidents/README.md)
 - [How the Delivery web app follows a change](/explanation/homelab/delivery-hub/)
 - [Console UI reference](/reference/console-ui/)
 - [Hub package README](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/README.md)

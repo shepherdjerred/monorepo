@@ -8,6 +8,7 @@ import { createDatabase } from "#infrastructure/database.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createQualifier } from "#infrastructure/qualification.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
+import { createWorkerJobsReader } from "#infrastructure/argo-recovery/test-stage-jobs.ts";
 import { createApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { createMinecraftRecoveryInspector } from "#infrastructure/minecraft-recovery/inspector.ts";
 import {
@@ -127,6 +128,7 @@ const app = createApp({
   }),
   inspectRecovery: createRecoveryInspector({
     readApplication,
+    readWorkerJobs: createWorkerJobsReader(),
     ...(inspectTrmnl === undefined ? {} : { inspectTrmnl }),
   }),
   inspectMinecraftRecovery: createMinecraftRecoveryInspector({

@@ -95,6 +95,11 @@ export function createPyroscopeApp(chart: Chart) {
   return helmApplication(chart, {
     name: "pyroscope",
     namespace: "pyroscope",
+    metadata: {
+      annotations: {
+        "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+      },
+    },
     chart: "pyroscope",
     // https://github.com/grafana/pyroscope/tree/main/operations/pyroscope/helm/pyroscope
     repoUrl: "https://grafana.github.io/helm-charts",

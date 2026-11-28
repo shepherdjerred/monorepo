@@ -13,6 +13,15 @@ export default [
       "eslint.config.ts",
     ],
   }),
+  // typescript-eslint 8.72+ builds a redundant full-package single-run Program
+  // alongside projectService under CI=true, exceeding Node's default 4 GiB heap.
+  {
+    languageOptions: {
+      parserOptions: {
+        disallowAutomaticSingleRunInference: true,
+      },
+    },
+  },
   {
     files: ["prisma.config.ts"],
     rules: { "custom-rules/prefer-bun-apis": "off" },

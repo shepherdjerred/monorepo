@@ -10,6 +10,7 @@ import {
 } from "../../ci/scripts/images/image-targets.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
+import { createRetryingDeliveryFetch } from "./delivery/retry-fetch.ts";
 import { readRequiredHandoff } from "./ci/ci-handoff.ts";
 import { z } from "zod";
 import { requireEnv } from "./run.ts";
@@ -133,6 +134,7 @@ export async function chartPublicationImages(
     const options = {
       baseUrl: requireEnv("DELIVERY_URL"),
       headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+      fetch: createRetryingDeliveryFetch(),
     };
     const delivery = createDeliveryClient(options);
     const request = createNarrowReader(options);

@@ -9,7 +9,8 @@ import {
 } from "#protocol/instance.ts";
 import { stageWorldDirectory } from "#sandbox/world-source.ts";
 import { copyRealMap } from "#sandbox/map-copy.ts";
-import { startCaptureProxy } from "./proxy.ts";
+import { startCaptureProxy, type CaptureProxy } from "./proxy.ts";
+import { reconcileRunningSandbox } from "./reconcile.ts";
 import { SandboxLifecycle } from "./lifecycle.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BridgeClient } from "#bridge/client.ts";
@@ -51,7 +52,6 @@ import {
   formatExpiresAtMs,
   parseSandboxRows,
   SANDBOX_ROW_FORMAT,
-  currentDockerEndpoints,
 } from "./rows.ts";
 import { reapManagedContainers } from "./reap.ts";
 
@@ -137,10 +137,7 @@ export function dockerCreateArgs(
 export class DockerSandboxProvider implements SandboxProvider {
   readonly kind = "docker" as const;
   private queue: Promise<unknown> = Promise.resolve();
-  private readonly proxies = new Map<
-    string,
-    Awaited<ReturnType<typeof startCaptureProxy>>
-  >();
+  private readonly proxies = new Map<string, CaptureProxy>();
   private readonly lifecycle = new SandboxLifecycle();
 
   constructor(
@@ -355,43 +352,20 @@ export class DockerSandboxProvider implements SandboxProvider {
           const current = await this.options.store.read(record.id);
           if (current === null) return;
           const row = running.get(dockerContainerId(current).slice(0, 12));
-          if (row === undefined)
+          if (row === undefined) {
+            this.closeProxy(current.id);
             return { ...current, status: "stopped" as const };
-          const adopted =
-            current.world === "real-map"
-              ? await this.adopt(current)
-              : {
-                  ...current,
-                  endpoints: currentDockerEndpoints(row.ports),
-                };
-          return { ...adopted, status: "ready" as const };
+          }
+          return reconcileRunningSandbox({
+            record: current,
+            ports: row.ports,
+            store: this.options.store,
+            proxies: this.proxies,
+          });
         }),
       ),
     );
     return listed.filter((record) => record !== undefined);
-  }
-
-  private async adopt(record: SandboxRecord): Promise<SandboxRecord> {
-    const existing = this.proxies.get(record.id);
-    if (existing !== undefined)
-      return {
-        ...record,
-        endpoints: { ...record.endpoints, game: existing.endpoint },
-      };
-    const game = await publishedPort(dockerContainerId(record), GAME_PORT);
-    const proxy = await startCaptureProxy(game);
-    const adopted = {
-      ...record,
-      endpoints: { ...record.endpoints, game: proxy.endpoint },
-    };
-    try {
-      await this.options.store.write(adopted);
-      this.proxies.set(record.id, proxy);
-      return adopted;
-    } catch (error) {
-      proxy.close();
-      throw error;
-    }
   }
 
   async destroy(id: string): Promise<void> {

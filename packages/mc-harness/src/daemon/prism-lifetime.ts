@@ -2,6 +2,13 @@ import { lstat, appendFile, readFile } from "node:fs/promises";
 import { z } from "zod";
 import { clientRequest } from "./client-socket.ts";
 import type { LaunchedClient, LaunchSpec } from "./client-launch.ts";
+import { createPrismMemoryMonitor } from "./prism.ts";
+
+export type PrismLifetimeOptions = {
+  prismLogPath?: string;
+  prismLogOffset?: number;
+  memoryPromptGraceMs?: number;
+};
 
 function alive(pid: number): boolean {
   try {
@@ -30,12 +37,24 @@ export function ownPrismGame(
   spec: LaunchSpec,
   launcher: LaunchedClient,
   cleanup: (completed: boolean) => Promise<void>,
+  options?: PrismLifetimeOptions,
 ): LaunchedClient {
   const state: {
     pid: number | undefined;
     code: number | null;
+    error: string | undefined;
     stopping: boolean;
-  } = { pid: undefined, code: null, stopping: false };
+  } = { pid: undefined, code: null, error: undefined, stopping: false };
+  const memoryMonitor =
+    options?.prismLogPath === undefined
+      ? undefined
+      : createPrismMemoryMonitor({
+          logPath: options.prismLogPath,
+          offset: options.prismLogOffset ?? 0,
+          ...(options.memoryPromptGraceMs === undefined
+            ? {}
+            : { graceMs: options.memoryPromptGraceMs }),
+        });
   const observe = async () => {
     const deadline = performance.now() + 300_000;
     while (state.pid === undefined) {
@@ -59,7 +78,10 @@ export function ownPrismGame(
         state.pid = z
           .object({ pid: z.number().int().positive() })
           .parse(status).pid;
-      } else await Bun.sleep(100);
+      } else {
+        if (memoryMonitor !== undefined) await memoryMonitor.poll();
+        await Bun.sleep(100);
+      }
     }
     while (alive(state.pid)) await Bun.sleep(100);
     return 0;
@@ -71,6 +93,7 @@ export function ownPrismGame(
       await cleanup(code === 0);
       return code;
     } catch (error) {
+      state.error = error instanceof Error ? error.message : String(error);
       state.code = 1;
       await appendFile(
         spec.logPath,
@@ -86,6 +109,7 @@ export function ownPrismGame(
     },
     exited,
     exitCode: () => state.code,
+    failureReason: () => state.error,
     kill: async (signal) => {
       state.stopping = true;
       const pid = state.pid;

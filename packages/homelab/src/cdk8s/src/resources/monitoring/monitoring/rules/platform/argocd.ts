@@ -24,6 +24,24 @@ export function getArgoCDRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          alert: "ArgoAppComparisonError",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Argo CD application {{ $labels.name }} comparison failed",
+            ),
+            description: escapePrometheusTemplate(
+              "Argo CD application {{ $labels.name }} has reported sync_status Unknown for 15 minutes because manifest rendering or diff comparison failed (ComparisonError). Inspect status.conditions on the Application in Argo CD and fix the chart values, immutable field diff, or compare-options.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'argocd_app_info{sync_status="Unknown"} == 1',
+          ),
+          for: "15m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
           alert: "ArgoAppNotSynced",
           annotations: {
             summary: escapePrometheusTemplate(

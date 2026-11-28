@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Build } from "#generated/prisma/client.ts";
 import type { ArtifactVersion } from "#shared/contract.ts";
 import {
   artifact,
@@ -22,6 +23,35 @@ function compareKeys(left: OrderKey, right: OrderKey) {
   return left.major === right.major
     ? left.minor - right.minor
     : left.major - right.major;
+}
+
+export const pipelineOriginSelect = {
+  serviceId: true,
+  repositoryId: true,
+  pipelineNumber: true,
+  registrationSequence: true,
+} as const;
+
+type PipelineOrigin = Pick<Build, keyof typeof pipelineOriginSelect>;
+
+/** Compare exact producer order within a service and repository. Legacy builds may lack this provenance. */
+export function precedesPipelineOrigin(
+  candidate: PipelineOrigin,
+  current: PipelineOrigin,
+) {
+  if (
+    candidate.serviceId !== current.serviceId ||
+    candidate.repositoryId === null ||
+    candidate.repositoryId !== current.repositoryId ||
+    candidate.pipelineNumber === null ||
+    current.pipelineNumber === null
+  )
+    return false;
+  return candidate.pipelineNumber === current.pipelineNumber
+    ? candidate.registrationSequence !== null &&
+        current.registrationSequence !== null &&
+        candidate.registrationSequence < current.registrationSequence
+    : candidate.pipelineNumber < current.pipelineNumber;
 }
 
 /** The live set of a service: its automatic set revision of the current lineage with the highest order key (R4). */
@@ -72,6 +102,8 @@ export type AutomaticComposition = {
   serviceId: string;
   /** New and retained artifacts by component (B2). */
   outputs: Record<string, string>;
+  /** Original producer order for components retained by a CI publication. */
+  retainedOrigins?: Record<string, PipelineOrigin>;
   orderKey: OrderKey;
 } & (
   | { qualifiedBuildId: string; triggerDeploymentId?: undefined }
@@ -89,6 +121,43 @@ function behindLive(live: LiveSet, key: OrderKey) {
   );
 }
 
+/** A frozen retention must not replace a newer producer already in the live set (R2). */
+async function currentOutputs(
+  tx: Transaction,
+  input: AutomaticComposition,
+  live: LiveSet,
+) {
+  const { retainedOrigins, outputs } = input;
+  if (retainedOrigins === undefined || live === null) return outputs;
+  const overlapping = live.entries
+    .filter(
+      ({ component, artifactId }) =>
+        retainedOrigins[component] !== undefined &&
+        outputs[component] !== artifactId,
+    )
+    .map(({ component }) => component);
+  if (overlapping.length === 0) return outputs;
+
+  const liveOrigins = await tx.versionSetEntry.findMany({
+    where: { revisionId: live.id, component: { in: overlapping } },
+    select: {
+      component: true,
+      artifact: { select: { build: { select: pipelineOriginSelect } } },
+    },
+  });
+  const selected = new Map(Object.entries(outputs));
+  for (const entry of liveOrigins) {
+    const { component } = entry;
+    const retained = retainedOrigins[component];
+    if (
+      retained !== undefined &&
+      precedesPipelineOrigin(retained, entry.artifact.build)
+    )
+      selected.delete(component);
+  }
+  return Object.fromEntries(selected);
+}
+
 /** The outputs over the live set, within the declared list, references resolved from their sources (A5). */
 async function gatherComponents(
   tx: Transaction,
@@ -100,12 +169,13 @@ async function gatherComponents(
   // composes whatever its builds produce.
   const scope = (component: string) =>
     declared.length === 0 || declared.includes(component);
+  const outputs = await currentOutputs(tx, input, live);
   const components: Record<string, string> = Object.fromEntries(
     [
       ...(live?.entries ?? []).map(
         (entry) => [entry.component, entry.artifactId] as const,
       ),
-      ...Object.entries(input.outputs),
+      ...Object.entries(outputs),
     ].filter(([component]) => scope(component)),
   );
   for (const reference of await tx.componentReference.findMany({
@@ -113,7 +183,7 @@ async function gatherComponents(
   })) {
     // The composition's own outputs stand (a tracking recomposition names
     // the accepted artifact itself, R7).
-    if (input.outputs[reference.component] !== undefined) continue;
+    if (outputs[reference.component] !== undefined) continue;
     // A5: every composition takes the reference's current source artifact,
     // so the live set's carried one never shadows a newer one. While the
     // source has none, the carried artifact stays (R2).

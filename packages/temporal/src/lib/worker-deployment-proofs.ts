@@ -8,6 +8,46 @@ export type RolloutCommandRunner = (
   command: readonly string[],
 ) => Promise<RolloutCommandResult>;
 
+const READ_ONLY_COMMAND_ATTEMPTS = 3;
+const READ_ONLY_RETRY_DELAY_MS = 250;
+
+function isNonRetryableRolloutReadError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    /\bHTTP (?:400|401|403|404|405|422)\b/iu.test(message) ||
+    /\b(?:unauthorized|forbidden|permission denied|unauthenticated|unknown flag|invalid argument)\b/iu.test(
+      message,
+    )
+  );
+}
+
+/**
+ * Retries idempotent read-only Temporal/Prometheus queries across transient
+ * client dial or DNS blips (`AI-642`); routing mutations never use this helper.
+ */
+export async function runReadOnlyRolloutCommand(
+  command: readonly string[],
+  run: RolloutCommandRunner,
+  options: { maxAttempts?: number; retryDelayMs?: number } = {},
+): Promise<RolloutCommandResult> {
+  const maxAttempts = options.maxAttempts ?? READ_ONLY_COMMAND_ATTEMPTS;
+  const retryDelayMs = options.retryDelayMs ?? READ_ONLY_RETRY_DELAY_MS;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await run(command);
+    } catch (error) {
+      if (isNonRetryableRolloutReadError(error)) throw error;
+      lastError = error;
+      if (attempt < maxAttempts && retryDelayMs > 0)
+        await Bun.sleep(retryDelayMs * attempt);
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Read-only rollout command failed");
+}
+
 const PrometheusResponseSchema = z.object({
   status: z.literal("success"),
   data: z.object({
@@ -54,14 +94,10 @@ export async function queryRolloutMetric(
   label: string,
   run: RolloutCommandRunner,
 ): Promise<number> {
-  const result = await run([
-    "toolkit",
-    "prom",
-    "query",
-    expression,
-    "--output",
-    "json",
-  ]);
+  const result = await runReadOnlyRolloutCommand(
+    ["toolkit", "prom", "query", expression, "--output", "json"],
+    run,
+  );
   return singlePrometheusValue(result.stdout, label);
 }
 
@@ -161,7 +197,7 @@ export async function requireAcceptedWorkerDeployment(
   },
   run: RolloutCommandRunner,
 ): Promise<void> {
-  const result = await run(
+  const result = await runReadOnlyRolloutCommand(
     temporalCommand(options, [
       "worker",
       "deployment",
@@ -171,6 +207,7 @@ export async function requireAcceptedWorkerDeployment(
       "--output",
       "json",
     ]),
+    run,
   );
   const deployment = AcceptedDeploymentSchema.parse(
     parseJson(result.stdout, "acceptance prerequisite deployment describe"),

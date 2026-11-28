@@ -23,6 +23,19 @@ import {
  * per-service change.
  */
 
+/**
+ * The environment of a Bun server in a read-only-root container: `HOME` points
+ * at the writable emptyDir because Bun writes runtime state under it, and the
+ * server listens on every interface at `port`.
+ */
+export function bunServerEnv(port: number): Record<string, EnvValue> {
+  return {
+    HOME: EnvValue.fromValue("/tmp"),
+    HOST: EnvValue.fromValue("0.0.0.0"),
+    PORT: EnvValue.fromValue(String(port)),
+  };
+}
+
 /** First-party Flags's in-cluster credentialless evaluation endpoint. */
 export const FLAGS_EVALUATION_URL = FLAGS_EVALUATION_ENDPOINT.url;
 

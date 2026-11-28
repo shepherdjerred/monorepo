@@ -172,7 +172,7 @@ export function canonicalizeLangTag(tag: string): string {
   return ISO639_2_TO_1[base] ?? base;
 }
 
-function languageScore(
+export function languageScore(
   lang: string | null,
   langPrefs: readonly string[],
 ): number {

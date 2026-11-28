@@ -1,0 +1,104 @@
+[
+  {
+    "rule": "theme-color",
+    "file": "index.html",
+    "count": 3,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/app.tsx",
+    "count": 4,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/app.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-class",
+    "file": "src/client/directory-sections.tsx",
+    "count": 3,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/directory-sections.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-class",
+    "file": "src/client/link-dialogs.tsx",
+    "count": 2,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/link-dialogs.tsx",
+    "count": 6,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/links-card.tsx",
+    "count": 3,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/links-card.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-class",
+    "file": "src/client/links-table.tsx",
+    "count": 2,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/links-table.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-prop",
+    "file": "src/client/links-table.tsx",
+    "count": 3,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "theme-store-key",
+    "file": "src/client/main.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "deprecated-import",
+    "file": "src/client/shell.tsx",
+    "count": 1,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/client/styles.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles.css",
+    "count": 7,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/client/styles.css",
+    "count": 12,
+    "reason": "Baseline at CU1. Go link moves off the page kit in G1."
+  }
+]

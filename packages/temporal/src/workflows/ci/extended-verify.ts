@@ -154,7 +154,7 @@ export async function runCiExtendedVerifyWorkflow(): Promise<CiExtendedVerifyRes
       `main advanced before pipeline ${receipt.number.toString()} ran; ${receipt.url}`,
     );
   if (!extendedVerifySucceeded(receipt)) {
-    const message = extendedVerifyFailureMessage(receipt);
+    const message = extendedVerifyFailureMessage(receipt, memo.source);
     record(message);
     throw ApplicationFailure.nonRetryable(message);
   }

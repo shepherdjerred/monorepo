@@ -1,6 +1,9 @@
 import type { AlertmanagerClient } from "@shepherdjerred/ops-clients/alertmanager.ts";
 import type { BugsinkClient } from "@shepherdjerred/ops-clients/bugsink.ts";
-import type { WoodpeckerClient } from "@shepherdjerred/ops-clients/woodpecker.ts";
+import type {
+  BranchStatus,
+  WoodpeckerClient,
+} from "@shepherdjerred/ops-clients/woodpecker.ts";
 import type { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
 import type { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import type { TrackerClient } from "@shepherdjerred/ops-clients/tracker.ts";
@@ -22,6 +25,7 @@ import {
   talosServiceHealthy,
 } from "#observability/metrics-ops.ts";
 import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
+import { readLatestRenovateQueue } from "#activities/renovate/store.ts";
 import { aiQueries, mapAi, monthToDateWindow } from "./ai.ts";
 import { mapAlerts } from "./alerts.ts";
 import { mapArgoApplications, updateOutOfSyncSince } from "./argocd.ts";
@@ -137,11 +141,20 @@ export async function collectTalos(talosctl: Talosctl): Promise<OpsCollection> {
   return mapTalos(machines, services);
 }
 
+/**
+ * `main`'s verdict for the snapshot. `publishSignal` then reports the same
+ * verdict to Incidents; it records its own failures and never fails the
+ * collection.
+ */
 export async function collectCi(
   woodpecker: WoodpeckerClient,
   context: OpsContext,
+  publishSignal: (status: BranchStatus) => Promise<unknown>,
 ): Promise<OpsCollection> {
-  return mapCi(await woodpecker.branchStatus("main"), context);
+  const status = await woodpecker.branchStatus("main");
+  const collection = mapCi(status, context);
+  await publishSignal(status);
+  return collection;
 }
 
 export async function collectGitHub(
@@ -184,16 +197,19 @@ export async function collectRenovate(
   options?: {
     now?: Date;
     readDeltas?: RenovateDeltaReader;
+    readRanking?: typeof readLatestRenovateQueue;
   },
 ): Promise<OpsCollection> {
   const now = options?.now ?? new Date();
   const readDeltas = options?.readDeltas ?? readLatestRenovateDeltas;
-  const [dashboard, open, merged30d, deltasByBranch] = await Promise.all([
-    github.openIssueByTitle(DEPENDENCY_DASHBOARD_TITLE),
-    github.openPullRequests(),
-    github.mergedPullRequests(daysBefore(now, 30)),
-    readDeltas(),
-  ]);
+  const [dashboard, open, merged30d, deltasByBranch, ranking] =
+    await Promise.all([
+      github.openIssueByTitle(DEPENDENCY_DASHBOARD_TITLE),
+      github.openPullRequests(),
+      github.mergedPullRequests(daysBefore(now, 30)),
+      readDeltas(),
+      (options?.readRanking ?? readLatestRenovateQueue)(),
+    ]);
   const { counts: legacyCounts, ...collection } = mapRenovate(dashboard, open);
   const renovateFacet = buildRenovateFacet({
     dashboard,
@@ -209,7 +225,12 @@ export async function collectRenovate(
   renovateUpdatesPending.set({ state: "open-pr" }, legacyCounts["open-pr"]);
   return {
     ...collection,
-    facets: { renovate: renovateFacet },
+    facets: {
+      renovate: {
+        ...renovateFacet,
+        ...(ranking === undefined ? {} : { ranking }),
+      },
+    },
   };
 }
 

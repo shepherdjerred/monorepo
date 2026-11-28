@@ -27,6 +27,7 @@ import "#styles/engineering.css";
 
 import { RenovateQueueTabs } from "./renovate-drawer.tsx";
 import { ExtLink, TYPE_COLOR, UPDATE_TYPES } from "./renovate-helpers.tsx";
+import { RenovateRanking } from "./renovate-ranking.tsx";
 
 export const RENOVATE_TAB_IDS = [
   "prs",
@@ -242,6 +243,7 @@ function RenovateBody(p: {
   return (
     <>
       <RenovateBanners renovate={renovate} />
+      <RenovateRanking ranking={renovate.ranking} />
       <div className="eng-meters-grid">
         <div className="eng-meter-card">
           <BudgetMeter

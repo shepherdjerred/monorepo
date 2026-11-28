@@ -78,6 +78,12 @@ function scoutMonitor(
   matchesThreshold: number,
   policy: Monitor["policy"],
 ): Monitor {
+  // Each beta rank is a distinct receipt at its writer's database. Multiple
+  // application pods can report the same ranks, so count each rank once.
+  const query =
+    environment === "beta"
+      ? 'count(max by (rank) ((scout_durable_recent_applied_receipt_timestamp_seconds{environment="beta",git_sha="$gitSha",role="application",rank=~"[1-5]"} > $acceptedAt) <= time())) or on() vector(0)'
+      : `sum(increase(scout_durable_receipts_recorded_total{environment="${environment}",git_sha="$gitSha",outcome="applied"}[$window]))`;
   return {
     component: "image:scout-for-lol",
     alarms: {
@@ -91,7 +97,7 @@ function scoutMonitor(
     evidence: [
       {
         key: "matches-processed",
-        query: `sum(increase(scout_durable_receipts_recorded_total{environment="${environment}",git_sha="$gitSha",outcome="applied"}[$window]))`,
+        query,
         threshold: matchesThreshold,
       },
     ],

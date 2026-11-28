@@ -9,6 +9,7 @@ import { ConflictBanner } from "./conflict-banner.tsx";
 import { DiffView, JsonEditor } from "./code.tsx";
 import { useApplyFlag, type DeploymentDocument } from "./api.ts";
 import { BooleanFields, VariantFields } from "./fields.tsx";
+import { useRefreshFlagAudit } from "./management-api.ts";
 import {
   applyJsonText,
   defaultEditMode,
@@ -25,6 +26,9 @@ import {
   type EditorIssue,
   type ValueKind,
 } from "./model.ts";
+import { FlagMeta } from "./views/flag-meta.tsx";
+import { HistoryPanel } from "./views/history-panel.tsx";
+import { UsagePanel } from "./views/usage-panel.tsx";
 
 const MODES = [
   { value: "form", label: "Form" },
@@ -89,6 +93,7 @@ export function Editor({
   const saving = useRef(false);
   const issuesId = useId();
   const apply = useApplyFlag(catalog, stage);
+  const refreshAudit = useRefreshFlagAudit(catalog, stage, flagKey);
 
   if (stored === undefined || draft === undefined || baseFlag === undefined) {
     return <p role="alert">FLAG_NOT_FOUND</p>;
@@ -178,6 +183,7 @@ export function Editor({
         flag,
       });
       if (result.kind === "conflict") {
+        refreshAudit();
         setSaved(false);
         setConflict({
           revision: result.revision,
@@ -194,6 +200,7 @@ export function Editor({
         setError(`The server refused this value: ${result.error}`);
         return;
       }
+      refreshAudit();
       setConflict(undefined);
       setServerIssues(undefined);
       setError(undefined);
@@ -224,6 +231,13 @@ export function Editor({
     setError(undefined);
   }
 
+  /** An old version from the history becomes the draft, for the usual review. */
+  function restore(flag: FlagValue) {
+    edit(flag);
+    setJson({ text: jsonText(flag), forDraft: flag, issues: [] });
+    setError(undefined);
+  }
+
   const describedBy = issues.length === 0 ? undefined : issuesId;
 
   return (
@@ -239,6 +253,7 @@ export function Editor({
         <p className="ui-muted">
           {kindLabel(kind)} · Revision {revision}
         </p>
+        <FlagMeta catalog={catalog} stage={stage} flagKey={flagKey} />
       </div>
       {conflict === undefined ? null : (
         <ConflictBanner
@@ -309,6 +324,13 @@ export function Editor({
           </Button>
         </div>
       </form>
+      <UsagePanel catalog={catalog} stage={stage} flagKey={flagKey} />
+      <HistoryPanel
+        catalog={catalog}
+        stage={stage}
+        flagKey={flagKey}
+        restore={{ stored: baseFlag, onRestore: restore }}
+      />
       <dialog
         ref={dialogRef}
         className="fl-dialog"

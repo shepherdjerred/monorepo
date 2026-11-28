@@ -6,7 +6,6 @@ import {
   RegionSchema,
   type LeaguePuuid,
   type RiotMatchId,
-  type Rank,
 } from "@scout-for-lol/data";
 import type { InitialMatchHistoryImport } from "#generated/prisma/client/index.js";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -24,6 +23,7 @@ import {
 } from "#src/league/initial-history/riot.ts";
 import { lockInitialMatchHistoryImport } from "#src/league/initial-history/enqueue.ts";
 import { publishReadyImports } from "#src/league/initial-history/publish.ts";
+import { upsertCurrentRankSnapshot } from "#src/league/rank-refresh/current-rank-snapshot.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   initialHistoryImportJobs,
@@ -50,10 +50,6 @@ const MatchSnapshotSchema = z
 
 type RetryReason =
   "rate_limit" | "upstream" | "transport" | "storage" | "staging";
-
-function serializeRank(rank: Rank | undefined): string | null {
-  return rank === undefined ? null : JSON.stringify(rank);
-}
 
 function classifyFailure(
   error: unknown,
@@ -305,21 +301,10 @@ export async function processRiotPhases(
       } finally {
         countCall();
       }
-      await db.currentRankSnapshot.upsert({
-        where: { puuid: job.puuid },
-        create: {
-          puuid: job.puuid,
-          soloRank: serializeRank(ranks.solo),
-          flexRank: serializeRank(ranks.flex),
-          ranked5sRank: serializeRank(ranks.ranked5s),
-          fetchedAt: now,
-        },
-        update: {
-          soloRank: serializeRank(ranks.solo),
-          flexRank: serializeRank(ranks.flex),
-          ranked5sRank: serializeRank(ranks.ranked5s),
-          fetchedAt: now,
-        },
+      await upsertCurrentRankSnapshot(db, {
+        puuid: LeaguePuuidSchema.parse(job.puuid),
+        ranks,
+        fetchedAt: now,
       });
       await db.initialMatchHistoryImport.update({
         where: { puuid: job.puuid },

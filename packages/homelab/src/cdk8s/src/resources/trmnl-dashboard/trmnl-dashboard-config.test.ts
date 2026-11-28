@@ -45,11 +45,10 @@ describe("trmnl-dashboard configuration", () => {
     expect(yaml).not.toContain("kind: ServiceAccount");
   });
 
-  it("allows Bugsink internal service hostnames", async () => {
+  it("exposes Errors internal service hostnames", async () => {
     const yaml = await synthesizeApp();
 
-    expect(yaml).toContain("bugsink-bugsink-service.bugsink");
-    expect(yaml).toContain("bugsink-bugsink-service.bugsink.svc.cluster.local");
+    expect(yaml).toContain("errors.errors.svc.cluster.local");
   });
 
   it("exposes pet metrics only through the Prometheus-selected service", async () => {

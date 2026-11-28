@@ -1,14 +1,24 @@
 import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type { ProbedVideo } from "@shepherdjerred/streambot/sources/probed-media.ts";
 import {
   buildGoLivePlayOptions,
   buildMusicPrepareOptions,
   buildVideoPrepareOptions,
+  outputFrameRate,
 } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
 import { streamerEnv as env } from "./streamer/streamer-test-fixtures.ts";
 
 const stream = loadConfig(env()).stream;
+
+/** Every audio flag off: the ffmpeg audio stage that shipped before the flags existed. */
+const AUDIO_OFF = {
+  dialogDownmix: false,
+  loudnessNormalization: false,
+  liveResync: false,
+  trackRanking: false,
+} as const;
 
 const MUSIC: ResolvedSource = {
   title: "A Song",
@@ -31,6 +41,7 @@ describe("buildMusicPrepareOptions", () => {
       resolved: MUSIC,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
 
     expect(options.audioOnly).toBe(true);
@@ -54,6 +65,7 @@ describe("buildMusicPrepareOptions", () => {
       resolved: MUSIC,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
 
     expect(options.readrate).toBe(stream.readrate);
@@ -68,6 +80,7 @@ describe("buildMusicPrepareOptions", () => {
       resolved: { ...MUSIC, live: true },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
     expect(liveOptions.readrate).toBeUndefined();
     expect("readrate" in liveOptions).toBe(false);
@@ -83,6 +96,7 @@ describe("buildMusicPrepareOptions", () => {
         resolved: MUSIC,
         startSeconds: 0,
         volumePercent,
+        audioProcessing: AUDIO_OFF,
       });
       expect(options.audioVolume).toBeUndefined();
     }
@@ -95,6 +109,7 @@ describe("buildMusicPrepareOptions", () => {
         resolved: MUSIC,
         startSeconds: 0,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
       }).startTime,
     ).toBeUndefined();
     expect(
@@ -103,6 +118,7 @@ describe("buildMusicPrepareOptions", () => {
         resolved: MUSIC,
         startSeconds: 42,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
       }).startTime,
     ).toBe(42);
   });
@@ -116,6 +132,7 @@ describe("buildMusicPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
     expect(options.customHeaders).toEqual({ Referer: "https://x.invalid/" });
   });
@@ -133,6 +150,7 @@ describe("buildMusicPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
     expect(options.subtitleBurn).toBeUndefined();
     expect(options.inputColor).toBeUndefined();
@@ -146,6 +164,7 @@ function gain(volumePercent: number): number | undefined {
     resolved: VIDEO,
     startSeconds: 0,
     volumePercent,
+    audioProcessing: AUDIO_OFF,
     pipelineMode: "sw",
   }).audioVolume;
 }
@@ -157,6 +176,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: { ...VIDEO, hdr: true, subtitle: { path: "/tmp/s.srt" } },
       startSeconds: 30,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
 
@@ -178,6 +198,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: { ...VIDEO, discontinuousLive: true },
       startSeconds: 30,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
     expect(options.normalizeTimestamps).toBe(true);
@@ -192,6 +213,7 @@ describe("buildVideoPrepareOptions", () => {
         resolved: VIDEO,
         startSeconds: 0,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
         pipelineMode: "hw-upload",
       }).hardwarePipelineMode,
     ).toBe("upload");
@@ -200,6 +222,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: VIDEO,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
     expect(software.encoder).toBeUndefined();
@@ -230,6 +253,7 @@ describe("buildVideoPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
 
@@ -247,6 +271,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: VIDEO,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
     expect(options.audioInput).toBeUndefined();
@@ -270,6 +295,7 @@ describe("buildVideoPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
     expect(options.customInputOptions).toEqual(inputOptions);
@@ -281,6 +307,7 @@ describe("buildVideoPrepareOptions", () => {
         resolved: VIDEO,
         startSeconds: 0,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
         pipelineMode: "sw",
       }).customInputOptions,
     ).toBeUndefined();
@@ -292,6 +319,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: VIDEO,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
     expect(seekable.readrate).toBe(stream.readrate);
@@ -302,6 +330,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: { ...VIDEO, live: true },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
     expect(live.readrate).toBeUndefined();
@@ -312,14 +341,186 @@ describe("buildVideoPrepareOptions", () => {
     // Play-side Go Live options retain the startup burst and add the live rebuffer cushion.
     expect(buildGoLivePlayOptions(stream, { live: true })).toEqual({
       type: "go-live",
+      frameRate: stream.fps,
       readrateInitialBurst: stream.readrateInitialBurst,
       videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
       liveBufferMs: stream.liveBufferMs,
     });
     expect(buildGoLivePlayOptions(stream, {})).toEqual({
       type: "go-live",
+      frameRate: stream.fps,
       readrateInitialBurst: stream.readrateInitialBurst,
       videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
     });
+  });
+});
+
+function sizedOptions(
+  displayAspect: number,
+  rotation: 0 | 90 | 180 | 270,
+  pipelineMode: "hw" | "sw",
+) {
+  return buildVideoPrepareOptions({
+    stream: { ...stream, width: 1920, height: 1080 },
+    resolved: {
+      ...VIDEO,
+      probedVideo: { displayAspect, rotation, interlaced: false },
+    },
+    startSeconds: 0,
+    volumePercent: 100,
+    audioProcessing: AUDIO_OFF,
+    pipelineMode,
+  });
+}
+
+function fittedSize(displayAspect: number) {
+  const options = sizedOptions(displayAspect, 0, "hw");
+  return { width: options.width, height: options.height };
+}
+
+describe("buildVideoPrepareOptions output size", () => {
+  test("fits the source's display aspect inside the configured box instead of stretching", () => {
+    expect(fittedSize(2.39)).toEqual({ width: 1920, height: 804 });
+    expect(fittedSize(16 / 9)).toEqual({ width: 1920, height: 1080 });
+    expect(fittedSize(4 / 3)).toEqual({ width: 1440, height: 1080 });
+    expect(fittedSize(9 / 16)).toEqual({ width: 608, height: 1080 });
+  });
+
+  test("keeps the configured box when the source was never probed", () => {
+    const options = buildVideoPrepareOptions({
+      stream,
+      resolved: VIDEO,
+      startSeconds: 0,
+      volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
+      pipelineMode: "hw",
+    });
+    expect(options.width).toBe(stream.width);
+    expect(options.height).toBe(stream.height);
+  });
+
+  test("decodes rotated sources to system memory so ffmpeg can autorotate them", () => {
+    expect(sizedOptions(9 / 16, 90, "hw").hardwarePipelineMode).toBe("upload");
+    expect(sizedOptions(16 / 9, 180, "hw").hardwarePipelineMode).toBe("upload");
+    expect(sizedOptions(16 / 9, 0, "hw").hardwarePipelineMode).toBeUndefined();
+    // The software rung decodes to system memory already and must not ask for a GPU upload.
+    expect(sizedOptions(9 / 16, 90, "sw").hardwarePipelineMode).toBeUndefined();
+  });
+});
+
+function probed(
+  video: Partial<ProbedVideo>,
+  extra: Partial<ResolvedSource> = {},
+) {
+  return {
+    ...VIDEO,
+    ...extra,
+    probedVideo: {
+      displayAspect: 16 / 9,
+      rotation: 0 as const,
+      interlaced: false,
+      ...video,
+    },
+  } satisfies ResolvedSource;
+}
+
+/** The output rate for a source probed at `frameRate` under a `fps` cap. */
+function rate(cap: { fps: number }, frameRate: number): number {
+  return outputFrameRate(cap, probed({ frameRate }));
+}
+
+/** Hardware-rung video options for a resolved source. */
+function hwOptions(resolved: ResolvedSource) {
+  return buildVideoPrepareOptions({
+    stream,
+    resolved,
+    startSeconds: 0,
+    volumePercent: 100,
+    pipelineMode: "hw",
+    audioProcessing: AUDIO_OFF,
+  });
+}
+
+describe("outputFrameRate", () => {
+  const cap30 = { fps: 30 };
+  const cap60 = { fps: 60 };
+
+  test("a film plays at its own rate instead of the 3:2 judder of a forced 30", () => {
+    expect(rate(cap30, 24_000 / 1001)).toBe(24_000 / 1001);
+    expect(rate(cap30, 24)).toBe(24);
+    expect(rate(cap30, 25)).toBe(25);
+    expect(rate(cap30, 30_000 / 1001)).toBe(30_000 / 1001);
+  });
+
+  test("ffprobe's slightly-off averages snap to the standard rate they belong to", () => {
+    // A VFR-timestamped Matroska film reports its average as e.g. 2997/125.
+    expect(rate(cap30, 2997 / 125)).toBe(24_000 / 1001);
+    expect(rate(cap30, 23.976)).toBe(24_000 / 1001);
+  });
+
+  test("a source over the cap drops to the largest whole fraction under it", () => {
+    expect(rate(cap30, 60)).toBe(30);
+    expect(rate(cap30, 60_000 / 1001)).toBe(30_000 / 1001);
+    expect(rate(cap30, 50)).toBe(25);
+    expect(rate(cap30, 120)).toBe(30);
+    expect(rate(cap30, 48)).toBe(24);
+    expect(rate(cap60, 60)).toBe(60);
+    expect(rate(cap60, 50)).toBe(50);
+    expect(rate(cap60, 120)).toBe(60);
+  });
+
+  test("a near-cap configuration does not halve the source it sits next to", () => {
+    expect(rate({ fps: 30_000 / 1001 }, 30)).toBe(30);
+    expect(rate({ fps: 29.97 }, 30_000 / 1001)).toBe(30_000 / 1001);
+  });
+
+  test("an unprobed, rateless or non-standard source keeps the configured rate", () => {
+    expect(outputFrameRate(cap30, VIDEO)).toBe(30);
+    expect(outputFrameRate(cap30, probed({}))).toBe(30);
+    // A variable-rate phone clip's average, and a slideshow.
+    expect(rate(cap30, 29.47)).toBe(30);
+    expect(rate(cap30, 1)).toBe(30);
+  });
+
+  test("prepare and Go Live play options carry the same rate", () => {
+    const resolved = probed({ frameRate: 24_000 / 1001 });
+    expect(hwOptions(resolved).frameRate).toBe(24_000 / 1001);
+    expect(buildGoLivePlayOptions(stream, resolved).frameRate).toBe(
+      24_000 / 1001,
+    );
+  });
+});
+
+describe("buildVideoPrepareOptions picture corrections", () => {
+  test("deinterlaces only a source the probe found interlaced", () => {
+    expect(hwOptions(probed({ interlaced: true })).deinterlace).toBe(true);
+    expect("deinterlace" in hwOptions(probed({ interlaced: false }))).toBe(
+      false,
+    );
+    expect("deinterlace" in hwOptions(VIDEO)).toBe(false);
+  });
+
+  test("converts tagged BT.601 and full-range BT.709 sources to BT.709 limited", () => {
+    for (const resolved of [
+      probed({ colorSpace: "smpte170m" }),
+      probed({ colorSpace: "bt470bg", colorRange: "tv" }),
+      probed({ colorSpace: "bt709", colorRange: "pc" }),
+    ]) {
+      expect(hwOptions(resolved).convertColorToBt709).toBe(true);
+    }
+  });
+
+  test("leaves BT.709, untagged, HDR and unprobed sources alone", () => {
+    for (const resolved of [
+      probed({ colorSpace: "bt709", colorRange: "tv" }),
+      // Both scalers read an untagged frame as BT.601, which would shift an untagged HD picture.
+      probed({}),
+      probed({ colorRange: "pc" }),
+      probed({ colorSpace: "bt2020nc" }, { hdr: true }),
+      probed({ colorSpace: "smpte170m" }, { hdr: true }),
+      VIDEO,
+    ]) {
+      expect("convertColorToBt709" in hwOptions(resolved)).toBe(false);
+    }
   });
 });

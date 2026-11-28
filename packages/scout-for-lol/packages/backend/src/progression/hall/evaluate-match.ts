@@ -1,171 +1,246 @@
-import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  DiscordGuildIdSchema,
+  HallRecordIdSchema,
+  QueueTypeSchema,
+  classifyHallQueueFamily,
+  isHallEligibleMatch,
+  matchCoverageOf,
+  type CanonicalMatch,
+  type DiscordGuildId,
+  type HallQueueFamilyId,
+  type HallRecordHolder,
+  type HallRecordId,
+} from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
-  HallRecordEvidenceSchema,
-  HallRecordHolderSchema,
-  HallRecordIdSchema,
-  DiscordGuildIdSchema,
-  classifyHallQueueFamily,
-  compareHallCandidate,
-  hallRecordValue,
-  isHallEligibleMatch,
-  type DiscordGuildId,
-  type HallRecordHolder,
-  type CanonicalMatch,
-} from "@scout-for-lol/data";
-import { prisma, type Db } from "#src/database/index.ts";
+  LeaguePuuidSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/domain/identity/league-account.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { parseProgressionJson } from "#src/progression/json.ts";
-import { lockHallRecords } from "#src/progression/hall/baseline.ts";
-import { announceHallRecordBreak } from "#src/progression/hall/break-announcement.ts";
-import { HallBreakPayloadSchema } from "#src/progression/hall/break-payload.ts";
-import { hallSettingsFromRow } from "#src/progression/hall/settings.ts";
+import { prisma, type Db } from "#src/database/index.ts";
+import { flattenMatch } from "#src/report-lake/flatten.ts";
+import { lockHallRecords } from "./baseline.ts";
+import { announceHallRecordBreak } from "./break-announcement.ts";
 import {
-  fetchProgressionMatches,
-  type ProgressionMatchRow,
-} from "#src/progression/progression-lake-reads.ts";
+  HallBreakPayloadSchema,
+  type HallBreakPayload,
+} from "./break-payload.ts";
+import { calculateHallStandings } from "./history.ts";
+import {
+  addHallCandidate,
+  hallCandidateFor,
+  hallCellKey,
+  hallHolderFor,
+  hallRankingsColumns,
+  hallRankScore,
+  hallStandingsFromCell,
+  legacyHallStandings,
+  type HallMatchRow,
+  type HallStandings,
+} from "./rankings.ts";
+import { hallSettingsFromRow } from "./settings.ts";
 
-type TrackedAccount = {
-  readonly id: number;
-  readonly alias: string;
-  readonly puuid: LeaguePuuid;
-  readonly createdTime: Date;
-  readonly serverId: DiscordGuildId;
-  readonly player: { readonly id: number; readonly alias: string };
+type HallMatch = {
+  readonly matchId: RiotMatchId;
+  readonly gameEndMs: number;
+  readonly family: HallQueueFamilyId;
+  readonly rows: ReadonlyMap<LeaguePuuid, HallMatchRow>;
 };
 
-function holderFor(account: TrackedAccount): HallRecordHolder {
-  return HallRecordHolderSchema.parse({
-    playerId: account.player.id,
-    playerAlias: account.player.alias,
-    accountId: account.id,
-    accountAlias: account.alias,
-    puuid: account.puuid,
+type HallEntrant = {
+  readonly row: HallMatchRow;
+  readonly holder: HallRecordHolder;
+};
+
+type ReadyHallCell = {
+  readonly id: string;
+  readonly recordId: HallRecordId;
+  readonly baselineRevision: number;
+  readonly currentValue: number | null;
+  readonly evidenceJson: string;
+  readonly standings: HallStandings | null;
+};
+
+/** Use the projection's scoring inputs without waiting for projection I/O. */
+function hallMatchFrom(match: CanonicalMatch): HallMatch | null {
+  if (matchCoverageOf(match.metadata) === "history") {
+    return null;
+  }
+  const flattened = flattenMatch(match);
+  const queueValue = flattened[0]?.queue;
+  if (queueValue === null || queueValue === undefined) {
+    return null;
+  }
+  const queue = QueueTypeSchema.parse(queueValue);
+  const family = classifyHallQueueFamily(queue);
+  if (family === null) {
+    return null;
+  }
+
+  const matchId = match.metadata.matchId;
+  const gameEndMs = match.info.gameEndTimestamp;
+  const gameEndAt = new Date(gameEndMs).toISOString();
+  const rows = new Map<LeaguePuuid, HallMatchRow>();
+  for (const row of flattened) {
+    if (row.puuid === null) {
+      continue;
+    }
+    rows.set(LeaguePuuidSchema.parse(row.puuid), {
+      ...row,
+      match_id: matchId,
+      game_end_at: gameEndAt,
+      queue,
+    });
+  }
+  return { matchId, gameEndMs, family, rows };
+}
+
+async function applyHallCell(
+  tx: Db,
+  cell: ReadyHallCell,
+  options: {
+    readonly before: HallStandings;
+    readonly entrants: readonly HallEntrant[];
+    readonly match: HallMatch;
+  },
+): Promise<HallBreakPayload | null> {
+  const { before, entrants, match } = options;
+  let after = before;
+  for (const { row, holder } of entrants) {
+    after = addHallCandidate(
+      after,
+      hallCandidateFor(row, holder, match.family, cell.recordId),
+    );
+  }
+  if (after === before && cell.standings !== null) {
+    return null;
+  }
+  const write = await tx.hallRecordCell.updateMany({
+    where: {
+      id: cell.id,
+      baselineRevision: cell.baselineRevision,
+      baselineStatus: "ready",
+    },
+    data: hallRankingsColumns(after, cell.baselineRevision),
+  });
+  if (write.count === 0) {
+    return null;
+  }
+  const previous = before[0];
+  const top = after[0];
+  if (
+    previous === undefined ||
+    top === undefined ||
+    top.value <= previous.value
+  ) {
+    return null;
+  }
+
+  const newEvidence = top.evidence[0];
+  if (newEvidence?.matchId !== match.matchId) {
+    throw new Error(
+      `Broken Hall cell ${cell.id} has no evidence for ${match.matchId}`,
+    );
+  }
+  return HallBreakPayloadSchema.parse({
+    ...newEvidence,
+    queueFamilyId: match.family,
+    recordId: cell.recordId,
+    holders: hallRankScore(top).holders,
+    previous: hallRankScore(previous),
+    standings: after.map((rank) => hallRankScore(rank)),
   });
 }
 
-async function evaluateCandidate(
-  tx: Db,
-  options: {
-    readonly guildId: DiscordGuildId;
-    readonly match: ProgressionMatchRow;
-    readonly account: TrackedAccount;
-    readonly enabledRecords: ReadonlySet<string>;
-    readonly enabledFamilies: ReadonlySet<string>;
-  },
-): Promise<string[]> {
-  if (!isHallEligibleMatch(options.match, options.account.createdTime)) {
-    return [];
-  }
-  const family = classifyHallQueueFamily(options.match.queue);
-  if (family === null || !options.enabledFamilies.has(family)) return [];
-  const holder = holderFor(options.account);
-  const brokenCellIds: string[] = [];
-  for (const rawRecordId of options.enabledRecords) {
-    const recordId = HallRecordIdSchema.parse(rawRecordId);
-    const cell = await tx.hallRecordCell.findUnique({
-      where: {
-        guildId_queueFamilyId_recordId: {
-          guildId: options.guildId,
-          queueFamilyId: family,
-          recordId,
-        },
-      },
-    });
-    if (cell?.baselineStatus !== "ready") continue;
-    const value = hallRecordValue(options.match, recordId);
-    const evidence = HallRecordEvidenceSchema.parse({
-      matchId: options.match.match_id,
-      gameEndAt: options.match.game_end_at,
-      value,
-      holder,
-    });
-    const comparison = compareHallCandidate(
-      cell.currentValue,
-      parseProgressionJson(cell.holdersJson, HallRecordHolderSchema.array()),
-      parseProgressionJson(cell.evidenceJson, HallRecordEvidenceSchema.array()),
-      { queueFamilyId: family, recordId, value, holder, evidence },
-    );
-    if (comparison.kind === "below") continue;
-    await tx.hallRecordCell.update({
-      where: { id: cell.id },
-      data: {
-        currentValue:
-          comparison.kind === "break" ? comparison.value : cell.currentValue,
-        holdersJson: JSON.stringify(comparison.holders),
-        evidenceJson: JSON.stringify(comparison.evidence),
-      },
-    });
-    if (comparison.kind === "break") brokenCellIds.push(cell.id);
-  }
-  return brokenCellIds;
-}
-
 async function evaluateGuild(
+  tx: Db,
   guildId: DiscordGuildId,
-  matchId: RiotMatchId,
-  matchesByPuuid: ReadonlyMap<string, ProgressionMatchRow>,
+  match: HallMatch,
 ): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    await lockHallRecords(tx, guildId);
-    const accounts = await tx.account.findMany({
-      where: {
-        serverId: guildId,
-        puuid: { in: [...matchesByPuuid.keys()] },
-      },
-      include: { player: true },
-    });
-    const settingsRow = await tx.hallSettings.findUnique({
-      where: { guildId },
-    });
-    if (settingsRow === null) return;
-    const settings = hallSettingsFromRow(settingsRow);
-    const brokenCellIds = new Set<string>();
-    for (const account of accounts) {
-      const match = matchesByPuuid.get(account.puuid);
-      if (match === undefined) continue;
-      const broken = await evaluateCandidate(tx, {
-        guildId,
-        match,
-        account,
-        enabledRecords: new Set(settings.enabledRecords),
-        enabledFamilies: new Set(settings.enabledQueueFamilies),
-      });
-      for (const cellId of broken) brokenCellIds.add(cellId);
-    }
-    if (brokenCellIds.size === 0 || settings.channelId === null) return;
-    const cells = await tx.hallRecordCell.findMany({
-      where: { id: { in: [...brokenCellIds] } },
-    });
-    const payload = cells.map((cell) => {
-      const evidence = parseProgressionJson(
-        cell.evidenceJson,
-        HallRecordEvidenceSchema.array(),
-      );
-      const primaryEvidence = evidence[0];
-      if (primaryEvidence === undefined) {
-        throw new Error(`Broken Hall cell ${cell.id} has no evidence`);
-      }
-      return HallBreakPayloadSchema.parse({
-        ...primaryEvidence,
-        queueFamilyId: cell.queueFamilyId,
-        recordId: cell.recordId,
-        holders: parseProgressionJson(
-          cell.holdersJson,
-          HallRecordHolderSchema.array(),
-        ),
-      });
-    });
-    // Inside this transaction, so the announcement commits with the cells it
-    // describes. Whether a silent match announces at all is
-    // `announceHallRecordBreak`'s decision.
-    await announceHallRecordBreak(tx, {
+  await lockHallRecords(tx, guildId);
+  const settingsRow = await tx.hallSettings.findUnique({ where: { guildId } });
+  if (settingsRow === null) {
+    return;
+  }
+  const settings = hallSettingsFromRow(settingsRow);
+  if (!settings.enabledQueueFamilies.includes(match.family)) {
+    return;
+  }
+
+  const rows = await tx.hallRecordCell.findMany({
+    where: {
       guildId,
-      matchId,
-      channelId: settings.channelId,
-      records: payload,
-      now: new Date(),
-    });
+      queueFamilyId: match.family,
+      recordId: { in: settings.enabledRecords },
+      baselineStatus: "ready",
+    },
+    orderBy: { recordId: "asc" },
+  });
+  if (rows.length === 0) {
+    return;
+  }
+  const cells = rows.map((row): ReadyHallCell => ({
+    ...row,
+    recordId: HallRecordIdSchema.parse(row.recordId),
+    standings: hallStandingsFromCell(row),
+  }));
+  const unseeded = cells.filter((cell) => cell.standings === null);
+  const accounts = await tx.account.findMany({
+    where: {
+      serverId: guildId,
+      ...(unseeded.length === 0
+        ? { puuid: { in: [...match.rows.keys()] } }
+        : {}),
+    },
+    include: { player: true },
+    orderBy: { id: "asc" },
+  });
+  const entrants = accounts.flatMap((account): HallEntrant[] => {
+    const row = match.rows.get(account.puuid);
+    return row === undefined || !isHallEligibleMatch(row, account.createdTime)
+      ? []
+      : [{ row, holder: hallHolderFor(account) }];
+  });
+  if (entrants.length === 0) {
+    return;
+  }
+
+  // Initialize old ready cells from prior games only, so the incoming match
+  // can still break the record. Keep the committed #1 if the lake lags it.
+  const initial = new Map(
+    unseeded.map((cell) => [
+      hallCellKey(match.family, cell.recordId),
+      legacyHallStandings(cell),
+    ]),
+  );
+  const seeded = await calculateHallStandings({
+    accounts,
+    before: match,
+    recordIds: unseeded.map((cell) => cell.recordId),
+    targetCellKeys: new Set(initial.keys()),
+    initial,
+  });
+  const records: HallBreakPayload[] = [];
+  for (const cell of cells) {
+    const key = hallCellKey(match.family, cell.recordId);
+    const before = cell.standings ?? seeded.get(key);
+    if (before === undefined) {
+      throw new Error(`Missing Hall standings for ${cell.id}`);
+    }
+    const record = await applyHallCell(tx, cell, { before, entrants, match });
+    if (record !== null) {
+      records.push(record);
+    }
+  }
+  if (records.length === 0 || settings.channelId === null) {
+    return;
+  }
+  await announceHallRecordBreak(tx, {
+    guildId,
+    matchId: match.matchId,
+    channelId: settings.channelId,
+    records,
+    now: new Date(),
   });
 }
 
@@ -173,52 +248,30 @@ async function evaluateGuild(
 export async function evaluateHallMatch(
   matchData: CanonicalMatch,
 ): Promise<void> {
-  const matchId = matchData.metadata.matchId;
-  const participantPuuids = matchData.metadata.participants;
+  const match = hallMatchFrom(matchData);
+  if (match === null || match.rows.size === 0) {
+    return;
+  }
   const accounts = await prisma.account.findMany({
-    where: { puuid: { in: participantPuuids } },
-    include: { player: true },
+    where: { puuid: { in: [...match.rows.keys()] } },
+    select: { serverId: true },
+    distinct: ["serverId"],
   });
-  if (accounts.length === 0) return;
-  const enabledGuildIds = new Set<DiscordGuildId>();
   for (const account of accounts) {
     const guildId = DiscordGuildIdSchema.parse(account.serverId);
-    if (
-      await isPolicyEnabled("hall_of_fame_enabled", {
-        server: guildId,
-      })
-    ) {
-      enabledGuildIds.add(guildId);
+    if (!(await isPolicyEnabled("hall_of_fame_enabled", { server: guildId }))) {
+      continue;
     }
-  }
-  if (enabledGuildIds.size === 0) return;
-  const configuredGuildIds = new Set<DiscordGuildId>();
-  for (const guildId of enabledGuildIds) {
-    const settingsRow = await prisma.hallSettings.findUnique({
-      where: { guildId },
-    });
-    if (settingsRow !== null) configuredGuildIds.add(guildId);
-  }
-  if (configuredGuildIds.size === 0) return;
-  const earliest = accounts.reduce(
-    (minimum, account) =>
-      new Date(Math.min(account.createdTime.getTime(), minimum.getTime())),
-    accounts[0]?.createdTime ?? new Date(),
-  );
-  const rows = await fetchProgressionMatches({
-    puuids: participantPuuids,
-    startAt: earliest,
-    matchId,
-  });
-  const byPuuid = new Map(rows.map((row) => [row.puuid, row]));
-  const guildIds = new Set<DiscordGuildId>();
-  for (const account of accounts) {
-    const row = byPuuid.get(account.puuid);
-    if (row === undefined) continue;
-    const guildId = DiscordGuildIdSchema.parse(account.serverId);
-    if (configuredGuildIds.has(guildId)) guildIds.add(guildId);
-  }
-  for (const guildId of guildIds) {
-    await evaluateGuild(guildId, matchId, byPuuid);
+
+    // A one-time history seed may need longer than Prisma's default
+    // transaction timeout. Keep it bounded by the realtime Activity budget.
+    await prisma.$transaction(
+      async (tx) => {
+        await evaluateGuild(tx, guildId, match);
+      },
+      {
+        timeout: 60_000,
+      },
+    );
   }
 }

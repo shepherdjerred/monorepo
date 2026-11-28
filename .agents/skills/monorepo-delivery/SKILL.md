@@ -5,24 +5,18 @@ description: Deliver changes in this monorepo through Git-Spice, focused checks,
 
 # Monorepo delivery
 
-Use `toolkit git-spice` (or its `toolkit spice` alias in isolated Claude
-worktrees, where the worktree guard refuses `git-spice` operands) for every
-feature branch and PR operation. A single PR is a stack of one, and every
-stack is a git-spice stack. Always pass `--no-prompt` in agent shells so PTY
-sessions never block on interactive input, and never use `gs`, hand-roll a
-stack rebase, or create a feature PR with `gh pr create`.
-
-Do not drive GitHub stacked pull requests outside git-spice. Do not run
-`gh stack`, install `github/gh-stack`, or open a chain of pull requests by
-pointing each base at the branch below it. git-spice may register submitted
-stacks with GitHub's native stack feature. Leave that registration to
-git-spice.
+Use `toolkit git-spice` (or `toolkit spice` in isolated Claude worktrees) for
+every feature branch and PR operation. A single PR is a stack of one, and every
+stack is a git-spice stack. Pass `--no-prompt` in agent shells, and never use
+`gs`, hand-roll a stack rebase, create a feature PR with `gh pr create`, run
+`gh stack` / `github/gh-stack`, or point PR bases into a chain (git-spice may
+register submitted stacks with GitHub's native stack feature itself).
 
 ## Work locally
 
 1. Inspect the current branch, worktree, and complete base diff. Preserve
    unrelated edits.
-2. Run focused package tasks with Turbo while iterating.
+2. Run focused package tasks with Turbo (and `bun run jscpd` for new clones).
 3. Run the extended test tier for affected workspaces; Woodpecker does not run
    it on pull requests:
    `bun run verify:extended -- --filter='...[origin/main...HEAD]'` (or
@@ -49,7 +43,7 @@ git-spice.
      because no frontend file changed; only purely mechanical chores write
      `None — <reason>`.
    - **Other surfaces:** matching rendered asset or Discord acceptance message.
-5. Stage exact paths and run `bunx lefthook run pre-commit`.
+5. Stage exact paths and run `bunx lefthook run pre-commit` (enforces `jscpd`).
 6. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
    and `Verification`.
 7. Inspect the complete branch diff before submission.
@@ -58,20 +52,23 @@ Create the draft PR, upload `Demo` media, embed it in `## Demo`, then mark
 ready (`Why`, `What`, `Demo`, and `Verification` in the PR body):
 
 ```bash
-toolkit git-spice branch submit --draft --no-prompt --no-web --title "type(scope): outcome" --body-file /tmp/pr-body.md
-toolkit pr asset before.png after.png --markdown
-# Embed printed markdown in ## Demo of /tmp/pr-body.md, then mark ready:
-toolkit git-spice branch submit --no-draft --no-prompt --no-web --body-file /tmp/pr-body.md
+SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/pr-XXXXXX")"
+toolkit git-spice branch submit --draft --no-prompt --no-web --title "type(scope): outcome" --body-file "$SCRATCH/pr-body.md"
+toolkit pr asset "$SCRATCH/before.png" "$SCRATCH/after.png" --markdown
+# Embed printed markdown in ## Demo of "$SCRATCH/pr-body.md", then mark ready:
+toolkit git-spice branch submit --no-draft --no-prompt --no-web --body-file "$SCRATCH/pr-body.md"
 toolkit ci wait --json
 ```
 
 Pass `--body-file` rather than `--body "$(cat ...)"` so worktree guards never
 reject command substitution (`toolkit spice` accepts the same flags in isolated
-Claude worktrees). Draft pushes run bounded preflight;
-`toolkit git-spice stack submit --update-only --no-prompt` updates an existing
-stack. A green draft preflight is not merge evidence: wait for full verification
-of the current head after marking it ready, and keep PR metadata based on the
-whole branch, not the latest commit.
+Claude worktrees). Parallel subagents must allocate an isolated `mktemp -d` or
+agent-scoped scratch subdirectory — never share fixed `/tmp/*` or root
+scratchpad filenames across concurrent agents. Draft pushes run bounded
+preflight; `toolkit git-spice stack submit --update-only --no-prompt` updates an
+existing stack. A green draft preflight is not merge evidence: wait for full
+verification of the current head after marking it ready, and keep PR metadata
+based on the whole branch, not the latest commit.
 
 ## Prove readiness
 
@@ -86,9 +83,14 @@ whole branch, not the latest commit.
   | Wait until main is fixed                 | `toolkit ci wait --main --follow`       |
   | Watch a deployment                       | `toolkit deploy wait <ID>`              |
 
-  Use `toolkit ci explain <PR>` for bounded failure evidence and
-  `toolkit ci load` for capacity. Long queues and builds are normal; elapsed
-  time alone is not a failure.
+  Use `toolkit ci explain <PR>` for bounded failure evidence, `toolkit ci load`
+  for capacity, and `toolkit ci timings` / `toolkit ci analyze` for workflow
+  p50/p90 latency and critical-path bottlenecks. Long queues and builds are
+  normal; elapsed time alone is not a failure.
+
+- **Pipeline cancellation:** Stop your own superseded PR pipelines via
+  `toolkit woodpecker pipeline stop <ID>`. Never cancel another session's PR
+  pipeline or any `main` push pipeline without explicit user approval.
 
 - Wait exits distinguish CI failure (1), errors (2), human intervention (3),
   head changes (4), PR ready but main red (5), timeout (6), and closed/merged

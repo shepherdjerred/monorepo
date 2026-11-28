@@ -2,6 +2,7 @@ import type { CiStep } from "./model.ts";
 import type { PerformanceOptions } from "#src/performance-config.ts";
 import { ramScratchProfile } from "./ram-scratch.ts";
 import { withSharedMiseInstalls } from "./cache.ts";
+import type { FormatCacheScope } from "./cache-trust-domain.ts";
 
 export const WORKSPACE_SEEDS = {
   claim: "woodpecker-workspace-seeds",
@@ -27,14 +28,45 @@ const FORMAT_CACHE_PATH = "/woodpecker/format-cache";
  * clones remove the install's writes instead (checkout/golden.ts).
  */
 const COPYFILE = { CI_BUN_INSTALL_BACKEND: "copyfile" } as const;
-function environment(step: CiStep, options: PerformanceOptions, main: boolean) {
+/** The formatter volume this step mounts, if any. */
+function formatCache(
+  step: CiStep,
+  options: PerformanceOptions,
+  format: FormatCacheScope,
+): Exclude<FormatCacheScope, "none"> | undefined {
+  if (format === "none" || !options.formatting || step.key !== "verify") return;
+  return format;
+}
+
+function environment(
+  step: CiStep,
+  options: PerformanceOptions,
+  format: FormatCacheScope,
+) {
+  const scope = formatCache(step, options, format);
   return {
     ...step.environment,
-    ...(options.formatting && step.key === "verify"
-      ? { CI_FORMAT_CACHE_ROOT: `${FORMAT_CACHE_PATH}/${main ? "main" : "pr"}` }
-      : {}),
+    ...(scope === undefined
+      ? {}
+      : { CI_FORMAT_CACHE_ROOT: `${FORMAT_CACHE_PATH}/${scope}` }),
     ...(options.copyfile ? COPYFILE : {}),
   };
+}
+
+function formatVolumes(
+  step: CiStep,
+  options: PerformanceOptions,
+  format: FormatCacheScope,
+) {
+  const scope = formatCache(step, options, format);
+  return scope === undefined
+    ? {}
+    : {
+        volumes: [
+          ...(step.volumes ?? []),
+          { claim: `woodpecker-format-${scope}`, path: FORMAT_CACHE_PATH },
+        ],
+      };
 }
 
 /** Each scratch profile reserves its tmpfs above the lane's own tier. */
@@ -60,7 +92,8 @@ function orderedFields(step: CiStep, options: PerformanceOptions) {
 export function performanceSteps(
   steps: readonly CiStep[],
   options: PerformanceOptions,
-  main: boolean,
+  /** See `formatCacheScope`; `none` mounts no formatter results. */
+  format: FormatCacheScope,
   credentialless: boolean,
 ): CiStep[] {
   if (credentialless) return [...steps];
@@ -82,19 +115,9 @@ export function performanceSteps(
     return {
       ...step,
       ...scratchFields(step, options),
-      environment: environment(step, options, main),
+      environment: environment(step, options, format),
       ...orderedFields(step, options),
-      ...(options.formatting && step.key === "verify"
-        ? {
-            volumes: [
-              ...(step.volumes ?? []),
-              {
-                claim: `woodpecker-format-${main ? "main" : "pr"}`,
-                path: FORMAT_CACHE_PATH,
-              },
-            ],
-          }
-        : {}),
+      ...formatVolumes(step, options, format),
       ...(step.sourceCache === undefined
         ? {}
         : {

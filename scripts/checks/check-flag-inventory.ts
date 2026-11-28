@@ -18,6 +18,9 @@ import {
 } from "../../packages/feature-flags/src/managed-flag-inventory.ts";
 import { projectDeploymentFlags } from "../../packages/feature-flags/src/project-deployment.ts";
 
+/** Audit label for this script's machine writes to Flags (`X-Flags-Actor`). */
+const FLAGS_ACTOR = "check-flag-inventory";
+
 function argument(
   name: string,
   args: readonly string[] = Bun.argv,
@@ -220,7 +223,7 @@ async function runDeclaredRollout(
   const hasToken = token !== undefined && token.trim() !== "";
   const fetcher =
     hasToken || rollout.mode === "apply"
-      ? createFlagsMachineFetcher(url, token)
+      ? createFlagsMachineFetcher(url, token, fetch, { actor: FLAGS_ACTOR })
       : undefined;
   const result = await applyDeclaredDeploymentFlags({
     url,
@@ -258,7 +261,12 @@ async function main(): Promise<void> {
   if (Bun.argv.includes("--apply-missing")) {
     const created = await applyMissingDeploymentFlags({
       url,
-      fetcher: createFlagsMachineFetcher(url, Bun.env["FLAGS_MACHINE_TOKEN"]),
+      fetcher: createFlagsMachineFetcher(
+        url,
+        Bun.env["FLAGS_MACHINE_TOKEN"],
+        fetch,
+        { actor: FLAGS_ACTOR },
+      ),
       deployments,
     });
     for (const result of created) {

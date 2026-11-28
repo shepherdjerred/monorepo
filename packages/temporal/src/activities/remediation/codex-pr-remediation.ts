@@ -124,7 +124,7 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
   }
 }
 
-async function executeCodexTurn(input: {
+export async function runRemediationCodexTurn(input: {
   repoDir: string;
   prompt: string;
   callSite: string;
@@ -319,7 +319,7 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
       typeof input.prompt === "function"
         ? await input.prompt(workspace.repoDir)
         : input.prompt;
-    const agentOutcome = await executeCodexTurn({
+    const agentOutcome = await runRemediationCodexTurn({
       repoDir: workspace.repoDir,
       prompt,
       callSite: input.callSite,

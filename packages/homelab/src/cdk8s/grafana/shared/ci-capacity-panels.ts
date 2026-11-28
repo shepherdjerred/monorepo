@@ -8,6 +8,13 @@
  * rules and the step-key label the configuration extension stamps.
  */
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import {
+  CI_AGENT_CONFIGURED_SLOTS_METRIC,
+  CI_NODE_CPU_HEADROOM_IDLE_RATIO,
+  CI_PENDING_QUEUE_FOR,
+  CI_PENDING_STEPS_THRESHOLD,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/woodpecker-queue.ts";
 import { createTimeseriesPanel } from "./dashboard-panels.ts";
 /**
  * Physical block devices, excluding partitions and virtual devices.
@@ -18,6 +25,86 @@ const PHYSICAL_DISK_PATTERN = "nvme[0-9]+n[0-9]+|sd[a-z]+|vd[a-z]+|xvd[a-z]+";
 // families expose the queue as `name`, while `local_queue` is absent.
 const CI_LOCAL_QUEUE_SELECTOR =
   'exported_namespace="woodpecker-ci",name="default"';
+
+/**
+ * Woodpecker's own queue, upstream of Kueue: steps wait here for an agent slot
+ * before any pod exists. `woodpecker_worker_count` counts idle agent slots, so
+ * running steps plus idle slots equal the agents' total capacity.
+ */
+export function addCiAgentQueuePanels(
+  builder: dashboard.DashboardBuilder,
+): void {
+  builder.withRow(new dashboard.RowBuilder("Woodpecker Agent Queue"));
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Woodpecker Queue Depth",
+      description:
+        "Steps by state in the Woodpecker server's queue. Pending steps wait for an agent slot; waiting steps wait on a dependency; idle slots are agent workflow slots with nothing to run.",
+      targets: [
+        {
+          query: 'max(woodpecker_pending_steps{namespace="woodpecker"})',
+          legend: "pending (waiting for an agent slot)",
+        },
+        {
+          query: 'max(woodpecker_waiting_steps{namespace="woodpecker"})',
+          legend: "waiting (on dependencies)",
+        },
+        {
+          query: 'max(woodpecker_running_steps{namespace="woodpecker"})',
+          legend: "running",
+        },
+        {
+          query: 'max(woodpecker_worker_count{namespace="woodpecker"})',
+          legend: "idle agent slots",
+        },
+      ],
+      gridPos: { x: 0, y: 82, w: 8, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Pending Steps vs liskov CPU",
+      description: `Many pending steps while the CI node has spare CPU is admission bookkeeping, not saturation: WoodpeckerPendingQueueWithCpuHeadroom fires when pending stays above ${String(CI_PENDING_STEPS_THRESHOLD)} with the node under ${String(Math.round((1 - CI_NODE_CPU_HEADROOM_IDLE_RATIO) * 100))}% busy for ${CI_PENDING_QUEUE_FOR}.`,
+      targets: [
+        {
+          query: 'max(woodpecker_pending_steps{namespace="woodpecker"})',
+          legend: "pending steps",
+        },
+        {
+          query: `vector(${String(CI_PENDING_STEPS_THRESHOLD)})`,
+          legend: "alert threshold (steps)",
+        },
+        {
+          query: `100 * (1 - avg(rate(node_cpu_seconds_total{node="${CI_NODE_HOSTNAME}",mode="idle"}[5m])))`,
+          legend: "CPU busy percent",
+        },
+      ],
+      gridPos: { x: 8, y: 82, w: 8, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Agent Slots: Connected vs Expected",
+      description:
+        "Connected slots are idle plus running steps. Expected capacity is what the available agent Deployments are configured to run (their ci.sjer.red/max-workflows labels times available replicas), so it follows a cap change when the agent rollout lands, not when the source merges. A gap that persists means a running agent has lost its connection: WoodpeckerAgentDisconnected.",
+      targets: [
+        {
+          query:
+            'max(woodpecker_worker_count{namespace="woodpecker"}) + on () max(woodpecker_running_steps{namespace="woodpecker"})',
+          legend: "connected slots (idle + running)",
+        },
+        {
+          query: CI_AGENT_CONFIGURED_SLOTS_METRIC,
+          legend: "expected capacity (configured)",
+        },
+      ],
+      gridPos: { x: 16, y: 82, w: 8, h: 8 },
+    }),
+  );
+}
 
 export function addCiCapacityHealthPanels(
   builder: dashboard.DashboardBuilder,

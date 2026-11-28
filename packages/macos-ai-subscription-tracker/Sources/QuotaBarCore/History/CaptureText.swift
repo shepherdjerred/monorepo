@@ -1,7 +1,24 @@
 import Foundation
 
+/// A badge describing a block's diff (`new`) or wire-transmission (`not sent`) state.
+public struct CaptureBlockBadge: Equatable, Identifiable, Sendable {
+  public let text: String
+  public let isAccent: Bool
+  public let help: String?
+
+  public var id: String { text }
+
+  public init(text: String, isAccent: Bool, help: String? = nil) {
+    self.text = text
+    self.isAccent = isAccent
+    self.help = help
+  }
+}
+
 /// Display text and grouping for captured requests.
 public enum CaptureText {
+  public static let notSentBadgeHelp =
+    "Not sent on the wire; carried server-side from the request this continues."
   public static let incompleteContextNote =
     "Context incomplete: the request this one continues was never captured, "
     + "so its inherited history is missing."
@@ -82,5 +99,18 @@ public enum CaptureText {
     let parent = previous.map { "#\($0)" } ?? "an earlier request"
     return "This request continues \(parent). Blocks it inherited were not sent, so they are "
       + "not in this body; the Request view shows the full rebuilt context."
+  }
+
+  /// Badges for a captured block or tool definition.
+  public static func blockBadges(isNew: Bool, inherited: Bool) -> [CaptureBlockBadge] {
+    var badges: [CaptureBlockBadge] = []
+    if isNew {
+      badges.append(CaptureBlockBadge(text: "new", isAccent: true))
+    }
+    if inherited {
+      badges.append(
+        CaptureBlockBadge(text: "not sent", isAccent: false, help: notSentBadgeHelp))
+    }
+    return badges
   }
 }

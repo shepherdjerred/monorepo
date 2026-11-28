@@ -1,6 +1,12 @@
-import { describe, expect, test } from "vitest";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
+import { afterEach, describe, expect, test } from "vitest";
 import {
   affectedVerifyFilters,
+  formatTurboFailureSummary,
+  listTurboSummaryFiles,
+  readNewTurboSummaries,
   ROOT_SCRIPTS_EXTERNAL_INPUTS,
 } from "../verify.ts";
 
@@ -175,5 +181,100 @@ describe("affected verification filters", () => {
       ),
     ).toEqual([]);
     expect(validated).toBe(false);
+  });
+});
+
+describe("Turbo SIGTERM and non-zero failure summary diagnostics", () => {
+  let directory = "";
+
+  afterEach(async () => {
+    if (directory !== "") {
+      await rm(directory, { recursive: true, force: true });
+      directory = "";
+    }
+  });
+
+  test("formats in-flight, failed, and unstarted tasks with elapsed seconds", () => {
+    const lines = formatTurboFailureSummary(
+      [
+        {
+          tasks: [
+            {
+              taskId: "@shepherdjerred/ops-model#build",
+              execution: { startTime: 100_000, endTime: 101_500, exitCode: 0 },
+            },
+            {
+              taskId: "@shepherdjerred/media#test:ci",
+              execution: { startTime: 100_000 },
+            },
+            {
+              taskId: "@shepherdjerred/temporal#test:ci",
+              execution: {
+                startTime: 120_000,
+                endTime: 150_000,
+                exitCode: null,
+              },
+            },
+            {
+              taskId: "//#jscpd",
+              execution: { startTime: 110_000, endTime: 125_000, exitCode: 1 },
+            },
+            {
+              taskId: "@shepherdjerred/delivery#lint",
+            },
+            {
+              taskId: "@shepherdjerred/delivery#test:ci",
+            },
+          ],
+        },
+      ],
+      165_000,
+    );
+
+    expect(lines).toEqual([
+      "[verify] Turbo in-flight task(s) (2): @shepherdjerred/media#test:ci (running 65s), @shepherdjerred/temporal#test:ci (running 45s)",
+      "[verify] Turbo failed task(s) (1): //#jscpd (exit 1)",
+      "[verify] Turbo unstarted task(s): 2",
+    ]);
+  });
+
+  test("reads only newly written .turbo/runs/*.json summary files", async () => {
+    directory = await mkdtemp(nodePath.join(tmpdir(), "verify-turbo-summary-"));
+    expect([...(await listTurboSummaryFiles(directory))]).toEqual([]);
+
+    const runsDir = nodePath.join(directory, ".turbo", "runs");
+    await mkdir(runsDir, { recursive: true });
+    await Bun.write(
+      nodePath.join(runsDir, "previous.json"),
+      JSON.stringify({
+        tasks: [
+          {
+            taskId: "old#test:ci",
+            execution: { startTime: 1000, endTime: 2000, exitCode: 2 },
+          },
+        ],
+      }),
+    );
+
+    const before = await listTurboSummaryFiles(directory);
+    expect([...before]).toEqual(["previous.json"]);
+
+    await Bun.write(
+      nodePath.join(runsDir, "current.json"),
+      JSON.stringify({
+        tasks: [
+          {
+            taskId: "@shepherdjerred/scout-for-lol#test:ci",
+            execution: { startTime: 10_000 },
+          },
+        ],
+      }),
+    );
+    await Bun.write(nodePath.join(runsDir, "corrupt.json"), "{not-json");
+
+    const summaries = await readNewTurboSummaries(directory, before);
+    expect(formatTurboFailureSummary(summaries, 42_000)).toEqual([
+      "[verify] Turbo in-flight task(s) (1): @shepherdjerred/scout-for-lol#test:ci (running 32s)",
+    ]);
   });
 });

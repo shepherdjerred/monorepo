@@ -9,7 +9,6 @@ import { rawArchiveReceiptRecord } from "#src/report-lake/durable-receipts.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  type DiscordAccountId,
   type DiscordGuildId,
   type LeaguePuuid,
 } from "@scout-for-lol/data";
@@ -21,7 +20,9 @@ import {
   addFlagOverride,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
+import type * as SeedModule from "#src/testing/consumer-player-seed.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
+import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 
@@ -29,22 +30,10 @@ import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 // snapshot; the object store is not part of this suite.
 const archivedSnapshots = vi.hoisted(() => new Map<string, object>());
 vi.mock("#src/report-lake/receipted-archive.ts", async () => {
-  const actual: object = await vi.importActual(
-    "#src/report-lake/receipted-archive.ts",
-  );
-  return {
-    ...actual,
-    readArchivedPrematchSnapshot: (
-      _descriptor: unknown,
-      matchId: RiotMatchId,
-    ) => {
-      const snapshot = archivedSnapshots.get(matchId);
-      if (snapshot === undefined) {
-        throw new Error(`No archived snapshot stubbed for ${matchId}`);
-      }
-      return Promise.resolve(snapshot);
-    },
-  };
+  const { stubArchivedPrematchSnapshots } = await vi.importActual<
+    typeof SeedModule
+  >("#src/testing/consumer-player-seed.ts");
+  return await stubArchivedPrematchSnapshots(archivedSnapshots);
 });
 
 const guildId = DiscordGuildIdSchema.parse("100000000000000041");
@@ -63,46 +52,8 @@ const ALT = testPuuid("consumer-alt");
 const OTHER = testPuuid("consumer-other");
 const gameCreatedAt = new Date(Date.UTC(2026, 7, 20, 12, 0, 0));
 
-async function seedPlayer(options: {
-  serverId: DiscordGuildId;
-  alias: string;
-  discordId?: DiscordAccountId;
-  puuids: LeaguePuuid[];
-  lastMatchTime?: Date | null;
-}) {
-  const now = new Date();
-  const player = await testPrisma.player.create({
-    data: {
-      alias: options.alias,
-      ...(options.discordId === undefined
-        ? {}
-        : { discordId: options.discordId }),
-      serverId: options.serverId,
-      creatorDiscordId: actorDiscordId,
-      createdTime: now,
-      updatedTime: now,
-    },
-  });
-  await testPrisma.account.createMany({
-    data: options.puuids.map((puuid, index) => ({
-      alias: `${options.alias}-${index.toString()}`,
-      puuid,
-      region: "AMERICA_NORTH",
-      playerId: player.id,
-      serverId: options.serverId,
-      creatorDiscordId: actorDiscordId,
-      riotGameName: `${options.alias} Riot ${index.toString()}`,
-      riotTagLine: "NA1",
-      riotIdUpdatedAt: now,
-      lastMatchTime:
-        options.lastMatchTime === undefined ? now : options.lastMatchTime,
-      lastCheckedAt: now,
-      createdTime: now,
-      updatedTime: now,
-    })),
-  });
-  return player;
-}
+const seedPlayer = (options: Parameters<typeof seedConsumerPlayer>[2]) =>
+  seedConsumerPlayer(testPrisma, actorDiscordId, options);
 
 function matchFact(options: {
   matchId: RiotMatchId;

@@ -65,7 +65,44 @@
       "unresolved": [
         "totalpercenthealthdamage",
         "totalpercenthealthdamagefeared"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "fiddlesticksqmissilefear",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "fiddlesticksqmissilenofear",
+            "width": 150,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Bountiful Harvest",
@@ -179,7 +216,44 @@
         ]
       },
       "resolvedDescription": "Fiddlesticks channels and drains the souls of nearby enemies, dealing 60/90/120/150/180 (+45% AP) magic damage per second for 2 seconds, plus 12/14.5/17/19.5/22% missing Health magic damage at the end. Fiddlesticks restores 25/32.5/40/47.5/55% of damage as Health. If Fiddlesticks ends the channel without interruption, the remaining Cooldown is reduced by 60%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "fiddlestickswcosmeticmissilebig",
+            "width": 150,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "fiddlestickswcosmeticmissilesmall",
+            "width": 150,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Reap",
@@ -244,7 +318,15 @@
         ]
       },
       "resolvedDescription": "Fiddlesticks unleashes dark magic, dealing 70/105/140/175/210 (+50% AP) magic damage and Slowing by 30/35/40/45/50% for 1.25 seconds. Enemies in the center are also Silenced for the duration.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.4,
+        "radius": 500,
+        "lineWidth": 70,
+        "missileSpeed": 1800,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Crowstorm",
@@ -288,7 +370,15 @@
         ]
       },
       "resolvedDescription": "Fiddlesticks channels for 1.5 seconds, then teleports and unleashes a murder of crows, dealing 750/1250/1750 (+250% AP) magic damage over 5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 600,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     }
   }
 }

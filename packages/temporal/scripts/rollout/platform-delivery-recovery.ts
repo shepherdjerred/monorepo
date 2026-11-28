@@ -13,7 +13,41 @@ import {
   provePlatformNativeJobs,
 } from "#lib/delivery/platform/recovery/native-proof.ts";
 import { recoveryJobReader } from "#lib/delivery/workers/worker-recovery-jobs.ts";
+import { redactSecrets } from "#shared/redact.ts";
 import { openOperatorRecovery } from "./temporal-operator-credentials.ts";
+
+const SECRET_ENV_NAME = /TOKEN|KEY|SECRET|PASSWORD|CREDENTIAL/iu;
+
+function errorChain(error: unknown): string {
+  const parts: string[] = [];
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current !== undefined && current !== null && !seen.has(current)) {
+    seen.add(current);
+    if (current instanceof Error) {
+      parts.push(current.message.length > 0 ? current.message : current.name);
+      current = current.cause;
+    } else {
+      parts.push(
+        typeof current === "string" ? current : JSON.stringify(current),
+      );
+      break;
+    }
+  }
+  return parts.filter((part) => part.length > 0).join(": ");
+}
+
+export function formatPlatformRecoveryFailure(
+  error: unknown,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): string {
+  const tokens = Object.entries(environment).flatMap(([name, value]) =>
+    SECRET_ENV_NAME.test(name) ? [value] : [],
+  );
+  const detail = redactSecrets(errorChain(error), tokens).trim();
+  const suffix = detail.length > 0 ? ` (${detail})` : "";
+  return `Independent platform recovery failed${suffix}; original result and quarantine remain unchanged. Inspect the exact intent and native receipts before retrying.`;
+}
 
 /** The same fixed native recipes work during a Delivery worker outage; no arbitrary source/stack/command input exists. */
 async function main() {
@@ -56,11 +90,11 @@ async function main() {
     await connection.close();
   }
 }
-try {
-  await main();
-} catch {
-  console.error(
-    "Independent platform recovery failed; original result and quarantine remain unchanged. Inspect the exact intent and native receipts before retrying.",
-  );
-  process.exitCode = 1;
+if (import.meta.main) {
+  try {
+    await main();
+  } catch (error) {
+    console.error(formatPlatformRecoveryFailure(error));
+    process.exitCode = 1;
+  }
 }

@@ -6,5 +6,11 @@
     "jsx": "react-jsx",
     "noEmit": true
   },
-  "include": ["src", "eslint.config.ts", "vite.config.ts"]
+  "include": [
+    "src",
+    "e2e",
+    "eslint.config.ts",
+    "playwright.config.ts",
+    "vite.config.ts"
+  ]
 }

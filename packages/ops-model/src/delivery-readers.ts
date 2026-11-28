@@ -87,6 +87,20 @@ export const DELIVERY_KUBERNETES_READERS = {
     ],
   },
   /**
+   * Recorded Application `test-*` Jobs and their executor Pods in
+   * `delivery-worker-jobs`, observed terminal before Argo recovery settles a
+   * deployment that ran an in-cluster test stage (AI-353).
+   */
+  workerJobs: {
+    name: "delivery-worker-jobs-reader",
+    directory: "/var/run/delivery-worker-jobs-reader",
+    namespaces: ["delivery-worker-jobs"],
+    rules: [
+      { apiGroups: [""], resources: ["pods"], verbs: READ },
+      { apiGroups: ["batch"], resources: ["jobs"], verbs: READ },
+    ],
+  },
+  /**
    * The API's own Service endpoints, read while it drains on shutdown: it
    * stops serving only once its endpoint is no longer ready and another is.
    */

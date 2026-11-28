@@ -287,6 +287,12 @@ export function createSeaweedfsApp(chart: Chart) {
         size: Size.gibibytes(50).asString(),
         storageClass: NVME_STORAGE_CLASS,
       },
+      idxVolMoveResources: {
+        requests: {
+          cpu: "10m",
+          memory: "32Mi",
+        },
+      },
       logs: {
         type: "emptyDir",
       },

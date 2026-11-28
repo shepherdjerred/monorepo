@@ -2,6 +2,8 @@ import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import { pipelineTiming } from "./timing.ts";
 import type { LatencyEvidence } from "./latency-evidence.ts";
 
+const MAIN_PUSH_WORKFLOWS = ["verify", "images", "helm-push"] as const;
+
 export function pipelineKind(pipeline: WoodpeckerPipeline): string {
   const names = new Set(pipeline.workflows.map((workflow) => workflow.name));
   if (names.has("ci-noop")) return "noop";
@@ -9,7 +11,8 @@ export function pipelineKind(pipeline: WoodpeckerPipeline): string {
   if (
     names.has("maintenance-release-notes") ||
     names.has("maintenance-ci-images") ||
-    names.has("maintenance-workspace-seeds")
+    names.has("maintenance-workspace-seeds") ||
+    names.has("maintenance-workspace-golden")
   )
     return "maintenance";
   // The nightly extended test tier is a manual main run without the release
@@ -18,9 +21,9 @@ export function pipelineKind(pipeline: WoodpeckerPipeline): string {
   if (
     pipeline.branch === "main" &&
     ["push", "manual"].includes(pipeline.event ?? "") &&
-    ["verify", "images", "helm-push", "argocd-sync"].every((name) =>
-      names.has(name),
-    )
+    // The publication workflows exist only on the default branch; Delivery
+    // owns deployment, so no ArgoCD sync workflow is part of the shape.
+    MAIN_PUSH_WORKFLOWS.every((name) => names.has(name))
   )
     return "main";
   if (names.has("verify") && names.has("ci-complete")) {

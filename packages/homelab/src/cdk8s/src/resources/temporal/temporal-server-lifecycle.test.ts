@@ -6,6 +6,7 @@ import {
   TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS,
   TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-release-budgets.ts";
+import { PROMOTION_POD_TERMINATION_SECONDS } from "@shepherdjerred/ops-model/promotion/drain-policy.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
@@ -302,6 +303,34 @@ describe("Temporal release budgets", () => {
       .parse(job.spec);
     expect(spec.activeDeadlineSeconds).toBe(
       TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+    );
+  });
+
+  test("sizes promotion-worker progressDeadlineSeconds and child sync timeout above its Recreate drain grace", () => {
+    const promotion = findResource(
+      "Deployment",
+      "temporal-temporal-promotion-worker",
+    );
+    const spec = z
+      .object({
+        progressDeadlineSeconds: z.number(),
+        template: z.object({
+          spec: z.object({ terminationGracePeriodSeconds: z.number() }).loose(),
+        }),
+      })
+      .loose()
+      .parse(promotion.spec);
+    expect(spec.template.spec.terminationGracePeriodSeconds).toBe(
+      PROMOTION_POD_TERMINATION_SECONDS,
+    );
+    expect(spec.progressDeadlineSeconds).toBe(
+      PROMOTION_POD_TERMINATION_SECONDS + 300,
+    );
+    expect(spec.progressDeadlineSeconds).toBeGreaterThan(
+      PROMOTION_POD_TERMINATION_SECONDS,
+    );
+    expect(TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS).toBeGreaterThan(
+      spec.progressDeadlineSeconds,
     );
   });
 });

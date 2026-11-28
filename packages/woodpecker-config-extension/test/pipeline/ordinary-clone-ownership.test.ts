@@ -79,7 +79,7 @@ describe("ordinary clone ownership handoff", () => {
     const cachedSteps = cacheSourceSteps([verify], {
       enabled: true,
       credentialless: false,
-      main: true,
+      trustDomain: "trusted",
       image: `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`,
     });
     const cachedVerify = cachedSteps[0];

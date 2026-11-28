@@ -12,8 +12,12 @@ import { ConfirmDialog } from "#client/ui/confirm-dialog.tsx";
 import { Callout, LoadError } from "#client/ui/feedback.tsx";
 import { Panel, SkeletonRows } from "#client/ui/panel.tsx";
 import { FactList } from "#client/ui/record.tsx";
+import { StatePill } from "#client/ui/poster-card.tsx";
 import { MovieEditionSelector } from "./selector.tsx";
-import { movieAdmissionReasonV4 } from "./presentation-v4.ts";
+import {
+  movieAdmissionReasonV4,
+  movieDiscoveryCopy,
+} from "./presentation-v4.ts";
 import {
   invalidateMovieTargetV4,
   useMovieLifecycleCommandV4,
@@ -144,12 +148,20 @@ function MovieEditionTargetV4({
         <MovieProtectiveControlsV4 context={context} action={action} />
       </>
     );
+  const discovery = movieDiscoveryCopy(context);
   return (
     <div className={cx("edition")}>
       <header className={cx("editionHead")}>
         <h3 className={cx("editionTitle")}>{context.editionLabel}</h3>
-        <StatusBadge value={context.target.availability} />
+        {discovery === undefined ? (
+          <StatusBadge value={context.target.availability} />
+        ) : (
+          <StatePill state={discovery} />
+        )}
       </header>
+      {discovery?.detail !== undefined && (
+        <Callout tone="warn">{discovery.detail}</Callout>
+      )}
       <FactList
         facts={[
           {

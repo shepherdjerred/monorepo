@@ -56,13 +56,13 @@ function issueSignal(
     links: [
       {
         kind: "bugsink",
-        label: "Bugsink issue",
+        label: "Errors issue",
         url: bugsinkIssueUrl(BUGSINK_URL, issue.id),
       },
       {
         kind: "bugsink",
         label: `${project.name} issues`,
-        url: bugsinkProjectUrl(BUGSINK_URL, project.id),
+        url: bugsinkProjectUrl(BUGSINK_URL, project.slug),
       },
       ...(namespace === undefined ? [] : [errorLogsLink(namespace)]),
     ],

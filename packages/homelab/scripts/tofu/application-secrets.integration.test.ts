@@ -33,11 +33,21 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
     second: "fixture-second-unchanged-456",
   };
   // Test-only synthetic values. No real vault or remote backend is used.
+  const validationPluginCacheDir = Bun.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"];
   const env = {
     PATH: Bun.env["PATH"],
     HOME: Bun.env["HOME"],
     // CI's mise shims resolve installed tools under this nonsecret bootstrap path.
     MISE_DATA_DIR: Bun.env["MISE_DATA_DIR"],
+    HTTPS_PROXY: Bun.env["HTTPS_PROXY"],
+    HTTP_PROXY: Bun.env["HTTP_PROXY"],
+    NO_PROXY: Bun.env["NO_PROXY"],
+    SSL_CERT_DIR: Bun.env["SSL_CERT_DIR"],
+    SSL_CERT_FILE: Bun.env["SSL_CERT_FILE"],
+    ...(validationPluginCacheDir === undefined ||
+    validationPluginCacheDir === ""
+      ? {}
+      : { TF_PLUGIN_CACHE_DIR: validationPluginCacheDir }),
     TF_VAR_tofu_state_encryption_passphrase:
       "fixture-only-encryption-passphrase",
     TF_VAR_adoption_lengths: JSON.stringify(
@@ -48,10 +58,10 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
     TF_VAR_adoption_keys: JSON.stringify(Object.keys(adopted)),
     TF_VAR_adoption_values: JSON.stringify(adopted),
   };
-  const command = (args: string[]) =>
+  const command = (phase: string, args: string[]) =>
     capturedRead(
       ["tofu", `-chdir=${fixtureRoot}`, ...args],
-      "local synthetic OpenTofu fixture",
+      `local synthetic OpenTofu fixture: ${phase}`,
       env,
     );
   try {
@@ -82,20 +92,24 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
       path.join(fixtureRoot, "desired-state.json"),
       JSON.stringify(catalog),
     );
-    await command([
+    await command("init", [
       "init",
       "-backend=false",
       "-input=false",
       "-lockfile=readonly",
     ]);
-    await command(["plan", "-input=false", "-out=adoption.plan"]);
+    await command("plan adoption", [
+      "plan",
+      "-input=false",
+      "-out=adoption.plan",
+    ]);
     const savedPlan = await Bun.file(
       path.join(fixtureRoot, "adoption.plan"),
     ).text();
     expect(savedPlan).not.toContain(adopted.first);
     expect(savedPlan).toContain("encrypted_data");
     const rawPlan = parsePrivateJson(
-      await command(["show", "-json", "adoption.plan"]),
+      await command("show adoption", ["show", "-json", "adoption.plan"]),
       z.unknown(),
     );
     assertAdoptionPlan(rawPlan, adopted);
@@ -105,7 +119,7 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
         (change) => change.change.actions.join(",") === "no-op",
       ),
     ).toBe(true);
-    await command(["apply", "-input=false", "adoption.plan"]);
+    await command("apply adoption", ["apply", "-input=false", "adoption.plan"]);
     const state = await Bun.file(
       path.join(fixtureRoot, "terraform.tfstate"),
     ).text();
@@ -113,7 +127,11 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
     expect(state).not.toContain(adopted.second);
     expect(state).toContain("encrypted_data");
     const outputs = parsePrivateJson(
-      await command(["output", "-json", "application_secret_handoffs"]),
+      await command("output adoption", [
+        "output",
+        "-json",
+        "application_secret_handoffs",
+      ]),
       z.record(z.string(), z.object({ value: z.string() })),
     );
     // Compare booleans so failed assertions cannot print sensitive outputs.
@@ -121,15 +139,23 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
     expect(outputs["second"]?.value === adopted.second).toBe(true);
     env.TF_VAR_adoption_keys = "[]";
     env.TF_VAR_adoption_values = "{}";
-    await command(["plan", "-input=false", "-detailed-exitcode"]);
+    await command("plan post-adoption", [
+      "plan",
+      "-input=false",
+      "-detailed-exitcode",
+    ]);
     catalog.credentials.first.revision = 1;
     await Bun.write(
       path.join(fixtureRoot, "desired-state.json"),
       JSON.stringify(catalog),
     );
-    await command(["plan", "-input=false", "-out=rotation.plan"]);
+    await command("plan rotation", [
+      "plan",
+      "-input=false",
+      "-out=rotation.plan",
+    ]);
     const rotation = parsePrivateJson(
-      await command(["show", "-json", "rotation.plan"]),
+      await command("show rotation", ["show", "-json", "rotation.plan"]),
       PlanSchema,
     );
     const changes = rotation.resource_changes.filter(
@@ -139,9 +165,13 @@ test("encrypted fixture adoption preserves values and only an explicit revision 
       'random_password.credentials["first"]',
     ]);
     expect(changes[0]?.change.actions).toEqual(["delete", "create"]);
-    await command(["apply", "-input=false", "rotation.plan"]);
+    await command("apply rotation", ["apply", "-input=false", "rotation.plan"]);
     const rotated = parsePrivateJson(
-      await command(["output", "-json", "application_secret_handoffs"]),
+      await command("output rotation", [
+        "output",
+        "-json",
+        "application_secret_handoffs",
+      ]),
       z.record(z.string(), z.object({ value: z.string() })),
     );
     expect(

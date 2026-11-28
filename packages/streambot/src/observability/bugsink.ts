@@ -16,14 +16,18 @@ export type BugsinkReporting = {
 };
 
 /**
- * The public Bugsink host. Every first-party browser app (discord-plays, Scout, sjer.red) reports
- * to a DSN on this host; a DSN anywhere else is cluster-internal and must not reach a browser.
+ * The public error ingest hosts (`logging.sjer.red` primary, `bugsink.sjer.red`
+ * compatibility alias). A DSN anywhere else is cluster-internal and must not reach a browser.
  */
 export const PUBLIC_BUGSINK_HOST = "bugsink.sjer.red";
+export const PUBLIC_BUGSINK_HOSTS: ReadonlySet<string> = new Set([
+  "logging.sjer.red",
+  PUBLIC_BUGSINK_HOST,
+]);
 
 /**
  * What a browser may report with: the server's own reporting, but only when its DSN is an
- * `https:` URL on the public Bugsink host. An internal, plain-HTTP or malformed DSN yields `null`,
+ * `https:` URL on a public error ingest host. An internal, plain-HTTP or malformed DSN yields `null`,
  * so the browser reports nothing rather than learning a cluster address.
  */
 export function browserBugsink(
@@ -37,7 +41,7 @@ export function browserBugsink(
     return null;
   }
   return url.protocol === "https:" &&
-    url.hostname === PUBLIC_BUGSINK_HOST &&
+    PUBLIC_BUGSINK_HOSTS.has(url.hostname) &&
     url.port === ""
     ? reporting
     : null;

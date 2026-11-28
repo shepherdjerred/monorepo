@@ -1,0 +1,68 @@
+[
+  {
+    "rule": "colour-literal",
+    "file": "src/client/styles/base.css",
+    "count": 1,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles/base.css",
+    "count": 6,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "token-redefinition",
+    "file": "src/client/styles/base.css",
+    "count": 1,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles/controls.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles/layout.css",
+    "count": 2,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "shared-class-patch",
+    "file": "src/client/styles/layout.css",
+    "count": 4,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/client/styles/pages.css",
+    "count": 11,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/client/styles/planning.css",
+    "count": 1,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "local-copy",
+    "file": "src/client/styles/planning.css",
+    "count": 3,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "colour-literal",
+    "file": "src/client/styles/tokens.css",
+    "count": 11,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  },
+  {
+    "rule": "theme-store-key",
+    "file": "src/client/ui/theme.ts",
+    "count": 1,
+    "reason": "Baseline at CU1. Tracker moves onto the shared pieces in T1–T7."
+  }
+]

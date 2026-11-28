@@ -1,5 +1,5 @@
 import { Dialog } from "@base-ui/react/dialog";
-import { CornerDownLeftIcon, SearchIcon, type LucideIcon } from "lucide-react";
+import { CornerDownLeftIcon, type LucideIcon } from "lucide-react";
 import {
   useId,
   useState,
@@ -8,6 +8,9 @@ import {
   type ReactNode,
 } from "react";
 import { IconButton } from "@shepherdjerred/console-ui/components/icon-button.tsx";
+import { ICONS } from "@shepherdjerred/console-ui/icons.ts";
+
+const SearchIcon = ICONS.search;
 
 export type CommandPaletteItem = {
   /** Unique across the whole palette. */

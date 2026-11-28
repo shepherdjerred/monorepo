@@ -1,12 +1,13 @@
 import type { Figure, Severity } from "@shepherdjerred/console-ui";
-import type {
-  AutoReadRule,
-  CreateUserFeedBody,
-  EntryView,
-  FeedHealthItem,
-  MarkAllReadBody,
-  SummaryResponse,
-  UpdateUserFeedBody,
+import {
+  normalizeAutoReadRules,
+  type AutoReadRule,
+  type CreateUserFeedBody,
+  type EntryView,
+  type FeedHealthItem,
+  type MarkAllReadBody,
+  type SummaryResponse,
+  type UpdateUserFeedBody,
 } from "@shepherdjerred/feeds/shared/contract.ts";
 
 export type EntriesRoute = {
@@ -219,24 +220,36 @@ export function feedHealthStatus(
 }
 
 export function formatAutoReadBadge(rule: AutoReadRule): string {
-  const prefix = rule.negate === true ? "!~" : "~";
-  return `${prefix} /${rule.pattern}/${rule.flags}`;
+  const rules = normalizeAutoReadRules(rule);
+  const first = rules[0];
+  if (first !== undefined && rules.length === 1) {
+    const prefix = first.negate === true ? "!~" : "~";
+    const fieldPrefix = first.field === "title" ? "" : `${first.field} `;
+    const pat =
+      first.pattern.length > 48
+        ? `${first.pattern.slice(0, 45)}…`
+        : first.pattern;
+    return `${fieldPrefix}${prefix} /${pat}/${first.flags}`;
+  }
+  const fields = [...new Set(rules.map((r) => r.field))].join(", ");
+  return `${String(rules.length)} rules (${fields})`;
 }
 
 export function sortFeedsForHealth(
   feeds: readonly FeedHealthItem[],
 ): FeedHealthItem[] {
   return [...feeds].toSorted((a, b) => {
-    const aFailing = a.consecutiveFailures > 0 ? 1 : 0;
-    const bFailing = b.consecutiveFailures > 0 ? 1 : 0;
-    if (aFailing !== bFailing) return bFailing - aFailing;
+    const aFail = a.consecutiveFailures > 0 ? 1 : 0;
+    const bFail = b.consecutiveFailures > 0 ? 1 : 0;
+    if (aFail !== bFail) return bFail - aFail;
     if (a.consecutiveFailures !== b.consecutiveFailures) {
       return b.consecutiveFailures - a.consecutiveFailures;
     }
-    if (a.source !== b.source) {
-      return a.source === "user" ? -1 : 1;
-    }
-    return a.title.localeCompare(b.title);
+    return a.source === b.source
+      ? a.title.localeCompare(b.title)
+      : a.source === "user"
+        ? -1
+        : 1;
   });
 }
 
@@ -249,12 +262,36 @@ export type UserFeedDraft = {
   readonly autoReadPattern: string;
   readonly autoReadFlags: "" | "i";
   readonly autoReadNegate: boolean;
+  readonly initialAutoRead?: AutoReadRule | null | undefined;
 };
 
 export type UserFeedField =
   "url" | "title" | "category" | "htmlUrl" | "autoReadPattern";
 
 export type UserFeedErrors = Partial<Record<UserFeedField, string>>;
+
+const EMPTY_TITLE_RULE = {
+  pattern: "",
+  flags: "i" as const,
+  negate: false,
+};
+
+function extractEditableTitleRule(rule: AutoReadRule | null | undefined): {
+  readonly pattern: string;
+  readonly flags: "" | "i";
+  readonly negate: boolean;
+} {
+  if (rule === null || rule === undefined) return EMPTY_TITLE_RULE;
+  const rules = normalizeAutoReadRules(rule);
+  const first = rules[0];
+  return first !== undefined && rules.length === 1 && first.field === "title"
+    ? {
+        pattern: first.pattern,
+        flags: first.flags,
+        negate: first.negate ?? false,
+      }
+    : EMPTY_TITLE_RULE;
+}
 
 export function emptyUserFeedDraft(): UserFeedDraft {
   return {
@@ -270,6 +307,7 @@ export function emptyUserFeedDraft(): UserFeedDraft {
 }
 
 export function draftFromFeed(feed: FeedHealthItem): UserFeedDraft {
+  const editable = extractEditableTitleRule(feed.autoRead);
   return {
     // Never populate stored URL into browser DOM state so secret tokens do not round-trip.
     url: "",
@@ -277,9 +315,10 @@ export function draftFromFeed(feed: FeedHealthItem): UserFeedDraft {
     category: feed.category,
     htmlUrl: feed.htmlUrl ?? "",
     hidden: feed.hidden,
-    autoReadPattern: feed.autoRead?.pattern ?? "",
-    autoReadFlags: feed.autoRead?.flags ?? "i",
-    autoReadNegate: feed.autoRead?.negate ?? false,
+    autoReadPattern: editable.pattern,
+    autoReadFlags: editable.flags,
+    autoReadNegate: editable.negate,
+    initialAutoRead: feed.autoRead,
   };
 }
 
@@ -363,41 +402,32 @@ export function validateUserFeedField(
   }
 }
 
-const VALIDATED_FIELDS: readonly UserFeedField[] = [
-  "url",
-  "title",
-  "category",
-  "htmlUrl",
-  "autoReadPattern",
-];
-
 export function validateUserFeedDraft(
   draft: UserFeedDraft,
   mode: "create" | "edit",
 ): UserFeedErrors {
   const errors: UserFeedErrors = {};
-  for (const field of VALIDATED_FIELDS) {
+  for (const field of [
+    "url",
+    "title",
+    "category",
+    "htmlUrl",
+    "autoReadPattern",
+  ] as const) {
     const message = validateUserFeedField(draft, field, mode);
-    if (message !== undefined) {
-      errors[field] = message;
-    }
+    if (message !== undefined) errors[field] = message;
   }
   return errors;
 }
 
 function buildAutoReadRule(draft: UserFeedDraft): AutoReadRule | null {
-  if (draft.autoReadPattern.length === 0) return null;
-  return draft.autoReadNegate
-    ? {
-        field: "title",
-        pattern: draft.autoReadPattern,
-        flags: draft.autoReadFlags,
-        negate: true,
-      }
+  return draft.autoReadPattern.length === 0
+    ? null
     : {
         field: "title",
         pattern: draft.autoReadPattern,
         flags: draft.autoReadFlags,
+        ...(draft.autoReadNegate ? { negate: true } : {}),
       };
 }
 
@@ -418,13 +448,19 @@ export function toCreateUserFeedBody(draft: UserFeedDraft): CreateUserFeedBody {
 export function toUpdateUserFeedBody(draft: UserFeedDraft): UpdateUserFeedBody {
   const url = draft.url.trim();
   const htmlUrl = draft.htmlUrl.trim();
+  const baseline = extractEditableTitleRule(draft.initialAutoRead);
+  const autoReadUnchanged =
+    draft.initialAutoRead !== undefined &&
+    draft.autoReadPattern === baseline.pattern &&
+    draft.autoReadFlags === baseline.flags &&
+    draft.autoReadNegate === baseline.negate;
   return {
     title: draft.title.trim(),
     category: draft.category.trim(),
     ...(url.length > 0 ? { url } : {}),
     htmlUrl: htmlUrl.length > 0 ? htmlUrl : null,
     hidden: draft.hidden,
-    autoRead: buildAutoReadRule(draft),
+    ...(autoReadUnchanged ? {} : { autoRead: buildAutoReadRule(draft) }),
   };
 }
 

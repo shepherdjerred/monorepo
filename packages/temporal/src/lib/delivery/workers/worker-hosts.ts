@@ -180,6 +180,68 @@ export function verifyWorkerPoolPods(
   }
 }
 
+const ApplicationErrorConditionsSchema = z.looseObject({
+  status: z
+    .looseObject({
+      conditions: z
+        .array(
+          z.looseObject({
+            type: z.string(),
+            message: z.string().optional(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
+});
+
+async function readApplicationErrorConditions(
+  appPath: string,
+  read: (path: string) => Promise<unknown>,
+): Promise<string[]> {
+  try {
+    const parsed = ApplicationErrorConditionsSchema.safeParse(
+      await read(appPath),
+    );
+    if (!parsed.success) return [];
+    return (parsed.data.status?.conditions ?? [])
+      .filter(
+        (condition) =>
+          condition.type === "ComparisonError" ||
+          condition.type === "InvalidSpecError",
+      )
+      .map((condition) => {
+        const message = condition.message?.trim();
+        return message !== undefined && message.length > 0
+          ? `${condition.type}: ${message}`
+          : condition.type;
+      });
+  } catch {
+    return [];
+  }
+}
+
+async function readResourceTree(
+  application: string,
+  appPath: string,
+  read: (path: string) => Promise<unknown>,
+): Promise<unknown> {
+  try {
+    return await read(`${appPath}/resource-tree`);
+  } catch (treeError) {
+    const conditions = await readApplicationErrorConditions(appPath, read);
+    if (conditions.length === 0) {
+      throw treeError;
+    }
+    const causeMessage =
+      treeError instanceof Error ? treeError.message : String(treeError);
+    throw new Error(
+      `Argo resource-tree read failed for ${application} (${causeMessage}): ${conditions.join("; ")}`,
+      { cause: treeError },
+    );
+  }
+}
+
 export async function workerApplicationResources(
   application: string,
   kind: "Deployment" | "StatefulSet" | "Pod" | "ReplicaSet",
@@ -197,7 +259,7 @@ export async function workerApplicationResources(
         }),
       ),
     })
-    .parse(await read(`${app}/resource-tree`));
+    .parse(await readResourceTree(application, app, read));
   const resources = [];
   // The tree also lists resources the Application declares but that do not
   // exist (health Missing, no uid). They have no live state to inspect, and

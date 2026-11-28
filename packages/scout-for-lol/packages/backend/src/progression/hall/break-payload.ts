@@ -15,12 +15,46 @@ import { RETIRED_HALL_RECORD_IDS } from "#src/progression/hall/legacy-record-ids
  * that writes it nor the reader, so the evaluator can import the codec without
  * the codec importing the evaluator back.
  */
-export type HallBreakPayload = z.infer<typeof HallBreakPayloadSchema>;
-export const HallBreakPayloadSchema = HallRecordEvidenceSchema.extend({
+export const LegacyHallBreakPayloadSchema = HallRecordEvidenceSchema.extend({
   queueFamilyId: HallQueueFamilyIdSchema,
   recordId: HallRecordIdSchema,
   holders: HallRecordHolderSchema.array(),
 });
+
+export type LegacyHallBreakPayload = z.infer<
+  typeof LegacyHallBreakPayloadSchema
+>;
+
+export const HallBreakScoreSchema = z.strictObject({
+  value: z.number(),
+  holders: HallRecordHolderSchema.array().min(1),
+});
+
+export type HallBreakScore = z.infer<typeof HallBreakScoreSchema>;
+
+export const HallBreakPayloadSchema = LegacyHallBreakPayloadSchema.extend({
+  previous: HallBreakScoreSchema,
+  standings: HallBreakScoreSchema.array().min(1).max(3),
+}).refine(
+  ({ value, holders, previous, standings }) => {
+    const [leader] = standings;
+    return (
+      leader?.value === value &&
+      Bun.deepEquals(leader.holders, holders) &&
+      previous.value < value &&
+      standings.every((score, index) => {
+        const higher = standings[index - 1];
+        return higher === undefined || higher.value > score.value;
+      })
+    );
+  },
+  {
+    message:
+      "Hall standings must descend from the new record above the previous record",
+  },
+);
+
+export type HallBreakPayload = z.infer<typeof HallBreakPayloadSchema>;
 
 const RecordIdFieldSchema = z.object({ recordId: z.unknown() }).partial();
 
@@ -51,5 +85,10 @@ export function dropRetiredHallRecordIds(raw: unknown): unknown {
  */
 export const HallBreakRecordsSchema = z.preprocess(
   dropRetiredHallRecordIds,
-  HallBreakPayloadSchema.array(),
+  HallBreakPayloadSchema.array().max(25),
+);
+
+export const LegacyHallBreakRecordsSchema = z.preprocess(
+  dropRetiredHallRecordIds,
+  LegacyHallBreakPayloadSchema.array(),
 );

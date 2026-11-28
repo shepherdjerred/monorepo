@@ -5,6 +5,7 @@ import {
 } from "@shepherdjerred/ops-model/facets.ts";
 import { CLUSTER_FIXTURE_FACETS } from "./ops-facets-cluster.ts";
 import { PLATFORM_FIXTURE_FACETS } from "./ops-facets-platform.ts";
+import { FIXTURE_RENOVATE_RANKING } from "./renovate-ranking.ts";
 
 const GITHUB_REPO = "https://github.com/shepherdjerred/monorepo";
 const BUGSINK_BASE = "https://bugsink.sjer.red";
@@ -100,6 +101,7 @@ function openPr(
 /** Rich, schema-validated sample facets across all 13 Hub 2.0 facet keys. */
 export const FIXTURE_OPS_FACETS: OpsFacets = parseOpsFacets({
   renovate: {
+    ranking: FIXTURE_RENOVATE_RANKING,
     issueNumber: 1,
     issueUrl: `${GITHUB_REPO}/issues/1`,
     truncated: false,

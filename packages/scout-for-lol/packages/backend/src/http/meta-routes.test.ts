@@ -6,6 +6,7 @@ import {
   type MetaRateLimiter,
 } from "#src/http/meta-routes.ts";
 import type { MetaReader } from "#src/meta/meta-reader.ts";
+import { MatchupSliceSchema } from "@scout-for-lol/data/meta/meta-serving.ts";
 import {
   EMPTY_META_READER,
   fixtureMetaReader,
@@ -14,6 +15,18 @@ import {
 /** Route behaviour over the in-memory meta: no lake, DuckDB or database. */
 
 const BASE = "https://scout.test";
+
+const MatchupsBodySchema = z.object({
+  schemaVersion: z.literal(1),
+  championId: z.number(),
+  championName: z.string(),
+  context: z.object({
+    patch: z.string(),
+    queueId: z.number(),
+    bracket: z.string(),
+  }),
+  slices: z.array(MatchupSliceSchema),
+});
 
 const ErrorBodySchema = z.object({ error: z.object({ code: z.string() }) });
 
@@ -146,6 +159,59 @@ describe("meta routes", () => {
       context: { patch: "16.3", bracket: "all" },
       slices: [{ games: 80, wins: 50 }],
     });
+  });
+
+  test("one champion's matchups list every opponent with its record and lane rate", async () => {
+    const response = await get("/api/meta/v1/matchups/2");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("ETag")).toMatch(/^W\/"meta1-/u);
+    const body = MatchupsBodySchema.parse(await response.json());
+    expect(body).toMatchObject({
+      championId: 2,
+      championName: "Ahri",
+      context: { patch: "16.3", queueId: 420, bracket: "all" },
+    });
+    expect(body.slices).toHaveLength(1);
+    const [annie] = body.slices[0]?.opponents ?? [];
+    expect(annie).toMatchObject({
+      championId: 3,
+      games: 80,
+      wins: 50,
+      lane: { games: 36, ahead: 24, denominator: "matchup_games" },
+    });
+    // The interval and the share come with the count, as on every figure.
+    expect(annie?.lane?.aheadRate.lower).toBeLessThan(24 / 36);
+    expect(annie?.lane?.share.value).toBeCloseTo(36 / 80);
+  });
+
+  test("a matchup pair carries the lane rate beside the record", async () => {
+    const body = z
+      .object({
+        slices: z.array(
+          z.object({ lane: z.object({ games: z.number() }).optional() }),
+        ),
+      })
+      .parse(await bodyOf("/api/meta/v1/matchups/2/3"));
+    expect(body.slices[0]?.lane?.games).toBe(36);
+  });
+
+  test("a champion's matchups honour the selection and are typed errors otherwise", async () => {
+    const wrongRole = await get("/api/meta/v1/matchups/2?role=top");
+    expect(wrongRole.status).toBe(404);
+    expect(await errorCode(wrongRole)).toBe("matchup_not_found");
+    const unknown = await get("/api/meta/v1/matchups/999");
+    expect(unknown.status).toBe(404);
+    expect(await errorCode(unknown)).toBe("unknown_champion");
+    const malformed = await get("/api/meta/v1/matchups/ahri");
+    expect(malformed.status).toBe(404);
+    expect(await errorCode(malformed)).toBe("unknown_champion");
+    const badQuery = await get("/api/meta/v1/matchups/2?patch=latest");
+    expect(badQuery.status).toBe(400);
+    expect(await errorCode(badQuery)).toBe("invalid_selection");
+    const unpublished = await get("/api/meta/v1/matchups/2", {
+      reader: EMPTY_META_READER,
+    });
+    expect(unpublished.status).toBe(503);
   });
 
   test("unknown champions are a typed 404, as is a matchup without enough games", async () => {

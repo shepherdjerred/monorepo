@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
+import { z } from "zod";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import generatedSchemas from "@shepherdjerred/feature-flags/flag-value-schemas.generated.json";
+import catalogJson from "@shepherdjerred/llm-models/catalog.json";
 import {
   addSegment,
   applyJsonText,
@@ -24,6 +26,12 @@ import {
   valueKind,
   withQuery,
 } from "./model.ts";
+import {
+  modelChoices,
+  modelValueNotice,
+  type ModelChoice,
+  type ValueChoices,
+} from "./value-choices.ts";
 
 test("builds deployment and flag paths with encoded segments", () => {
   expect(deploymentPath("scout", "prod")).toBe("/scout/prod");
@@ -284,6 +292,212 @@ test("JSON Schemas come from the flag schema and the generated registry", () => 
     generatedSchemas["delivery-enabled-environments"].schema,
   );
   expect(jsonSchemaFor(unmanaged)).toEqual({ type: "string" });
+});
+
+// ---- Choices: closed enum/const lists and catalog models ----
+
+function variant(key: string, value = ""): FlagValue {
+  return { type: "variant", key, value };
+}
+
+function choicesOf(key: string): ValueChoices | undefined {
+  const kind = valueKind(variant(key));
+  if (kind.kind !== "managed") throw new Error(`${key} is not managed`);
+  return kind.choices;
+}
+
+function modelValues(key: string): readonly ModelChoice[] {
+  const choices = choicesOf(key);
+  if (choices === undefined || choices.closed)
+    throw new Error(`${key} has no model choices`);
+  return choices.values;
+}
+
+const CatalogSliceSchema = z.record(
+  z.string(),
+  z.object({
+    id: z.string(),
+    status: z.string(),
+    pricingOnly: z.boolean().optional(),
+    capabilities: z.object({ inputModalities: z.array(z.string()) }),
+    routes: z.object({
+      native: z.object({ provider: z.string() }).optional(),
+      codexSdk: z.unknown().optional(),
+      claudeAgentSdk: z.unknown().optional(),
+    }),
+  }),
+);
+const catalog = new Map(
+  Object.values(CatalogSliceSchema.parse(catalogJson)).map((entry) => [
+    entry.id,
+    entry,
+  ]),
+);
+
+test("enum and const keys get a closed list in schema order", () => {
+  expect(choicesOf("storm-forum-season")).toMatchObject({ closed: true });
+  expect(choicesOf("storm-forum-season")?.values[0]).toEqual({
+    value: "auto",
+    label: "auto",
+  });
+  expect(
+    choicesOf("storm-forum-season")?.values.map((choice) => choice.value),
+  ).toEqual([
+    "auto",
+    "normal",
+    "spring",
+    "summer",
+    "autumn",
+    "winter",
+    "newyear",
+    "valentines",
+    "easter",
+    "midsummer",
+    "harvest",
+    "halloween",
+    "thanksgiving",
+    "christmas",
+  ]);
+  expect(choicesOf("birmel-llm-reasoning-effort")?.values).toEqual(
+    ["minimal", "low", "medium", "high"].map((value) => ({
+      value,
+      label: value,
+    })),
+  );
+  expect(choicesOf("storm-brain-conversation-model")).toEqual({
+    closed: true,
+    values: [{ value: "gpt-6-luna", label: "gpt-6-luna" }],
+  });
+});
+
+test("free-form and JSON keys have no choices", () => {
+  for (const key of [
+    "delivery-enabled-environments",
+    "delivery-executor-concurrency",
+    "alert-dashboard-email-to",
+  ])
+    expect(choicesOf(key)).toBeUndefined();
+  expect(valueKind(environments)).not.toHaveProperty("choices");
+});
+
+test("model keys list routable catalog models, current first, then by name", () => {
+  const values = modelValues("birmel-llm-model");
+  const order = { current: 0, preview: 1, deprecated: 2 };
+  for (const [index, choice] of values.entries()) {
+    const previous = values[index - 1];
+    if (previous === undefined) continue;
+    const byStatus = order[previous.status] - order[choice.status];
+    expect(byStatus).toBeLessThanOrEqual(0);
+    if (byStatus === 0)
+      expect(previous.label.localeCompare(choice.label)).toBeLessThan(0);
+  }
+  expect(values.at(-1)?.status).toBe("deprecated");
+  expect(values[0]).toMatchObject({ status: "current" });
+  expect(values.find((choice) => choice.value === "gpt-6.1-sol")).toEqual({
+    value: "gpt-6.1-sol",
+    label: "GPT-6.1 Sol",
+    status: "current",
+    detail: expect.any(String),
+  });
+});
+
+function ids(key: string): string[] {
+  return modelValues(key).map((choice) => choice.value);
+}
+
+test("model choices exclude pricing-only entries and follow the key's route", () => {
+  const pricingOnly = [...catalog.values()]
+    .filter((entry) => entry.pricingOnly === true)
+    .map((entry) => entry.id);
+  expect(pricingOnly.length).toBeGreaterThan(0);
+  for (const key of [
+    "birmel-llm-model",
+    "scout-explore-model",
+    "temporal-agent-chat-imessage-codex-model",
+    "temporal-agent-chat-imessage-claude-model",
+  ])
+    for (const id of pricingOnly) expect(ids(key)).not.toContain(id);
+
+  expect(ids("birmel-llm-embedding-model")).toEqual(["text-embedding-3-small"]);
+  expect(ids("birmel-llm-decisions-model")).toEqual(["gpt-6-luna"]);
+  expect(ids("storm-brain-decisions-model")).toEqual(["gpt-6-luna"]);
+  // Current before preview, whatever the names.
+  expect(ids("birmel-llm-image-model")).toEqual([
+    "gemini-2.5-flash-image",
+    "gemini-3-pro-image-preview",
+    "gemini-3.1-flash-image-preview",
+  ]);
+  expect(ids("birmel-llm-model")).not.toContain("text-embedding-3-small");
+  expect(ids("birmel-llm-model")).toContain("claude-opus-5");
+
+  for (const id of ids("temporal-agent-chat-imessage-codex-model"))
+    expect(catalog.get(id)?.routes.codexSdk).toBeDefined();
+  for (const id of ids("temporal-agent-chat-discord-claude-default-model"))
+    expect(catalog.get(id)?.routes.claudeAgentSdk).toBeDefined();
+  expect(ids("temporal-agent-chat-imessage-codex-model")).not.toContain(
+    "claude-opus-5",
+  );
+  expect(ids("temporal-agent-chat-imessage-claude-model")).not.toContain(
+    "gpt-6.1-sol",
+  );
+  for (const id of ids("scout-explore-model"))
+    expect(catalog.get(id)?.capabilities.inputModalities).toContain("image");
+});
+
+test("a capability requirement drops catalog models without it", () => {
+  const language = modelChoices({ kind: "native", endpoint: "language" });
+  const withImages = modelChoices({
+    kind: "native",
+    endpoint: "language",
+    requires: ["imageInput"],
+  });
+  expect(withImages).toEqual(
+    language.filter((choice) =>
+      catalog.get(choice.value)?.capabilities.inputModalities.includes("image"),
+    ),
+  );
+});
+
+test("JSON mode offers catalog models as examples on one stable schema", () => {
+  const flag = variant("storm-brain-model", "gpt-6.1-sol");
+  const schema = jsonSchemaFor(flag);
+  expect(schema).toMatchObject({
+    type: "string",
+    "x-model-route": { kind: "native", endpoint: "language" },
+    examples: modelValues("storm-brain-model").map((choice) => choice.value),
+  });
+  expect(jsonSchemaFor({ ...flag })).toBe(schema);
+  expect(jsonSchemaFor(season)).not.toHaveProperty("examples");
+});
+
+test("model values outside the catalog, its route, or its current set get a notice", () => {
+  const choices = choicesOf("storm-brain-model");
+  if (choices === undefined) throw new Error("storm-brain-model has choices");
+  expect(modelValueNotice(choices, "gpt-6.1-sol")).toBeUndefined();
+  expect(modelValueNotice(choices, "")).toBeUndefined();
+  expect(modelValueNotice(choices, "gpt-7-imaginary")).toBe(
+    "Not in the shared model catalog — consumers reject unknown models (storm-brain fails at startup). Add it to @shepherdjerred/llm-models first.",
+  );
+  expect(modelValueNotice(choices, "kimi-k3.1-pro")).toContain(
+    "pricing-only in the catalog",
+  );
+  expect(modelValueNotice(choices, "text-embedding-3-small")).toContain(
+    "has no native language route with structured outputs in the catalog",
+  );
+  expect(modelValueNotice(choices, "gpt-5.5")).toMatch(
+    /^Deprecated in the catalog/u,
+  );
+  const claude = choicesOf("temporal-agent-chat-imessage-claude-model");
+  if (claude === undefined) throw new Error("claude model has choices");
+  expect(modelValueNotice(claude, "claude-imaginary")).toContain(
+    "Claude Agent SDK unchecked",
+  );
+  expect(modelValueNotice(claude, "gpt-6.1-sol")).toContain(
+    "has no Claude Agent SDK route",
+  );
+  const closed = choicesOf("storm-forum-season");
+  if (closed === undefined) throw new Error("season has choices");
+  expect(modelValueNotice(closed, "anything")).toBeUndefined();
 });
 
 test("server issues are kept for the edited key and labelled by path", () => {

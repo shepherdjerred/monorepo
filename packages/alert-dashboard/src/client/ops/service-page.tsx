@@ -46,6 +46,7 @@ const SERVICE_ALIASES: Readonly<Record<string, string>> = {
   media: "streambot",
   postal: "outbound-mail",
   mail: "outbound-mail",
+  bugsink: "errors",
 };
 
 function Facts({

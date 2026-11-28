@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client"
+  output = "../generated/prisma"
+  runtime = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ActorKind {
+  human
+  agent
+  runner
+}
+
+enum ArtifactKind {
+  html
+  site
+  image
+  video
+  pdf
+  markdown
+  cast
+  mermaid
+  file
+}
+
+enum ThreadState {
+  open
+  resolved
+}
+
+model Actor {
+  id String @id @default(uuid())
+  key String @unique
+  kind ActorKind
+  name String
+  /// `<hostname>:<worktree>`; the server derives it from metadata when the caller sends none.
+  workspaceKey String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  seenCount Int @default(1)
+  metadata Json
+  versions Version[]
+  uploads UploadSession[]
+  threads Thread[]
+  comments Comment[]
+  deliveries Delivery[]
+  events Event[]
+  boardRevisions BoardRevision[]
+}
+
+model Board {
+  id String @id @default(uuid())
+  slug String @unique
+  title String
+  /// BoardIndex (schema 1), validated by the contract on every write.
+  index Json
+  revision Int @default(1)
+  keep Boolean @default(false)
+  createdAt DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+  archivedAt DateTime?
+  /// Set when the cleanup workflow purges the board's content.
+  expiredAt DateTime?
+  artifacts Artifact[]
+  revisions BoardRevision[]
+  threads Thread[]
+  uploads UploadSession[]
+  @@index([archivedAt])
+  @@index([lastActivityAt])
+}
+
+/// The last 50 whole-document replacements of a board's index.
+model BoardRevision {
+  id String @id @default(uuid())
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  revision Int
+  index Json
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+  @@unique([boardId, revision])
+}
+
+model Artifact {
+  id String @id @default(uuid())
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  title String
+  kind ArtifactKind
+  /// The publisher's `<hostname>:<worktree>`; scopes a bare `wait`.
+  ownerKey String
+  versionCounter Int @default(0)
+  currentVersionId String? @unique
+  currentVersion Version? @relation("CurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+  versions Version[] @relation("ArtifactVersions")
+  threads Thread[]
+  uploads UploadSession[]
+  @@index([boardId, deletedAt])
+  @@index([ownerKey])
+}
+
+/// Immutable once committed.
+model Version {
+  id String @id @default(uuid())
+  artifactId String
+  artifact Artifact @relation("ArtifactVersions", fields: [artifactId], references: [id], onDelete: Cascade)
+  number Int
+  /// 24 random bytes, base64url, minted at commit and rotatable. Never in events, logs, metrics or traces.
+  contentToken String @unique
+  entryPath String
+  totalBytes BigInt
+  note String @default("")
+  viewport Json?
+  posterSha256 String?
+  publisherId String
+  publisher Actor @relation(fields: [publisherId], references: [id])
+  uploadId String @unique
+  upload UploadSession @relation("UploadVersion", fields: [uploadId], references: [id])
+  createdAt DateTime @default(now())
+  /// Set when the cleanup workflow deletes the version's content; the row stays for threads.
+  purgedAt DateTime?
+  currentOf Artifact? @relation("CurrentVersion")
+  files VersionFile[]
+  threads Thread[]
+  @@unique([artifactId, number])
+}
+
+model VersionFile {
+  versionId String
+  version Version @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  path String
+  sha256 String
+  blob Blob @relation(fields: [sha256], references: [sha256], onDelete: Restrict)
+  mediaType String
+  @@id([versionId, path])
+  @@index([sha256])
+}
+
+model Blob {
+  sha256 String @id
+  /// Random, never reused: a deleted object's key can never name new bytes.
+  storageKey String @unique
+  size BigInt
+  createdAt DateTime @default(now())
+  versionFiles VersionFile[]
+  @@index([createdAt])
+}
+
+model UploadSession {
+  id String @id @default(uuid())
+  idempotencyKey String @unique
+  requestDigest String
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  artifactId String?
+  artifact Artifact? @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  request Json
+  expectedCurrentVersionId String?
+  createdById String
+  createdBy Actor @relation(fields: [createdById], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  committedVersionId String? @unique
+  files UploadFile[]
+  version Version? @relation("UploadVersion")
+  @@index([expiresAt])
+  @@index([boardId])
+}
+
+/// The manifest an upload declared. `sha256` has no foreign key: the blob row
+/// exists only after its bytes were verified, which is after the manifest.
+model UploadFile {
+  uploadId String
+  upload UploadSession @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  path String
+  sha256 String
+  size BigInt
+  mediaType String
+  @@id([uploadId, path])
+  @@index([sha256])
+}
+
+model Thread {
+  id String @id @default(uuid())
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  artifactId String?
+  artifact Artifact? @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  versionId String?
+  version Version? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  anchor Json
+  state ThreadState @default(open)
+  createdById String
+  createdBy Actor @relation(fields: [createdById], references: [id])
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+  comments Comment[]
+  @@index([boardId, state])
+  @@index([artifactId, state])
+}
+
+model Comment {
+  id String @id @default(uuid())
+  threadId String
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId String
+  author Actor @relation(fields: [authorId], references: [id])
+  body String
+  createdAt DateTime @default(now())
+  /// The settle window runs from here: a human comment is deliverable once it has
+  /// been unchanged for the configured number of seconds.
+  updatedAt DateTime @default(now())
+  delivery Delivery?
+  @@index([threadId, createdAt])
+  @@index([updatedAt])
+}
+
+/// One row per human comment once claimed.
+model Delivery {
+  commentId String @id
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  claimedAt DateTime @default(now())
+  ackedAt DateTime?
+  handledAt DateTime?
+  attempts Int @default(1)
+  @@index([actorId])
+}
+
+/// Append-only change log. An AFTER INSERT trigger notifies `artifacts_events`.
+model Event {
+  seq BigInt @id @default(autoincrement())
+  /// No foreign key: events outlive a purged board.
+  boardId String?
+  kind String
+  entityId String
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  requestId String
+  occurredAt DateTime @default(now())
+  payload Json
+  @@index([boardId, seq])
+  @@index([occurredAt])
+}

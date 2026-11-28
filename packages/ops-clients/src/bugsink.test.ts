@@ -6,66 +6,70 @@ import {
 } from "@shepherdjerred/ops-clients/bugsink.ts";
 import { sequence } from "@shepherdjerred/ops-clients/test-support/fake-fetch.ts";
 
-const BASE = "https://bugsink.sjer.red";
+const BASE = "https://errors.tailnet-1a49.ts.net";
 
 function issue(
   id: string,
-  resolved: boolean,
+  state: "OPEN" | "RESOLVED" | "RESOLVED_NEXT_RELEASE" | "MUTED",
   overrides: {
-    project?: number;
-    last_seen?: string;
-    digested_event_count?: number;
-    is_muted?: boolean;
+    projectId?: number;
+    lastSeen?: string;
+    digestedEventCount?: number;
   } = {},
 ) {
   return {
     id,
-    project: overrides.project ?? 3,
-    digest_order: 1,
-    first_seen: "2026-09-20T10:00:00Z",
-    last_seen: overrides.last_seen ?? "2026-09-24T11:00:00Z",
-    digested_event_count: overrides.digested_event_count ?? 4,
-    stored_event_count: 4,
-    calculated_type: "TypeError",
-    calculated_value: `err-${id}`,
+    projectId: overrides.projectId ?? 3,
+    firstSeen: "2026-09-20T10:00:00Z",
+    lastSeen: overrides.lastSeen ?? "2026-09-24T11:00:00Z",
+    digestedEventCount: overrides.digestedEventCount ?? 4,
+    storedEventCount: 4,
+    type: "TypeError",
+    value: `err-${id}`,
     transaction: "GET /",
-    is_resolved: resolved,
-    is_resolved_by_next_release: false,
-    is_muted: overrides.is_muted ?? false,
+    state,
   };
 }
 
 describe("BugsinkClient", () => {
-  test("follows every page and keeps unresolved issues", async () => {
+  test("follows cursor pages and keeps unresolved and muted issues", async () => {
     const { fetch, requests } = sequence(
       {
-        next: `${BASE}/api/canonical/0/issues/?cursor=2&project=3`,
-        previous: null,
-        results: [issue("a", false), issue("b", true)],
+        nextCursor: "b",
+        items: [issue("a", "OPEN"), issue("b", "RESOLVED")],
       },
-      { next: null, previous: null, results: [issue("c", false)] },
+      {
+        nextCursor: null,
+        items: [issue("c", "MUTED")],
+      },
     );
-    const client = new BugsinkClient({ baseUrl: BASE, token: "t", fetch });
+    const client = new BugsinkClient({ baseUrl: BASE, fetch });
     const issues = await client.unresolvedIssues(3);
-    expect(issues.map((entry) => entry.id)).toEqual(["a", "c"]);
-    expect(requests[0]?.url).toBe(`${BASE}/api/canonical/0/issues/?project=3`);
-    expect(requests[0]?.headers.get("authorization")).toBe("Bearer t");
+    expect(issues.map((entry) => [entry.id, entry.muted])).toEqual([
+      ["a", false],
+      ["c", true],
+    ]);
+    expect(requests[0]?.url).toBe(
+      `${BASE}/api/v1/issues?project=3&tab=all&limit=200`,
+    );
+    expect(requests[1]?.url).toBe(
+      `${BASE}/api/v1/issues?project=3&tab=all&limit=200&cursor=b`,
+    );
   });
 
-  test("exposes optional project event counts and computes allProjectsSummary with bounded concurrency", async () => {
+  test("maps project event counts and computes allProjectsSummary with bounded concurrency", async () => {
     const now = new Date("2026-09-24T12:00:00Z");
     let inFlight = 0;
     let maxInFlight = 0;
 
     const projectsPayload = {
-      next: null,
-      results: [
+      items: [
         {
           id: 1,
           name: "Scout",
           slug: "scout",
-          digested_event_count: 500,
-          stored_event_count: 100,
+          digestedEventCount: 500,
+          storedEventCount: 100,
         },
         { id: 2, name: "Hub", slug: "hub" },
         { id: 3, name: "Birmel", slug: "birmel" },
@@ -77,43 +81,41 @@ describe("BugsinkClient", () => {
 
     const issuesByProject: Record<string, unknown[]> = {
       "1": [
-        issue("recent-low", false, {
-          project: 1,
-          last_seen: "2026-09-24T11:30:00Z",
-          digested_event_count: 5,
+        issue("recent-low", "OPEN", {
+          projectId: 1,
+          lastSeen: "2026-09-24T11:30:00Z",
+          digestedEventCount: 5,
         }),
-        issue("recent-high", false, {
-          project: 1,
-          last_seen: "2026-09-23T00:00:00Z",
-          digested_event_count: 42,
+        issue("recent-high", "OPEN", {
+          projectId: 1,
+          lastSeen: "2026-09-23T00:00:00Z",
+          digestedEventCount: 42,
         }),
-        issue("stale-one", false, {
-          project: 1,
-          last_seen: "2026-09-01T00:00:00Z",
-          digested_event_count: 10,
+        issue("stale-one", "OPEN", {
+          projectId: 1,
+          lastSeen: "2026-09-01T00:00:00Z",
+          digestedEventCount: 10,
         }),
-        issue("muted-one", false, {
-          project: 1,
-          last_seen: "2026-09-24T11:00:00Z",
-          digested_event_count: 99,
-          is_muted: true,
+        issue("muted-one", "MUTED", {
+          projectId: 1,
+          lastSeen: "2026-09-24T11:00:00Z",
+          digestedEventCount: 99,
         }),
       ],
       "2": [
-        issue("hub-1", false, {
-          project: 2,
-          last_seen: "2026-09-24T09:00:00Z",
-          digested_event_count: 7,
+        issue("hub-1", "OPEN", {
+          projectId: 2,
+          lastSeen: "2026-09-24T09:00:00Z",
+          digestedEventCount: 7,
         }),
       ],
     };
 
     const client = new BugsinkClient({
       baseUrl: BASE,
-      token: "t",
       fetch: async (input) => {
         const url = new URL(String(input));
-        if (url.pathname.endsWith("/projects/")) {
+        if (url.pathname.endsWith("/projects")) {
           return Response.json(projectsPayload);
         }
         inFlight += 1;
@@ -122,8 +124,8 @@ describe("BugsinkClient", () => {
         inFlight -= 1;
         const proj = url.searchParams.get("project") ?? "";
         return Response.json({
-          next: null,
-          results: issuesByProject[proj] ?? [],
+          nextCursor: null,
+          items: issuesByProject[proj] ?? [],
         });
       },
     });
@@ -158,29 +160,23 @@ describe("BugsinkClient", () => {
     });
   });
 
-  test("refuses a pagination link on another origin", async () => {
-    const { fetch } = sequence({
-      next: "https://evil.example/api/canonical/0/projects/?cursor=2",
-      results: [],
-    });
-    const client = new BugsinkClient({ baseUrl: BASE, token: "t", fetch });
-    await expect(client.projects()).rejects.toThrow(/refusing pagination/u);
-  });
-
   test("refuses a repeated cursor", async () => {
     const page = {
-      next: `${BASE}/api/canonical/0/projects/?cursor=2`,
-      results: [{ id: 1, name: "Scout", slug: "scout-for-lol" }],
+      nextCursor: "same-cursor",
+      items: [issue("a", "OPEN")],
     };
     const { fetch } = sequence(page, page, page);
-    const client = new BugsinkClient({ baseUrl: BASE, token: "t", fetch });
-    await expect(client.projects()).rejects.toThrow(/refusing pagination/u);
+    const client = new BugsinkClient({ baseUrl: BASE, fetch });
+    await expect(client.unresolvedIssues(3)).rejects.toThrow(
+      /refusing repeated cursor/u,
+    );
   });
 
-  test("builds web UI links", () => {
-    expect(bugsinkIssueUrl(BASE, "abc")).toBe(
-      `${BASE}/issues/issue/abc/event/last/`,
+  test("builds Errors console deep links", () => {
+    expect(bugsinkIssueUrl(BASE, "abc")).toBe(`${BASE}/issues/abc`);
+    expect(bugsinkProjectUrl(BASE, "scout-for-lol")).toBe(
+      `${BASE}/projects/scout-for-lol`,
     );
-    expect(bugsinkProjectUrl(BASE, 3)).toBe(`${BASE}/issues/3/`);
+    expect(bugsinkProjectUrl(BASE, 3)).toBe(`${BASE}/issues/3`);
   });
 });

@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 const FORBIDDEN_HANDLER_PATTERN = /\bdefine(?:Query|Update)\b/u;
 const NONDETERMINISTIC_UUID_PATTERN = /\b(?:crypto\.)?randomUUID\s*\(/u;
 
@@ -40,8 +42,8 @@ export async function findTracingSafetyViolations(
 }
 
 async function main(): Promise<void> {
-  const packageRoot = new URL("..", import.meta.url).pathname;
-  const repositoryRoot = new URL("../../..", import.meta.url).pathname;
+  const packageRoot = fileURLToPath(new URL("..", import.meta.url));
+  const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
   const roots = [
     `${packageRoot}src/workflows`,
     `${repositoryRoot}packages/scout-for-lol/packages/temporal/src/workflows`,

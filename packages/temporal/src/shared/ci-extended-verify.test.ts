@@ -16,7 +16,10 @@ const receipt = (
   url: "https://woodpecker.sjer.red/repos/1/pipeline/4321",
   commit: "a".repeat(40),
   status: "success",
-  workflows: [{ name: "verify-extended", state: "success" }],
+  workflows: [
+    { name: "verify-extended", state: "success" },
+    { name: "paper-smoke-nightly", state: "success" },
+  ],
   ...extra,
 });
 
@@ -71,9 +74,27 @@ test("a green receipt ran verify-extended to success; a skipped lane is not gree
   expect(extendedVerifySucceeded(receipt())).toBe(true);
   expect(
     extendedVerifySucceeded(
-      receipt({ workflows: [{ name: "verify-extended", state: "skipped" }] }),
+      receipt({
+        workflows: [
+          { name: "verify-extended", state: "skipped" },
+          { name: "paper-smoke-nightly", state: "success" },
+        ],
+      }),
     ),
   ).toBe(false);
+  // A pipeline missing either required workflow is never green, even when
+  // everything it did run passed.
+  for (const present of ["verify-extended", "paper-smoke-nightly"]) {
+    const missing =
+      present === "verify-extended" ? "paper-smoke-nightly" : "verify-extended";
+    const partial = receipt({
+      workflows: [{ name: present, state: "success" }],
+    });
+    expect(extendedVerifySucceeded(partial)).toBe(false);
+    expect(extendedVerifyFailureMessage(partial)).toContain(
+      `no ${missing} workflow ran`,
+    );
+  }
   expect(extendedVerifySucceeded(receipt({ workflows: [] }))).toBe(false);
   expect(extendedVerifySucceeded(receipt({ status: "failure" }))).toBe(false);
   expect(
@@ -88,15 +109,35 @@ test("a green receipt ran verify-extended to success; a skipped lane is not gree
   ).toBe(false);
 });
 
-test("the failure message names the pipeline, its URL and the red workflows", () => {
+const withPaperSmoke = (smoke: string) =>
+  receipt({
+    status: smoke === "success" ? "success" : "failure",
+    workflows: [
+      { name: "verify-extended", state: "success" },
+      { name: "paper-smoke-nightly", state: smoke },
+    ],
+  });
+
+test("the nightly Paper smoke is a second workflow that must also pass", () => {
+  expect(extendedVerifySucceeded(withPaperSmoke("success"))).toBe(true);
+  expect(extendedVerifySucceeded(withPaperSmoke("failure"))).toBe(false);
+  expect(extendedVerifyFailureMessage(withPaperSmoke("failure"))).toContain(
+    "paper-smoke-nightly=failure",
+  );
+  expect(supersededReceipt(withPaperSmoke("success"))).toBe(false);
+});
+
+test("the failure message names the pipeline, its URL, the selected source, and the red workflows", () => {
   const message = extendedVerifyFailureMessage(
     receipt({
+      commit: "b".repeat(40),
       status: "failure",
       workflows: [
         { name: "verify-extended", state: "failure" },
         { name: "extended-superseded", state: "success" },
       ],
     }),
+    "a".repeat(40),
   );
   expect(message).toContain("pipeline 4321");
   expect(message).toContain("ended failure");
@@ -106,7 +147,12 @@ test("the failure message names the pipeline, its URL and the red workflows", ()
     "https://woodpecker.sjer.red/repos/1/pipeline/4321",
   );
   expect(message).toContain("a".repeat(12));
+  expect(message).not.toContain("b".repeat(12));
   expect(
-    extendedVerifyFailureMessage(receipt({ status: "success", workflows: [] })),
-  ).toContain("no verify-extended workflow ran");
+    extendedVerifyFailureMessage(
+      receipt({ commit: "b".repeat(40), status: "success", workflows: [] }),
+    ),
+  ).toContain(
+    `at ${"b".repeat(12)} (no verify-extended workflow ran, no paper-smoke-nightly workflow ran)`,
+  );
 });

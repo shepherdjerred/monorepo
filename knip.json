@@ -14,6 +14,7 @@
       "entry": [
         "*.ts",
         "checks/**/*.ts",
+        "generate/*.ts",
         "ci/*.ts",
         "ci/trmnl/publish-plugins.ts",
         "release/*.ts",
@@ -85,7 +86,29 @@
         "*.ts"
       ]
     },
+    "packages/artifacts": {
+      "entry": [
+        "playwright.config.ts",
+        "src/**/*.test.{ts,tsx}",
+        "e2e/**/*.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "e2e/**/*.ts",
+        "prisma/**/*.prisma",
+        "*.ts"
+      ]
+    },
     "packages/errors": {
+      "entry": ["src/**/*.test.{ts,tsx}", "architecture-fixtures/**/*.ts"],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "architecture-fixtures/**/*.ts",
+        "prisma/**/*.prisma",
+        "*.ts"
+      ]
+    },
+    "packages/incidents": {
       "entry": ["src/**/*.test.{ts,tsx}", "architecture-fixtures/**/*.ts"],
       "project": [
         "src/**/*.{ts,tsx}",
@@ -230,6 +253,14 @@
     },
     "packages/loaded": {
       "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/console-client": {
+      "entry": ["src/**/*.test.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/console-server": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/console-ui": {
       "entry": ["scripts/*.ts"],
@@ -441,7 +472,8 @@
         "src/**/*.test.ts",
         "scripts/**/*.ts",
         "src/workflows/media/fixtures/cleanup-before-input.ts",
-        "src/workflows/media/fixtures/cleanup-before-observation.ts"
+        "src/workflows/media/fixtures/cleanup-before-observation.ts",
+        "src/workflows/infra/fixtures/bugsink-before-retirement.ts"
       ],
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
       "ignoreBinaries": ["op"]
@@ -475,6 +507,9 @@
     },
     "packages/tasknotes-server": {
       "project": ["src/**/*.ts", "prisma/**/*.prisma"]
+    },
+    "packages/tasknotes-web": {
+      "entry": ["playwright.config.ts", "e2e/server.ts", "e2e/**/*.spec.ts"]
     },
     "packages/homelab": {
       "entry": ["scripts/**/*.ts"],
@@ -521,7 +556,6 @@
   ],
   "ignoreDependencies": [
     "@eslint-community/eslint-plugin-eslint-comments",
-    "@eslint/compat",
     "@eslint/eslintrc",
     "@eslint/js",
     "@fontsource/roboto",
@@ -537,7 +571,6 @@
     "@prisma/client",
     "@prisma/client-runtime-utils",
     "@resvg/resvg-js",
-    "@scout-for-lol/data",
     "@shepherdjerred/eslint-config",
     "@svgr/plugin-jsx",
     "@tailwindcss/forms",
@@ -552,7 +585,6 @@
     "@typescript-eslint/parser",
     "@typescript-eslint/utils",
     "@vitejs/plugin-react-swc",
-    "debug",
     "eslint-config-prettier",
     "eslint-import-resolver-typescript-bun",
     "eslint-plugin-astro",
@@ -568,9 +600,7 @@
     "jiti",
     "lodash",
     "prism-media",
-    "react",
     "remeda",
-    "sodium-native",
     "ts-morph",
     "ts-pattern",
     "tslib",

@@ -166,7 +166,7 @@ test("empty search and remote provider failures cannot manufacture local-admissi
   }
 });
 
-test("an admitted alternative can satisfy a movie while another provider is locally deferred", async () => {
+test("an admitted alternative waits for the other provider's first page", async () => {
   const f = await createMovieWorkflowFixture("default", { bytes });
   try {
     await f.source.db.mediaProvider.create({
@@ -177,19 +177,22 @@ test("an admitted alternative can satisfy a movie while another provider is loca
       },
     });
     const seen: string[] = [];
+    let waiting = true;
     const movie = createMovieNetworkFacetV4({
       ...f.source.context,
       providers: {
         withProvider: (id, work) => {
           seen.push(id);
           if (id === "knaben")
-            return Promise.reject(
-              new ProviderAdmissionDeferred(
-                id,
-                new Date(Date.now() + 30_000),
-                "lease_busy",
-              ),
-            );
+            return waiting
+              ? Promise.reject(
+                  new ProviderAdmissionDeferred(
+                    id,
+                    new Date(Date.now() + 30_000),
+                    "lease_busy",
+                  ),
+                )
+              : work({ search: () => Promise.resolve([]) });
           return f.source.context.providers.withProvider("knaben", (client) =>
             work({
               search: async (input) => {
@@ -204,10 +207,28 @@ test("an admitted alternative can satisfy a movie while another provider is loca
         },
       },
     });
+    const deferred = await movie.reconcileMovieIntentV4(
+      f.input,
+      testPlexBindingExecution(),
+    );
+    expect(deferred).toMatchObject({
+      status: "waiting",
+      reason: "provider_deferred",
+    });
+    expect(await f.source.db.acquisitionAttempt.count()).toBe(0);
+    if (
+      !("providerSearchProgress" in deferred) ||
+      deferred.providerSearchProgress === undefined
+    )
+      throw new Error("Page results were not carried into the continuation");
+    waiting = false;
     expect(
-      await movie.reconcileMovieIntentV4(f.input, testPlexBindingExecution()),
+      await movie.reconcileMovieIntentV4(
+        { ...f.input, providerSearchProgress: deferred.providerSearchProgress },
+        testPlexBindingExecution(),
+      ),
     ).toMatchObject({ status: "acquire", reason: null });
-    expect(seen).toEqual(["knaben", "thepiratebay"]);
+    expect(seen).toEqual(["knaben", "thepiratebay", "knaben"]);
     expect(await f.source.db.acquisitionAttempt.count()).toBe(1);
   } finally {
     await f.close();

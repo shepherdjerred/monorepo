@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { RecurrenceBasis } from "../protocol/generated.ts";
-import { computeNextOccurrence } from "../v1/recurrence.ts";
+import { computeNextOccurrence } from "@shepherdjerred/facet-protocol/recurrence";
 
 test("keeps the local hour across DST and skips past scheduled occurrences", () => {
   const input = {

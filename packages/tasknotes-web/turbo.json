@@ -1,0 +1,9 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test:e2e": {
+      "passThroughEnv": ["$TURBO_EXTENDS$", "PLAYWRIGHT_BROWSERS_PATH"]
+    }
+  }
+}

@@ -36,7 +36,29 @@
         ]
       },
       "resolvedDescription": "Dr. Mundo resists the first Immobilizing effect that hits him, instead losing Health and dropping a chemical cannister nearby. Dr. Mundo can pick it up by walking over it, restoring Health and reducing this Ability's Cooldown. Dr. Mundo also has significantly increased Health regeneration.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "drmundopobjectmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Infected Bonesaw",
@@ -125,7 +147,15 @@
       "unresolved": [
         "healthrestoreonhitchampionmonster",
         "healthrestoreonhitminion"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 299.3,
+        "lineWidth": 60,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Heart Zapper",
@@ -225,7 +255,15 @@
         ]
       },
       "resolvedDescription": "Dr. Mundo charges up a defibrilator, dealing 20/35/50/65/80 magic damage each second for up to 3 seconds to nearby enemies. Additionally he stores 80-95% (based on level) of damage taken for the first 0.75 seconds and 25% for the remaining duration as gray health and can Recast. Recast: Detonate the defibrilator, dealing 20/35/50/65/80 (+7% bonus Health) magic damage to nearby enemies. If this hits at least one champion, Dr. Mundo restores 100% of gray health, otherwise he instead restores 50% of gray health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Blunt Force Trauma",
@@ -325,7 +363,15 @@
         ]
       },
       "resolvedDescription": "Passive: Dr Mundo gains 2/2.3/2.6/2.9/3.2% max Health Attack Damage. Active: Dr Mundo violently swings his \"medical\" bag, causing his next Attack to deal an additional 5/15/25/35/45 (+5% bonus Health) physical damage, increased by up to 140% (-100%) based on his missing Health. If the enemy is killed, Mundo swats them away, dealing 5/15/25/35/45 (+5% bonus Health) physical damage to enemies they pass through.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 1,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Maximum Dosage",
@@ -379,7 +425,15 @@
         ]
       },
       "resolvedDescription": "Dr. Mundo pumps himself with chemicals, gaining 15/20/25% of his missing Health as max Health, 15/25/35% Move Speed, and regenerating 20/40/60% max Health over 10 seconds. At Rank 3, both healing effects are increased by an additional 5% per nearby enemy champion.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 600,
+        "lineWidth": null,
+        "missileSpeed": 828.5,
+        "missiles": []
+      }
     }
   }
 }

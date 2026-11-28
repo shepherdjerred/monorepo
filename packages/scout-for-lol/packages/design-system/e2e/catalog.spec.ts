@@ -32,6 +32,10 @@ function normalizeHex(value: string): string {
   return hex.replace(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/, "#$1$1$2$2$3$3");
 }
 
+// Each story owns its browser context; use the three bounded CI workers even
+// though the catalog is generated into a single spec file.
+test.describe.configure({ mode: "parallel" });
+
 for (const story of stories) {
   for (const theme of themes) {
     test(`${story.id} [${theme.skin}/${theme.mode}]`, async ({ page }) => {

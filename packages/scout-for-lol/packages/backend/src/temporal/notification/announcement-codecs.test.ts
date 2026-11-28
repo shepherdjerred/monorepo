@@ -7,6 +7,7 @@ import {
   hallBreakRecords,
   hallGuildId,
   hallRiotMatchId,
+  legacyHallAnnouncementEnvelope,
 } from "#src/temporal/notification/hall-record-break.test-fixtures.ts";
 import { describe, expect, test } from "vitest";
 
@@ -19,38 +20,68 @@ function hallEnvelope(count?: number) {
 }
 
 describe("the hall record-break announcement codec", () => {
-  test("round-trips v1's outbox records through the intent envelope", () => {
+  test("round-trips the previous record and standings through a v2 intent envelope", () => {
     const input = {
       guildId: hallGuildId,
       riotMatchId: hallRiotMatchId,
       records: hallBreakRecords(),
     };
-    const parsed = hallRecordBreakAnnouncementCodec.parse(
-      structuredClone(hallRecordBreakAnnouncementEnvelope(input)),
+    const envelope = structuredClone(
+      hallRecordBreakAnnouncementEnvelope(input),
     );
-    expect(parsed).toEqual(input);
+    expect(envelope.version).toBe(2);
+    expect(hallRecordBreakAnnouncementCodec.parse(envelope)).toEqual(input);
   });
 
-  test("carries the records exactly as v1's outbox stores them", () => {
-    const envelope = structuredClone(hallEnvelope());
-    expect(JSON.stringify(envelope.data.records)).toBe(
-      JSON.stringify(hallBreakRecords()),
+  test("reads stored v1 intents with their original records", () => {
+    const envelope = structuredClone(legacyHallAnnouncementEnvelope());
+    expect(hallRecordBreakAnnouncementCodec.parse(envelope)).toEqual(
+      envelope.data,
     );
   });
 
-  test("drops a record id retired by a catalog rename, as v1's reader does", () => {
+  test("requires the standings and previous score in a v2 payload", () => {
+    expect(() =>
+      hallRecordBreakAnnouncementCodec.parse({
+        ...legacyHallAnnouncementEnvelope(),
+        version: 2,
+      }),
+    ).toThrow();
+  });
+
+  test("refuses v2 standings out of rank order and records that only tied", () => {
     const envelope = hallEnvelope(1);
-    const parsed = hallRecordBreakAnnouncementCodec.parse({
-      ...envelope,
-      data: {
-        ...envelope.data,
-        records: [
-          { ...envelope.data.records[0], recordId: "largest_multikill" },
-        ],
-      },
-    });
-    expect(parsed.records).toEqual([]);
+    const [record] = envelope.data.records;
+    if (record === undefined) throw new Error("Missing Hall record fixture");
+    const invalidRecords = [
+      { ...record, standings: record.standings.toReversed() },
+      { ...record, previous: { ...record.previous, value: record.value } },
+    ];
+    for (const invalidRecord of invalidRecords) {
+      expect(() =>
+        hallRecordBreakAnnouncementCodec.parse({
+          ...envelope,
+          data: { ...envelope.data, records: [invalidRecord] },
+        }),
+      ).toThrow("Hall standings must descend");
+    }
   });
+
+  test.each([legacyHallAnnouncementEnvelope(1), hallEnvelope(1)])(
+    "drops a record id retired by a catalog rename in v$version",
+    (envelope) => {
+      const parsed = hallRecordBreakAnnouncementCodec.parse({
+        ...envelope,
+        data: {
+          ...envelope.data,
+          records: [
+            { ...envelope.data.records[0], recordId: "largest_multikill" },
+          ],
+        },
+      });
+      expect(parsed.records).toEqual([]);
+    },
+  );
 
   test("still refuses a record id nobody retired", () => {
     const envelope = hallEnvelope(1);

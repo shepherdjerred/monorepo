@@ -101,18 +101,10 @@ export function createTemporalWorkerDeployment(
   const argocdItem = new OnePasswordItem(chart, "temporal-argocd-admin-1p", {
     spec: { itemPath: vaultItemPath("4ohxvipg3qrpaetx4jycekjavi") },
   });
-  const bugsinkItem = new OnePasswordItem(chart, "temporal-bugsink-api-1p", {
-    spec: { itemPath: vaultItemPath("jeuqmwh3r4nwu2ivo4pa3gr7om") },
-  });
   const argocdSecret = Secret.fromSecretName(
     chart,
     "temporal-argocd-admin-secret",
     argocdItem.name,
-  );
-  const bugsinkSecret = Secret.fromSecretName(
-    chart,
-    "temporal-bugsink-api-secret",
-    bugsinkItem.name,
   );
   const photonItem = new OnePasswordItem(chart, "temporal-photon-1p", {
     spec: { itemPath: vaultItemPath("f67iy2i34gonqynkm2vtsvnueu") },
@@ -387,11 +379,7 @@ export function createTemporalWorkerDeployment(
     feedsAuthSecret,
     ciGithubSecret,
     infraServiceAccount,
-    homelabAuditEnvironment: homelabAuditEnv(
-      secret,
-      argocdSecret,
-      bugsinkSecret,
-    ),
+    homelabAuditEnvironment: homelabAuditEnv(secret, argocdSecret),
     talosConfigVolume,
     ddnsApiTokenVolume,
     gitBackupTokenVolume,

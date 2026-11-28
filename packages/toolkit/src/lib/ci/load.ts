@@ -50,11 +50,11 @@ const MetricsSchema = z.object({
     ),
   }),
 });
-type Metric = z.infer<typeof MetricsSchema>["data"]["result"][number];
-type LoadSection<T> =
+export type Metric = z.infer<typeof MetricsSchema>["data"]["result"][number];
+export type LoadSection<T> =
   { available: true; data: T } | { available: false; error: string };
 
-async function section<T>(
+export async function section<T>(
   read: () => Promise<T>,
   secrets: readonly string[],
 ): Promise<LoadSection<T>> {
@@ -71,7 +71,7 @@ async function section<T>(
   }
 }
 
-async function metric(
+export async function metric(
   expression: string,
   signal?: AbortSignal,
 ): Promise<Metric[]> {
@@ -105,17 +105,21 @@ async function metric(
   return result.data.result;
 }
 
+/** Woodpecker's pending, running and dependency-blocked workflow counts. */
+export async function woodpeckerQueue(
+  config: WoodpeckerConfig,
+  signal?: AbortSignal,
+) {
+  return QueueSchema.parse(
+    await woodpeckerJson("/api/queue/info", config, signal),
+  );
+}
+
 export async function ciLoad(config: WoodpeckerConfig, signal?: AbortSignal) {
   const secrets = [config.token];
   const [queue, admission, gateAdmission, cpu, memory, disk, ioPressure, pods] =
     await Promise.all([
-      section(
-        async () =>
-          QueueSchema.parse(
-            await woodpeckerJson("/api/queue/info", config, signal),
-          ),
-        secrets,
-      ),
+      section(() => woodpeckerQueue(config, signal), secrets),
       section(
         () =>
           captureJson(

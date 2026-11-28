@@ -210,6 +210,22 @@ describe("kueue-config", () => {
     );
   });
 
+  it("keeps every queue's cpu (every queue) plus resident requests within liskov's allocatable cpu", () => {
+    // Same reasoning as memory. Measured 2026-11-27: liskov reports 29 CPU
+    // allocatable. The resident allowance covers non-Kueue requests: buildkitd
+    // 500m, the five Woodpecker agents 500m (100m each, maintenance included),
+    // kube-system 300m, prometheus 260m, promtail 100m, ci-cache 100m, openebs
+    // 100m, plus small extras.
+    const LISKOV_ALLOCATABLE_CPU = 29;
+    const RESIDENT_CPU_ALLOWANCE = 1.9;
+    const queuedCpu = CLUSTER_QUEUES.map((name) =>
+      Number(quota(name, "cpu") ?? "NaN"),
+    ).reduce((total, cpu) => total + cpu, 0);
+    expect(queuedCpu + RESIDENT_CPU_ALLOWANCE).toBeLessThanOrEqual(
+      LISKOV_ALLOCATABLE_CPU,
+    );
+  });
+
   /**
    * Counted in pods, not workflows: a workflow has its step and each of its
    * services admitted at once. Sized so the pods quota never binds before the
@@ -223,7 +239,8 @@ describe("kueue-config", () => {
     expect(quota(CI_GATE_CLUSTER_QUEUE, "pods")).toBe(
       String(CI_GATE_WORKFLOWS),
     );
-    expect(CI_COMPUTE_WORKFLOWS).toBe(12);
+    // PR 12, main 10 and maintenance 1.
+    expect(CI_COMPUTE_WORKFLOWS).toBe(23);
     expect(CI_GATE_WORKFLOWS).toBe(4);
   });
 

@@ -82,10 +82,10 @@ export class DeliveryAuthorization {
         throw new AutonomousBlocker(
           "The PR head no longer matches the host task checkout",
         );
-      if (
-        !deliveryIsHealthy(await github.health(pr.number, state.checkoutPath))
-      )
+      const health = await github.health(pr.number, state.checkoutPath);
+      if (!deliveryIsHealthy(health) || health.staleBase?.stale === true) {
         return false;
+      }
       const approved = await github.hasExactHeadApproval(
         pr.number,
         pr.headRefOid,

@@ -2,6 +2,22 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
+    // A build's hash reaches every dependent's typecheck, lint and test tasks
+    // through ^build. `bun build ./src/index.ts` reads src/**, package.json
+    // and tsconfig.json; it never reads these documents, the CI manifest or
+    // the lint config (typecheck, lint and test keep the full default inputs).
+    // src/managed-flag-inventory.json and src/managed-flag-keys.generated.ts
+    // are imported by src and stay in the hash.
+    "build": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "!AGENTS.md",
+        "!CLAUDE.md",
+        "!FLAG-INVENTORY.md",
+        "!ci-tests.json",
+        "!eslint.config.ts"
+      ]
+    },
     "generate": {
       "inputs": [
         "src/managed-flag-inventory.json",

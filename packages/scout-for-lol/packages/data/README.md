@@ -113,6 +113,12 @@ per-ability numbers for the voice assistant and other fact-answering features:
   cannot resolve stays literal `{{ token }}` text and is listed in that
   ability's `unresolved` array, so consumers can decline honestly instead of
   inventing numbers.
+- **`mechanics`** (optional) is how the ability is aimed and how its missiles
+  travel, read from the same bin and never inferred: `targeting`, `castTime`,
+  `radius`, `lineWidth`, `missileSpeed`, and a `missiles` list with each
+  missile's width, movement, speed, behaviors and `stopsOnFirstHit` (the bin's
+  `DestroyOnHit`). It is what separates "passes through minions" from "stops at
+  the first enemy". The slot omits it when the bin states nothing.
 
 Read them through `getAbilityFacts(championName)` in
 `src/data-dragon/ability-facts.ts`. The input is a user boundary: it accepts
@@ -161,3 +167,22 @@ cites the facts it leans on; ability cites drive the icons beside a tip.
   and the patch they agree with, or null when the pruned matrix has no set or
   the set is stale. A stale set is hidden, never a build failure; a file that
   fails its schema throws.
+
+## Patch changes
+
+`patch-notes-archive/{patch}.html` holds the raw official patch-notes page for
+each patch, archived by the refresh before any model call. Patches missing from
+it are fetched, with no model, by `bun run backfill-patch-notes`.
+
+`src/data-dragon/assets/patch-changes.generated.json` is derived from that
+archive by `src/data-dragon/patch-changes-parser.ts` (a streaming `HTMLRewriter`
+pass over the champions and items sections): one entry per `before ⇒ after`
+line, with the subject mapped to its champion or item id, the ability heading it
+sits under, and a `buff`/`nerf`/`adjust` direction. A line is buff or nerf only
+when before and after have the same shape and every number moved the same way
+(lower is stronger for cooldown, cost and cast time); anything else is adjust.
+A subject's direction for a patch is buff or nerf only when all its lines agree
+(`overallDirection`). Lines that are not before/after changes are skipped, not
+guessed at. Names the registries cannot place fail generation. Regenerate with
+`bun run generate:patch-changes`; `bun run generate` fails if the file is stale.
+Read it through `getPatchChanges(kind, id)` in `src/data-dragon/patch-changes.ts`.

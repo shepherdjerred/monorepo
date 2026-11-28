@@ -24,7 +24,30 @@
         ]
       },
       "resolvedDescription": "When an enemy champion dies near Lissandra they become a Frozen Thrall. Frozen Thralls slow nearby enemies and then, after a delay, shatter from the intense cold, dealing magic damage to nearby targets.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "lissandrapassiveattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Ice Shard",
@@ -89,7 +112,44 @@
         ]
       },
       "resolvedDescription": "Lissandra throws a spear of ice that shatters on the first enemy hit, dealing 80/115/150/185/220 (+75% AP) magic damage, Slowing them by 20/24/28/32/36% for 1.5 seconds, and also damaging and slowing the enemies behind them.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 75,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "lissandraqmissile",
+            "width": 75,
+            "movement": "FixedSpeedMovement",
+            "speed": 2200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "lissandraqshards",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 2200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Ring of Frost",
@@ -147,7 +207,30 @@
         ]
       },
       "resolvedDescription": "Lissandra creates an ice field, Rooting nearby enemies for 1.25/1.35/1.45/1.55/1.65 seconds and dealing 70/105/140/175/210 (+70% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 275,
+        "lineWidth": null,
+        "missileSpeed": 902,
+        "missiles": [
+          {
+            "name": "lissandrawfrozen",
+            "width": 250,
+            "movement": "FixedSpeedMovement",
+            "speed": 2300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Glacial Path",
@@ -184,7 +267,44 @@
         ]
       },
       "resolvedDescription": "Lissandra casts forth an ice claw that deals 70/105/140/175/210 (+60% AP) magic damage. Lissandra can Recast while the claw travels to teleport to its location.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 110,
+        "missileSpeed": 850,
+        "missiles": [
+          {
+            "name": "lissandraedamage",
+            "width": 110,
+            "movement": "FixedSpeedMovement",
+            "speed": 850,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "lissandraemissile",
+            "width": 125,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Frozen Tomb",
@@ -263,7 +383,58 @@
         ]
       },
       "resolvedDescription": "Lissandra encases herself or an enemy champion in ice. Enemies are Stunned for 1.5 seconds. When self cast, Lissandra enters Stasis for 2.5 seconds and restores 100/150/200 (+55% AP) Health, increased by 1% for each 1% missing Health. In either case, dark ice eminates from the target, dealing 150/250/350 (+75% AP) magic damage. The ice persists for 3 seconds, Slowing enemies by 45/60/75%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 690,
+        "lineWidth": null,
+        "missileSpeed": 2000,
+        "missiles": [
+          {
+            "name": "lissandrarenemy2",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "lissandrarslow",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "lissandrarspellshieldcheck",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

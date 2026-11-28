@@ -102,6 +102,15 @@ describe("loadConfig", () => {
     expect(config.stream.hardwareAcceleration).toBe(true);
   });
 
+  test("STREAM_FPS is a cap that may be fractional but not above Discord's 60", () => {
+    expect(loadConfig({ ...VALID, STREAM_FPS: "29.97" }).stream.fps).toBe(
+      29.97,
+    );
+    expect(() => loadConfig({ ...VALID, STREAM_FPS: "61" })).toThrow(
+      "Invalid streambot configuration",
+    );
+  });
+
   test("defaults adminIds and mediaDirs to empty when unset", () => {
     const env = { ...VALID };
     delete env["ADMIN_IDS"];

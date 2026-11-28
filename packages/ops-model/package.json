@@ -34,8 +34,10 @@
     "./platform-policy.json": "./platform-policy.json",
     "./catalog-document.schema.json": "./catalog-document.schema.json",
     "./catalog-document.json": "./catalog-document.json",
+    "./ci-dashboard.ts": "./src/ci-dashboard/index.ts",
     "./facets.ts": "./src/facets/index.ts",
     "./llm-traces.ts": "./src/llm-traces/index.ts",
+    "./renovate-ranking.ts": "./src/renovate/ranking.ts",
     "./*": "./src/*"
   }
 }

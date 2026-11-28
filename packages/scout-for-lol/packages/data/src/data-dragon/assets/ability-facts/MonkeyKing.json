@@ -115,7 +115,15 @@
         ]
       },
       "resolvedDescription": "Wukong and his Clone's next Attack gains 135/145/155/165/175 range, deals an additional 20/45/70/95/120 (+50% bonus AD) physical damage, and removes 10/15/20/25/30% Armor for 3 seconds. This Ability's cooldown is reduced by 0.5 seconds every time Wukong or his Clone hit an enemy with an Attack or Ability. This Ability triggers spell effects upon dealing damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.5,
+        "radius": 400,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Warrior Trickster",
@@ -187,7 +195,15 @@
         ]
       },
       "resolvedDescription": "Wukong dashes and becomes Invisible for 1 second, leaving behind a stationary Clone for 4 seconds. The Clone Attacks nearby enemies Wukong has recently damaged and will mimic his ultimate, each dealing 40/45/50/55/60% of normal damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Nimbus Strike",
@@ -273,7 +289,15 @@
         ]
       },
       "resolvedDescription": "Wukong dashes to an enemy, sending out Clones that mimic the dash to up to 2 additional enemies nearby. Each enemy struck takes 80/120/160/200/240 (+100% AP) magic damage. He and his Clone gain 40/45/50/55/60% Attack Speed for 5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 2200,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Cyclone",
@@ -337,7 +361,15 @@
         ]
       },
       "resolvedDescription": "Wukong gains 20% Move Speed and spins his staff, Knocking Up nearby enemies for 0.6 seconds and take 275% AD plus 8/12/16% max Health physical damage over 2 seconds. This Ability can be cast a second time within 8 seconds before going on cooldown.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 35,
+        "lineWidth": 160,
+        "missileSpeed": 700,
+        "missiles": []
+      }
     }
   }
 }

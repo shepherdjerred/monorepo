@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   bugsinkEnv,
+  bunServerEnv,
   flagsEnv,
   FLAGS_EVALUATION_URL,
   FLAGS_MANAGEMENT_URL,
@@ -58,6 +59,16 @@ function render(
     ),
   );
 }
+
+describe("bunServerEnv", () => {
+  test("declares HOME, HOST and the port, in that order", () => {
+    expect(render(() => bunServerEnv(7440))).toEqual([
+      "HOME=/tmp",
+      "HOST=0.0.0.0",
+      "PORT=7440",
+    ]);
+  });
+});
 
 describe("flagsEnv", () => {
   test("declares the mode first, then deployment and credentialless evaluation URL", () => {

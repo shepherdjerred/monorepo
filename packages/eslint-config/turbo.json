@@ -1,0 +1,37 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // A build's hash reaches every dependent's typecheck, lint and test tasks
+    // through ^build. The build is `tsc` over src/** (tsconfig.json), and
+    // dependents consume src/** or its dist output. local.ts, local-rules.ts
+    // and eslint-suppressions.json are read only by this package's own
+    // eslint.config.ts, and tsconfig.eslint.json only by its own lint, so
+    // they stay out of the build hash; typecheck, lint and test keep the full
+    // default inputs.
+    "build": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "!ci-tests.json",
+        "!eslint.config.ts",
+        "!eslint-suppressions.json",
+        "!local.ts",
+        "!local-rules.ts",
+        "!tsconfig.eslint.json"
+      ]
+    },
+    // `generate` has no script here, but dependents order after it (^generate),
+    // so its hash carries the same inputs as build.
+    "generate": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "!ci-tests.json",
+        "!eslint.config.ts",
+        "!eslint-suppressions.json",
+        "!local.ts",
+        "!local-rules.ts",
+        "!tsconfig.eslint.json"
+      ]
+    }
+  }
+}
