@@ -2749,7 +2749,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "scout-beta/3",
+      "recipeRevisionId": "scout-beta/4",
       "configurationRevisionId": "scout-beta/2"
     },
     {
