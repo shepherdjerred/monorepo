@@ -303,6 +303,69 @@ async function verifyYasuoWindWallDraws(
   }
 }
 
+function heimerImpactWitnesses(
+  track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
+) {
+  if (track.effects.length <= 100) return [];
+  if (track.schema === 1)
+    return [
+      [1715.7, 10],
+      [1716, 0],
+      [1715.7, 10],
+    ] as const;
+  // Five distinct impacts share one start time in the recorded fight.
+  const impactId = "heimerdinger-w-impact";
+  const impact = track.families.find(({ id }) => id === impactId);
+  if (impact === undefined) throw new Error("Missing recorded impact family.");
+  expect(impact.components).toHaveLength(2);
+  const creates = track.effects.filter(({ family }) => family === impactId);
+  const simultaneous = creates.filter(
+    ({ start }) => expectedFor(start, impact.components, 1715.7) > 0,
+  );
+  expect(simultaneous).toHaveLength(5);
+  expect(new Set(simultaneous.map(({ start }) => start)).size).toBe(1);
+  return (
+    [
+      [1715.7, 10],
+      [1716, 0],
+      [1715.7, 10],
+    ] as const
+  ).map(([seconds, impacts]) => {
+    const impactDraws = creates.reduce(
+      (draws, { start }) =>
+        draws + expectedFor(start, impact.components, seconds),
+      0,
+    );
+    expect(impactDraws).toBe(impacts);
+    return [seconds, expectedParticleDraws(track, seconds)] as const;
+  });
+}
+
+function sennaFlareWitnesses(
+  track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
+) {
+  if (track.schema === 1) return [];
+  const flare = track.families.find(
+    ({ id }) => id === "senna-w-ground-impact-flare",
+  );
+  if (flare === undefined) return [];
+  const creates = track.effects.filter(({ family }) => family === flare.id);
+  expect(creates).toHaveLength(1);
+  expect(flare.components).toHaveLength(2);
+  const [create] = creates;
+  if (create === undefined) throw new Error("Missing recorded Senna flare.");
+  const witnesses = [
+    [1719.9, 0],
+    [1720, 2],
+    [1720.1, 0],
+    [1720, 2],
+  ] as const;
+  return witnesses.map(([seconds, draws]) => {
+    expect(expectedFor(create.start, flare.components, seconds)).toBe(draws);
+    return [seconds, expectedParticleDraws(track, seconds)] as const;
+  });
+}
+
 export async function verifyRecordedParticlePreview(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -338,12 +401,8 @@ export async function verifyRecordedParticlePreview(
   await verifyMaskedGroundDraws(page, track);
   await verifyYasuoWindWallDraws(page, track);
   await verifySnowflashDraws(page, track);
-  if (track.effects.length > 100) {
-    // Five distinct impacts share one start time in the recorded fight.
-    await expectAt(1715.7, 10);
-    await expectAt(1716, expectedAmmoDraws(1716));
-    await expectAt(1715.7, 10);
-  }
+  for (const [seconds, draws] of heimerImpactWitnesses(track))
+    await expectAt(seconds, draws);
   for (const seconds of ammoWitnessClocks(
     ammo?.components,
     ammoEffects,
@@ -367,6 +426,8 @@ export async function verifyRecordedParticlePreview(
     await expectAt(255.3, 0);
     await expectAt(255, 1);
   }
+  for (const [seconds, draws] of sennaFlareWitnesses(track))
+    await expectAt(seconds, draws);
   if ("worldRibbon" in track) {
     for (const seconds of [1713.9, 1714.3, 1714.7, 1714.9, 1715.2, 1714.3])
       await expectAt(seconds, expectedDraws(seconds));
