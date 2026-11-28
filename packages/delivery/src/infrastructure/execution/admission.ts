@@ -236,12 +236,13 @@ export async function recheckAdmission(
 }
 
 /**
- * Serializes a promotion-source worker rollout behind any running worker
- * rollout in a dependent environment so the source's live routing stays on the
- * promoted candidate through promote-time verification (AI-857). Host
- * retirements remain unblocked to recover cluster capacity.
+ * Serialize worker claims on either end of a promotion edge while the other
+ * end owns a rollout or its recovery. The source's live routing must stay on
+ * the promoted candidate through promote-time verification (AI-857, AI-1124).
+ * An owning promotion keeps its frozen source through catalog changes. Host
+ * retirements preserve the candidate and remain unblocked.
  */
-export async function requireDependentWorkerRolloutsIdle(
+export async function requireRelatedWorkerRolloutsIdle(
   tx: Transaction,
   row: {
     id: string;
@@ -249,27 +250,41 @@ export async function requireDependentWorkerRolloutsIdle(
     kind: string;
     workerSnapshot: unknown;
   },
+  promotionSourceId: string | null,
 ) {
   if (row.workerSnapshot === null || row.kind === "retire-host") return;
-  const dependent = await tx.deployment.findFirst({
+  const blocker = await tx.deployment.findFirst({
     where: {
       id: { not: row.id },
-      status: "running",
+      OR: [{ status: "running" }, { recoveryRequired: true }],
       kind: { not: "retire-host" },
       NOT: [
         { workerSnapshot: { equals: Prisma.DbNull } },
         { workerSnapshot: { equals: Prisma.JsonNull } },
       ],
-      environment: { promotionSourceEnvironmentId: row.environmentId },
+      AND: {
+        OR: [
+          { environment: { promotionSourceEnvironmentId: row.environmentId } },
+          { kind: "promote", sourceEnvironmentId: row.environmentId },
+          ...(promotionSourceId === null
+            ? []
+            : [{ environmentId: promotionSourceId }]),
+        ],
+      },
     },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: { id: true, environmentId: true },
   });
-  if (dependent !== null)
+  if (blocker !== null) {
+    const relation =
+      blocker.environmentId === promotionSourceId
+        ? "promotion source"
+        : "dependent";
     throw new DeliveryError(
       "BUSY",
-      `Waiting for dependent worker rollout ${dependent.id} in ${dependent.environmentId} to finish before advancing ${row.environmentId}`,
+      `Waiting for ${relation} worker rollout ${blocker.id} in ${blocker.environmentId} to settle before advancing ${row.environmentId}`,
     );
+  }
 }
 
 /** Refuses when another self-hosted deployment is running or quarantined (D8). */

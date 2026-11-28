@@ -35,7 +35,7 @@ import {
   admissionTargets,
   freezeAdmission,
   recheckAdmission,
-  requireDependentWorkerRolloutsIdle,
+  requireRelatedWorkerRolloutsIdle,
   requireDispatchBarrier,
 } from "#infrastructure/execution/admission.ts";
 import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
@@ -181,7 +181,11 @@ async function admitQueued(
     env.application,
   );
   await requireFreeInstances(tx, deploymentId, instances);
-  await requireDependentWorkerRolloutsIdle(tx, row);
+  await requireRelatedWorkerRolloutsIdle(
+    tx,
+    row,
+    env.promotionSourceEnvironmentId,
+  );
   // Prerequisite edges, runners and accepted-elsewhere artifacts are frozen
   // before any lock is taken; an unmet one keeps the deployment queued (Z1).
   const admissionSnapshot = await freezeAdmission(tx, row, pipeline.definition);

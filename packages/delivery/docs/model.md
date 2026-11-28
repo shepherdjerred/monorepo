@@ -709,6 +709,12 @@ edges, with automatic flags and approval policy.
 - M2. A `promote` deployment requires its selected set revision to be
   accepted in the source environment, with that environment's monitor
   `settled` (W3), at admission time, and rechecks on retry.
+- M3. Related worker rollouts claim one at a time across each promotion-source
+  edge. A queued worker rollout waits while a rollout on the other end of the
+  edge is running or holds recovery ownership, even if the catalog has since
+  replaced the owning promotion's frozen source edge. Admission rechecks M2
+  when the waiting promotion retries its claim. Same-set host retirements
+  preserve routing and can proceed independently across the edge.
 
 ### 4.17 Acquisition intent
 
