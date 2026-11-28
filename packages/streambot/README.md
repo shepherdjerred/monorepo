@@ -138,7 +138,15 @@ therefore splits identities:
   the audio layout. Video is encoded at that display aspect fitted inside
   `STREAM_WIDTH`×`STREAM_HEIGHT` (a 2.39:1 film plays at 1920×804, a portrait
   clip at 608×1080); Discord letterboxes it. Rotated sources decode to system
-  memory so ffmpeg can autorotate them. A failed probe keeps the full box.
+  memory so ffmpeg can autorotate them. `STREAM_FPS` is a cap, not a forced
+  rate: a source at a standard rate (23.976, 25, 29.97, 50, 59.94, …) encodes
+  at that rate, or at the largest whole fraction of it under the cap (60 → 30,
+  50 → 25), and Discord is told the same rate. Interlaced sources are
+  deinterlaced before the scale (`bwdif`, or `deinterlace_vaapi` on the GPU).
+  Sources tagged BT.601 (SD) or full-range BT.709 are converted to BT.709
+  limited range in the scale filter and the output is tagged BT.709; untagged
+  sources are left as they are. A failed probe keeps the full box, the
+  `STREAM_FPS` rate and today's colour handling.
 
 The playback lifecycle is a pure, unit-tested XState machine; all I/O lives in
 invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the

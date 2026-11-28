@@ -894,3 +894,85 @@ describe("prepareStream hardwarePipelineMode", () => {
     }
   });
 });
+
+describe("prepareStream picture corrections", () => {
+  function argsFor(
+    options: Parameters<typeof prepareStream>[1],
+  ): readonly string[] {
+    const { command, output, promise } = prepareStream("video.mkv", options);
+    promise.catch(() => {});
+    try {
+      return [...ffmpegArgs(command)];
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  }
+
+  function valueAfter(
+    args: readonly string[],
+    flag: string,
+  ): string | undefined {
+    const index = args.indexOf(flag);
+    return index === -1 ? undefined : args[index + 1];
+  }
+
+  test("an NTSC output rate reaches -r as its exact rational, an integer rate as before", () => {
+    expect(valueAfter(argsFor({ frameRate: 24_000 / 1001 }), "-r")).toBe(
+      "24000/1001",
+    );
+    expect(valueAfter(argsFor({ frameRate: 30 }), "-r")).toBe("30");
+  });
+
+  test("software: deinterlace and BT.709 conversion land in -filter:v, with output colour tags", () => {
+    const args = argsFor({
+      width: 1440,
+      height: 1080,
+      deinterlace: true,
+      convertColorToBt709: true,
+    });
+    expect(valueAfter(args, "-filter:v")).toBe(
+      "bwdif=mode=send_frame:deint=interlaced,scale=1440:1080:out_color_matrix=bt709:out_range=tv",
+    );
+    expect(valueAfter(args, "-colorspace")).toBe("bt709");
+    expect(valueAfter(args, "-color_range")).toBe("tv");
+    // Inert in ffmpeg 7.1 (the encoder takes both from the frames), and nothing converted them.
+    expect(args).not.toContain("-color_primaries");
+    expect(args).not.toContain("-color_trc");
+  });
+
+  test("neither correction emits anything unless asked for", () => {
+    const args = argsFor({ width: 1920, height: 1080, frameRate: 30 });
+    expect(valueAfter(args, "-filter:v")).toBe("scale=1920:1080");
+    expect(args).not.toContain("-colorspace");
+    expect(args).not.toContain("-color_range");
+  });
+
+  test("VAAPI: deinterlace_vaapi and the BT.709 scale_vaapi options in the GPU graph", async () => {
+    const { Encoders } = await import("../src/media/encoders/index.ts");
+    const args = argsFor({
+      hardwareAcceleratedDecoding: true,
+      encoder: Encoders.vaapi({ device: "/dev/dri/renderD128" }),
+      width: 1440,
+      height: 1080,
+      deinterlace: true,
+      convertColorToBt709: true,
+    });
+    expect(valueAfter(args, "-filter:v")).toBe(
+      "deinterlace_vaapi=rate=frame:auto=1,scale_vaapi=w=1440:h=1080:format=nv12:out_color_matrix=bt709:out_range=tv",
+    );
+    expect(valueAfter(args, "-colorspace")).toBe("bt709");
+  });
+
+  test("throws rather than dropping a correction there is no video graph for", () => {
+    expect(() =>
+      prepareStream("input.mkv", { audioOnly: true, deinterlace: true }),
+    ).toThrow(/deinterlace cannot be applied when audioOnly/);
+    expect(() =>
+      prepareStream("input.mkv", {
+        noTranscoding: true,
+        convertColorToBt709: true,
+      }),
+    ).toThrow(/convertColorToBt709 cannot be applied when noTranscoding/);
+  });
+});

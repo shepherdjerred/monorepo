@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type { ProbedVideo } from "@shepherdjerred/streambot/sources/probed-media.ts";
 import {
   buildGoLivePlayOptions,
   buildMusicPrepareOptions,
   buildVideoPrepareOptions,
+  outputFrameRate,
 } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
 import { streamerEnv as env } from "./streamer/streamer-test-fixtures.ts";
 
@@ -312,12 +314,14 @@ describe("buildVideoPrepareOptions", () => {
     // Play-side Go Live options retain the startup burst and add the live rebuffer cushion.
     expect(buildGoLivePlayOptions(stream, { live: true })).toEqual({
       type: "go-live",
+      frameRate: stream.fps,
       readrateInitialBurst: stream.readrateInitialBurst,
       videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
       liveBufferMs: stream.liveBufferMs,
     });
     expect(buildGoLivePlayOptions(stream, {})).toEqual({
       type: "go-live",
+      frameRate: stream.fps,
       readrateInitialBurst: stream.readrateInitialBurst,
       videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
     });
@@ -372,5 +376,121 @@ describe("buildVideoPrepareOptions output size", () => {
     expect(sizedOptions(16 / 9, 0, "hw").hardwarePipelineMode).toBeUndefined();
     // The software rung decodes to system memory already and must not ask for a GPU upload.
     expect(sizedOptions(9 / 16, 90, "sw").hardwarePipelineMode).toBeUndefined();
+  });
+});
+
+function probed(
+  video: Partial<ProbedVideo>,
+  extra: Partial<ResolvedSource> = {},
+) {
+  return {
+    ...VIDEO,
+    ...extra,
+    probedVideo: {
+      displayAspect: 16 / 9,
+      rotation: 0 as const,
+      interlaced: false,
+      ...video,
+    },
+  } satisfies ResolvedSource;
+}
+
+/** The output rate for a source probed at `frameRate` under a `fps` cap. */
+function rate(cap: { fps: number }, frameRate: number): number {
+  return outputFrameRate(cap, probed({ frameRate }));
+}
+
+/** Hardware-rung video options for a resolved source. */
+function hwOptions(resolved: ResolvedSource) {
+  return buildVideoPrepareOptions({
+    stream,
+    resolved,
+    startSeconds: 0,
+    volumePercent: 100,
+    pipelineMode: "hw",
+  });
+}
+
+describe("outputFrameRate", () => {
+  const cap30 = { fps: 30 };
+  const cap60 = { fps: 60 };
+
+  test("a film plays at its own rate instead of the 3:2 judder of a forced 30", () => {
+    expect(rate(cap30, 24_000 / 1001)).toBe(24_000 / 1001);
+    expect(rate(cap30, 24)).toBe(24);
+    expect(rate(cap30, 25)).toBe(25);
+    expect(rate(cap30, 30_000 / 1001)).toBe(30_000 / 1001);
+  });
+
+  test("ffprobe's slightly-off averages snap to the standard rate they belong to", () => {
+    // A VFR-timestamped Matroska film reports its average as e.g. 2997/125.
+    expect(rate(cap30, 2997 / 125)).toBe(24_000 / 1001);
+    expect(rate(cap30, 23.976)).toBe(24_000 / 1001);
+  });
+
+  test("a source over the cap drops to the largest whole fraction under it", () => {
+    expect(rate(cap30, 60)).toBe(30);
+    expect(rate(cap30, 60_000 / 1001)).toBe(30_000 / 1001);
+    expect(rate(cap30, 50)).toBe(25);
+    expect(rate(cap30, 120)).toBe(30);
+    expect(rate(cap30, 48)).toBe(24);
+    expect(rate(cap60, 60)).toBe(60);
+    expect(rate(cap60, 50)).toBe(50);
+    expect(rate(cap60, 120)).toBe(60);
+  });
+
+  test("a near-cap configuration does not halve the source it sits next to", () => {
+    expect(rate({ fps: 30_000 / 1001 }, 30)).toBe(30);
+    expect(rate({ fps: 29.97 }, 30_000 / 1001)).toBe(30_000 / 1001);
+  });
+
+  test("an unprobed, rateless or non-standard source keeps the configured rate", () => {
+    expect(outputFrameRate(cap30, VIDEO)).toBe(30);
+    expect(outputFrameRate(cap30, probed({}))).toBe(30);
+    // A variable-rate phone clip's average, and a slideshow.
+    expect(rate(cap30, 29.47)).toBe(30);
+    expect(rate(cap30, 1)).toBe(30);
+  });
+
+  test("prepare and Go Live play options carry the same rate", () => {
+    const resolved = probed({ frameRate: 24_000 / 1001 });
+    expect(hwOptions(resolved).frameRate).toBe(24_000 / 1001);
+    expect(buildGoLivePlayOptions(stream, resolved).frameRate).toBe(
+      24_000 / 1001,
+    );
+  });
+});
+
+describe("buildVideoPrepareOptions picture corrections", () => {
+  test("deinterlaces only a source the probe found interlaced", () => {
+    expect(hwOptions(probed({ interlaced: true })).deinterlace).toBe(true);
+    expect("deinterlace" in hwOptions(probed({ interlaced: false }))).toBe(
+      false,
+    );
+    expect("deinterlace" in hwOptions(VIDEO)).toBe(false);
+  });
+
+  test("converts tagged BT.601 and full-range BT.709 sources to BT.709 limited", () => {
+    for (const resolved of [
+      probed({ colorSpace: "smpte170m" }),
+      probed({ colorSpace: "bt470bg", colorRange: "tv" }),
+      probed({ colorSpace: "bt709", colorRange: "pc" }),
+    ]) {
+      expect(hwOptions(resolved).convertColorToBt709).toBe(true);
+    }
+  });
+
+  test("leaves BT.709, untagged, HDR and unprobed sources alone", () => {
+    for (const resolved of [
+      probed({ colorSpace: "bt709", colorRange: "tv" }),
+      // Both scalers read an untagged frame as BT.601, which would shift an untagged HD picture.
+      probed({}),
+      probed({ colorRange: "pc" }),
+      probed({ colorSpace: "bt2020nc" }, { hdr: true }),
+      probed({ colorSpace: "smpte170m" }, { hdr: true }),
+      VIDEO,
+    ]) {
+      expect("convertColorToBt709" in hwOptions(resolved)).toBe(false);
+    }
   });
 });

@@ -32,7 +32,7 @@ import { isBun, isDeno, isFiniteNonZero } from "../utils.js";
 import { AVCodecID } from "./LibavCodecId.js";
 import { createDecoder } from "./LibavDecoder.js";
 import { Encoders } from "./encoders/index.js";
-import { buildSoftwareVideoGraph } from "./videoGraph.js";
+import { buildSoftwareVideoGraph, formatFrameRate } from "./videoGraph.js";
 
 import type { AudioFrameSink } from "./AudioSink.js";
 import type { Request } from "zeromq";
@@ -70,9 +70,30 @@ export type PrepareStreamOptions = {
   height: number;
 
   /**
-   * Video frame rate
+   * Output video frame rate (`-r`, and the GPU subtitle canvas rate). NTSC rates such as
+   * `24000 / 1001` are emitted as their exact `N/1001` rational. Omit to keep the input timing.
    */
   frameRate?: number;
+
+  /**
+   * Deinterlace before scaling (`bwdif` on the software path, `deinterlace_vaapi` on a GPU
+   * pipeline), one output frame per input frame, touching only frames flagged interlaced. Set it
+   * for an interlaced source; scaling the woven fields instead bakes combing into every frame.
+   * Throws with `audioOnly` or `noTranscoding`, which have no video graph to put it in. Default
+   * `false`.
+   */
+  deinterlace: boolean;
+
+  /**
+   * Convert an SDR picture to BT.709 limited range in the scale filter and tag the output
+   * (`-colorspace bt709 -color_range tv`). For sources tagged BT.601 or full range: a receiver
+   * that assumes BT.709 for HD otherwise decodes an upscaled SD BT.601 picture with the wrong
+   * coefficients and its hues shift. The scalers read the input matrix from the frame's tags, and
+   * read an untagged frame as BT.601, so set it only for a source whose tags are known. With
+   * `inputColor: "hdr"` only the output tags apply — the tonemap already produces BT.709. Throws
+   * with `audioOnly` or `noTranscoding`. Default `false`.
+   */
+  convertColorToBt709: boolean;
 
   /**
    * Video codec
@@ -381,7 +402,7 @@ class FfmpegArgumentBuilder {
   }
 
   fpsOutput(frameRate: number): this {
-    this.outputOptions.push("-r", String(frameRate));
+    this.outputOptions.push("-r", formatFrameRate(frameRate));
     return this;
   }
 
@@ -721,6 +742,8 @@ export function prepareStream(
     customInputOptions: [],
     customFfmpegFlags: [],
     inputColor: "sdr",
+    deinterlace: false,
+    convertColorToBt709: false,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(
@@ -824,6 +847,9 @@ export function prepareStream(
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
       inputColor: opts.inputColor ?? defaultOptions.inputColor,
+      deinterlace: opts.deinterlace ?? defaultOptions.deinterlace,
+      convertColorToBt709:
+        opts.convertColorToBt709 ?? defaultOptions.convertColorToBt709,
       ...(opts.subtitleBurn !== undefined
         ? { subtitleBurn: opts.subtitleBurn }
         : {}),
@@ -886,6 +912,19 @@ export function prepareStream(
         "inputColor 'hdr' cannot be applied when audioOnly is set: there is no video stream to tonemap. Drop inputColor for audio-only output.",
       );
     }
+  }
+  // Same contract for the two picture corrections: each needs a video graph, which neither an
+  // audio-only nor a copied (noTranscoding) video stream has.
+  if (mergedOptions.audioOnly || mergedOptions.noTranscoding) {
+    const mode = mergedOptions.audioOnly ? "audioOnly" : "noTranscoding";
+    if (mergedOptions.deinterlace)
+      throw new Error(
+        `deinterlace cannot be applied when ${mode} is set: there is no video filter graph to deinterlace in.`,
+      );
+    if (mergedOptions.convertColorToBt709)
+      throw new Error(
+        `convertColorToBt709 cannot be applied when ${mode} is set: there is no video filter graph to convert colour in.`,
+      );
   }
 
   let isHttpUrl = false;
@@ -1118,6 +1157,8 @@ export function prepareStream(
         : { videoStreamIndex: mergedOptions.videoStreamIndex }),
       inputColor: mergedOptions.inputColor,
       ...(uploadMode ? { uploadInput: true } : {}),
+      ...(mergedOptions.deinterlace ? { deinterlace: true } : {}),
+      ...(mergedOptions.convertColorToBt709 ? { convertToBt709: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),
       ...(mergedOptions.subtitleBurn !== undefined
         ? {
@@ -1146,6 +1187,19 @@ export function prepareStream(
     }
 
     if (frameRate) commandBuilder.fpsOutput(frameRate);
+
+    // The scale filter converted the matrix and range (or the HDR tonemap did); pin the output to
+    // them too. ffmpeg 7.1 negotiates these two against the filter graph, so they also hold the
+    // software path to BT.709 limited if a later filter would otherwise renegotiate. Primaries
+    // and transfer are deliberately not forced: nothing converted them, and ffmpeg 7.1 takes both
+    // from the frames regardless (`-color_primaries`/`-color_trc` are inert on the output).
+    if (mergedOptions.convertColorToBt709)
+      commandBuilder.addOutputOption([
+        "-colorspace",
+        "bt709",
+        "-color_range",
+        "tv",
+      ]);
 
     commandBuilder.addOutputOption([
       "-b:v",
