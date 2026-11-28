@@ -34,6 +34,12 @@ import {
 import { npmPackageArchiveSteps } from "#src/pipeline/lanes/npm-packages.ts";
 import { GRADLE_BUILD_CACHE_ENVIRONMENT } from "#src/pipeline/gradle-build-cache.ts";
 import { SCCACHE_WEBDAV_ENVIRONMENT } from "#src/pipeline/sccache-webdav.ts";
+import {
+  GIT_MAINTENANCE_OFF,
+  SHALLOW_HISTORY_DEPTH,
+} from "#src/pipeline/git-history.ts";
+
+const HISTORY_DEPTH = SHALLOW_HISTORY_DEPTH.toString();
 
 /**
  * The CI graph, as data.
@@ -60,14 +66,19 @@ export function verifyCommands(options: {
   const commands = [
     ". ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile",
+    // The workspace is discarded after this step; automatic maintenance would
+    // only write a commit graph and pack index that nothing reads back.
+    ...GIT_MAINTENANCE_OFF,
     // Woodpecker's shallow clone omits the default branch history. Fetch it
-    // for the initial main predecessor and the PR coverage fallback.
-    'git fetch --no-tags --depth=100 origin "$CI_REPO_DEFAULT_BRANCH"',
+    // for the initial main predecessor and the PR coverage fallback. The
+    // golden workspace already holds this history (git-history.ts), so only
+    // commits newer than the golden cross the wire.
+    `git fetch --no-tags --depth=${HISTORY_DEPTH} origin "$CI_REPO_DEFAULT_BRANCH"`,
     'git update-ref "refs/remotes/origin/$CI_REPO_DEFAULT_BRANCH" FETCH_HEAD',
     'if [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
     // Deepen the PR head separately, then fetch its target last so FETCH_HEAD
     // unambiguously names the target branch for the merge-base calculation.
-    '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
+    `  if git fetch --no-tags --depth=${HISTORY_DEPTH} origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=${HISTORY_DEPTH} origin "$CI_COMMIT_TARGET_BRANCH"; then`,
     '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
     "  else",
     '    CI_CHANGED_BASE=""',

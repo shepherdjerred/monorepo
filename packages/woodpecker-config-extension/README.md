@@ -157,6 +157,23 @@ boundaries, and resets, so only differing files are written. It then removes
 the marker. The ordinary Git plugin path empties a golden clone first, and a
 prepared-seed checkout clears it, since both expect an empty workspace.
 
+The golden also holds the last 100 commits of history (`pipeline/git-history.ts`)
+under `refs/remotes/origin/<default branch>`, then garbage-collects what an
+earlier generation left unreachable. The ref matters: a checkout leaves `HEAD`
+at a depth-one commit, so Git's negotiation advertises no ancestors and the
+verification steps' `git fetch --depth=100` would otherwise re-send every blob
+the last 100 commits changed (about 1.5 GB written per workspace). The golden
+and the steps also turn off `gc.auto` and `maintenance.auto`, since a workspace
+is discarded after its step and nothing reads back the commit graph and pack
+index that automatic maintenance writes; setting them in the golden means every
+clone has them before its own first fetch.
+
+Only steps whose workspace is a golden clone benefit: source-cache checkouts of
+work events (`woodpecker-source-cache-enabled`). Credentialless automation
+pipelines, non-work events and prepared-seed steps (performance pipelines) clear
+or never clone the golden and fetch as before. A main more than 100 commits past
+the golden sends the same bytes as before, never more.
+
 Incremental source misses copy and verify recent immutable objects before
 advertising a temporary negotiation ref. Fetch still requests the exact SHA;
 the helper validates its commit and tree and removes the temporary ref.
