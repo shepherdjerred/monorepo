@@ -1,9 +1,14 @@
 import { expect, test } from "bun:test";
 import {
+  createRecordedRiftStopReader,
   readRecordedRiftEffectPackets,
   selectRecordedRiftEffectPackets,
 } from "./recorded-rift-effect-packets.mjs";
 import { bindRecordedRiftEffectReceipt } from "./recorded-rift-effect-receipts.mjs";
+import {
+  position944SubstitutionIndex,
+  rotateByteLeft,
+} from "./native-terrain-byte-codecs.mjs";
 
 test("keeps creation and stop packets in physical order with inherited headers", () => {
   const payload = Uint8Array.of(9);
@@ -77,6 +82,48 @@ test("rejects unreviewed builds and protocols before scanning packets", () => {
     expect(() => readRecordedRiftEffectPackets(header, () => {})).toThrow(
       "Recorded particle packet build or protocol differs",
     );
+});
+
+test("reads portable stop targets, routes and complete bodies", () => {
+  const read = createRecordedRiftStopReader(
+    { build: "16.23.841.8428", protocol: "8bbfcd5af2bc92db" },
+    {
+      decodePositionByte: (byte) =>
+        (position944SubstitutionIndex(byte) + 0x67) & 255,
+    },
+  );
+  const packet = (header, ...digits) =>
+    Uint8Array.of(
+      header,
+      ...digits.map((digit) => (rotateByteLeft(digit, 6) + 0x81) & 255),
+    );
+  expect(read(packet(1))).toEqual({
+    target: 0xffff_ffff,
+    flags: 52,
+    route: "direct-stop",
+  });
+  expect(read(packet(10))).toEqual({
+    target: 0,
+    flags: 60,
+    route: "alternate-stop",
+  });
+  expect(read(packet(8, 0x81, 3))).toEqual({
+    target: 0x4000_0181,
+    flags: 60,
+    route: "alternate-stop",
+  });
+  expect(read(packet(0, 0x80, 0x80, 0x80, 8))).toEqual({
+    target: 0x0100_0000,
+    flags: 52,
+    route: "direct-stop",
+  });
+  for (const body of [
+    packet(0, 0x81),
+    packet(2, 0),
+    packet(0, 3, 0),
+    packet(0, 0x80, 0x80, 0x80, 0x80, 16),
+  ])
+    expect(read(body)).toBeNull();
 });
 
 test("binds stop requests by physical packet, not by shared time or context", () => {

@@ -27,6 +27,12 @@ sys.path.insert(0, str(TOOLS))
 navgrid_tools = runpy.run_path(str(TOOLS / "probe-exact-fog-navgrid.py"))
 FogNavgrid = navgrid_tools["FogNavgrid"]
 MachImage = navgrid_tools["MachImage"]
+SHOW_PACKET_HASHES = {
+    # observe-maokai-visibility-boundary.py verifies these original opcode-66
+    # payloads set the team mask without writing any other owner state.
+    "8c25b3494723a39b933e5a4ce5f139279586ffe1a70f98abacf903a2b0f4c258",
+    "c616d342397df9f01b60c9d363aa4a9c1205344587166e8960efacafae6865df",
+}
 
 
 def sha(data):
@@ -47,6 +53,11 @@ def main():
     parser.add_argument(
         "--outer", action="store_true", help="Trace the two outer missiles up to their first unclassified packet"
     )
+    parser.add_argument("--discovery-sha256", help="Reviewed canonical discovery receipt hash")
+    parser.add_argument(
+        "--authored-movement", type=Path, help="Original Maokai spell receipt from verify-rift-maokai-launches"
+    )
+    parser.add_argument("--max-launches", type=int, help="Limit discovery verification to the earliest launches")
     args = parser.parse_args()
     output = args.output
     if not output.parent.resolve().is_relative_to(Path(".cache").resolve()) or output.exists():
@@ -57,8 +68,23 @@ def main():
     navgrid = args.navgrid.read_bytes()
     assert source["build"] == "16.23.841.8428"
     assert source["protocol"] == "8bbfcd5af2bc92db"
-    assert source["replaySha256"] == "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1"
-    actor_records = {row["entity"]: row for row in source["native"]["records"]}
+    discovery = args.discovery_sha256 is not None
+    if discovery:
+        assert not args.outer and args.authored_movement
+        assert args.max_launches is None or args.max_launches > 0
+        assert sha(source_bytes) == args.discovery_sha256
+        assert source["kind"] == "reviewed-native-maokai-r-launch-discovery"
+        receipts = json.loads(args.authored_movement.read_bytes())
+        assert receipts["build"] == source["build"] and receipts["protocol"] == source["protocol"]
+        cohort = receipts["cohorts"][0]
+        decoder_sha = source["decoderSha256"]
+        navgrid_sha = receipts["navgridSha256"]
+    else:
+        assert args.authored_movement is None and args.max_launches is None
+        assert source["replaySha256"] == "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1"
+        cohort = source["cohorts"][0]
+        decoder_sha = source["native"]["decoderSha256"]
+        navgrid_sha = source["navgridSha256"]
 
     class CurrentNavgrid(FogNavgrid):
         EXECUTABLE_SLICE_SHA256 = "de6db1683eb61358d0aaf9fac44ef722850a927263eae7f68212add8621a500e"
@@ -82,12 +108,8 @@ def main():
             cpu.reg_write(r.UC_X86_REG_RIP, self.get(stack))
             cpu.reg_write(r.UC_X86_REG_RSP, stack + 8)
 
-    assert (
-        sha(binary)
-        == source["native"]["decoderSha256"]
-        == "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7"
-    )
-    assert sha(navgrid) == source["navgridSha256"] == "28f6738003e01a0c13fa8a2f859d2947a8743606465b42139a24c423dd311bd9"
+    assert sha(binary) == decoder_sha == "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7"
+    assert sha(navgrid) == navgrid_sha == "28f6738003e01a0c13fa8a2f859d2947a8743606465b42139a24c423dd311bd9"
     image = MachImage(binary)
     oracle = CurrentNavgrid(image, navgrid)
     oracle.load()
@@ -111,6 +133,7 @@ def main():
 
     spatial_writes = []
     stop_writes = []
+    expected_source = None
 
     def observe_boundary(cpu, address, _size, _data):
         dest = cpu.reg_read(r.UC_X86_REG_RDI)
@@ -119,7 +142,7 @@ def main():
         elif address == image.base + 0x8AF4D0 and dest == config:
             stop_writes.append(read(actor + 0x60, "3f"))
         elif address == image.base + 0x5587F0:
-            assert cpu.reg_read(r.UC_X86_REG_ESI) == 1073742170
+            assert cpu.reg_read(r.UC_X86_REG_ESI) == expected_source
         else:
             raise ValueError("Unexpected spatial or stop boundary")
         stack = cpu.reg_read(r.UC_X86_REG_RSP)
@@ -141,8 +164,7 @@ def main():
     ):
         assert read(image.base + table + offset, "Q")[0] == image.base + expected
 
-    assert source["cohorts"][0]["spellName"] == "MaokaiRMis"
-    cohort = source["cohorts"][0]
+    assert cohort["spellName"] == "MaokaiRMis"
     assert cohort["baseSha256"] == "b6d9a1f03f96018c40a3f3d4da2345983ebbe3e15c1c0d934a1bc4dd62e46b8d"
     fields = cohort["movement"]["fields"]
     assert cohort["movement"]["classHash"] == "af905da2"
@@ -184,7 +206,8 @@ def main():
         call(0x895F40, controller)
         velocity = read(actor + 0x60, "3f")
         target = read(controller + 0x7C, "3f")
-        assert math.isclose(math.hypot(*velocity), starting, abs_tol=0.01)
+        speed = math.hypot(velocity[0], velocity[2]) if discovery else math.hypot(*velocity)
+        assert math.isclose(speed, starting, abs_tol=0.01), (record["entity"], origin, target, velocity, starting)
         return {
             "positionXYZ": origin,
             "velocityXYZ": velocity,
@@ -195,7 +218,10 @@ def main():
     def advance(dt):
         vm.mem_write(proposal, bytes(32))
         call(0x895FE0, controller, proposal, dt=dt)
-        assert call(0x8A65E0, controller, proposal) & 255 == 0
+        if call(0x8A65E0, controller, proposal) & 255:
+            if discovery:
+                return None
+            raise ValueError("Native geometric termination precedes recorded boundary")
         spatial_writes.clear()
         call(0x8A1850, controller, proposal)
         position = read(actor + 0x160, "3f")
@@ -203,19 +229,41 @@ def main():
         return position
 
     cases = []
-    events_by_id = {event["id"]: event for event in cohort["events"]}
+    omissions = []
     if args.outer:
         assert sha(source_bytes) == "dae6f325435b30bf80cdfe6810e253754339956d2e8c5e083f509aa1e5415894"
     handles = (1073820800, 1073820809) if args.outer else (1073820771, 1073820782, 1073820791)
-    for ident in handles:
-        event = events_by_id[ident]
-        record = actor_records[ident]
+    if discovery:
+        inputs = [(row, row["identity"]) for row in source["candidates"][: args.max_launches]]
+    else:
+        event_by_id = {event["id"]: event for event in cohort["events"]}
+        record_by_id = {row["entity"]: row for row in source["native"]["records"]}
+        inputs = [(event_by_id[handle], record_by_id[handle]) for handle in handles]
+    for event, record in inputs:
+        ident = record["entity"]
+        expected_source = record["sourceContext"]
         assert record["forcedRecordedSource"] and record["packetElapsedSeconds"] == 0
         assert record["requestedMissileSpellHash"] == 0x0187CC63
-        assert record["sourceContext"] == 1073742170
         launch_seconds = event["launch"]["seconds"]
-        assert launch_seconds == 1713.9644140625
-        if args.outer:
+        if not discovery:
+            assert expected_source == 1073742170 and launch_seconds == 1713.9644140625
+        if discovery:
+            assert record["sourceName"] == "Maokai"
+            stop_seconds = None
+            birth_visibility = []
+            first_unclassified = None
+            for packet in event["subsequentPackets"]:
+                if packet["opcode"] == 66 and packet["bodyBytes"] == 2 and packet["bodySha256"] in SHOW_PACKET_HASHES:
+                    if packet["seconds"] == launch_seconds:
+                        birth_visibility.append(packet)
+                    continue
+                first_unclassified = packet
+                break
+            if not birth_visibility or not first_unclassified or first_unclassified["seconds"] <= launch_seconds:
+                omissions.append({"entity": ident, "reason": "missing-proven-visible-prefix"})
+                continue
+            verified_through = first_unclassified["seconds"]
+        elif args.outer:
             assert not event["stops"]
             assert event["opcodeInventory"].keys() <= {"66", "213", "639", "682", "696", "784"}
             assert all(len(bytes.fromhex(packet["payload"])) == 19 for packet in event["components"])
@@ -237,12 +285,14 @@ def main():
         before = initialize(record, target)
         assert control["velocityXYZ"] != before["velocityXYZ"]
         fields_at_start = {"timeSeconds": launch_seconds, **before, "speed": starting}
-        coarse_end = advance(duration)
+        coarse_end = None if discovery else advance(duration)
         initialize(record, target)
         subdivisions = math.ceil(duration * 120)
         samples = [fields_at_start]
         for index in range(1, subdivisions + 1):
             position = advance(duration / subdivisions)
+            if position is None:
+                break
             samples.append(
                 {
                     "timeSeconds": launch_seconds + duration * index / subdivisions,
@@ -251,11 +301,17 @@ def main():
                     "speed": read(controller + 0xA0, "f")[0],
                 }
             )
-        cadence_delta = math.dist(coarse_end, samples[-1]["positionXYZ"])
-        assert cadence_delta < 0.25
-        assert math.dist(before["positionXYZ"], samples[-1]["positionXYZ"]) > 100
+        cadence_delta = None if discovery else math.dist(coarse_end, samples[-1]["positionXYZ"])
+        if discovery:
+            if len(samples) != subdivisions + 1:
+                omissions.append({"entity": ident, "reason": "native-geometric-terminal-before-packet"})
+                continue
+        else:
+            assert cadence_delta < 0.25
+            assert math.dist(before["positionXYZ"], samples[-1]["positionXYZ"]) > 100
         stop_writes.clear()
-        if not args.outer:
+        bounded_prefix = args.outer or discovery
+        if not bounded_prefix:
             call(0x893510, actor)
             assert stop_writes == [(0, 0, 0)]
             assert read(actor + 0x3D8, "B") == (1,)
@@ -265,21 +321,22 @@ def main():
                 "recordedLaunchTimeSeconds": launch_seconds,
                 "recordedStopTimeSeconds": stop_seconds,
                 "motionVerifiedThroughSeconds": verified_through,
-                "postContactMotionUnverified": args.outer or verified_through < stop_seconds,
+                "postContactMotionUnverified": bounded_prefix or verified_through < stop_seconds,
                 "launchBodySha256": event["launch"]["bodySha256"],
-                "recordedStopSequences": [row["sequence"] for row in event["stops"]],
+                "recordedStopSequences": [] if discovery else [row["sequence"] for row in event["stops"]],
                 "nativeGeometricTerminalGateTriggeredDuringTrace": False,
-                "nativeVelocityZeroAtStop": None if args.outer else True,
-                "nativeMissileStoppedBitAtStop": None if args.outer else True,
+                "nativeVelocityZeroAtStop": None if bounded_prefix else True,
+                "nativeMissileStoppedBitAtStop": None if bounded_prefix else True,
                 **(
                     {
                         "firstUnclassifiedPacket": {
                             key: first_unclassified[key] for key in ("opcode", "sequence", "seconds", "bodySha256")
                         }
                     }
-                    if args.outer
+                    if bounded_prefix
                     else {}
                 ),
+                **({"sourceContext": expected_source, "birthVisibilityPackets": birth_visibility} if discovery else {}),
                 "differentTargetVelocityControl": control["velocityXYZ"],
                 "oneStepEndpointDeltaFrom120HzWorldUnits": cadence_delta,
                 "samples": samples,
@@ -307,7 +364,15 @@ def main():
                     "stop": "0x893510",
                 },
                 "cases": cases,
+                **({"omissions": omissions, "visibilityReceiverRva": "0x21fe40"} if discovery else {}),
                 "scope": (
+                    "Original movement for a recorded visible prefix under All vision, from a "
+                    "same-clock native team-mask set through the first subsequent packet outside "
+                    "the reviewed mask-set family. The final sample is an exclusive boundary. "
+                    "No stop is synthesized and per-team visibility and emitter state are separate."
+                )
+                if discovery
+                else (
                     "Original movement from recorded birth strictly before the first unclassified "
                     "actor packet, using exact Map11 heights. The final sample is an exclusive "
                     "boundary. No stop is synthesized. Native visibility, VFX seed and teardown "

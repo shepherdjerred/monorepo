@@ -3,7 +3,10 @@
 Run from the repository root using Unicorn and the Windows CRT. The emitter
 receipt contains the original Maokai skin 33 VFX definition. The motion receipt
 comes from probe-rift-maokai-movement.py. Use slots 0, 1, and 2 with both random
-inputs (0.125 and 0.875) before preparing the private track.
+inputs (0.125 and 0.875) before preparing the private track. For a reviewed
+visible-prefix motion receipt, use --discovery-sha256 and one of its case slots.
+Discovery covers other casts in the same saved .8428 match. The original
+skin-33 roster binding and authored emitter remain pinned.
 
 The probe reproduces the native parent request, basis and root-position handoff,
 rate, birth, particle aging, CPU writer and material selection with owned scene
@@ -20,6 +23,7 @@ import math
 import struct
 import sys
 from collections import deque
+from itertools import pairwise
 from pathlib import Path
 
 import unicorn
@@ -28,14 +32,20 @@ from unicorn import x86_const as reg
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from champion_replication_archive import CURRENT_BUILD, read_replication_image
 
+VISIBLE_MASK_PACKET_HASHES = {
+    "8c25b3494723a39b933e5a4ce5f139279586ffe1a70f98abacf903a2b0f4c258",
+    "c616d342397df9f01b60c9d363aa4a9c1205344587166e8960efacafae6865df",
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     for name in ("executable", "motion_receipt", "effect_receipt"):
         parser.add_argument(name, type=Path)
-    parser.add_argument("slot", type=int, choices=(0, 1, 2))
+    parser.add_argument("slot", type=int)
     parser.add_argument("random_sample", type=float, choices=(0.125, 0.875))
     parser.add_argument("output", type=Path)
+    parser.add_argument("--discovery-sha256", help="Reviewed visible-prefix motion receipt hash")
     if not __debug__:
         parser.error("Run without Python optimization so native validation is active")
     args = parser.parse_args()
@@ -52,11 +62,21 @@ def main():
         "11dfea28db28ca841a38e21d0cd53620bfaab98895ea99288bc340b0c9c7f5cf": (1073820800, 1073820809),
     }
     motion_digest = hashlib.sha256(motion_bytes).hexdigest()
-    assert motion_digest in cohorts
     assert hashlib.sha256(asset_bytes).hexdigest() == "d16ac8262fa12cb2d239cbda480c77221eb85e105f1d72a5bd0421008f32df3c"
     motion = json.loads(motion_bytes)
-    assert tuple(case["entity"] for case in motion["cases"]) == cohorts[motion_digest]
-    assert args.slot < len(motion["cases"])
+    discovery = args.discovery_sha256 is not None
+    if discovery:
+        assert motion_digest == args.discovery_sha256
+        assert motion["build"] == CURRENT_BUILD
+        assert motion["protocol"] == "8bbfcd5af2bc92db"
+        assert motion["replaySha256"] == "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1"
+        assert motion["decoderSha256"] == digest
+        assert motion["navgridSha256"] == "28f6738003e01a0c13fa8a2f859d2947a8743606465b42139a24c423dd311bd9"
+        assert motion["visibilityReceiverRva"] == "0x21fe40"
+    else:
+        assert motion_digest in cohorts
+        assert tuple(case["entity"] for case in motion["cases"]) == cohorts[motion_digest]
+    assert 0 <= args.slot < len(motion["cases"])
     asset = json.loads(asset_bytes)
     atan2f = ctypes.CDLL("ucrtbase.dll").atan2f
     atan2f.argtypes = [ctypes.c_float, ctypes.c_float]
@@ -392,6 +412,24 @@ def main():
     vm.mem_write(actor + 0x24, previous_clock_marker)
     put(actor + 0x18, "B", 0)
     projectile = motion["cases"][args.slot]
+    if discovery:
+        start = projectile["recordedLaunchTimeSeconds"]
+        end = projectile["motionVerifiedThroughSeconds"]
+        assert projectile["sourceContext"] == 1073742170
+        assert projectile["recordedStopTimeSeconds"] is None
+        assert projectile["firstUnclassifiedPacket"]["seconds"] == end
+        assert start < end
+        assert projectile["birthVisibilityPackets"]
+        assert all(
+            packet["seconds"] == start
+            and packet["opcode"] == 66
+            and packet["bodyBytes"] == 2
+            and packet["bodySha256"] in VISIBLE_MASK_PACKET_HASHES
+            for packet in projectile["birthVisibilityPackets"]
+        )
+        clocks = [sample["timeSeconds"] for sample in projectile["samples"]]
+        assert clocks[0] == start and clocks[-1] == end
+        assert all(left < right for left, right in pairwise(clocks))
     previous = projectile["samples"][0]["positionXYZ"]
     facade, weak, holder, owner, projectile_actor, move_spec, callback, scratch = [
         stop + 0x1F000 + 0x1000 * i for i in range(8)
@@ -526,6 +564,16 @@ def main():
                         "rngSamples": rng_samples,
                         "materialStages": material_stages,
                         "materialState": material_state,
+                        **(
+                            {
+                                "motionReceiptSha256": motion_digest,
+                                "decoderSha256": digest,
+                                "slot": args.slot,
+                                "randomSample": args.random_sample,
+                            }
+                            if discovery
+                            else {}
+                        ),
                     },
                     allow_nan=False,
                 )

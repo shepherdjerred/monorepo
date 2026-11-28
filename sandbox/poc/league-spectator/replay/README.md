@@ -927,6 +927,32 @@ key, lists subsequent packets for those actors, and records unresolved
 original descriptor calls. Discovery does not establish how those later
 packets change movement or extend the rendered track.
 
+To trace a visible prefix from the discovery receipt, first check the
+original packet receivers. The probe requires a reviewed team-mask set at the
+launch clock. It ends at the first other actor packet, including a team-mask
+clear, and reports any launch it could not trace. The final sample is an
+exclusive boundary for the All vision particle author.
+
+```powershell
+$discoverySha256 = (Get-FileHash -LiteralPath $newPrivateLaunchReceipt -Algorithm SHA256).Hash.ToLowerInvariant()
+uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/observe-maokai-visibility-boundary.py $macGameExecutable $newPrivateLaunchReceipt $discoverySha256
+uv run --with capstone --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-maokai-movement.py $macGameExecutable "$newPrivateLaunchStem.navgrid" $newPrivateLaunchReceipt $newPrivateDiscoveredMotionReceipt --discovery-sha256 $discoverySha256 --authored-movement "$newPrivateLaunchStem.json"
+```
+
+For the same reviewed replay and Maokai skin 33, the discovery ribbon author can
+append visible prefixes outside the existing cast windows. For each selected
+case slot, run the original emitter with both random controls. Name the outputs
+`ribbon-discovery-<slot>-0.125.json` and `ribbon-discovery-<slot>-0.875.json`.
+In that directory, save `ribbon-discovery-digests.json` as an array of objects
+with `slot`, `primarySha256`, and `controlSha256`. Each native control stays
+bound to the exact motion receipt and the authored emitter.
+
+```powershell
+uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-maokai-ribbon.py $macGameExecutable $newPrivateDiscoveredMotionReceipt $authoredMaokaiEffectReceipt $slot 0.125 "$privateRibbonReceipts/ribbon-discovery-$slot-0.125.json" --discovery-sha256 $motionSha256
+uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-maokai-ribbon.py $macGameExecutable $newPrivateDiscoveredMotionReceipt $authoredMaokaiEffectReceipt $slot 0.875 "$privateRibbonReceipts/ribbon-discovery-$slot-0.875.json" --discovery-sha256 $motionSha256
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-maokai-ribbon.mjs --discovery $schema6TrackDirectory $baseTrackSha256 $newPrivateDiscoveredMotionReceipt $motionSha256 $privateRibbonReceipts $nativeDigestIndexSha256 $newPrivateRibbonTrackDirectory
+```
+
 The Heimerdinger Ammo Spend author extends that same track with the `bubble`
 camera quad at two recorded detached creates. It binds the reviewed create and
 stop receipts, two matching native control runs, and the exact texture mip.
@@ -1074,8 +1100,28 @@ skins' archived resource resolvers. It retains unresolvable requests, original
 parent contexts, and any earlier observed creation referenced by a stop
 request. An identified parent still needs a native attachment transform.
 
+The catalog can decode opcode 1164 stop targets and route flags directly from
+the ROFL, using the authenticated terrain byte maps. Omit `--stop` and
+`--stop-sha256` to use the same clock window as the creation inventory. Supply
+both options to extend the stop window or compare every decoded stop against the
+archived handler. Either path records stop requests for lifecycle selection.
+
 ```powershell
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-rift-effect-catalog.mjs --replay $replayPath --position-codecs $exactPositionCodecs --installation $installation --resources $equippedSkinResourceReceipt --resources-sha256 $equippedSkinResourceSha256 --creation $nativeFightCreationReceipt --creation-sha256 $nativeFightCreationSha256 --stop $nativeFightStopReceipt --stop-sha256 $nativeFightStopSha256 --out $freshFightCatalog
+```
+
+The portable opcode 938 reader checks the packet group count and reads the
+resource key and entry-array boundary at each established group offset. The
+archived reader consumes both group and entry arrays in alternating order
+from the front and back of the array. For three groups the wire order is
+0, 2, 1. The portable reader stops before the entry bodies. It cannot find
+subsequent group offsets, establish placement, or validate a complete
+creation request.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath --opcode 938 $newPrivateCreateCorpus
+uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-rift-create-prefix.py $macGameExecutable $newPrivateCreateCorpus $nativeCreatePrefixReceipt
+bun sandbox/poc/league-spectator/replay/tools/research/verify-recorded-rift-create-prefix.mjs $newPrivateCreateCorpus $nativeCreatePrefixReceipt $exactPositionCodecs
 ```
 
 The archived attachment probe runs the original creation handler on the Rift

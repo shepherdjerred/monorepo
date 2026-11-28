@@ -10,7 +10,10 @@ import { mapBinHash } from "../map-scene-assets.mjs";
 import { openLocalWad } from "../wad.mjs";
 import { createNativeTerrainChampionCreation88Reader } from "./native-terrain-champion-identities.mjs";
 import { createExactTerrainByteCodecs } from "./native-terrain-positions-944.mjs";
-import { readRecordedRiftEffectPackets } from "./recorded-rift-effect-packets.mjs";
+import {
+  createRecordedRiftStopReader,
+  readRecordedRiftEffectPackets,
+} from "./recorded-rift-effect-packets.mjs";
 import { bindRecordedRiftEffectReceipt } from "./recorded-rift-effect-receipts.mjs";
 
 const executableSha256 =
@@ -46,9 +49,8 @@ function rejectDerivedEventFields(events) {
       );
 }
 
-function readOpening(replay, codecBytes) {
+function readOpening(replay, codecs) {
   const options = { allowCurrentBuild: true };
-  const codecs = createExactTerrainByteCodecs(codecBytes, replay, options);
   const readChampion = createNativeTerrainChampionCreation88Reader(
     replay,
     codecs,
@@ -142,7 +144,11 @@ async function compile({
     protocol: replay.protocol,
     replaySha256: sha256(new Uint8Array(rawReplay)),
   };
-  for (const receipt of [resources, creation, stop]) {
+  for (const receipt of [
+    resources,
+    creation,
+    ...(stop === undefined ? [] : [stop]),
+  ]) {
     assert.equal(receipt.schema, 1);
     assert.equal(receipt.build, identity.build);
     assert.equal(receipt.protocol, identity.protocol);
@@ -154,32 +160,59 @@ async function compile({
   assert.equal(creation.mode, "creation-inventory");
   assert.equal(creation.lifecycleEvidence, "creation-only");
   assert.equal(creation.events.length, creation.entryCount);
-  assert.equal(stop.kind, "recorded-particle-stop-requests");
-  assert.equal(stop.opcode, 1164);
-  assert.equal(stop.scope.originalBodyDecoder, true);
-  assert.equal(stop.scope.originalTargetLookupArgument, true);
-  assert.equal(stop.scope.originalBranchSelection, true);
-  assert.equal(stop.scope.liveEffectRegistry, false);
-  assert.equal(stop.scope.liveStopSideEffects, false);
-  for (const receipt of [creation, stop]) {
-    assert.equal(receipt.replaySha256, identity.replaySha256);
-    assert.equal(receipt.executableSha256, executableSha256);
+  assert.equal(creation.replaySha256, identity.replaySha256);
+  assert.equal(creation.executableSha256, executableSha256);
+  if (stop !== undefined) {
+    assert.equal(stop.kind, "recorded-particle-stop-requests");
+    assert.equal(stop.opcode, 1164);
+    assert.equal(stop.scope.originalBodyDecoder, true);
+    assert.equal(stop.scope.originalTargetLookupArgument, true);
+    assert.equal(stop.scope.originalBranchSelection, true);
+    assert.equal(stop.scope.liveEffectRegistry, false);
+    assert.equal(stop.scope.liveStopSideEffects, false);
+    assert.equal(stop.replaySha256, identity.replaySha256);
+    assert.equal(stop.executableSha256, executableSha256);
+    rejectDerivedEventFields(stop.events);
   }
+  const stopWindow = stop?.window ?? creation.window;
   assert.ok(
-    stop.window[0] <= creation.window[0] &&
-      stop.window[1] >= creation.window[1],
+    stopWindow[0] <= creation.window[0] && stopWindow[1] >= creation.window[1],
   );
   rejectDerivedEventFields(creation.events);
-  rejectDerivedEventFields(stop.events);
 
-  const owners = readOpening(replay, await readFile(codecPath));
+  const codecs = createExactTerrainByteCodecs(
+    await readFile(codecPath),
+    replay,
+    {
+      allowCurrentBuild: true,
+    },
+  );
+  const owners = readOpening(replay, codecs);
+  const decodeStop = createRecordedRiftStopReader(replay, codecs);
   const packets = [];
+  const stops = [];
   for (const packet of readRecordedRiftEffectPackets(replay, decompress)) {
     const [start, end] =
-      packet.kind === "create" ? creation.window : stop.window;
+      packet.kind === "create" ? creation.window : stopWindow;
     if (packet.timeSeconds < start || packet.timeSeconds >= end) continue;
     const { payload, ...envelope } = packet;
-    packets.push({ ...envelope, packetSha256: sha256(payload) });
+    const packetSha256 = sha256(payload);
+    packets.push({ ...envelope, packetSha256 });
+    if (packet.kind === "stop") {
+      const request = decodeStop(payload);
+      assert.ok(
+        request,
+        `Invalid particle-stop body at sequence ${packet.sequence}`,
+      );
+      stops.push({
+        stamp: packet.timeSeconds,
+        sequence: packet.sequence,
+        context: packet.context,
+        packetSha256,
+        ...request,
+        kind: "stop",
+      });
+    }
   }
   const events = bindRecordedRiftEffectReceipt(
     packets,
@@ -187,12 +220,17 @@ async function compile({
     "create",
     creation.window,
   );
-  const stops = bindRecordedRiftEffectReceipt(
-    packets,
-    { ...stop, packetCount: stop.events.length },
-    "stop",
-    stop.window,
-  );
+  if (stop !== undefined)
+    assert.deepEqual(
+      stops,
+      bindRecordedRiftEffectReceipt(
+        packets,
+        { ...stop, packetCount: stop.events.length },
+        "stop",
+        stopWindow,
+      ),
+      "Portable particle stops disagree with the archived handler",
+    );
   assert.equal(
     new Set(stops.map(({ sequence }) => sequence)).size,
     stops.length,
@@ -283,7 +321,7 @@ async function compile({
     executableSha256,
     inputDigests: { ...inputDigests, modelCatalog: resources.catalogSha256 },
     creationWindow: creation.window,
-    stopWindow: stop.window,
+    stopWindow,
     scope: "authored-definitions-and-packet-evidence",
     openingRoster: [...owners.values()],
     events: sources,
@@ -307,9 +345,16 @@ const keys = [
 const { values } = parseArgs({
   options: Object.fromEntries(keys.map((key) => [key, { type: "string" }])),
 });
+const optional = new Set(["stop", "stop-sha256"]);
+const required = keys.filter((key) => !optional.has(key));
 assert.ok(
-  keys.every((key) => values[key]),
-  `Required arguments: ${keys.map((key) => "--" + key).join(" ")}`,
+  required.every((key) => values[key]),
+  `Required arguments: ${required.map((key) => "--" + key).join(" ")}`,
+);
+assert.equal(
+  Boolean(values.stop),
+  Boolean(values["stop-sha256"]),
+  "Supply both archived stop receipt and digest",
 );
 const [cache, parent] = await Promise.all([
   realpath(".cache"),
@@ -323,7 +368,7 @@ assert.ok(
 const inputDigests = {
   resources: values["resources-sha256"],
   creation: values["creation-sha256"],
-  stop: values["stop-sha256"],
+  ...(values.stop === undefined ? {} : { stop: values["stop-sha256"] }),
 };
 const [resources, creation, stop] = await Promise.all(
   Object.entries(inputDigests).map(([key, digest]) =>

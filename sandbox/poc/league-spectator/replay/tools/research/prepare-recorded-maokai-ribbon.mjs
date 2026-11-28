@@ -8,12 +8,18 @@ import { readLocalRecordedParticles } from "../build-local-scout-terrain-package
 // for slots 0, 1, and 2 and random values 0.125 and 0.875. Both runs must retain
 // the same indexed world geometry. The author preserves the v3 effects and
 // keeps only ribbon samples strictly before each recorded contact or stop.
+// Discovery appends only verified visible prefixes from the same .8428 replay
+// and Maokai skin binding. The pinned index is an array of slot, primarySha256
+// and controlSha256 objects referring to the two completed probes per slot.
 const usage =
   "bun prepare-recorded-maokai-ribbon.mjs <v3-track-root> <motion-receipt> <native-receipt-directory> <base-mip0-png> <default-color-png> <new-private-output-root>\n" +
-  "bun prepare-recorded-maokai-ribbon.mjs --outer <existing-ribbon-track-root> <base-sha256> <outer-motion-receipt> <native-receipt-directory> <new-private-output-root>";
+  "bun prepare-recorded-maokai-ribbon.mjs --outer <existing-ribbon-track-root> <base-sha256> <outer-motion-receipt> <native-receipt-directory> <new-private-output-root>\n" +
+  "bun prepare-recorded-maokai-ribbon.mjs --discovery <schema6-track-root> <base-sha256> <motion-receipt> <motion-sha256> <native-receipt-directory> <native-index-sha256> <new-private-output-root>";
 const args = process.argv.slice(2);
 const outer = args[0] === "--outer";
-if (outer) args.shift();
+const discovery = args[0] === "--discovery";
+const append = outer || discovery;
+if (append) args.shift();
 const [
   trackRoot,
   motionPath,
@@ -21,12 +27,16 @@ const [
   texturePath,
   palettePath,
   outputRoot,
-] = outer ? [args[0], args[2], args[3], null, null, args[4]] : args;
+] = discovery
+  ? [args[0], args[2], args[4], null, null, args[6]]
+  : outer
+    ? [args[0], args[2], args[3], null, null, args[4]]
+    : args;
 if (trackRoot === "--help") {
   console.log(usage);
   process.exit(0);
 }
-assert.equal(args.length, outer ? 5 : 6, usage);
+assert.equal(args.length, discovery ? 7 : outer ? 5 : 6, usage);
 const cache = await realpath(".cache");
 const output = resolve(outputRoot);
 const parent = await realpath(dirname(output));
@@ -50,7 +60,7 @@ const vertex =
 const fragment =
   "11948a488fc18ecf633c1a672ba92c1bac38431ab7f295ac4f0ef5ca223cd3fc";
 const manifestPath = resolve(trackRoot, "recorded-particles.json");
-const baseFiles = outer
+const baseFiles = append
   ? await readLocalRecordedParticles(manifestPath, args[1], {
       build: "16.23.841.8428",
       replaySha256,
@@ -61,23 +71,27 @@ const source = JSON.parse(
     ? baseFiles.get("recorded-particles.json")
     : await read(manifestPath),
 );
-assert(outer ? [4, 5, 6].includes(source.schema) : source.schema === 3);
+assert(
+  discovery
+    ? source.schema === 6
+    : outer
+      ? [4, 5, 6].includes(source.schema)
+      : source.schema === 3,
+);
 assert.equal(source.kind, "recorded-native-terrain-particles");
 assert.equal(source.build, "16.23.841.8428");
 assert.equal(source.replaySha256, replaySha256);
 assert.equal(source.shaders.vertex, `recorded-particles/${vertex}.glsl`);
 assert.equal(source.shaders.fragment, `recorded-particles/${fragment}.glsl`);
 
-const motion = JSON.parse(
-  await checked(
-    motionPath,
-    outer
-      ? "11dfea28db28ca841a38e21d0cd53620bfaab98895ea99288bc340b0c9c7f5cf"
-      : "2c97bd8d259a544f2e145e47bbedd676b6b0e912991f2a1eaa283c337ae1b94a",
-  ),
-);
+const motionDigest = discovery
+  ? args[3]
+  : outer
+    ? "11dfea28db28ca841a38e21d0cd53620bfaab98895ea99288bc340b0c9c7f5cf"
+    : "2c97bd8d259a544f2e145e47bbedd676b6b0e912991f2a1eaa283c337ae1b94a";
+const motion = JSON.parse(await checked(motionPath, motionDigest));
 assert.equal(motion.replaySha256, replaySha256);
-const nativeTraces = outer
+const legacyTraces = outer
   ? [
       [
         1073820800,
@@ -107,20 +121,50 @@ const nativeTraces = outer
         "c5df27a2b2489cbe1d13f3d84cc22e4aa82e33a1f2507fae03d478a127fc5e0b",
       ],
     ];
+async function readDiscoveryIndex() {
+  assert.equal(motion.build, source.build);
+  assert.equal(motion.protocol, "8bbfcd5af2bc92db");
+  assert.equal(motion.visibilityReceiverRva, "0x21fe40");
+  assert.equal(
+    motion.decoderSha256,
+    "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7",
+  );
+  const index = JSON.parse(
+    await checked(
+      resolve(receiptRoot, "ribbon-discovery-digests.json"),
+      args[5],
+    ),
+  );
+  assert(Array.isArray(index) && index.length > 0);
+  const slots = new Set();
+  return index.map(({ slot, primarySha256, controlSha256 }) => {
+    assert(Number.isInteger(slot) && slot >= 0 && slot < motion.cases.length);
+    assert(!slots.has(slot));
+    slots.add(slot);
+    return [motion.cases[slot].entity, primarySha256, controlSha256, slot];
+  });
+}
+
+const nativeTraces = discovery ? await readDiscoveryIndex() : legacyTraces;
 const paths = await Promise.all(
-  nativeTraces.map(async ([handle, digest, controlDigest], index) => {
-    const receiptStem = outer ? "ribbon-outer" : "ribbon-final";
+  nativeTraces.map(async ([handle, digest, controlDigest, slot], index) => {
+    const receiptStem = discovery
+      ? "ribbon-discovery"
+      : outer
+        ? "ribbon-outer"
+        : "ribbon-final";
+    const motionIndex = slot ?? index;
     const [trace, control] = await Promise.all([
       checked(
-        resolve(receiptRoot, `${receiptStem}-${index}-0.125.json`),
+        resolve(receiptRoot, `${receiptStem}-${motionIndex}-0.125.json`),
         digest,
       ).then((bytes) => JSON.parse(bytes)),
       checked(
-        resolve(receiptRoot, `${receiptStem}-${index}-0.875.json`),
+        resolve(receiptRoot, `${receiptStem}-${motionIndex}-0.875.json`),
         controlDigest,
       ).then((bytes) => JSON.parse(bytes)),
     ]);
-    const trajectory = motion.cases[index];
+    const trajectory = motion.cases[motionIndex];
     const {
       recordedLaunchTimeSeconds: start,
       motionVerifiedThroughSeconds: end,
@@ -135,9 +179,25 @@ const paths = await Promise.all(
     );
     assert.deepEqual(trace.timeline, control.timeline);
     assert.equal(trace.timeline.length, trajectory.samples.length);
-    if (outer) {
+    if (append) {
       assert.equal(trajectory.recordedStopTimeSeconds, null);
       assert.equal(trajectory.firstUnclassifiedPacket.seconds, end);
+    }
+    if (discovery) {
+      assert.equal(trajectory.sourceContext, trace.spawn.sourceContext);
+      assert(trajectory.birthVisibilityPackets.length > 0);
+      assert.deepEqual(trace.materialState, control.materialState);
+      for (const [receipt, random] of [
+        [trace, 0.125],
+        [control, 0.875],
+      ]) {
+        assert.equal(receipt.entity, handle);
+        assert.equal(receipt.motionReceiptSha256, motionDigest);
+        assert.equal(receipt.decoderSha256, motion.decoderSha256);
+        assert.equal(receipt.slot, motionIndex);
+        assert.equal(receipt.randomSample, random);
+        assert.deepEqual(receipt.spawn, trace.spawn);
+      }
     }
     assert.equal(trace.materialState.pass, 5);
     assert.equal(
@@ -178,7 +238,7 @@ const paths = await Promise.all(
         indices: geometry.indexBytes,
       });
     }
-    assert(samples.length > 60);
+    assert(samples.length > (discovery ? 1 : 60));
     return { handle, start, end, samples };
   }),
 );
@@ -209,7 +269,7 @@ const files =
   );
 files.delete("recorded-particles.json");
 let track;
-if (outer) {
+if (append) {
   assert.equal(source.worldRibbon.texture, ribbonTexture);
   assert.equal(source.worldRibbon.palette, ribbonPalette);
   const retainedPaths = source.worldRibbon.paths;
@@ -223,6 +283,14 @@ if (outer) {
       retainedPaths.every((path) => path.handle !== handle),
     ),
   );
+  if (discovery) {
+    assert.equal(new Set(paths.map(({ handle }) => handle)).size, paths.length);
+    assert(
+      paths.every(({ start, end }) =>
+        retainedPaths.every((path) => end <= path.start || start >= path.end),
+      ),
+    );
+  }
   track = {
     ...source,
     worldRibbon: { ...source.worldRibbon, paths: [...retainedPaths, ...paths] },
