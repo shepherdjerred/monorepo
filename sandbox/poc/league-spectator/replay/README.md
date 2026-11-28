@@ -806,6 +806,15 @@ All vision. The preview uses the cold color-remap resource and a camera-facing
 quad. Active match remapping, other effects, and team visibility for particles
 remain outside the preview.
 
+Verify the five recorded Heimerdinger W missile launches and contacts in the
+same fight with the original replay and archived executable. The private
+receipt records full native reads, packet clock and ordering, launch position,
+and contact dispatch arguments. Intermediate movement remains unverified.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/verify-current-projectile-boundary.mjs $replayPath $macGameExecutable $newPrivateProjectileReceipt uv run --with unicorn python
+```
+
 The animation verifier samples an explicitly chosen authored clip against the
 original joint layout and checks exact rewind. The death verifier joins
 corroborated recorded deaths to authored clip and sound references from the

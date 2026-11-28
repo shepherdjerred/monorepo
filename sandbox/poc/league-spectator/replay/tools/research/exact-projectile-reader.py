@@ -1,4 +1,4 @@
-"""Observe the 16.23.840.6595 missile packet reader and descriptor in Unicorn."""
+"""Observe reviewed League missile packet readers and descriptors in Unicorn."""
 
 import hashlib
 import json
@@ -16,8 +16,13 @@ from macho import MachImage
 def main():
     binary = Path(sys.argv[1]).read_bytes()
     digest = hashlib.sha256(binary).hexdigest()
-    if digest != "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15":
-        raise ValueError("Expected reviewed exact 16.23.840.6595 executable bytes")
+    build = sys.argv[2] if len(sys.argv) > 2 else "16.23.840.6595"
+    reviewed_digests = {
+        "16.23.840.6595": "639a6d2ec167f177b8b7766f9aaaa21c0ace07fd6ff084512794166adda0fc15",
+        "16.23.841.8428": "c7288a5607c95d50f8333385a0fa84cb089ac53c24375433d6432a1e65c009d7",
+    }
+    if digest != reviewed_digests.get(build):
+        raise ValueError(f"Expected reviewed exact {build} executable bytes")
     image = MachImage(binary)
     vm = unicorn.Uc(unicorn.UC_ARCH_X86, unicorn.UC_MODE_64)
     vm.mem_map(image.base, len(image.image))
@@ -117,6 +122,14 @@ def main():
             engine.mem_write(destination, struct.pack("<f", terrain_probe_height))
             returned = 1
         elif rva == 0x14A0240 or name in ("_pthread_mutex_lock", "_pthread_mutex_unlock"):
+            returned = 0
+        elif build == "16.23.841.8428" and name == "___cxa_guard_acquire":
+            address = engine.reg_read(reg.UC_X86_REG_RDI)
+            returned = int(engine.mem_read(address, 1)[0] == 0)
+        elif build == "16.23.841.8428" and name == "___cxa_guard_release":
+            engine.mem_write(engine.reg_read(reg.UC_X86_REG_RDI), b"\x01")
+            returned = 0
+        elif build == "16.23.841.8428" and name == "___cxa_atexit":
             returned = 0
         elif name == "___bzero":
             destination = engine.reg_read(reg.UC_X86_REG_RDI)
