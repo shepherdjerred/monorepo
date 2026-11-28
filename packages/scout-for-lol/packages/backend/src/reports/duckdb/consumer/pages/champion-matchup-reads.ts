@@ -33,7 +33,7 @@ import type { RoleMatchupRow } from "#src/trpc/router/consumer/consumer-match-ro
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
 /** The position string Riot stores for each lane. */
-const RIOT_POSITION_BY_LANE = {
+export const RIOT_POSITION_BY_LANE = {
   top: "TOP",
   jungle: "JUNGLE",
   middle: "MIDDLE",

@@ -3,10 +3,12 @@ import {
   type DiscordAccountId,
   type LeaguePuuid,
   type RiotMatchId,
+  type TimelineEventLakeRow,
   type TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
+import { testEventRow } from "#src/testing/report-lake/test-timeline-rows.ts";
 
 /**
  * Ten-player Summoner's Rift lobbies for champion-page fixtures: five role
@@ -29,6 +31,12 @@ export type LobbySeat = {
   championName: string;
   /** Total gold in the frame stamped just after 15:00. */
   gold15: number;
+  /**
+   * What the seat bought and ran: item ids in purchase order (a minute apart,
+   * written as timeline events unless the game has no timeline) and the
+   * keystone rune.
+   */
+  build?: { purchases?: readonly number[]; keystone?: number };
 };
 
 /**
@@ -95,11 +103,13 @@ export function championLobby(options: {
   tracked: TestLakeMatchFact[];
   untracked: TestLakeMatchFact[];
   timelineFrames: TimelineParticipantFrameLakeRow[];
+  timelineEvents: TimelineEventLakeRow[];
 } {
   const timeline = options.timeline ?? "full";
   const tracked: TestLakeMatchFact[] = [];
   const untracked: TestLakeMatchFact[] = [];
   const timelineFrames: TimelineParticipantFrameLakeRow[] = [];
+  const timelineEvents: TimelineEventLakeRow[] = [];
   for (const seat of options.seats) {
     const fact: TestLakeMatchFact = {
       playerId: seat.playerId,
@@ -119,6 +129,9 @@ export function championLobby(options: {
       championName: seat.championName,
       gameCreationAt: options.createdAt,
       gameDurationSeconds: timeline === "ended-before-15" ? 870 : 1800,
+      ...(seat.build?.keystone === undefined
+        ? {}
+        : { scoutQlLoadout: { perk0: seat.build.keystone } }),
     };
     (seat.tracked ? tracked : untracked).push(fact);
     const at = (frameIndex: number, timestampMs: number, totalGold: number) =>
@@ -131,6 +144,18 @@ export function championLobby(options: {
         totalGold,
       });
     if (timeline === "none") continue;
+    for (const [index, itemId] of (seat.build?.purchases ?? []).entries()) {
+      timelineEvents.push(
+        testEventRow(options.createdAt, {
+          event_id: `${options.matchId}-${seat.playerId.toString()}-${index.toString()}`,
+          match_id: options.matchId,
+          event_type: "ITEM_PURCHASED",
+          event_timestamp_ms: (index + 1) * 60_000,
+          participant_id: seat.playerId,
+          item_id: itemId,
+        }),
+      );
+    }
     // The 14:00 frame is a decoy with the order reversed: a read that took
     // the wrong frame would flip every lane.
     timelineFrames.push(at(14, FRAME_14, 20_000 - seat.gold15));
@@ -140,5 +165,5 @@ export function championLobby(options: {
       at(16, FRAME_16, 20_000 - seat.gold15),
     );
   }
-  return { tracked, untracked, timelineFrames };
+  return { tracked, untracked, timelineFrames, timelineEvents };
 }

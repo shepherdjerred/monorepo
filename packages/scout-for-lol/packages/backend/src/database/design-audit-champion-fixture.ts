@@ -7,6 +7,7 @@ import {
   type Region,
 } from "@scout-for-lol/data";
 import type { PrismaClient } from "#generated/prisma/client/index.js";
+import { designAuditAhriBuild } from "#src/database/design-audit-champion-builds.ts";
 import {
   championLobby,
   type LobbyPosition,
@@ -126,6 +127,7 @@ function seat(options: {
   position: LobbyPosition;
   champion: Champion;
   gold15: number;
+  build?: LobbySeat["build"];
 }): LobbySeat {
   return {
     playerId: options.playerId,
@@ -140,6 +142,7 @@ function seat(options: {
     championId: options.champion.id,
     championName: options.champion.name,
     gold15: options.gold15,
+    ...(options.build === undefined ? {} : { build: options.build }),
   };
 }
 
@@ -185,6 +188,7 @@ function ahriLobbySeats(options: {
     alias: string;
     puuid: LeaguePuuid;
     discordId?: DiscordAccountId;
+    build?: LobbySeat["build"];
   };
   opponent: Champion;
   led: boolean | null;
@@ -252,6 +256,8 @@ export function designAuditChampionGames(input: {
   const tracked = [];
   const untracked = [];
   const timelineFrames = [];
+  const timelineEvents = [];
+  const gamesBy = new Map<string, number>();
   for (const [index, [who, opponent, won, led]] of AHRI_GAMES.entries()) {
     const person =
       who === "viewer"
@@ -260,6 +266,8 @@ export function designAuditChampionGames(input: {
     if (person === undefined) {
       throw new Error(`Design-audit friend ${who} was not seeded`);
     }
+    const nth = gamesBy.get(who) ?? 0;
+    gamesBy.set(who, nth + 1);
     const lobby = championLobby({
       matchId: RiotMatchIdSchema.parse(
         `NA1_${(9_400_000_000 + index).toString()}`,
@@ -272,6 +280,7 @@ export function designAuditChampionGames(input: {
         ahri: {
           ...person,
           ...(who === "viewer" ? { discordId: input.viewer.discordId } : {}),
+          build: designAuditAhriBuild(who, nth),
         },
         opponent,
         led,
@@ -281,6 +290,7 @@ export function designAuditChampionGames(input: {
     tracked.push(...lobby.tracked);
     untracked.push(...lobby.untracked);
     timelineFrames.push(...lobby.timelineFrames);
+    timelineEvents.push(...lobby.timelineEvents);
   }
-  return { tracked, untracked, timelineFrames };
+  return { tracked, untracked, timelineFrames, timelineEvents };
 }

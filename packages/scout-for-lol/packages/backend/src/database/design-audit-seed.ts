@@ -329,7 +329,7 @@ export async function seedDesignAuditDatabase(
     await writeTestLake(lakeDir, {
       serverId: guildId,
       timelineFrames: [...review.timelineFrames, ...champions.timelineFrames],
-      timelineEvents: review.timelineEvents,
+      timelineEvents: [...review.timelineEvents, ...champions.timelineEvents],
       timelineCoverage: review.timelineCoverage,
       timelineEventParticipants: review.timelineEventParticipants,
       matchFacts: [

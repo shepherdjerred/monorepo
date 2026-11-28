@@ -48,6 +48,7 @@ type Seat = {
   position: LobbySeat["position"];
   champion: { id: number; name: string };
   gold15: number;
+  build?: LobbySeat["build"];
 };
 
 const POSITIONS: LobbySeat["position"][] = [
@@ -89,6 +90,7 @@ export function lobby(options: {
         championId: named?.champion.id ?? 1,
         championName: named?.champion.name ?? "Annie",
         gold15: named?.gold15 ?? 5000,
+        ...(named?.build === undefined ? {} : { build: named.build }),
       });
     }
   }
@@ -140,6 +142,7 @@ export async function writeLobbies(
     matchFacts: [...lobbies.flatMap((entry) => entry.tracked), ...extra],
     untrackedMatchFacts: lobbies.flatMap((entry) => entry.untracked),
     timelineFrames: lobbies.flatMap((entry) => entry.timelineFrames),
+    timelineEvents: lobbies.flatMap((entry) => entry.timelineEvents),
   });
 }
 

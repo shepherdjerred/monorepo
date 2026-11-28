@@ -32,6 +32,8 @@ export function entryGamesSource(
     pairs: readonly EntryAccountPair[];
     queues?: QueueType[] | undefined;
     extra?: SqlFragment;
+    /** Loadout columns to read; a read names the ones it uses. */
+    loadout?: readonly string[];
   },
 ): SqlFragment | undefined {
   const extra = options.extra ?? { sql: "", params: [] };
@@ -42,16 +44,20 @@ export function entryGamesSource(
           sql: "queue IN (SELECT unnest(?))",
           params: [listParam(options.queues)],
         };
-  return buildMatchesSource(files, {
-    sql: ["puuid IN (SELECT unnest(?))", extra.sql, queues.sql]
-      .filter((part) => part.length > 0)
-      .join(" AND "),
-    params: [
-      listParam([...new Set(options.pairs.map((pair) => pair.puuid))]),
-      ...extra.params,
-      ...queues.params,
-    ],
-  });
+  return buildMatchesSource(
+    files,
+    {
+      sql: ["puuid IN (SELECT unnest(?))", extra.sql, queues.sql]
+        .filter((part) => part.length > 0)
+        .join(" AND "),
+      params: [
+        listParam([...new Set(options.pairs.map((pair) => pair.puuid))]),
+        ...extra.params,
+        ...queues.params,
+      ],
+    },
+    options.loadout,
+  );
 }
 
 /**
