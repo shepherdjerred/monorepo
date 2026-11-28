@@ -1399,9 +1399,10 @@ Pop-Location
 Use the original `NA1-5686263770.rofl`. The test checks the ten recorded
 champions and textured geometry, runs the 1:00–1:30 window at 1×, rewinds, and
 checks a timestamp and player camera shared with a fresh signed-out browser.
-It checks Soraka's recorded health on the shared frame. This private fixture
-renders terrain, champion movement, nameplates, and replay-derived health and
-resource bars. Bloom flow-map shading and combat presentation are incomplete.
+It checks Soraka's recorded health and level on the shared frame. The replay
+worker supplies the recorded player names, scoreboard, and elimination jumps.
+The end-of-match check compares all ten player rows and the winner against the
+original ROFL footer. Bloom flow-map shading and combat presentation are incomplete.
 
 ## Local Scout player demo
 

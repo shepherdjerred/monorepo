@@ -163,6 +163,7 @@ async function buildPackage(inputs) {
       waypointOrigin: movementOrigin,
       allowCurrentBuild: true,
       decodeChampionStats: true,
+      decodePlayerState: true,
       championModelCatalog: {
         schema: catalog.schema,
         kind: catalog.kind,
