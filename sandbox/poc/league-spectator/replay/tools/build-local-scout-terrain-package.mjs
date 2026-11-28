@@ -247,7 +247,12 @@ export async function writeLocalScoutTerrainPackage({
   combatAudioFiles,
   particleFiles,
   impactComparisonFiles,
+  riftStartupFiles,
 }) {
+  assert.ok(
+    riftStartupFiles === undefined || buildScoped,
+    "The original startup worker requires a build-scoped Rift package",
+  );
   if (buildScoped) {
     assert.deepEqual(map, { mapId: 11, gameMode: "CLASSIC" });
     assert.ok(
@@ -279,6 +284,8 @@ export async function writeLocalScoutTerrainPackage({
     "Private package cache must stay inside this repository",
   );
   const resources = new Map([[entrypoint, await buildEngine(threeCore)]]);
+  for (const [path, bytes] of riftStartupFiles ?? [])
+    resources.set(path, bytes);
   if (impactComparisonFiles !== undefined) {
     assert.equal(particleFiles, undefined);
     assert.equal(map.mapId, 12);
@@ -332,6 +339,9 @@ export async function writeLocalScoutTerrainPackage({
           ...map,
           teamSizes: [5, 5],
           rosterCoverage: "build-scoped-archive",
+          ...(riftStartupFiles === undefined
+            ? {}
+            : { mapModeSource: "original-startup" }),
         }
       : {
           ...map,

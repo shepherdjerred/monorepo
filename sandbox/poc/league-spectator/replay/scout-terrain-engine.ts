@@ -1,6 +1,7 @@
 import type { ReplayEngineFactory } from "@scout-for-lol/replay/engine";
 import { readReplayContainerIdentity } from "@scout-for-lol/replay/packets";
 import { createReplaySceneSession } from "@scout-for-lol/replay/scene";
+import { verifyRiftStartup } from "./scout-rift-startup.ts";
 import {
   ReplayCapabilityError,
   type ReplayMapActor,
@@ -238,6 +239,8 @@ export const createReplayEngine: ReplayEngineFactory = async ({
         "incompatible-build",
         "The saved replay does not match the archive build and protocol.",
       );
+    if (capabilities.mapModeSource === "original-startup")
+      await verifyRiftStartup(resources, replay, signal);
     scene = SceneSchema.parse({
       ...(source as object),
       identity: {
@@ -267,6 +270,16 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const animationCatalog = scene.workerMotion?.championAnimationModelCatalog;
   const files = new Map(localManifest.files.map((file) => [file.path, file]));
   const bloomTurretCores = scene.bloomTurretCores;
+  if (
+    scene.bloomTurretHealth !== undefined &&
+    (bloomTurretCores?.kind !== "recorded-authored-turret-cores" ||
+      (await jsonSha256(scene.bloomTurretHealth)) !==
+        "d338172b1718dcd4779a28543d62e03d38e1838b6fcd63efb8ca3b5c19f939a0")
+  )
+    throw new ReplayCapabilityError(
+      "invalid-package",
+      "The Bloom turret health differs from the verified recorded tracks.",
+    );
   if (bloomTurretCores !== undefined) {
     const replaySha256 =
       "4bb0f94d3ceb19df374c0937a9e59dcc866a5b92e4727b81c6c7d5b3aca970b7";

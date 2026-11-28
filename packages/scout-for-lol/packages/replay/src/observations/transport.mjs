@@ -175,6 +175,7 @@ function* readReplayChunks(
   layout,
   selectedStreams,
   cursor = replay.headerEnd,
+  expectedChunkCount,
 ) {
   const { end } = replay;
   let expandedBytes = 0,
@@ -185,6 +186,8 @@ function* readReplayChunks(
     expandedBytes += chunk.rawSize;
     if (expandedBytes > 1024 * 1024 * 1024 || ++count > 100000)
       throw Error("Replay exceeds transport resource limits");
+    if (expectedChunkCount !== undefined && count > expectedChunkCount)
+      throw Error("Replay chunk count mismatch");
     // Header/resource bounds cover the scanned range. A selected stream
     // does not require decompression of unrelated packet bodies.
     if (selectedStreams && !selectedStreams.has(chunk.stream)) continue;
@@ -194,6 +197,8 @@ function* readReplayChunks(
       timeDeltaMode: layout.timeDeltaMode,
     };
   }
+  if (expectedChunkCount !== undefined && count !== expectedChunkCount)
+    throw Error("Replay chunk count mismatch");
 }
 
 function envelopeLayout(replay) {
@@ -214,16 +219,23 @@ function envelopeLayout(replay) {
 
 // Recorded fields only. The marker preserves the time and parameter widths;
 // callers must establish signedness, accumulation and clock meaning separately.
-export function* replayPacketEnvelopes(replay, decompress) {
+export function* replayPacketEnvelopes(replay, decompress, { stream } = {}) {
   const { layout, recordTypes } = envelopeLayout(replay);
-  let chunkCount = 0;
-  for (const chunk of readReplayChunks(replay, decompress, layout, null)) {
-    if (++chunkCount > replay.declaredChunkCount)
-      throw Error("Replay chunk count mismatch");
+  if (
+    stream !== undefined &&
+    (!Number.isInteger(stream) || stream < 1 || stream > 4)
+  )
+    throw Error("Invalid replay stream selection");
+  const selected = stream === undefined ? null : new Set([stream]);
+  for (const chunk of readReplayChunks(
+    replay,
+    decompress,
+    layout,
+    selected,
+    replay.headerEnd,
+    replay.declaredChunkCount,
+  ))
     yield* packetEnvelopes(chunk, recordTypes);
-  }
-  if (chunkCount !== replay.declaredChunkCount)
-    throw Error("Replay chunk count mismatch");
 }
 
 export function* readReplayKeyframe(replay, entry, decompress) {

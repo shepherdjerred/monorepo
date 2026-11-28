@@ -23,6 +23,45 @@ async function readReceipt(path, expected) {
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }
 
+export async function readMayhemBloomTurretHealth(input, comparison) {
+  const [census, native] = await Promise.all([
+    readReceipt(
+      input.census,
+      "95fc08cd571080ec5fff27707dbcfe62a655d1c7aa95850c4009bc11c6d19f7c",
+    ),
+    readReceipt(
+      input.native,
+      "5e790f8c19c306d56c8780369528815b6e56e32637e3d689092605801c1a1f8d",
+    ),
+  ]);
+  assert.equal(census.identity.replaySha256, replayDigest);
+  assert.deepEqual(native.agreementByStream, { 1: 630, 2: 189 });
+  return comparison.instances.map(({ context, destroyedAtSeconds }) => {
+    const points = [];
+    let current;
+    let max;
+    for (const row of census.groups) {
+      if (row.participantId !== context || row.stream !== 1) continue;
+      if (destroyedAtSeconds !== null && row.timeSeconds >= destroyedAtSeconds)
+        continue;
+      current = row.values.current ?? current;
+      max = row.values.max ?? max;
+      assert.ok(
+        current > 0 && max >= current,
+        "Invalid observed live turret health",
+      );
+      const last = points.at(-1);
+      assert.ok(last === undefined || last[0] <= row.timeSeconds);
+      if (last?.[0] === row.timeSeconds)
+        points[points.length - 1] = [row.timeSeconds, current, max];
+      else if (last?.[1] !== current || last?.[2] !== max)
+        points.push([row.timeSeconds, current, max]);
+    }
+    assert.equal(points[0]?.[0], 0);
+    return { context, points };
+  });
+}
+
 export async function readMayhemBloomTurretCoreComparison(
   input,
   identity,

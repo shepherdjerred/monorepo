@@ -494,6 +494,21 @@ Use the replay-bound package to include prepared combat effects or audio.
 Set `SCOUT_REPLAY_E2E_WRONG_MAP_ROFL` to a same-build Map12 ROFL to exercise
 wrong-map rejection in the recorded browser test.
 
+To also check the original startup packet in the browser, capture the
+reviewed startup reader pages from the two saved .8428 matches. This uses the
+archived executable offline.
+
+```powershell
+uv run --offline --no-project --with unicorn==2.1.4 python tools/research/prepare-rift-startup-pages.py $archive $privateStartupDirectory $riftRofl $bloomRofl
+```
+
+Pass its `profile.json` to `--rift-browser-startup-profile` and the reviewed
+Unicorn module from `tools/build-structural-runtime.py` to
+`--rift-browser-startup-runtime`. The package pins both inputs. Scout checks
+the original Map11 CLASSIC configuration before the world worker runs.
+The prepared pages cover the two startup captures and their malformed-packet
+controls. Additional startup layouts need their own comparison evidence.
+
 To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose
@@ -1544,8 +1559,12 @@ Use `tools/research/audit-mayhem-bloom-structures.mjs` and the offline
 Set `bloomTurretCores.geometry` and `bloomTurretCores.opening` to those receipt
 paths. The builder corroborates six losses against decoded replay events,
 keyframes, and footer evidence. The two surviving cores persist to replay
-end. Turret foliage, branches, shrines, health bars, and destruction visuals
-remain unverified.
+end. Supply the original health getter receipt as `bloomTurretCores.health`
+to draw bars from the recorded health and maximum health at the replay clock.
+The research tools `audit-mayhem-bloom-turret-health.mjs` and
+`probe-mayhem-bloom-turret-health.py` produce the candidate and native getter
+receipts. Turret foliage, branches, shrines, and destruction visuals remain
+unverified.
 
 To include recorded champion animation, prepare clips using the exact replay
 and the archived executable. Use the source and ordinal model manifests bound

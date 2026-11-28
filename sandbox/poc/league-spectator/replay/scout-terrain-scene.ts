@@ -847,6 +847,23 @@ const TerrainSceneFields = z.object({
         .length(8),
     })
     .optional(),
+  bloomTurretHealth: z
+    .array(
+      z.strictObject({
+        context: z.number().int().positive(),
+        points: z
+          .array(
+            z.tuple([
+              z.number().nonnegative(),
+              z.number().positive(),
+              z.number().positive(),
+            ]),
+          )
+          .min(1),
+      }),
+    )
+    .length(8)
+    .optional(),
   nexusModels: z
     .object({
       bindings: z.array(modelBinding).length(2),

@@ -90,7 +90,14 @@ test("the build-scoped package rejects a same-build replay from the wrong map", 
   );
   await page.goto(replayPath);
   const player = page.getByRole("region", { name: "Replay player" });
-  await expect(player.getByRole("alert")).toContainText(/Map11|turret|Nexus/u);
+  const hasStartupReader = [...fixture.paths.values()].includes(
+    "rift-startup-worker.mjs",
+  );
+  await expect(player.getByRole("alert")).toContainText(
+    hasStartupReader
+      ? "The original replay startup does not identify Map11 CLASSIC."
+      : /Map11|turret|Nexus/u,
+  );
   await expect(
     player.getByRole("button", { name: "Play", exact: true }),
   ).toHaveCount(0);

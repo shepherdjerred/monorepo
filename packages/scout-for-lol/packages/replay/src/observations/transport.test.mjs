@@ -37,6 +37,43 @@ test("traverses only observed 841 packet envelopes", () => {
   ).toThrow("Unsupported packet envelope build/protocol");
 });
 
+test("a selected startup stream still validates the full chunk count", () => {
+  const packet = Uint8Array.of(0xb1, 0, 0, 0, 0, 0, 1, 0xfe, 3, 0, 42);
+  const bytes = new Uint8Array(18 + 1 + 18 + packet.length);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(5, 1 << 24, true);
+  view.setUint32(9, 4, true);
+  view.setUint32(13, 1, true);
+  bytes[17] = 4;
+  const startup = 19;
+  view.setUint32(startup + 5, 3 << 24, true);
+  view.setUint32(startup + 9, packet.length, true);
+  bytes[startup + 17] = 4;
+  bytes.set(packet, startup + 18);
+  const replay = {
+    build: "16.23.841.8428",
+    protocol: "8bbfcd5af2bc92db",
+    bytes,
+    headerEnd: 0,
+    end: bytes.length,
+    declaredChunkCount: 2,
+  };
+  const decompress = () => {
+    throw Error("Unrelated compressed body must remain untouched");
+  };
+  const selected = { stream: 3 };
+  expect([...replayPacketEnvelopes(replay, decompress, selected)]).toEqual([
+    expect.objectContaining({ stream: 3, explicitOpcode: 1022 }),
+  ]);
+  expect(() => [
+    ...replayPacketEnvelopes(
+      { ...replay, declaredChunkCount: 3 },
+      decompress,
+      selected,
+    ),
+  ]).toThrow("Replay chunk count mismatch");
+});
+
 function winnerFromFooter(outcomes) {
   const build = Buffer.from("16.23.840.6595");
   const header = Buffer.alloc(15);

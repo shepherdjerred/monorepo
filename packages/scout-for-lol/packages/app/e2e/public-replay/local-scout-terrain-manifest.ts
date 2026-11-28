@@ -17,6 +17,7 @@ export const LocalScoutTerrainManifestSchema =
         gameMode: z.literal("CLASSIC"),
         teamSizes: z.tuple([z.literal(5), z.literal(5)]),
         rosterCoverage: z.literal("build-scoped-archive"),
+        mapModeSource: z.literal("original-startup").optional(),
       }),
       z.discriminatedUnion("mapId", [
         z.strictObject({
@@ -45,9 +46,21 @@ export const LocalScoutTerrainManifestSchema =
           ),
       ]),
     ]),
-  }).refine(
-    ({ capabilities, gameBuild, protocol }) =>
-      capabilities.rosterCoverage !== "build-scoped-archive" ||
-      (gameBuild === "16.23.841.8428" && protocol === "8bbfcd5af2bc92db"),
-    "The build-scoped archive requires exact Map11 build and protocol.",
-  );
+  })
+    .refine(
+      ({ capabilities, gameBuild, protocol }) =>
+        capabilities.rosterCoverage !== "build-scoped-archive" ||
+        (gameBuild === "16.23.841.8428" && protocol === "8bbfcd5af2bc92db"),
+      "The build-scoped archive requires exact Map11 build and protocol.",
+    )
+    .refine(({ capabilities, files }) => {
+      const required = new Set([
+        "rift-startup-worker.mjs",
+        "rift-startup-pages.bin",
+      ]);
+      const present = files.filter(({ path }) => required.has(path)).length;
+      return capabilities.rosterCoverage === "build-scoped-archive" &&
+        capabilities.mapModeSource === "original-startup"
+        ? present === 2
+        : present === 0;
+    }, "The original startup capability and its verified worker inputs must be supplied together.");

@@ -478,6 +478,9 @@ export function createTerrainRenderer(
           : [[participantId, settledRubble.afterSeconds]],
     ),
   );
+  const bloomTurretHealth = new Map(
+    scene.bloomTurretHealth?.map(({ context, points }) => [context, points]),
+  );
   let disposed = false;
   let particleRenderer;
   let flowMap;
@@ -669,6 +672,12 @@ export function createTerrainRenderer(
         gl.disable(gl.BLEND);
       }
     }
+    const bloomTurretCores = scene.bloomTurretCores;
+    const visibleBloomTurrets = bloomTurretCores?.instances.filter(
+      ({ destroyedAtSeconds }) =>
+        frame.timeSeconds <
+        (destroyedAtSeconds ?? bloomTurretCores.beforeSeconds ?? Infinity),
+    );
     if (modelRenderer !== undefined) {
       const visible = (context) => options.isVisible?.(context) ?? true;
       const structures = scene.structureModels?.instances ?? [];
@@ -705,17 +714,8 @@ export function createTerrainRenderer(
         modelRenderer.draw(viewProjection.elements, frame.worldUnits ?? []);
       if (structureModels !== undefined || nexusModels !== undefined)
         modelRenderer.draw(viewProjection.elements, visibleStructures);
-      if (structureModels !== undefined && scene.bloomTurretCores !== undefined)
-        modelRenderer.draw(
-          viewProjection.elements,
-          scene.bloomTurretCores.instances.filter(
-            ({ destroyedAtSeconds }) =>
-              frame.timeSeconds <
-              (destroyedAtSeconds ??
-                scene.bloomTurretCores.beforeSeconds ??
-                Infinity),
-          ),
-        );
+      if (structureModels !== undefined && visibleBloomTurrets !== undefined)
+        modelRenderer.draw(viewProjection.elements, visibleBloomTurrets);
       if (nexusModels !== undefined) {
         const { instances, terminalLoss, cue } = scene.nexusModels;
         const loss = terminalLoss ?? cue;
@@ -796,6 +796,31 @@ export function createTerrainRenderer(
         height,
         ratio,
         [24, 4],
+      );
+    }
+    if (
+      structureModels !== undefined &&
+      visibleBloomTurrets !== undefined &&
+      bloomTurretHealth.size > 0
+    ) {
+      drawHealthBars(
+        gl,
+        visibleBloomTurrets.map((row) => ({
+          ...row,
+          teamId: row.participantId === 444 ? 100 : 200,
+        })),
+        ({ context }) => {
+          const point = bloomTurretHealth
+            .get(context)
+            ?.findLast(([time]) => time <= frame.timeSeconds);
+          return point === undefined ? undefined : [point[1], point[2]];
+        },
+        structureModels,
+        viewProjection.elements,
+        width,
+        height,
+        ratio,
+        [54, 6],
       );
     }
     if (

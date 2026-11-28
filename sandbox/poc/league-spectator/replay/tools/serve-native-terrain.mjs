@@ -56,6 +56,8 @@ const { positionals, values } = parseArgs({
     "canonical-match": { type: "string" },
     "canonical-match-sha256": { type: "string" },
     "rift-startup-archive": { type: "string" },
+    "rift-browser-startup-profile": { type: "string" },
+    "rift-browser-startup-runtime": { type: "string" },
     "rift-minimap": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
@@ -145,6 +147,18 @@ const recoveryPath = values["scout-recovery-db"];
 const canonicalMatchPath = values["canonical-match"];
 const canonicalMatchDigest = values["canonical-match-sha256"];
 const riftStartupArchive = values["rift-startup-archive"];
+const riftBrowserStartupProfile = values["rift-browser-startup-profile"];
+const riftBrowserStartupRuntime = values["rift-browser-startup-runtime"];
+assert.equal(
+  riftBrowserStartupProfile === undefined,
+  riftBrowserStartupRuntime === undefined,
+  "Supply both the portable startup image profile and reviewed runtime",
+);
+assert.ok(
+  riftBrowserStartupProfile === undefined ||
+    (buildScoped && values["worker-decompressor"] !== undefined),
+  "Browser startup admission requires a build-scoped Rift worker package",
+);
 assert.ok(
   !buildScoped ||
     (riftStartupArchive !== undefined &&
@@ -3088,6 +3102,19 @@ if (privatePackageOutput !== undefined) {
     announcerFiles,
     combatAudioFiles,
     particleFiles,
+    ...(riftBrowserStartupProfile === undefined
+      ? {}
+      : {
+          riftStartupFiles:
+            await import("./research/build-rift-startup-worker.mjs").then(
+              ({ buildRiftStartupWorker }) =>
+                buildRiftStartupWorker(
+                  riftBrowserStartupProfile,
+                  riftBrowserStartupRuntime,
+                  values["worker-decompressor"],
+                ),
+            ),
+        }),
   });
   console.log(JSON.stringify(result));
   process.exit(0);
