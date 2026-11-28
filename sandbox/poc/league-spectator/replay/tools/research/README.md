@@ -861,6 +861,17 @@ oracle command accepts both packet corpora. The source position is the input
 to native movement correction, with final actor placement owned by the movement
 controller and the actor update.
 
+Run the `.8428` receiver separately to verify effective slot selection, host
+clock scaling, and the next-attack deadline. Its JSON identifies the supplied
+character flags, round-robin cursors, slot availability, actor stats, and host
+clock controls. It checks both positive and negative packet offsets against
+the original stored deadline. Effective selection and animation timing for
+recorded actors still need the corresponding live character state.
+
+```powershell
+uv run --offline --with unicorn python "$attackTools/probe-recorded-attack-receiver.py" $macArchive | Set-Content -Encoding utf8 $receiverReceipt
+```
+
 The asset census reads the equipped skins from the recorded opening and
 checks each original character record, spell, graph, and rig. The optional
 proofs supply the native default spell names and the animation default for
