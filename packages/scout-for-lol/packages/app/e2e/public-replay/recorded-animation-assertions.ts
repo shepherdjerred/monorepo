@@ -71,6 +71,18 @@ async function verifyWukongPathFacing(page: Page) {
   expect(await wukongAt(57.2)).toEqual(first);
 }
 
+export async function verifyRecordedBloomAnimation(
+  page: Page,
+  testInfo: TestInfo,
+) {
+  await verifyLaterCue(page, testInfo, {
+    actor: "1073741901",
+    indexCount: 30_759,
+    clocks: [83.5, 83.8],
+    screenshot: "bloom-draven-cast.png",
+  });
+}
+
 export async function verifyRecordedChampionAnimation(
   page: Page,
   fixture: { current: boolean; long: boolean; cueCount: number },

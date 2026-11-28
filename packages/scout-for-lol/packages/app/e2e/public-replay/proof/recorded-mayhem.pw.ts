@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
 import { z } from "zod";
+import { verifyRecordedBloomAnimation } from "#replay-e2e/recorded-animation-assertions.ts";
 import {
   installRecordedDrawProbe,
   readRecordedDraw,
@@ -129,6 +130,7 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
     gameMode: "KIWI",
     sha256: mayhemReplaySha256,
   });
+  expect(fixture.animationModelCount).toBeGreaterThanOrEqual(8);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const traffic = await observeRecordedReplayRequests(page, baseURL);
@@ -193,6 +195,8 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
     ),
   ).not.toBe(openingPixels);
   await verifyMayhemImpacts(page, fixture);
+  await verifyRecordedBloomAnimation(page, testInfo);
+  await camera.selectOption("free");
   await seek(page, 60);
   expect(await readRecordedDraw(page)).toMatchObject({
     actorOrigins: opening.actorOrigins,

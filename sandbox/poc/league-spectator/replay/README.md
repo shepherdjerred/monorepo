@@ -1483,9 +1483,11 @@ bun --no-install --bun playwright test --config e2e/public-replay/recorded-playw
 Pop-Location
 ```
 
-Use the original `NA1-5686263770.rofl`. The test checks the ten recorded
+Use the original `NA1-5686263770.rofl` and the pinned `championAnimationCatalog`
+described below. The test checks the ten recorded
 champions and textured geometry, verifies all 12 first-wave minions at 1:00,
-runs the 1:00–1:30 window at 1×, rewinds, and
+runs the 1:00–1:30 window at 1×, verifies Draven's changing cast pose and its
+reproducibility after a seek, rewinds, and
 checks a timestamp and player camera shared with a fresh signed-out browser.
 It checks Soraka's recorded health and level on the shared frame. The replay
 worker supplies the recorded player names, scoreboard, and elimination jumps.
