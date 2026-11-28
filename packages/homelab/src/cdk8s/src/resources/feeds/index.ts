@@ -10,6 +10,7 @@ import {
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FEEDS_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
@@ -46,7 +47,15 @@ const PUBLIC_FEED_EGRESS_BLOCK_EXCEPTIONS = [
   "169.254.0.0/16",
 ];
 
-export function createFeedsDeployment(chart: Chart) {
+/**
+ * The Feeds web service. `database` only opens egress to Feeds' PostgreSQL
+ * cluster for now: the pod holds no reference to its credentials, so it
+ * starts before the operator has created them.
+ */
+export function createFeedsDeployment(
+  chart: Chart,
+  database: Pick<SingleAppDatabase, "egress">,
+) {
   const feedsTailnet = tailnetService("feeds");
   const webService = new FirstPartyWebService(chart, "feeds-web-service", {
     name: "feeds",
@@ -155,6 +164,7 @@ export function createFeedsDeployment(chart: Chart) {
           dnsEgressRule(),
           kubernetesApiEgressRule(),
           flagsEgress(),
+          database.egress,
           {
             to: [
               {

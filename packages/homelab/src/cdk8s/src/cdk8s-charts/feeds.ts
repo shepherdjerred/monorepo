@@ -19,7 +19,8 @@ export function createFeedsChart(app: App, active = FEEDS_ACTIVE) {
   new Namespace(chart, "feeds-namespace", { metadata: { name: "feeds" } });
   // Feeds is moving from its SQLite file onto its own PostgreSQL cluster. The
   // cluster comes up beside the running app; the Deployment does not reference
-  // it yet, so its pod never waits on the operator-generated credentials.
+  // it beyond network egress, so its pod never waits on the
+  // operator-generated credentials.
   const database = singleAppDatabase(chart, {
     app: "feeds",
     provision: true,
@@ -30,6 +31,6 @@ export function createFeedsChart(app: App, active = FEEDS_ACTIVE) {
     { app: "feeds" },
     { name: "feeds-pg-netpol" },
   );
-  createFeedsDeployment(chart);
+  createFeedsDeployment(chart, database);
   return chart;
 }
