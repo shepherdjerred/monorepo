@@ -1,0 +1,19 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // A build's hash reaches every dependent's typecheck, lint and test tasks
+    // through ^build. The CI manifest is read only by the test runner, which
+    // hashes it as a test:ci input. The JSON registries (services.json,
+    // catalog-document.json, platform-policy.json and the schemas) are
+    // imported or exported and stay in the hash.
+    "build": {
+      "inputs": ["$TURBO_EXTENDS$", "!ci-tests.json"]
+    },
+    // `generate` has no script here, but dependents order after it (^generate),
+    // so its hash carries the same inputs as build.
+    "generate": {
+      "inputs": ["$TURBO_EXTENDS$", "!ci-tests.json"]
+    }
+  }
+}

@@ -13,7 +13,13 @@ import {
 /**
  * Browser end-to-end suites.
  *
- * One step covers pull requests and the default branch.
+ * Default branch, plus pull requests that change `ci/ci-playwright/**` (the
+ * image promotion). Other pull requests do not run this lane: it was the one PR
+ * lane past 15 minutes (29 min p90, 13% of runs at its 30-minute timeout) and
+ * about a third of CI CPU, so committers run the affected projects locally
+ * (`bun run e2e:affected`) before marking a PR ready. A main push still runs it
+ * because its output is the `sjer-red-dist` and `wiki-dist` artifacts that the
+ * `sites` lane deploys.
  *
  * The step runs a selector of its own (`run-playwright.ts`) that decides which
  * suites to execute from the changed set. That is deliberate and stays: the
@@ -29,6 +35,14 @@ export function playwrightSteps(
     {
       key: "playwright-e2e",
       label: "playwright e2e",
+      defaultBranchOnly: true,
+      // The ci-playwright promotion PR is exercised here before it
+      // auto-merges: it always rewrites ci/ci-playwright/DIGEST and STATE.json
+      // (ciImagePromotionFiles in ci/scripts/images/update-ci-image-pin-core.ts)
+      // and bumps the @playwright/test pins, and the candidate digest is the
+      // image this lane runs. Not keyed on bun.lock or package.json, which
+      // would bring the lane back for most pull requests.
+      pullRequestInclude: ["ci/ci-playwright/**"],
       image: images.playwright,
       environment: {
         CI_CHANGED_BASE: changedBase,

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { CI_AGENT_MAX_WORKFLOWS_LABEL } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 type KubePrometheusStackValues = HelmValuesForChart<"kube-prometheus-stack">;
@@ -13,6 +14,14 @@ type GrafanaDashboardSidecarValues = Omit<
   labelValue?: string;
 };
 type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
+  initChownData?: {
+    resources?: {
+      requests?: {
+        cpu: string;
+        memory: string;
+      };
+    };
+  };
   sidecar?: Omit<GrafanaSidecarValues, "dashboards"> & {
     dashboards?: GrafanaDashboardSidecarValues;
   };
@@ -73,6 +82,8 @@ export const CI_KUBE_STATE_METRICS_VALUES = {
   metricLabelsAllowlist: [
     "pods=[ci.sjer.red/step-key,ci.sjer.red/commit]",
     "persistentvolumeclaims=[velero.io/backup]",
+    // Each agent's slot count, read by WoodpeckerAgentDisconnected.
+    `deployments=[${CI_AGENT_MAX_WORKFLOWS_LABEL}]`,
   ],
   metricAnnotationsAllowList: [
     "pods=[ci.sjer.red/branch,ci.sjer.red/pipeline-url]",
@@ -260,6 +271,11 @@ export function createGrafanaValues(
       labels: {
         "velero.io/backup": "enabled",
         "velero.io/exclude-from-backup": "false",
+      },
+    },
+    initChownData: {
+      resources: {
+        requests: { cpu: "10m", memory: "32Mi" },
       },
     },
     useStatefulSet: true,

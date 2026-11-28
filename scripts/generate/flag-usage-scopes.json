@@ -1,0 +1,25 @@
+{
+  "alert-dashboard": ["packages/alert-dashboard", "packages/incidents"],
+  "arcade": ["packages/arcade"],
+  "birmel": ["packages/birmel"],
+  "delivery": ["packages/delivery"],
+  "errors": ["packages/errors"],
+  "feeds": ["packages/feeds"],
+  "golink": ["packages/golink"],
+  "justin": ["packages/justin-principal-engineer"],
+  "mail": ["packages/mail"],
+  "media": ["packages/media"],
+  "scout": ["packages/scout-for-lol"],
+  "starlight-karma-bot": ["packages/starlight-karma-bot"],
+  "storm": [
+    "packages/storm-brain",
+    "packages/storm-forum",
+    "packages/storm-stats"
+  ],
+  "streambot": ["packages/streambot"],
+  "temporal": ["packages/temporal"],
+  "the-storm": ["packages/the-storm"],
+  "tracker": ["packages/tracker"],
+  "trmnl-dashboard": ["packages/trmnl-dashboard"],
+  "woodpecker": ["packages/woodpecker-config-extension"]
+}

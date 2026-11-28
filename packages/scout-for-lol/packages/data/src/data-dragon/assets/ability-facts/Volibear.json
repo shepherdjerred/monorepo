@@ -106,7 +106,15 @@
         ]
       },
       "resolvedDescription": "Volibear gains 12/15.5/19/22.5/26% Move Speed, doubled to 24/31/38/45/52% towards enemy champions for the next 4 seconds. While active, Volibear's next Attack deals 10/20/30/40/50 (+100% AD) (+160% bonus AD) physical damage and Stuns the target for 1 second. Volibear becomes enraged if an enemy Immobilizes him before he Stuns a target, ending the Ability early but refreshing its Cooldown.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Frenzied Maul",
@@ -194,7 +202,15 @@
       "resolvedDescription": "Volibear mauls an enemy, dealing 5/30/55/80/105 (+110% AD) (+6% bonus Health) physical damage and marking them for 8 seconds. If this Ability is used on a marked target, its damage is increased to {{ empowereddamage }} and Volibear restores 20/35/50/65/80 plus 8/11/14/17/20% missing Health.",
       "unresolved": [
         "empowereddamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 325,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Sky Splitter",
@@ -287,7 +303,15 @@
         ]
       },
       "resolvedDescription": "Volibear summons a thundercloud that fires a lightning bolt, dealing 80/110/140/170/200 (+70% AP) plus 11/12/13/14/15% max Health magic damage and Slowing by 40% for 2 seconds. If Volibear is inside the blast zone, he gains a 75% AP plus 14% max Health Shield for 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 325,
+        "lineWidth": 200,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Stormbringer",
@@ -361,7 +385,15 @@
         ]
       },
       "resolvedDescription": "Volibear transforms and leaps, gaining 175/350/525 Health and 50 Attack Range for the next 12 seconds. Upon landing, Volibear cracks the earth, Disabling nearby towers for 2/3/4 seconds and dealing 300/500/700 (+125% AP) (+250% bonus AD) physical damage to them. Nearby enemies are Slowed by 50%, decaying over 1 second. Enemies directly underneath Volibear suffer 300/500/700 (+125% AP) (+250% bonus AD) physical damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": null,
+        "radius": 550,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

@@ -66,6 +66,18 @@ authorize replacing or rebinding the dataset.
 | `images`         | Custom Docker images (caddy-s3proxy, redlib)                                                                         |
 | `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                                  |
 
+For local OpenTofu plans on any `automatic` or `reviewed-plan` stack (`seaweedfs`,
+`tailscale`, `arr`, `github`, `cloudflare`, `openai`, `anthropic`, `discord`,
+`cloudflare-tokens`, `posthog`, `dockerhub`), run
+`bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> plan --service-account`
+(add `--expect-no-changes` to assert a zero-change plan by exit code). It builds
+an ephemeral `0600` `op://` env file from `deliveryTofuGrants(stack)` and runs
+through `scripts/onepassword/with-service-account.sh` without requiring
+Personal-vault `.env` entries. Operator-only stacks (`anthropic-federation`,
+`argocd`, `asuswrt`, `backblaze`, `dockerhub-tokens`, `google`, and
+`application-secrets`) still require desktop-app authorization or operator
+bootstrap tokens.
+
 ## Platform model
 
 Some facts are rendered twice: a public hostname is a `TunnelBinding` in

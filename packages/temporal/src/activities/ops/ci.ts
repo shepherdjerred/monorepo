@@ -1,7 +1,22 @@
-import type { BranchStatus } from "@shepherdjerred/ops-clients/woodpecker.ts";
+import type {
+  BranchStatus,
+  WoodpeckerPipeline,
+} from "@shepherdjerred/ops-clients/woodpecker.ts";
 import type { SignalInput } from "@shepherdjerred/ops-model/snapshot.ts";
 import { MONOREPO_URL } from "./ops-links.ts";
 import { truncate, type OpsCollection, type OpsContext } from "./ops-types.ts";
+
+/** A verdict pipeline is red unless it passed. */
+export function isRedVerdict(verdict: WoodpeckerPipeline): boolean {
+  return verdict.status !== "success";
+}
+
+/** `main is red: …` / `main is green: …`, shared by the snapshot and Incidents. */
+export function ciVerdictTitle(verdict: WoodpeckerPipeline): string {
+  return isRedVerdict(verdict)
+    ? `main is red: pipeline #${String(verdict.number)} ${verdict.status}`
+    : `main is green: pipeline #${String(verdict.number)} passed`;
+}
 
 /**
  * The CI verdict of `main`: the newest push pipeline that passed or failed. A
@@ -15,7 +30,7 @@ export function mapCi(
   if (verdict === undefined) {
     throw new Error("Woodpecker has no finished push pipeline of main");
   }
-  const failed = verdict.status !== "success";
+  const failed = isRedVerdict(verdict);
   const signal: SignalInput = {
     id: "ci:main",
     source: "ci",
@@ -24,9 +39,7 @@ export function mapCi(
     kind: "ci-branch",
     severity: failed ? "error" : "ok",
     needsMe: false,
-    title: failed
-      ? `main is red: pipeline #${String(verdict.number)} ${verdict.status}`
-      : `main is green: pipeline #${String(verdict.number)} passed`,
+    title: ciVerdictTitle(verdict),
     detail: truncate(verdict.message, 200),
     since: new Date(
       Date.parse(verdict.finishedAt ?? verdict.createdAt),

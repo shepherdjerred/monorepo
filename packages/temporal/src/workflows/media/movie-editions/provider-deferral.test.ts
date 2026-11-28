@@ -27,7 +27,7 @@ function currentExecution() {
 }
 
 async function run(
-  mode: "acquire" | "obsolete" | "empty" | "staggered_empty",
+  mode: "acquire" | "obsolete" | "empty" | "staggered_empty" | "paged",
   workflowsPath = current,
 ) {
   const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -44,6 +44,20 @@ async function run(
     criteriaDigest: "a".repeat(64),
     completedProviderIds: ["knaben"],
   };
+  const checkpoints =
+    mode === "paged"
+      ? [2, 3].map((round) => ({
+          ...progress,
+          completedProviderIds: [],
+          paging: {
+            schemaVersion: 1,
+            round,
+            exhaustedProviderIds: ["thepiratebay"],
+            pages: [{ providerId: "knaben", digest: "b".repeat(64) }],
+            listings: [{ digest: "c".repeat(64) }],
+          },
+        }))
+      : [progress];
   const runIds = new Set<string>();
   const childExecutions: { workflowId: string; runId: string }[] = [];
   const finish: unknown[] = [];
@@ -54,23 +68,25 @@ async function run(
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: {
       reconcileMovieIntentV4: (raw: unknown) => {
+        const resume = checkpoints[searches - 1];
         expect(raw).toEqual(
-          searches === 0 || workflowsPath !== current
+          resume === undefined || workflowsPath !== current
             ? input
-            : { ...input, providerSearchProgress: progress },
+            : { ...input, providerSearchProgress: resume },
         );
         runIds.add(currentExecution().runId);
         searches++;
-        if (mode !== "empty" && searches === 1)
+        const next = checkpoints[searches - 1];
+        if (mode !== "empty" && next !== undefined)
           return Promise.resolve({
             status: "waiting",
             attemptId: null,
             reason: "provider_deferred",
             retryAfterSeconds: 30,
-            providerSearchProgress: progress,
+            providerSearchProgress: next,
           });
         return Promise.resolve(
-          mode === "acquire"
+          mode === "acquire" || mode === "paged"
             ? { status: "acquire", attemptId, reason: null }
             : {
                 status: mode === "obsolete" ? "obsolete" : "waiting",
@@ -140,6 +156,20 @@ async function run(
     ]);
   }
 }
+
+test("paged checkpoints survive two continuations and all recorded runs replay with one acquisition child", async () => {
+  const result = await run("paged");
+  expect(result.searches).toBe(3);
+  expect(result.submissions).toBe(1);
+  expect(result.histories).toHaveLength(3);
+  expect(
+    result.histories
+      .flatMap((history) => history.events ?? [])
+      .filter(
+        (event) => event.startChildWorkflowExecutionInitiatedEventAttributes,
+      ),
+  ).toHaveLength(1);
+}, 60_000);
 
 test("local admission waits durably then continues the same operation into one child without retrying terminal quota", async () => {
   const result = await run("acquire");

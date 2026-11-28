@@ -4,17 +4,39 @@
  * stack and the cdktn binding generator install it from this mirror.
  */
 import path from "node:path";
-import { run, tmpBase } from "@shepherdjerred/root-scripts/lib/run.ts";
+import { z } from "zod";
+import {
+  run,
+  runAllowExit,
+  tmpBase,
+} from "@shepherdjerred/root-scripts/lib/run.ts";
 import {
   loadProviderPins,
   providerAddress,
   type ProviderPin,
 } from "./provider-versions.ts";
 
+const REPOSITORY_ROOT = path.resolve(import.meta.dir, "../../../..");
+const MISE_TOML_PATH = path.join(REPOSITORY_ROOT, ".mise.toml");
 const PROVIDER_SOURCE = path.resolve(
   import.meta.dir,
   "../../../terraform-provider-asuswrt",
 );
+
+const MiseGoSchema = z.object({
+  tools: z.object({
+    go: z.string().min(1),
+  }),
+});
+
+export async function pinnedGoVersion(
+  miseTomlPath = MISE_TOML_PATH,
+): Promise<string> {
+  const parsed = MiseGoSchema.parse(
+    Bun.TOML.parse(await Bun.file(miseTomlPath).text()),
+  );
+  return `go${parsed.tools.go}`;
+}
 
 export async function asuswrtProviderPin(): Promise<ProviderPin> {
   const pins = await loadProviderPins();
@@ -43,6 +65,65 @@ async function output(
   return result.stdout.trim();
 }
 
+async function probeMiseGoPath(
+  env: Record<string, string>,
+  repoRoot: string,
+): Promise<string | undefined> {
+  const miseDataDir = Bun.env["MISE_DATA_DIR"];
+  const probeEnv =
+    miseDataDir !== undefined && env["MISE_DATA_DIR"] === undefined
+      ? { ...env, MISE_DATA_DIR: miseDataDir }
+      : env;
+  try {
+    const result = await runAllowExit(["mise", "which", "go"], {
+      cwd: repoRoot,
+      env: probeEnv,
+      inheritEnv: false,
+      capture: true,
+      echoCapturedStdout: false,
+    });
+    const candidate = result.stdout.trim();
+    return candidate !== "" && result.exitCode === 0 ? candidate : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Resolves an isolated Go toolchain environment matching `.mise.toml`:
+ * strips stale `GOROOT`, prepends `mise which go`'s directory when `mise` is
+ * available, and verifies `go env GOVERSION` equals the repository pin.
+ */
+export async function resolveGoToolchainEnv(
+  env: Record<string, string>,
+  options?: { repoRoot?: string; expectedGoVersion?: string },
+): Promise<Record<string, string>> {
+  const repoRoot = options?.repoRoot ?? REPOSITORY_ROOT;
+  const resolved: Record<string, string> = { ...env };
+  delete resolved["GOROOT"];
+
+  const miseGo = await probeMiseGoPath(resolved, repoRoot);
+  if (miseGo !== undefined) {
+    const goBinDir = path.dirname(miseGo);
+    const existingPath = resolved["PATH"] ?? "";
+    resolved["PATH"] =
+      existingPath === ""
+        ? goBinDir
+        : `${goBinDir}${path.delimiter}${existingPath}`;
+  }
+
+  const expectedVersion =
+    options?.expectedGoVersion ??
+    (await pinnedGoVersion(path.join(repoRoot, ".mise.toml")));
+  const actualVersion = await output(["go", "env", "GOVERSION"], resolved);
+  if (actualVersion !== expectedVersion) {
+    throw new Error(
+      `Go toolchain version mismatch for AsusWRT provider: resolved ${actualVersion || "<empty>"}, expected ${expectedVersion} from .mise.toml`,
+    );
+  }
+  return resolved;
+}
+
 /** The unpublished local provider must never be resolved through a registry. */
 export function asuswrtProviderInstallationConfig(
   mirrorRoot: string,
@@ -61,16 +142,17 @@ export async function prepareAsuswrtProvider(
 ): Promise<string> {
   const pin = await asuswrtProviderPin();
   const address = providerAddress(pin);
+  const goEnv = await resolveGoToolchainEnv(env);
   const temporaryRoot = await output(
     ["mktemp", "-d", `${tmpBase()}/asuswrt-provider.XXXXXXXX`],
-    env,
+    goEnv,
   );
   if (temporaryRoot === "")
     throw new Error("mktemp returned no path for the AsusWRT provider");
-  const goos = await output(["go", "env", "GOOS"], env, PROVIDER_SOURCE);
-  const goarch = await output(["go", "env", "GOARCH"], env, PROVIDER_SOURCE);
+  const goos = await output(["go", "env", "GOOS"], goEnv, PROVIDER_SOURCE);
+  const goarch = await output(["go", "env", "GOARCH"], goEnv, PROVIDER_SOURCE);
   const mirror = `${temporaryRoot}/mirror/${address}/${pin.version}/${goos}_${goarch}`;
-  await run(["mkdir", "-p", mirror], { env, inheritEnv: false });
+  await run(["mkdir", "-p", mirror], { env: goEnv, inheritEnv: false });
   await run(
     [
       "go",
@@ -81,7 +163,7 @@ export async function prepareAsuswrtProvider(
       `${mirror}/terraform-provider-asuswrt_v${pin.version}`,
       ".",
     ],
-    { env, inheritEnv: false, cwd: PROVIDER_SOURCE },
+    { env: goEnv, inheritEnv: false, cwd: PROVIDER_SOURCE },
   );
   const cliConfig = `${temporaryRoot}/tofu.tfrc`;
   await Bun.write(

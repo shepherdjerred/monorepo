@@ -152,11 +152,7 @@ struct BlockView: View {
       HStack(spacing: 6) {
         Text(block.role ?? block.section.rawValue).font(.caption.weight(.semibold))
         Text(block.category.rawValue).font(.caption).foregroundStyle(.secondary)
-        if block.isNew { Badge(text: "new", color: .accentColor) }
-        if block.inherited {
-          Badge(text: "inherited", color: .gray)
-            .help("Not sent in this request; rebuilt from the request it continues.")
-        }
+        BlockBadges(isNew: block.isNew, inherited: block.inherited)
         Spacer(minLength: 4)
         Text(CaptureText.bytes(block.bytes)).font(.caption2).foregroundStyle(.tertiary)
       }
@@ -230,8 +226,7 @@ private struct ToolDefinitionView: View {
         if let description = tool.description, !description.isEmpty {
           Text(description).font(.caption).foregroundStyle(.secondary).lineLimit(1)
         }
-        if tool.block.isNew { Badge(text: "new", color: .accentColor) }
-        if tool.block.inherited { Badge(text: "inherited", color: .gray) }
+        BlockBadges(isNew: tool.block.isNew, inherited: tool.block.inherited)
         Spacer(minLength: 4)
       }
     }
@@ -404,6 +399,22 @@ private struct CodeBlock: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(6)
       .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 5))
+  }
+}
+
+private struct BlockBadges: View {
+  let isNew: Bool
+  let inherited: Bool
+
+  var body: some View {
+    ForEach(CaptureText.blockBadges(isNew: isNew, inherited: inherited)) { badge in
+      if let help = badge.help {
+        Badge(text: badge.text, color: badge.isAccent ? .accentColor : .gray)
+          .help(help)
+      } else {
+        Badge(text: badge.text, color: badge.isAccent ? .accentColor : .gray)
+      }
+    }
   }
 }
 

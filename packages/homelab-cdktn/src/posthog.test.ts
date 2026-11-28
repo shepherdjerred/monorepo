@@ -5,7 +5,7 @@ import {
   ResourcesSchema,
   TerraformSchema,
   enforcedEncryption,
-  synthesizedStack,
+  useSynthesizedApp,
 } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
@@ -30,9 +30,8 @@ const RegistrySchema = z.looseObject({
   ),
 });
 
-async function posthog() {
-  return synthesizedStack("posthog", ConfigurationSchema);
-}
+const readStack = useSynthesizedApp();
+const posthog = () => readStack("posthog", ConfigurationSchema);
 
 /** PostHog ids of the dashboards adopted with their tile layouts. */
 const ADOPTED_DASHBOARDS = [
@@ -109,8 +108,8 @@ const CREATED = [
 ];
 
 describe("posthog", () => {
-  test("keeps the addresses of its state", async () => {
-    const { resource, moved, removed, output } = await posthog();
+  test("keeps the addresses of its state", () => {
+    const { resource, moved, removed, output } = posthog();
     expect(
       Object.entries(resource)
         .flatMap(([type, byName]) =>
@@ -123,16 +122,16 @@ describe("posthog", () => {
     expect(output).toBeUndefined();
   });
 
-  test("imports every adopted object at its PostHog id and nothing it created", async () => {
-    const { import: imports } = await posthog();
+  test("imports every adopted object at its PostHog id and nothing it created", () => {
+    const { import: imports } = posthog();
     expect(imports).toHaveLength(67);
     expect(
       Object.fromEntries(imports.map((block) => [block.to, block.id])),
     ).toEqual(IMPORTS);
   });
 
-  test("refuses to destroy the project, its owner, the proxy record and the ads source", async () => {
-    const { resource } = await posthog();
+  test("refuses to destroy the project, its owner, the proxy record and the ads source", () => {
+    const { resource } = posthog();
     const protectedAddresses = Object.entries(resource).flatMap(
       ([type, byName]) =>
         Object.entries(byName)
@@ -147,8 +146,8 @@ describe("posthog", () => {
     });
   });
 
-  test("keeps the provider, its constraint and the key provider its state records", async () => {
-    const { terraform, provider, variable } = await posthog();
+  test("keeps the provider, its constraint and the key provider its state records", () => {
+    const { terraform, provider, variable } = posthog();
     expect(terraform.required_providers).toEqual({
       posthog: { source: "posthog/posthog", version: "~> 1.0" },
     });
@@ -180,8 +179,8 @@ describe("posthog", () => {
     });
   });
 
-  test("encodes every insight query in OpenTofu from an object whose keys are data", async () => {
-    const { resource, locals } = await posthog();
+  test("encodes every insight query in OpenTofu from an object whose keys are data", () => {
+    const { resource, locals } = posthog();
     const insights = resource["posthog_insight"] ?? {};
     const queries = locals["insight_queries"] ?? {};
     const single = Object.keys(insights).filter(
@@ -214,8 +213,8 @@ describe("posthog", () => {
     });
   });
 
-  test("keeps the Storm insights' instance keys and their encoded query", async () => {
-    const { resource, locals } = await posthog();
+  test("keeps the Storm insights' instance keys and their encoded query", () => {
+    const { resource, locals } = posthog();
     expect(Object.keys(locals["storm_metrics"] ?? {})).toEqual([
       "active_players",
       "features",
@@ -251,8 +250,8 @@ describe("posthog", () => {
     }
   });
 
-  test("positions tiles from layouts encoded in OpenTofu and leaves the rest to PostHog", async () => {
-    const { resource, locals } = await posthog();
+  test("positions tiles from layouts encoded in OpenTofu and leaves the rest to PostHog", () => {
+    const { resource, locals } = posthog();
     const layouts = resource["posthog_dashboard_layout"] ?? {};
     const tileLayouts = locals["dashboard_tile_layouts"] ?? {};
     expect(layouts["dashboard_1977280"]).toMatchObject({
@@ -286,7 +285,7 @@ describe("posthog", () => {
   });
 
   test("allows capture from every registered site and filters internal traffic by cohort", async () => {
-    const { resource } = await posthog();
+    const { resource } = posthog();
     const { sites } = RegistrySchema.parse(
       await Bun.file(
         path.join(import.meta.dir, "../../../config/analytics-sites.json"),
@@ -319,8 +318,8 @@ describe("posthog", () => {
 });
 
 describe("posthog Streambot usage dashboard", () => {
-  test("puts every insight on its dashboard and queries only its own events", async () => {
-    const { resource, locals } = await posthog();
+  test("puts every insight on its dashboard and queries only its own events", () => {
+    const { resource, locals } = posthog();
     const insights = resource["posthog_insight"] ?? {};
     const queries = locals["insight_queries"] ?? {};
     const streambot = Object.keys(insights).filter((name) =>

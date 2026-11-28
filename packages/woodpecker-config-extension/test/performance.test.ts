@@ -2,6 +2,10 @@ import { expect, test } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
 import { benchmarkRequest, benchmarkSteps } from "#src/pipeline/benchmark.ts";
+import type {
+  CacheTrustDomain,
+  FormatCacheScope,
+} from "#src/pipeline/cache-trust-domain.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { performanceSteps } from "#src/pipeline/performance.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
@@ -13,7 +17,13 @@ import { MISE_INSTALLS } from "#src/pipeline/cache.ts";
 import { credentiallessHostedAutomationSteps } from "#src/pipeline/steps.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
-import { TEST_IMAGES, TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
+import {
+  HOSTED_AUTOMATION_AUTHORIZATION,
+  OWNER_AUTHORIZATION,
+  TEST_IMAGES,
+  TEST_IDENTITY,
+  testPipelineSteps,
+} from "./identity.ts";
 
 const enabled = {
   incremental: true,
@@ -45,17 +55,23 @@ test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", ()
       CI_BENCHMARK_FEATURE: "scratch",
     },
   });
-  const request = benchmarkRequest(pipeline, "main", true);
+  const request = benchmarkRequest(pipeline, "main", OWNER_AUTHORIZATION);
   if (request === undefined) throw new Error("Missing request");
-  expect(() => benchmarkRequest(pipeline, "main", false)).toThrow();
   expect(() =>
-    benchmarkRequest({ ...pipeline, event: "pull_request" }, "main", true),
+    benchmarkRequest(pipeline, "main", HOSTED_AUTOMATION_AUTHORIZATION),
+  ).toThrow();
+  expect(() =>
+    benchmarkRequest(
+      { ...pipeline, event: "pull_request" },
+      "main",
+      OWNER_AUTHORIZATION,
+    ),
   ).toThrow();
   expect(() =>
     benchmarkRequest(
       { ...pipeline, branch: "main", ref: "refs/heads/main" },
       "main",
-      true,
+      OWNER_AUTHORIZATION,
     ),
   ).toThrow();
   expect(() =>
@@ -65,7 +81,7 @@ test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", ()
         variables: { ...pipeline.variables, CI_BENCHMARK_PROFILE: "browser" },
       },
       "main",
-      true,
+      OWNER_AUTHORIZATION,
     ),
   ).toThrow();
   expect(() =>
@@ -126,7 +142,7 @@ test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", ()
   ).toBe(RAM_SCRATCH.profile);
   expect(
     emitted.steps[0]?.backend_options.kubernetes.resources.requests["memory"],
-  ).toBe("30Gi");
+  ).toBe("20Gi");
   expect(
     emitted.steps[0]?.backend_options.kubernetes.resources.limits["memory"],
   ).toBe("36Gi");
@@ -134,10 +150,9 @@ test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", ()
     (sum, volume) => sum + gib(volume.size),
     0,
   );
-  expect(
-    gib(candidate.resources.memoryRequest) -
-      gib(TURBO_VERIFY_TIER.memoryRequest),
-  ).toBe(scratch);
+  expect(candidate.resources.memoryRequest).toBe(
+    TURBO_VERIFY_TIER.memoryRequest,
+  );
   expect(
     gib(candidate.resources.memoryLimit) - gib(TURBO_VERIFY_TIER.memoryLimit),
   ).toBe(scratch);
@@ -147,7 +162,7 @@ test("shared mise installs mount wherever the toolchain is sourced, only when en
   const mounted = performanceSteps(
     steps,
     { ...DISABLED_PERFORMANCE, miseInstalls: true },
-    true,
+    "main",
     false,
   );
   const containers = mounted.flatMap((step) => [
@@ -187,7 +202,7 @@ test("shared mise installs mount wherever the toolchain is sourced, only when en
     MISE_DOWNLOADS_DIR: "/woodpecker/mise-installs/downloads",
     MISE_SHARED_INSTALL_DIRS: "/opt/mise/installs",
   });
-  const plain = performanceSteps(steps, DISABLED_PERFORMANCE, true, false);
+  const plain = performanceSteps(steps, DISABLED_PERFORMANCE, "main", false);
   expect(
     [...plain, ...plain.flatMap((step) => step.orderedSteps ?? [])].some(
       (container) =>
@@ -199,7 +214,7 @@ test("shared mise installs mount wherever the toolchain is sourced, only when en
   const credentialless = performanceSteps(
     credentiallessHostedAutomationSteps(TEST_IMAGES),
     enabled,
-    false,
+    "pr",
     true,
   );
   for (const step of credentialless)
@@ -207,7 +222,7 @@ test("shared mise installs mount wherever the toolchain is sourced, only when en
 });
 test("ordinary verify and browser execution pods carry their own scratch profile only when enabled", () => {
   const steps = testPipelineSteps();
-  const scratched = performanceSteps(steps, enabled, true, false);
+  const scratched = performanceSteps(steps, enabled, "main", false);
   expect(
     scratched
       .filter((step) => step.ramScratch === true)
@@ -218,14 +233,13 @@ test("ordinary verify and browser execution pods carry their own scratch profile
     if (profile === undefined) throw new Error("Missing scratch profile");
     expect(step.resources).toEqual(profile.resources);
     const tier = step.key === "verify" ? TURBO_VERIFY_TIER : BROWSER_TIER;
-    // The profile reserves exactly its tmpfs allowance above the lane's tier.
+    // The limit carries exactly the tmpfs allowance above the lane's tier; the
+    // request is the tier's, measured with tmpfs pages included.
     const tmpfs = profile.volumes.reduce(
       (sum, volume) => sum + gib(volume.size),
       0,
     );
-    expect(gib(profile.resources.memoryRequest) - gib(tier.memoryRequest)).toBe(
-      tmpfs,
-    );
+    expect(profile.resources.memoryRequest).toBe(tier.memoryRequest);
     expect(gib(profile.resources.memoryLimit) - gib(tier.memoryLimit)).toBe(
       tmpfs,
     );
@@ -265,12 +279,12 @@ test("ordinary verify and browser execution pods carry their own scratch profile
       ).toBeUndefined();
   }
   expect(
-    performanceSteps(steps, { ...enabled, scratch: false }, true, false).some(
+    performanceSteps(steps, { ...enabled, scratch: false }, "main", false).some(
       (step) => step.ramScratch === true,
     ),
   ).toBe(false);
   expect(
-    performanceSteps(steps, enabled, true, true).some(
+    performanceSteps(steps, enabled, "main", true).some(
       (step) => step.ramScratch === true,
     ),
   ).toBe(false);
@@ -280,7 +294,7 @@ test("ordinary lanes and their ordered containers install with Bun copyfile only
   const copied = performanceSteps(
     steps,
     { ...DISABLED_PERFORMANCE, copyfile: true },
-    true,
+    "main",
     false,
   );
   for (const key of ["verify", "playwright-e2e"])
@@ -292,7 +306,7 @@ test("ordinary lanes and their ordered containers install with Bun copyfile only
   expect(
     ordered.every((command) => backend(command.environment) === "copyfile"),
   ).toBe(true);
-  const plain = performanceSteps(steps, DISABLED_PERFORMANCE, true, false);
+  const plain = performanceSteps(steps, DISABLED_PERFORMANCE, "main", false);
   expect(
     [...plain, ...plain.flatMap((step) => step.orderedSteps ?? [])].some(
       (step) => backend(step.environment) !== undefined,
@@ -301,14 +315,14 @@ test("ordinary lanes and their ordered containers install with Bun copyfile only
 });
 test("performance options never grant caches to credentialless work", () => {
   const steps = testPipelineSteps();
-  expect(performanceSteps(steps, enabled, false, true)).toEqual(steps);
+  expect(performanceSteps(steps, enabled, "pr", true)).toEqual(steps);
   const cached = cacheSourceSteps(steps, {
     enabled: true,
     credentialless: false,
-    main: false,
+    trustDomain: "pull-request",
     image: helper,
   });
-  const verify = performanceSteps(cached, enabled, false, false).find(
+  const verify = performanceSteps(cached, enabled, "pr", false).find(
     (step) => step.key === "verify",
   );
   expect(verify?.environment?.["CI_FORMAT_CACHE_ROOT"]).toMatch(/\/pr$/u);
@@ -334,11 +348,17 @@ test("benchmark requests cannot trigger releases, platform operations, or a movi
       CI_BENCHMARK_FEATURE: "prepared",
     },
   });
-  const request = benchmarkRequest(pipeline, "main", true);
+  const request = benchmarkRequest(pipeline, "main", OWNER_AUTHORIZATION);
   if (request === undefined) throw new Error("Missing request");
-  expect(() => benchmarkRequest(pipeline, "main", false)).toThrow();
   expect(() =>
-    benchmarkRequest({ ...pipeline, commit: "b".repeat(40) }, "main", true),
+    benchmarkRequest(pipeline, "main", HOSTED_AUTOMATION_AUTHORIZATION),
+  ).toThrow();
+  expect(() =>
+    benchmarkRequest(
+      { ...pipeline, commit: "b".repeat(40) },
+      "main",
+      OWNER_AUTHORIZATION,
+    ),
   ).toThrow();
   expect(() =>
     benchmarkRequest(
@@ -347,7 +367,7 @@ test("benchmark requests cannot trigger releases, platform operations, or a movi
         variables: { ...pipeline.variables, CI_MAINTENANCE_KIND: "ci-images" },
       },
       "main",
-      true,
+      OWNER_AUTHORIZATION,
     ),
   ).toThrow();
   expect(() =>
@@ -406,11 +426,12 @@ test("verify benchmarks use the Gradle cache only when warm, in their trust doma
     variant: "baseline",
     source: "0".repeat(40),
     feature: "gradle",
+    main: false,
   } as const;
-  const verify = (cache: "cold" | "warm", main: boolean) =>
+  const verify = (cache: "cold" | "warm", trustDomain: CacheTrustDomain) =>
     benchmarkSteps(
       TEST_IMAGES,
-      { ...request, cache, main },
+      { ...request, cache, trustDomain },
       DISABLED_PERFORMANCE,
       helper,
     )[0];
@@ -418,14 +439,86 @@ test("verify benchmarks use the Gradle cache only when warm, in their trust doma
     (step?.secrets ?? [])
       .map((grant) => grant.env)
       .filter((env) => env.startsWith("GRADLE_BUILD_CACHE_"));
-  expect(passwords(verify("warm", true))).toEqual([
+  expect(passwords(verify("warm", "trusted"))).toEqual([
     "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
   ]);
-  expect(passwords(verify("warm", false))).toEqual([
+  expect(passwords(verify("warm", "pull-request"))).toEqual([
     "GRADLE_BUILD_CACHE_READ_PASSWORD",
   ]);
-  const cold = verify("cold", true);
+  const cold = verify("cold", "trusted");
   expect(passwords(cold)).toEqual([]);
   expect(cold?.environment?.["GRADLE_BUILD_CACHE_URL"]).toBeUndefined();
   expect(cold?.environment?.["SCCACHE_WEBDAV_ENDPOINT"]).toBeUndefined();
+});
+
+/** A warm verify benchmark started by hand, as Woodpecker reports one. */
+const warmVerifyBenchmark = (branch: string, author: string, feature: string) =>
+  benchmarkRequest(
+    PipelineSchema.parse({
+      ...fixture.pipeline,
+      event: "manual",
+      branch,
+      ref: `refs/heads/${branch}`,
+      author,
+      sender: "",
+      variables: {
+        CI_BENCHMARK_PROFILE: "verify",
+        CI_BENCHMARK_SOURCE: fixture.pipeline.commit,
+        CI_BENCHMARK_VARIANT: "baseline",
+        CI_BENCHMARK_CACHE: "warm",
+        CI_BENCHMARK_FEATURE: feature,
+      },
+    }),
+    "main",
+    OWNER_AUTHORIZATION,
+  );
+const benchmarkTrustDomain = (branch: string, author: string) =>
+  warmVerifyBenchmark(branch, author, "gradle")?.trustDomain;
+
+/** Verify with every performance option on, for one formatter scope. */
+const formattedVerify = (format: FormatCacheScope) =>
+  performanceSteps(testPipelineSteps(), enabled, format, false).find(
+    (step) => step.key === "verify",
+  );
+const claims = (format: FormatCacheScope) =>
+  (formattedVerify(format)?.volumes ?? [])
+    .map((volume) => volume.claim)
+    .filter((claim) => claim.startsWith("woodpecker-format-"));
+
+test("a trusted proposal mounts no formatter results; main and isolated proposals keep theirs", () => {
+  expect(claims("none")).toEqual([]);
+  expect(
+    formattedVerify("none")?.environment?.["CI_FORMAT_CACHE_ROOT"],
+  ).toBeUndefined();
+  expect(claims("pr")).toEqual(["woodpecker-format-pr"]);
+  expect(claims("main")).toEqual(["woodpecker-format-main"]);
+});
+
+test("a formatter benchmark fails on a trusted canary rather than measure nothing", () => {
+  expect(() =>
+    warmVerifyBenchmark("ci-canary/format", "shepherdjerred", "formatting"),
+  ).toThrow("formatter volume");
+  expect(
+    warmVerifyBenchmark("main", "shepherdjerred", "formatting")?.trustDomain,
+  ).toBe("trusted");
+  expect(
+    warmVerifyBenchmark(
+      "ci-canary/format",
+      "long-summer-intern[bot]",
+      "formatting",
+    )?.trustDomain,
+  ).toBe("pull-request");
+});
+
+test("benchmark requests resolve their cache by the rule pull requests use", () => {
+  expect(benchmarkTrustDomain("main", "shepherdjerred")).toBe("trusted");
+  expect(benchmarkTrustDomain("main", "long-summer-intern[bot]")).toBe(
+    "trusted",
+  );
+  expect(benchmarkTrustDomain("ci-canary/gradle", "shepherdjerred")).toBe(
+    "trusted",
+  );
+  expect(
+    benchmarkTrustDomain("ci-canary/gradle", "long-summer-intern[bot]"),
+  ).toBe("pull-request");
 });

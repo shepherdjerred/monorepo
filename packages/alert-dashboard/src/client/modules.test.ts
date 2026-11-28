@@ -55,6 +55,13 @@ describe("the composed module registry", () => {
       "shell /house",
       "shell /history",
       "shell /system",
+      "shell /kit",
+      "shell /kit/detail",
+      "shell /incidents",
+      "shell /incidents/maintenance",
+      "shell /incidents/history",
+      "shell /incidents/new",
+      "shell /incidents/:ref",
       "shell /traces",
       "shell /traces/:traceId",
     ]);
@@ -91,6 +98,7 @@ describe("the composed module registry", () => {
           "House /house",
           "History /history",
           "System /system",
+          "Incidents /incidents",
         ],
       },
       {
@@ -119,6 +127,7 @@ describe("the composed module registry", () => {
       "System",
       "The Storm overview",
       "Promotion",
+      "Open incidents",
       "LLM traces",
     ]);
   });

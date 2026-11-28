@@ -61,7 +61,15 @@
         ]
       },
       "resolvedDescription": "Jax leaps to a friendly or enemy unit or ward, dealing 65/105/145/185/225 (+100% bonus AD) physical damage if it is an enemy.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Empower",
@@ -105,7 +113,15 @@
         ]
       },
       "resolvedDescription": "Jax charges his weapon with energy, causing his next Attack or Leap Strike to deal an additional 50/85/120/155/190 (+60% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Counter Strike",
@@ -191,7 +207,15 @@
         ]
       },
       "resolvedDescription": "Jax enters a defensive stance for up to 2 seconds, dodging incoming Attacks and taking 25% less damage from area of effect Abilities. After 2 seconds or Recasting, Jax deals 40/70/100/130/160 (+70% bonus AP) + 4% max Health magic damage and Stuns nearby enemies for 1 second. The damage is increased by 20% per Attack dodged, up to a maximum of 80/140/200/260/320 (+140% bonus AP) + 8% max Health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 375,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Grandmaster-at-Arms",
@@ -260,7 +284,15 @@
         ]
       },
       "resolvedDescription": "Passive: Every third Attack within 2.5 seconds deals an additional 75/130/185 (+60% AP) magic damage. Active: Jax slams his lantern down, dealing 100/175/250 (+100% bonus AP) magic damage to nearby enemies. If he hits a champion he gains 45/60/75 (+40% bonus AD) Armor and 27/36/45 (+24% bonus AD) Magic Resist plus 20/25/30 (+10% bonus AD) Armor and 12/15/18 (+6% bonus AD) Magic Resist per additional champion hit for 8 seconds. During this time every second Attack deals additional magic damage instead of every third.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.25,
+        "radius": 250,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     }
   }
 }

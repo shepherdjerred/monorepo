@@ -18,7 +18,30 @@
         ]
       },
       "resolvedDescription": "After killing 9 minions or monsters, Ahri heals. After taking down an enemy champion, Ahri heals for a greater amount.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "ahripassivemissile",
+            "width": null,
+            "movement": "AcceleratingMovement",
+            "speed": 1800,
+            "minSpeed": 1200,
+            "maxSpeed": 8000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Orb of Deception",
@@ -55,7 +78,44 @@
         ]
       },
       "resolvedDescription": "Ahri throws then pulls back her orb, dealing 35/60/85/110/135 (+50% AP) magic damage on the way out and 35/60/85/110/135 (+50% AP) true damage on the way back.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 275,
+        "lineWidth": 100,
+        "missileSpeed": 1100,
+        "missiles": [
+          {
+            "name": "ahriqmissile",
+            "width": 100,
+            "movement": "AcceleratingMovement",
+            "speed": 2500,
+            "minSpeed": 400,
+            "maxSpeed": 2500,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ahriqreturnmissile",
+            "width": 100,
+            "movement": "AcceleratingMovement",
+            "speed": 60,
+            "minSpeed": 60,
+            "maxSpeed": 2600,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Fox-Fire",
@@ -176,7 +236,44 @@
         ]
       },
       "resolvedDescription": "Ahri releases 3 fox-fires that seek nearby enemies and deal 40/60/80/100/120 (+40% AP) magic damage, reduced to 16/24/32/40/48 (+16% AP) damage beyond the first. She also gains 40% Move Speed decaying over 2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.25,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 1800,
+        "missiles": [
+          {
+            "name": "ahriwdamagemissile",
+            "width": null,
+            "movement": "ParametricMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "ahriwmissile",
+            "width": null,
+            "movement": "CircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Charm",
@@ -234,7 +331,31 @@
         ]
       },
       "resolvedDescription": "Ahri blows a kiss that Charms the first enemy hit for 1.2/1.35/1.5/1.65/1.8 seconds and deals 80/120/160/200/240 (+85% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 60,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "ahriemissile",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1550,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "R": {
       "name": "Spirit Rush",
@@ -313,7 +434,30 @@
         ]
       },
       "resolvedDescription": "Ahri nimbly dashes, firing 3 essence bolts at nearby enemies, prioritizing champions. These bolts deal 75/125/175 (+35% AP) magic damage each. Spirit Rush can be Recast up to 2 more times within 15 seconds. Consuming a champion's Essence with Essence Theft during this period extends the recast window by up to 10 seconds and grants an additional recast of Spirit Rush (up to 3 stored).",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 300,
+        "lineWidth": null,
+        "missileSpeed": 2200,
+        "missiles": [
+          {
+            "name": "ahrirmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

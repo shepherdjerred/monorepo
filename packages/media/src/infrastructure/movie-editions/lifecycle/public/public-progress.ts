@@ -3,6 +3,7 @@ import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { MovieTargetProgressV4Schema } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { torrentVisibility } from "#infrastructure/visibility/torrent.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { readMovieDiscoveryStatus } from "./discovery-status.ts";
 
 const HISTORY_LIMIT = 10;
 
@@ -14,10 +15,19 @@ export async function readMovieTargetProgressV4(
     epoch: number;
     owner: boolean;
     ownDemand: boolean;
+    discovery?: { generation: number; reserved: boolean };
   },
   budget: PublicationAuthorityReadBudget,
 ) {
   if (!input.owner && !input.ownDemand) return null;
+  const discovery =
+    input.discovery === undefined || budget.take <= 1
+      ? undefined
+      : await readMovieDiscoveryStatus(
+          tx,
+          { ...input.discovery, scope: input.scope, epoch: input.epoch },
+          budget,
+        );
   const selected: Prisma.AcquisitionAttemptWhereInput = {
     edition: input.scope.edition,
     mediaIds: { equals: [input.scope.mediaId] },
@@ -143,6 +153,7 @@ export async function readMovieTargetProgressV4(
     historyTruncated:
       presentationTruncated(attempts.length, attemptTake) ||
       presentationTruncated(torrents.length, torrentTake),
+    ...(discovery === undefined ? {} : { discovery }),
   });
 }
 

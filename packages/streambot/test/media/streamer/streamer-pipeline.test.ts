@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
-import type { PlayerFactory } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
+import type {
+  PlayerFactory,
+  StreamerDependencies,
+} from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type {
   ResolvedSource,
@@ -37,6 +40,7 @@ type PrepareSnapshot = {
   inputColor: string | undefined;
   audioOnly: boolean | undefined;
   audioVolume: number | undefined;
+  audioProcessing: unknown;
   readrate: number | undefined;
   readrateInitialBurst: number | undefined;
   playType: string | undefined;
@@ -58,6 +62,7 @@ function snapshotPrepare(prepare: NonNullable<PlayerOptions>["prepare"]) {
     inputColor: prepare?.inputColor,
     audioOnly: prepare?.audioOnly,
     audioVolume: prepare?.audioVolume,
+    audioProcessing: prepare?.audioProcessing,
     readrate: prepare?.readrate,
     readrateInitialBurst: prepare?.readrateInitialBurst,
   };
@@ -135,6 +140,7 @@ async function startPipelineRun(options: {
   resolved?: ResolvedSource;
   startErrors?: (Error | undefined)[];
   volume?: number;
+  audioProcessingFlags?: StreamerDependencies["audioProcessingFlags"];
 }) {
   const { factory, attempts } = makeFakeFactory(options.startErrors);
   const observerCalls: (boolean | undefined)[] = [];
@@ -145,6 +151,9 @@ async function startPipelineRun(options: {
     () => 0,
     {
       createPlayer: factory,
+      ...(options.audioProcessingFlags === undefined
+        ? {}
+        : { audioProcessingFlags: options.audioProcessingFlags }),
       createObserver: (hardware, now, onStall, observerOptions) => {
         observerCalls.push(observerOptions?.audioOnly);
         observerLiveCalls.push(observerOptions?.live);
@@ -223,6 +232,31 @@ describe("StreambotStreamer pipeline options", () => {
     expect(attempts[1]?.hasEncoder).toBe(false); // software encoder on the retry
     expect(attempts[1]?.subtitleBurn).toEqual({ path: SUBTITLE_PATH });
     expect(attempts[1]?.inputColor).toBe("hdr");
+
+    attempts[1]?.resolve();
+    await run;
+  });
+
+  test("evaluates the audio flags for the guild once per segment, including a fallback segment", async () => {
+    const guilds: string[] = [];
+    const { attempts, run } = await startPipelineRun({
+      pipelineMode: "hw",
+      startErrors: [new Error("overlay_vaapi unsupported")],
+      audioProcessingFlags: (guildId) => {
+        guilds.push(guildId);
+        return Promise.resolve({
+          dialogDownmix: false,
+          loudnessNormalization: true,
+          liveResync: false,
+          trackRanking: false,
+        });
+      },
+    });
+
+    expect(guilds).toEqual([VOICE.guildId, VOICE.guildId]);
+    expect(attempts).toHaveLength(2);
+    for (const attempt of attempts)
+      expect(attempt.audioProcessing).toEqual({ loudnessNormalization: true });
 
     attempts[1]?.resolve();
     await run;

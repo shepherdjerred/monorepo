@@ -100,7 +100,7 @@ const app = createApp({
       ["images", "helm-push"],
       { baseUrl: serverUrl, token: apiToken, requirePipelineSuccess: true },
     ),
-  hostedAutomationApproved: (pipeline) =>
+  automationHeadApproved: (pipeline) =>
     hasExactHeadApproval(pipeline, {
       repo: repoSlug,
       token: approvalReadToken,

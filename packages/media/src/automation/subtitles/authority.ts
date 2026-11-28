@@ -104,6 +104,51 @@ export function policyRequirements(
   return { targets, reasons };
 }
 
+type AssetCoverageItem = Prisma.LibraryAssetGetPayload<{
+  include: {
+    coverage: {
+      include: {
+        media: {
+          include: {
+            intents: { include: { profile: true } };
+            parent: { include: { parent: true } };
+          };
+        };
+      };
+    };
+  };
+}>["coverage"][number];
+
+type HouseholdBindingRecord = {
+  mediaId: string;
+  profileId?: string;
+  profileVersion?: number;
+  originalLanguage?: string | null;
+  enabled?: boolean;
+};
+
+async function readCoverageHouseholdRequirements(
+  tx: Prisma.TransactionClient,
+  coverage: readonly AssetCoverageItem[],
+  targets: SubtitleTarget[],
+  reasons: string[],
+) {
+  const household: HouseholdBindingRecord[] = [];
+  for (const { media } of coverage) {
+    const series =
+      media.parent?.kind === "series" ? media.parent : media.parent?.parent;
+    const requirement = await householdCaptionRequirements(
+      tx,
+      defaultIntent(media.intents)?.profile ?? null,
+      media.originalLanguage ?? series?.originalLanguage ?? null,
+    );
+    targets.push(...requirement.targets);
+    reasons.push(...requirement.reasons);
+    household.push({ mediaId: media.id, ...requirement.binding });
+  }
+  return household;
+}
+
 /** The digest excludes subtitle progress; one completed target cannot obsolete its sibling. */
 export async function currentSubtitleWork(
   tx: Prisma.TransactionClient,
@@ -155,19 +200,11 @@ export async function currentSubtitleWork(
   );
   const requirements = policyRequirements(policies, audio ?? null, epoch);
   const { reasons } = requirements;
-  const household = await Promise.all(
-    asset.coverage.map(async ({ media }) => {
-      const series =
-        media.parent?.kind === "series" ? media.parent : media.parent?.parent;
-      const requirement = await householdCaptionRequirements(
-        tx,
-        defaultIntent(media.intents)?.profile ?? null,
-        media.originalLanguage ?? series?.originalLanguage ?? null,
-      );
-      targets.push(...requirement.targets);
-      reasons.push(...requirement.reasons);
-      return { mediaId: media.id, ...requirement.binding };
-    }),
+  const household = await readCoverageHouseholdRequirements(
+    tx,
+    asset.coverage,
+    targets,
+    reasons,
   );
   if (
     await hasPendingSeriesPackPublicationV1(tx, {

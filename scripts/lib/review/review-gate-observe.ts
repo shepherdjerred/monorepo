@@ -168,13 +168,14 @@ export async function observeProviderOnce(input: {
   });
 
   // The same per-round rule the combined decision applies.
+  const priorRound = state.priorRound ?? false;
   const judged = judgedSnapshot(
     {
       provider,
       reviewState: state.state,
       threads: threadResult.threads,
       blockedReason: state.blockedReason,
-      priorRound: state.priorRound ?? false,
+      priorRound,
     },
     policy,
   );
@@ -186,6 +187,7 @@ export async function observeProviderOnce(input: {
     policy: judged.policy,
     skipReason: state.skipReason,
     blockedReason: judged.blockedReason,
+    priorRoundPass: priorRound && state.state !== "reviewed",
   });
 
   return {

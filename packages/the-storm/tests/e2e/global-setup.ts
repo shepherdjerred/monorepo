@@ -6,8 +6,7 @@ import { startFakeBrain, type FakeBrain } from "./harness/fake-brain.ts";
 import {
   e2eProfile,
   gameplayFixtures,
-  loadResources,
-  capacityResources,
+  profileResources,
   capacityBootstrapEnvironment,
   type E2eProfile,
 } from "./gameplay-fixtures.ts";
@@ -84,6 +83,7 @@ async function restoreReviewedShops(server: ServerInfo): Promise<void> {
     host: server.host,
     port: server.rconPort,
     password: server.rconPassword,
+    timeoutMs: 30_000,
   });
   try {
     const reply = await rcon.command("shoprestore apply");
@@ -114,12 +114,36 @@ function savedLogPath(full: boolean): string {
   );
 }
 
-async function arenaAdmission(server: ServerInfo): Promise<void> {
+const ARENA_FAILURE_MARKERS = [
+  "Could not prepare arenas; admission is disabled",
+  "The Storm failed to enable",
+  "Error occurred while enabling",
+] as const;
+
+export async function arenaAdmission(
+  server: ServerInfo,
+  options?: {
+    readLogs?: (server: ServerInfo) => Promise<string>;
+    sleep?: (ms: number) => Promise<void>;
+    maxAttempts?: number;
+  },
+): Promise<void> {
+  const readLogs = options?.readLogs ?? serverLogs;
+  const sleep = options?.sleep ?? Bun.sleep;
+  const maxAttempts = options?.maxAttempts ?? 120;
   // An idle runner can report "open" before asynchronous map validation finishes.
-  for (let attempt = 0; attempt < 120; attempt++) {
-    const logs = await serverLogs(server);
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const logs = await readLogs(server);
     if (logs.includes("Prepared arena maps; admission is open")) return;
-    await Bun.sleep(500);
+    const failure = ARENA_FAILURE_MARKERS.find((marker) =>
+      logs.includes(marker),
+    );
+    if (failure !== undefined) {
+      throw new Error(
+        `Arena startup failed (${failure}):\n${logs.slice(-8000)}`,
+      );
+    }
+    await sleep(500);
   }
   throw new Error("The authored arenas did not open after Paper startup");
 }
@@ -175,6 +199,7 @@ export default async function setup(project: TestProject) {
     );
   }
 
+  const resources = profileResources(profile);
   const server = await startServer({
     cacheDir: path.join(
       packageRoot,
@@ -186,8 +211,7 @@ export default async function setup(project: TestProject) {
     warmCache: Bun.env["STORM_E2E_COLD"] !== "1",
     stormJar,
     ...(await gameplayFixtures(packageRoot, profile)),
-    ...(profile === "load" ? { resources: loadResources() } : {}),
-    ...(profile === "capacity" ? { resources: capacityResources() } : {}),
+    ...(resources === undefined ? {} : { resources }),
     ownedConfigDir,
     env: {
       ...worldSignProofEnvironment(),

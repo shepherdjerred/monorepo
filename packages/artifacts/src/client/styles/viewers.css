@@ -1,0 +1,527 @@
+/* ── Focused view layout ─────────────────────────────────────────────────── */
+.ar-focus {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: calc(100dvh - var(--ar-top));
+  min-height: 0;
+}
+.ar-focus-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.ar-focus-title h1 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.ar-crumbs {
+  font-size: 12px;
+}
+.ar-crumbs a {
+  color: var(--ui-muted);
+}
+.ar-focus-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.ar-note-text {
+  max-width: 60ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ar-focus-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ar-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.ar-select select {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--ui-btn-edge);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+}
+.ar-focus-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  min-height: 0;
+}
+.ar-viewer-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ui-track);
+}
+.ar-mode-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  z-index: 20;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--ui-ink);
+  color: var(--ui-panel);
+  font-size: 12.5px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+@media (max-width: 900px) {
+  .ar-focus {
+    height: auto;
+  }
+  .ar-focus-body {
+    grid-template-columns: 1fr;
+  }
+  .ar-viewer-pane {
+    height: 70dvh;
+  }
+}
+
+/* ── Stage ───────────────────────────────────────────────────────────────── */
+.ar-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.ar-stage[data-commenting="true"],
+.ar-stage[data-commenting="true"] * {
+  cursor: crosshair;
+}
+.ar-stage[data-commenting="true"] .ar-pin {
+  cursor: pointer;
+}
+
+/* Pins: constant size, never scaled with the content. */
+.ar-pins {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ar-pin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border: 2px solid var(--ui-panel);
+  border-radius: 999px 999px 999px 2px;
+  background: var(--ar-pin);
+  color: var(--ar-pin-ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 4px color-mix(in srgb, black 35%, transparent);
+  transform: translate(-2px, -100%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.ar-pin[data-hollow="true"] {
+  background: var(--ui-panel);
+  border-color: var(--ar-pin);
+  color: var(--ar-pin);
+}
+.ar-pin[data-resolved="true"] {
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+.ar-pin[data-approximate="true"] {
+  border-style: dashed;
+}
+.ar-pin[data-selected="true"] {
+  outline: 3px solid color-mix(in srgb, var(--ar-pin) 45%, transparent);
+  outline-offset: 1px;
+  z-index: 2;
+}
+.ar-pin-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--ar-pin);
+  color: var(--ar-pin-ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+.ar-pin-badge[data-hollow="true"] {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--ar-pin);
+  color: var(--ar-pin);
+}
+
+.ar-popover {
+  position: absolute;
+  z-index: 30;
+  width: 300px;
+  padding: 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  box-shadow: 0 8px 28px color-mix(in srgb, black 25%, transparent);
+}
+@media (max-width: 640px) {
+  .ar-popover {
+    right: 8px;
+    bottom: 8px;
+    left: 8px !important;
+    top: auto !important;
+    width: auto;
+  }
+}
+
+/* ── Frames ──────────────────────────────────────────────────────────────── */
+.ar-frame-viewer {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+.ar-frame-viewer[data-mode="node"] {
+  place-items: start;
+}
+.ar-frame-box {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 0 var(--ui-line);
+}
+.ar-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  background: #fff;
+  transform-origin: 0 0;
+}
+.ar-frame-box:not([data-active="true"]) .ar-frame {
+  pointer-events: none;
+}
+.ar-frame-activate,
+.ar-frame-catcher {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+.ar-frame-activate {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 4px;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+}
+.ar-frame-activate span,
+.ar-frame-activate svg {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.ar-frame-activate:hover span,
+.ar-frame-activate:hover svg,
+.ar-frame-activate:focus-visible span,
+.ar-frame-activate:focus-visible svg {
+  opacity: 1;
+}
+.ar-frame-activate:hover,
+.ar-frame-activate:focus-visible {
+  background: color-mix(in srgb, black 42%, transparent);
+  color: #fff;
+}
+.ar-frame-activate svg {
+  width: 20px;
+  height: 20px;
+}
+.ar-exit-chip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--ui-ink);
+  color: var(--ui-panel);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ar-exit-chip svg {
+  width: 14px;
+  height: 14px;
+}
+.ar-exit-chip kbd {
+  border-color: color-mix(in srgb, var(--ui-panel) 35%, transparent);
+  background: transparent;
+  color: inherit;
+}
+.ar-badge-approx {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 4;
+  max-width: calc(100% - 20px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+  font-size: 12px;
+}
+
+/* ── PDF ─────────────────────────────────────────────────────────────────── */
+.ar-pdf {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.ar-pdf-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-head);
+  font-size: 12.5px;
+}
+.ar-pdf-scroll {
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+}
+.ar-pdf-slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding-bottom: 12px;
+}
+.ar-pdf-page {
+  position: relative;
+  background: #fff;
+  box-shadow: 0 1px 6px color-mix(in srgb, black 22%, transparent);
+}
+.ar-pdf-page canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ar-pdf-page .textLayer {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Image, video, cast, markdown, file ──────────────────────────────────── */
+.ar-image {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+  touch-action: none;
+}
+.ar-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  user-select: none;
+}
+.ar-image[data-zoomed="true"] {
+  cursor: grab;
+}
+.ar-zoom-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  gap: 6px;
+}
+.ar-video {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+.ar-video-el {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+.ar-time-strip {
+  position: relative;
+  height: 30px;
+  margin: 0 12px;
+  border-top: 1px solid var(--ui-line);
+  background: var(--ui-panel);
+}
+.ar-video .ar-time-strip {
+  flex: none;
+  width: 100%;
+  margin: 0;
+}
+.ar-time-pin {
+  position: absolute;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--ar-pin);
+  color: var(--ar-pin-ink);
+  font-size: 11px;
+  font-weight: 700;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+.ar-time-pin[data-hollow="true"] {
+  background: var(--ui-panel);
+  box-shadow: inset 0 0 0 2px var(--ar-pin);
+  color: var(--ar-pin);
+}
+.ar-time-pin[data-selected="true"] {
+  outline: 3px solid color-mix(in srgb, var(--ar-pin) 45%, transparent);
+}
+.ar-time-pin[data-resolved="true"] {
+  opacity: 0.55;
+}
+.ar-cast {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: var(--ui-panel);
+}
+.ar-cast-player {
+  padding: 12px;
+}
+
+.ar-md-scroll {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: var(--ui-panel);
+}
+.ar-md {
+  max-width: 78ch;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+  line-height: 1.65;
+}
+.ar-md h1,
+.ar-md h2,
+.ar-md h3 {
+  margin: 1.4em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.ar-md h1 {
+  font-size: 22px;
+}
+.ar-md h2 {
+  font-size: 18px;
+}
+.ar-md h3 {
+  font-size: 15px;
+}
+.ar-md p,
+.ar-md ul,
+.ar-md ol,
+.ar-md table,
+.ar-md pre {
+  margin: 0 0 1em;
+}
+.ar-md a {
+  color: var(--ui-accent);
+}
+.ar-md img {
+  max-width: 100%;
+  height: auto;
+}
+.ar-md code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--ui-head);
+  font-family: var(--ui-font-mono);
+  font-size: 0.9em;
+}
+.ar-md pre {
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-head);
+}
+.ar-md pre code {
+  padding: 0;
+  background: transparent;
+}
+.ar-md table {
+  border-collapse: collapse;
+}
+.ar-md th,
+.ar-md td {
+  padding: 6px 10px;
+  border: 1px solid var(--ui-line);
+}
+.ar-md th {
+  background: var(--ui-head);
+  text-align: left;
+}
+.ar-file-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  max-width: 560px;
+  margin: 48px auto;
+  padding: 20px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+}
+.ar-file-card svg {
+  width: 32px;
+  height: 32px;
+  color: var(--ui-muted);
+}
+.ar-file-card h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ar-file-card p {
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}

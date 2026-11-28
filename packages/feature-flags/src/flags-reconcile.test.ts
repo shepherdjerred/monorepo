@@ -248,6 +248,55 @@ test("machine fetcher requires a token and enforces same-origin", () => {
   );
 });
 
+test("machine fetcher sends X-Flags-Actor only when an actor is given", async () => {
+  const seen: (string | null)[] = [];
+  const upstream: FlagsHttpFetcher = (_input, init) => {
+    seen.push(new Headers(init?.headers).get("x-flags-actor"));
+    return Promise.resolve(Response.json({ ok: true }));
+  };
+  await createFlagsMachineFetcher(
+    "https://flags.example.test",
+    "test-machine-token",
+    upstream,
+  )("https://flags.example.test/v1/diff");
+  await createFlagsMachineFetcher(
+    "https://flags.example.test",
+    "test-machine-token",
+    upstream,
+    { actor: "temporal-flag-inventory-sync" },
+  )("https://flags.example.test/v1/diff", {
+    headers: { "X-Flags-Actor": "spoofed" },
+  });
+  expect(seen).toEqual([null, "temporal-flag-inventory-sync"]);
+});
+
+test("machine fetcher rejects an invalid actor label", () => {
+  for (const actor of [
+    "",
+    "Toolkit",
+    "-leading",
+    "has space",
+    "a".repeat(65),
+  ]) {
+    expect(() =>
+      createFlagsMachineFetcher(
+        "https://flags.example.test",
+        "test-machine-token",
+        fetch,
+        { actor },
+      ),
+    ).toThrow(/Invalid Flags actor label/);
+  }
+  expect(() =>
+    createFlagsMachineFetcher(
+      "https://flags.example.test",
+      "test-machine-token",
+      fetch,
+      { actor: `ops.bot_1@host-${"a".repeat(48)}` },
+    ),
+  ).not.toThrow();
+});
+
 test("snapshot reads stay credentialless, resolve minecraft/tsmc route, and detect drift", async () => {
   const scoutProd = selectFlagDeployments({
     deploymentFilter: "scout/prod",

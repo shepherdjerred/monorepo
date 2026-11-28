@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
 import { HOMELAB_VAULT_ID } from "#src/onepassword.ts";
+import { useSynthesizedApp } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
   terraform: z.looseObject({
@@ -17,10 +17,8 @@ const ConfigurationSchema = z.looseObject({
   output: z.record(z.string(), z.object({ value: z.string() }).loose()),
 });
 
-async function argocd() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(JSON.parse(synthesized.get("argocd") ?? ""));
-}
+const readStack = useSynthesizedApp();
+const argocd = () => readStack("argocd", ConfigurationSchema);
 
 /** The ArgoCD token, 1Password item and output of each account, by address. */
 const HANDOFFS = [
@@ -68,8 +66,8 @@ const HANDOFFS = [
   },
 ] as const;
 
-test("argocd keeps the token and 1Password item addresses of its state", async () => {
-  const { resource, output } = await argocd();
+test("argocd keeps the token and 1Password item addresses of its state", () => {
+  const { resource, output } = argocd();
   expect(Object.keys(resource).toSorted()).toEqual([
     "argocd_account_token",
     "onepassword_item",
@@ -85,8 +83,8 @@ test("argocd keeps the token and 1Password item addresses of its state", async (
   );
 });
 
-test("each account's token is written to its own concealed 1Password field", async () => {
-  const { resource, output } = await argocd();
+test("each account's token is written to its own concealed 1Password field", () => {
+  const { resource, output } = argocd();
   for (const { token, item, title, field, output: name } of HANDOFFS) {
     expect(resource["argocd_account_token"]?.[token]).toEqual({
       account: token.replaceAll("_", "-"),
@@ -111,8 +109,8 @@ test("each account's token is written to its own concealed 1Password field", asy
   }
 });
 
-test("argocd authenticates as the tofu-argocd account and keeps its lock constraints", async () => {
-  const { terraform, provider, variable, ...rest } = await argocd();
+test("argocd authenticates as the tofu-argocd account and keeps its lock constraints", () => {
+  const { terraform, provider, variable, ...rest } = argocd();
   expect(provider["argocd"]).toEqual([
     {
       server_addr: "argocd.tailnet-1a49.ts.net:443",

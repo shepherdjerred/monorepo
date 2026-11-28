@@ -131,7 +131,7 @@ During implementation, run focused tasks:
 
 ```bash
 bunx turbo run build typecheck test lint --filter=<package>
-bunx lefthook run pre-commit
+bunx lefthook run pre-commit # includes jscpd (standalone: bun run jscpd)
 ```
 
 Woodpecker runs the `ci` test tier exhaustively and is the CI source of truth.

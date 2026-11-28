@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -80,6 +80,55 @@ it("follows the native game after Prism forwards launch and refuses to signal a 
     game.kill();
     await game.exited;
     server.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+it("fails fast with an actionable diagnostic when Prism stalls in EnsureAvailableMemory", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "prism-mem-"));
+  try {
+    const prismLogPath = path.join(directory, "PrismLauncher-0.log");
+    await writeFile(
+      prismLogPath,
+      '0.100 D Task "EnsureAvailableMemory(0x99)" starting\n',
+    );
+    const spec: LaunchSpec = {
+      repoRoot: directory,
+      bootstrapPath: path.join(directory, "bootstrap.json"),
+      bootstrap: {
+        socket: path.join(directory, "client.sock"),
+        artifacts: directory,
+        server: "mc.ts-mc.net:30000",
+      },
+      gameDir: directory,
+      username: "XiguaJerred",
+      logPath: path.join(directory, "client.log"),
+    };
+    const cleaned: boolean[] = [];
+    const owned = ownPrismGame(
+      spec,
+      {
+        pid: 9999,
+        exited: Promise.resolve(0),
+        exitCode: () => 0,
+        kill: () => {
+          // Synthetic forwarded launcher is already exited.
+        },
+      },
+      (completed) => {
+        cleaned.push(completed);
+        return Promise.resolve();
+      },
+      { prismLogPath, prismLogOffset: 0, memoryPromptGraceMs: 30 },
+    );
+    expect(await owned.exited).toBe(1);
+    expect(owned.exitCode()).toBe(1);
+    expect(owned.failureReason?.()).toContain("EnsureAvailableMemory");
+    expect(cleaned).toEqual([false]);
+    expect(await readFile(spec.logPath, "utf8")).toContain(
+      "EnsureAvailableMemory",
+    );
+  } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });

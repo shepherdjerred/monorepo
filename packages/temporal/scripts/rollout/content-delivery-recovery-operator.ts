@@ -52,7 +52,9 @@ import { executeContentRecovery } from "#lib/delivery/content-recovery/execute.t
 import {
   ContentOperatorError,
   type ContentAction,
+  type ContentOperatorAction,
 } from "#lib/delivery/content-recovery/request.ts";
+import { inspectForumPrior } from "./content-delivery-recovery-forum-prior.ts";
 
 /** The Forum's candidate web Deployment runs the frozen image (4.15). */
 async function forumWebReady(
@@ -156,7 +158,7 @@ export async function isBarrierFencedDeploymentWorkflow(
 /** Foreground operator capability only; never registered on a worker or Workflow. */
 export async function recoverContentWithOperator(
   id: string,
-  action: ContentAction,
+  action: ContentOperatorAction,
   runtime: {
     kubernetes: KubeConfig;
     connection: Connection;
@@ -407,6 +409,13 @@ export async function recoverContentWithOperator(
       await backend(await load());
       return { observedAt: new Date().toISOString() };
     },
+    inspectPrior: async (context, prior) =>
+      await inspectForumPrior(
+        context,
+        prior,
+        runtime.kubernetes,
+        runtime.command,
+      ),
     restore: async (context) => {
       await restoreContentDispatch(context, runtime.connection, read);
     },

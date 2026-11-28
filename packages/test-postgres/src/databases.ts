@@ -1,6 +1,17 @@
-import { currentDatabaseOwner, ownerCommentSql } from "./owner.ts";
+import {
+  currentDatabaseOwner,
+  currentProcessStart,
+  hostProcessProbe,
+  ownerCommentSql,
+  ownerProcessState,
+  sqlLiteral,
+  type OwnerRecord,
+  type ProcessProbe,
+} from "./owner.ts";
 import { databaseUrlFromAdmin } from "./server.ts";
 import {
+  listManagedDatabases,
+  listManagedDatabasesAsync,
   psqlMaintenance,
   psqlMaintenanceCommands,
   psqlMaintenanceCommandsAsync,
@@ -28,22 +39,133 @@ export function assertOwnedEphemeralDatabaseName(dbName: string): void {
   }
 }
 
+export type ExplicitDropDecision =
+  | { readonly action: "noop" }
+  | { readonly action: "drop" }
+  | {
+      readonly action: "refuse";
+      readonly reason:
+        | "unowned"
+        | "malformed-owner"
+        | "foreign-host"
+        | "owner-alive"
+        | "owner-start-unknown";
+      readonly message: string;
+    };
+
+export function decideExplicitDrop(input: {
+  readonly dbName: string;
+  readonly row: { readonly record: OwnerRecord } | undefined;
+  readonly callerPid: number;
+  readonly callerProcessStart: string;
+  readonly probe: ProcessProbe;
+}): ExplicitDropDecision {
+  const { dbName, row, callerPid, callerProcessStart, probe } = input;
+  if (row === undefined) {
+    return { action: "noop" };
+  }
+  if (row.record.kind === "none") {
+    return {
+      action: "refuse",
+      reason: "unowned",
+      message: `Refusing to drop test database ${dbName}: database has no monorepo-test-owner record`,
+    };
+  }
+  if (row.record.kind === "malformed") {
+    return {
+      action: "refuse",
+      reason: "malformed-owner",
+      message: `Refusing to drop test database ${dbName}: malformed owner comment (${row.record.comment})`,
+    };
+  }
+  const { owner } = row.record;
+  if (
+    owner.host === probe.host &&
+    owner.pid === callerPid &&
+    owner.processStart === callerProcessStart
+  ) {
+    return { action: "drop" };
+  }
+  switch (ownerProcessState(owner, probe)) {
+    case "gone":
+      return { action: "drop" };
+    case "foreign-host":
+      return {
+        action: "refuse",
+        reason: "foreign-host",
+        message: `Refusing to drop test database ${dbName}: owned by foreign host ${owner.host} (current host: ${probe.host})`,
+      };
+    case "alive":
+      return {
+        action: "refuse",
+        reason: "owner-alive",
+        message: `Refusing to drop test database ${dbName}: owned by another live process (pid ${owner.pid.toString()} started ${owner.processStart} on ${owner.host})`,
+      };
+    case "start-unknown":
+      return {
+        action: "refuse",
+        reason: "owner-start-unknown",
+        message: `Refusing to drop test database ${dbName}: cannot verify start time of live owner pid ${owner.pid.toString()} on ${owner.host}`,
+      };
+  }
+}
+
+export type DropOwnedDatabaseOptions = {
+  readonly adminUrl?: string | undefined;
+  readonly probe?: ProcessProbe | undefined;
+};
+
 export function dropOwnedTestDatabaseSync(
   dbName: string,
-  options?: { readonly adminUrl?: string | undefined },
+  options?: DropOwnedDatabaseOptions,
 ): void {
   assertOwnedEphemeralDatabaseName(dbName);
-  psqlMaintenance(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`, options);
+  const row = listManagedDatabases(`d.datname = ${sqlLiteral(dbName)}`, {
+    adminUrl: options?.adminUrl,
+  })[0];
+  const decision = decideExplicitDrop({
+    dbName,
+    row,
+    callerPid: process.pid,
+    callerProcessStart: currentProcessStart(),
+    probe: options?.probe ?? hostProcessProbe,
+  });
+  if (decision.action === "noop") {
+    return;
+  }
+  if (decision.action === "refuse") {
+    throw new Error(decision.message);
+  }
+  psqlMaintenance(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`, {
+    adminUrl: options?.adminUrl,
+  });
 }
 
 export async function dropOwnedTestDatabase(
   dbName: string,
-  options?: { readonly adminUrl?: string | undefined },
+  options?: DropOwnedDatabaseOptions,
 ): Promise<void> {
   assertOwnedEphemeralDatabaseName(dbName);
+  const rows = await listManagedDatabasesAsync(
+    `d.datname = ${sqlLiteral(dbName)}`,
+    { adminUrl: options?.adminUrl },
+  );
+  const decision = decideExplicitDrop({
+    dbName,
+    row: rows[0],
+    callerPid: process.pid,
+    callerProcessStart: currentProcessStart(),
+    probe: options?.probe ?? hostProcessProbe,
+  });
+  if (decision.action === "noop") {
+    return;
+  }
+  if (decision.action === "refuse") {
+    throw new Error(decision.message);
+  }
   await psqlMaintenanceCommandsAsync(
     [`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`],
-    options,
+    { adminUrl: options?.adminUrl },
   );
 }
 

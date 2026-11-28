@@ -1,0 +1,162 @@
+/* ── Threads ─────────────────────────────────────────────────────────────── */
+.ar-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+  border-left: 1px solid var(--ui-line);
+  background: var(--ui-panel);
+}
+@media (max-width: 900px) {
+  .ar-sidebar {
+    border-top: 1px solid var(--ui-line);
+    border-left: 0;
+  }
+}
+.ar-waiting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.ar-waiting[data-waiting="true"] {
+  color: var(--ui-sev-ok-text);
+  font-weight: 600;
+}
+.ar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ui-sev-unknown);
+}
+.ar-waiting[data-waiting="true"] .ar-dot {
+  background: var(--ui-sev-ok);
+}
+.ar-threads {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+.ar-thread {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+.ar-thread[data-selected="true"] {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 1px var(--ui-accent);
+}
+.ar-thread[data-state="resolved"] {
+  background: var(--ui-head);
+}
+.ar-thread-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.ar-thread-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ar-comments {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+.ar-comment {
+  display: grid;
+  gap: 4px;
+}
+.ar-comment-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.ar-comment-head time {
+  color: var(--ui-muted);
+}
+.ar-comment-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.ar-comment[data-author="agent"] .ar-comment-body {
+  padding-left: 8px;
+  border-left: 2px solid var(--ui-line);
+}
+.ar-comment-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.ar-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--ui-sev-unknown-soft);
+  color: var(--ui-sev-unknown-text);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.ar-chip[data-tone="sent"] {
+  background: var(--ui-sev-info-soft);
+  color: var(--ui-sev-info-text);
+}
+.ar-chip[data-tone="done"] {
+  background: var(--ui-sev-ok-soft);
+  color: var(--ui-sev-ok-text);
+}
+.ar-reply-toggle {
+  justify-self: start;
+  min-height: 24px;
+  padding: 0 4px;
+  border-radius: 4px;
+  color: var(--ui-accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ar-reply-toggle:hover {
+  text-decoration: underline;
+}
+.ar-composer {
+  display: grid;
+  gap: 6px;
+}
+.ar-composer label {
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.ar-composer textarea {
+  width: 100%;
+  min-height: 64px;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-btn-edge);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font: inherit;
+  resize: vertical;
+}
+.ar-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}

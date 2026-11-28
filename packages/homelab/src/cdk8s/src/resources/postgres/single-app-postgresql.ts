@@ -21,7 +21,7 @@ import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/
  * apps to this set — all new clusters render `zfs-ssd-lz4` from creation.
  */
 export const GRANDFATHERED_ZFS_SSD_POSTGRES_APPS: ReadonlySet<string> = new Set(
-  ["bugsink", "delivery", "golink", "media", "tasknotes", "tracker"],
+  ["delivery", "golink", "media", "tasknotes", "tracker"],
 );
 
 type SingleAppPostgreSQLOptions = {

@@ -209,7 +209,7 @@ describe("compacted run cache", () => {
     expect(first?.suites).toHaveLength(1);
     expect(first?.tasks).toHaveLength(1);
     const cached = await readdir(directory);
-    expect(cached.toSorted()).toEqual(["42.json", "42.v2.json"]);
+    expect(cached.toSorted()).toEqual(["42.json", "42.v3.json"]);
     const second = await loadVerifyRun(client, 42, directory);
     expect(mocks.send).toHaveBeenCalledTimes(1);
     expect(second).toEqual(first);
@@ -235,7 +235,7 @@ describe("compacted run cache", () => {
 
     mocks.send.mockRejectedValue(missing());
     expect(await loadVerifyRun(client, 8, directory)).toBeNull();
-    expect(await readdir(directory)).toEqual(["7.v2.json"]);
+    expect(await readdir(directory)).toEqual(["7.v3.json"]);
   });
 });
 

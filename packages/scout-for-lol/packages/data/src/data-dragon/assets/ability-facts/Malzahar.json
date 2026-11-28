@@ -69,7 +69,30 @@
         ]
       },
       "resolvedDescription": "Malzahar opens two portals to the Void that fire projectiles inward, dealing 70/105/140/175/210 (+55% AP) magic damage and Silencing for 1/1.25/1.5/1.75/2 second(s).",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 1600,
+        "missiles": [
+          {
+            "name": "malzaharqmissile",
+            "width": 85,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Void Swarm",
@@ -169,7 +192,15 @@
         ]
       },
       "resolvedDescription": "Passive: Malzahar's other Abilities give him a stack when cast (max 2). Active: Malzahar summons a Voidling plus an additional Voidling per stack. Voidlings last 8/8/9/9/10 seconds and deal 12/14/16/18/20 (+5-64.5 based on level) (+40% bonus AD) (+20% AP) magic damage each hit.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "AreaClamped",
+        "castTime": null,
+        "radius": 60,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Malefic Visions",
@@ -222,7 +253,15 @@
       "resolvedDescription": "Malzahar inflicts terrible visions, dealing 80/115/150/185/220 (+80% AP) magic damage over 4 seconds. Applying Call of the Void or Nether Grasp to the victim during this time refreshes the visions. If the victim dies, Malzahar gains {{ manarestore }} Mana and the visions spread to the nearest enemy. Malefic Visions executes minions below 10-30 (based on level) Health.",
       "unresolved": [
         "manarestore"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Target",
+        "castTime": null,
+        "radius": 500,
+        "lineWidth": null,
+        "missileSpeed": 1400,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Nether Grasp",
@@ -303,7 +342,15 @@
       "resolvedDescription": "Malzahar Suppresses an enemy champion and deals 125/200/275 (+80% AP) magic damage over 2.5 seconds. A zone of negative energy is created around his target dealing {{ zonedamagetooltip }} max Health magic damage over 5 seconds.",
       "unresolved": [
         "zonedamagetooltip"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 280,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

@@ -11,6 +11,7 @@ import {
   AvistazFamilyProvider,
   type ProviderCandidate,
   type ProviderSearch,
+  type ProviderSearchPage,
   type ProviderRecentPage,
 } from "#integrations/providers.ts";
 import { MagnetDownloadProvider } from "#integrations/magnetdownload.ts";
@@ -48,6 +49,7 @@ export const StoredCandidateSchema = z.object({
 });
 export type TrackerClient = {
   search: (input: ProviderSearch) => Promise<ProviderCandidate[]>;
+  searchPage?: (input: ProviderSearch) => Promise<ProviderSearchPage>;
   recent?: (input: { page: number }) => Promise<ProviderRecentPage>;
   download?: (candidate: ProviderCandidate) => Promise<Uint8Array<ArrayBuffer>>;
 };
@@ -55,6 +57,7 @@ export type ProviderRegistry = {
   withProvider: <T>(
     providerId: string,
     work: (client: TrackerClient) => Promise<T>,
+    options?: { deferLocalPacing: true },
   ) => Promise<T>;
 };
 
@@ -146,6 +149,7 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
   async withProvider<T>(
     providerId: string,
     work: (client: TrackerClient) => Promise<T>,
+    options?: { deferLocalPacing: true },
   ): Promise<T> {
     const configuration = await this.db.mediaProvider.findUniqueOrThrow({
       where: { id: providerId },
@@ -195,11 +199,17 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
       );
     }
     let backoffSeconds = policy.minimumIntervalSeconds;
+    let localRetryAt: Date | undefined;
     try {
       const result = await work(
         await this.client(
           providerId,
-          this.transport(providerId, ownerId, policy.minimumIntervalSeconds),
+          this.transport(
+            providerId,
+            ownerId,
+            policy.minimumIntervalSeconds,
+            options?.deferLocalPacing === true,
+          ),
           ownerId,
         ),
       );
@@ -209,7 +219,9 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
       });
       return result;
     } catch (error) {
-      if (error instanceof IntegrationError) {
+      if (error instanceof ProviderAdmissionDeferred) {
+        localRetryAt = error.retryAt;
+      } else if (error instanceof IntegrationError) {
         if (error.kind === "authentication") this.sessions.delete(providerId);
         backoffSeconds = Math.max(
           backoffSeconds,
@@ -227,7 +239,8 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
         data: {
           ownerId: null,
           leaseUntil: null,
-          nextAllowedAt: new Date(Date.now() + backoffSeconds * 1000),
+          nextAllowedAt:
+            localRetryAt ?? new Date(Date.now() + backoffSeconds * 1000),
         },
       });
     }
@@ -237,6 +250,7 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
     providerId: string,
     ownerId: string,
     intervalSeconds: number,
+    deferLocalPacing: boolean,
   ): FetchTransport {
     return async (url, init) => {
       const lease = await this.db.providerLease.findUniqueOrThrow({
@@ -249,13 +263,20 @@ export class DatabaseProviderRegistry implements ProviderRegistry {
       )
         throw new IntegrationError(providerId, "conflict");
       const wait = Math.max(0, lease.nextAllowedAt.getTime() - Date.now());
-      if (wait > 15_000)
+      if (wait > 15_000) {
+        if (deferLocalPacing)
+          throw new ProviderAdmissionDeferred(
+            providerId,
+            lease.nextAllowedAt,
+            "cooldown",
+          );
         throw new IntegrationError(
           providerId,
           "rate-limited",
           429,
           Math.ceil(wait / 1000),
         );
+      }
       if (wait > 0)
         await setTimeout(
           wait,

@@ -432,6 +432,7 @@ describe("evaluateGate", () => {
       threads: [thread({ isResolved: true })],
     });
     expect(d.state).toBe("passed");
+    expect(d.message).toContain("Codex reviewed abc123");
   });
 
   test("fails when reviewed with a blocking thread", () => {
@@ -935,6 +936,60 @@ describe("after a provider's first round", () => {
       ],
     });
     expect(d.state).toBe("passed");
+    expect(d.message).toBe(
+      "Prior review round completed by Codex (abc123 not yet reviewed at head); no unresolved P0 from any provider remains.",
+    );
+  });
+
+  test("reports prior-round completion without claiming exact-head review", () => {
+    const d = evaluateGate({
+      head,
+      provider: codexProvider,
+      policy: policy(),
+      reviewState: "reviewed",
+      threads: [],
+      priorRoundPass: true,
+    });
+    expect(d.state).toBe("passed");
+    expect(d.message).toContain(
+      "Codex completed a prior review round (abc123 not yet reviewed at head)",
+    );
+    expect(d.message).not.toContain("Codex reviewed abc123");
+  });
+
+  test("reports both exact-head and prior-round providers accurately when mixed", () => {
+    const exactOnly = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewed",
+          priorRound: true,
+        }),
+      ],
+    });
+    expect(exactOnly.state).toBe("passed");
+    expect(exactOnly.message).toBe(
+      "Codex reviewed abc123 with no blocking findings; no unresolved P0 from any provider remains.",
+    );
+
+    const mixed = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({ provider: codexProvider, reviewState: "reviewed" }),
+        snapshot({
+          provider: coderabbitProvider,
+          reviewState: "reviewing",
+          priorRound: true,
+        }),
+      ],
+    });
+    expect(mixed.state).toBe("passed");
+    expect(mixed.message).toBe(
+      "Codex reviewed abc123 with no blocking findings (prior review round completed by CodeRabbit; abc123 not yet reviewed at head by CodeRabbit); no unresolved P0 from any provider remains.",
+    );
   });
 
   test("the first round still waits and still blocks on P1", () => {

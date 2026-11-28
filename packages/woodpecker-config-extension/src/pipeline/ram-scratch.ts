@@ -7,14 +7,17 @@ const TMP = { name: "ci-ram-tmp", path: "/woodpecker/tmp" } as const;
  * Admission and pipeline generation share these bounded, disposable profiles.
  *
  * Each one moves its lane's TMPDIR (and verify's private Gradle home) from the
- * workflow's ZFS volume into tmpfs, and reserves the whole tmpfs allowance on
- * top of the lane's own measured tier. tmpfs pages count against the pod's
- * memory, so a full scratch volume can never push the process past its tier.
- * Checkout, dependency trees and reports stay on the workflow volume.
+ * workflow's ZFS volume into tmpfs. tmpfs pages count against the container's
+ * memory, so each profile adds its whole tmpfs allowance to the lane's memory
+ * limit: a full scratch volume can never squeeze the process below its tier's
+ * limit. The request stays the lane's tier, which is measured with the tmpfs
+ * pages included, so Kueue reserves what the lane really uses rather than
+ * every byte it could. Checkout, dependency trees and reports stay on the
+ * workflow volume.
  *
- * Verify qualified at a 24.1 GiB observed peak with no OOM under its 36Gi
- * limit. The browser lane peaks below 3 GiB; Scout's test PostgreSQL cluster
- * and browser profiles are its TMPDIR writers.
+ * Verify peaked at 35.9 GiB over 14 days to 2026-11-26 (p90 19.7 GiB) with no
+ * OOM under its 36Gi limit. The browser lane peaks at 4.4 GiB; Scout's test
+ * PostgreSQL cluster and browser profiles are its TMPDIR writers.
  *
  * The extended tier is the same Turbo graph running the heavier suites alone
  * (every integration suite boots a private PostgreSQL cluster under TMPDIR),
@@ -29,7 +32,7 @@ const VERIFY_SCRATCH = {
   ],
   resources: {
     ...TURBO_VERIFY_TIER,
-    memoryRequest: "30Gi",
+    // The tier's 24Gi limit plus 12Gi of tmpfs.
     memoryLimit: "36Gi",
   },
 } as const;
@@ -52,7 +55,7 @@ export const RAM_SCRATCH_PROFILES = {
     volumes: [{ ...TMP, size: "4Gi" }],
     resources: {
       ...BROWSER_TIER,
-      memoryRequest: "10Gi",
+      // The tier's 12Gi limit plus 4Gi of tmpfs.
       memoryLimit: "16Gi",
     },
   },

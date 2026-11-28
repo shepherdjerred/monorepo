@@ -377,3 +377,177 @@ describe("pre-effect OpenTofu recovery (AI-423)", () => {
     expect(isUnappliedModelTofuDeployment(afterPlan.deployment)).toBe(false);
   });
 });
+
+describe("in-cluster Job fencing before recovery execution (AI-353)", () => {
+  it.each(["inspect", "plan", "apply"] as const)(
+    "refuses platform recovery %s before launching a recovery Job while an earlier Job or Pod is still active",
+    async (action) => {
+      const applied = quarantined([
+        { request: planRequest, status: "succeeded" },
+        { request: applyRequest, status: "running" },
+      ]);
+      api.responses.set("platform-recovery/recovery%2F1", applied);
+      api.responses.set("platform/plans/deployment%2F1", saved);
+
+      const planJob = deliveryJobManifest(planRequest);
+      planJob.metadata = structuredClone(planJob.metadata) ?? {};
+      planJob.metadata.uid = `uid-${planRequest.stageKey}`;
+      planJob.status = {
+        active: 0,
+        conditions: [{ type: "Complete", status: "True" }],
+      };
+      const applyJob = deliveryJobManifest(applyRequest);
+      applyJob.metadata = structuredClone(applyJob.metadata) ?? {};
+      applyJob.metadata.uid = `uid-${applyRequest.stageKey}`;
+      applyJob.status = { active: 1, conditions: [] };
+
+      const runJob = vi.fn(() => {
+        throw new Error("Recovery Job must not start while apply Job runs");
+      });
+      const executeWithPods = (
+        podsFor: (name: string) => Promise<
+          {
+            metadata: {
+              ownerReferences: {
+                apiVersion: string;
+                kind: string;
+                name: string;
+                uid: string;
+              }[];
+            };
+            status: { phase: string };
+          }[]
+        >,
+      ) =>
+        executePlatformRecoveryAction("recovery/1", action, {
+          runJob,
+          closedWorkflow: async (id) => ({
+            workflowId: `delivery/${id}`,
+            status: "FAILED",
+          }),
+          nativeJobs: async (ctx) =>
+            await provePlatformNativeJobs(ctx, {
+              job: async (name) =>
+                name === planJob.metadata?.name ? planJob : applyJob,
+              pods: podsFor,
+            }),
+        });
+
+      await expect(executeWithPods(async () => [])).rejects.toThrow(
+        "Platform executor Job remains active",
+      );
+      expect(runJob).not.toHaveBeenCalled();
+
+      applyJob.status = {
+        active: 0,
+        conditions: [{ type: "Failed", status: "True" }],
+      };
+      await expect(
+        executeWithPods(async (name) =>
+          name === applyJob.metadata?.name
+            ? [
+                {
+                  metadata: {
+                    ownerReferences: [
+                      {
+                        apiVersion: "batch/v1",
+                        kind: "Job",
+                        name: applyJob.metadata?.name ?? "",
+                        uid: applyJob.metadata?.uid ?? "",
+                      },
+                    ],
+                  },
+                  status: { phase: "Running" },
+                },
+              ]
+            : [],
+        ),
+      ).rejects.toThrow("Native platform executor Pod is live");
+      expect(runJob).not.toHaveBeenCalled();
+    },
+  );
+
+  it("refuses control-plane platform recovery before runJob while the control-plane Job is still active", async () => {
+    const base = quarantined([{ request: planRequest, status: "running" }]);
+    const cpImage = {
+      id: "image/original",
+      component: "image:temporal-worker",
+      kind: "image",
+      uri: "docker.io/shepherdjerred/temporal-worker",
+      digest: `sha256:${"a".repeat(64)}`,
+      version: "2.0.0-1",
+      serviceId: "temporal",
+      buildId: "temporal/build1",
+      sourceRevision: "a".repeat(40),
+      createdAt: timestamp,
+      origin: { kind: "first-party" },
+    };
+    const cpChart = (n: number) => ({
+      id: `chart/${String(n)}`,
+      component: "chart:delivery-control-plane",
+      kind: "chart",
+      uri: `https://chartmuseum.tailnet-1a49.ts.net/charts/delivery-control-plane-2.0.0-${String(n)}.tgz`,
+      digest: `sha256:${"b".repeat(64)}`,
+      version: `2.0.0-${String(n)}`,
+      serviceId: "delivery-control-plane",
+      buildId: `cp/build${String(n)}`,
+      sourceRevision: "b".repeat(40),
+      createdAt: timestamp,
+      origin: { kind: "first-party" },
+    });
+    const controlPlaneContext = PlatformRecoveryContextSchema.parse({
+      ...base,
+      deployment: {
+        ...base.deployment,
+        deployment: {
+          ...base.deployment.deployment,
+          kind: "upgrade-control-plane",
+          controlPlaneSnapshot: {
+            schema: "delivery-control-plane/v1",
+            source: {
+              id: "cp/build2",
+              sourceRevision: "b".repeat(40),
+              repositoryId: 1,
+              pipelineNumber: 2,
+              ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/2",
+            },
+            previousArtifact: cpImage,
+            nextArtifact: cpImage,
+            priorChartArtifact: cpChart(1),
+            priorSelectionManaged: true,
+            chartArtifact: cpChart(2),
+          },
+        },
+        pipeline: {
+          ...base.deployment.pipeline,
+          definition: {
+            kind: "control-plane",
+            application: "delivery-control-plane",
+            namespace: "temporal",
+            runnerImage: planRequest.runnerImage,
+            chartRepository: "https://chartmuseum.tailnet-1a49.ts.net",
+            chartName: "delivery-control-plane",
+            chartComponent: "chart:delivery-control-plane",
+          },
+        },
+      },
+      expectedSettlements: { desired: "b".repeat(64) },
+    });
+    api.responses.set("platform-recovery/recovery%2F1", controlPlaneContext);
+    const runJob = vi.fn(() => {
+      throw new Error("Control-plane recovery Job must not start early");
+    });
+    await expect(
+      executePlatformRecoveryAction("recovery/1", "inspect", {
+        runJob,
+        closedWorkflow: async (id) => ({
+          workflowId: `delivery/${id}`,
+          status: "FAILED",
+        }),
+        nativeJobs: () =>
+          Promise.reject(new Error("Platform executor Job remains active")),
+      }),
+    ).rejects.toThrow("Platform executor Job remains active");
+    expect(runJob).not.toHaveBeenCalled();
+  });
+});

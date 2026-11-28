@@ -1,6 +1,5 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { z } from "zod";
 import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -10,6 +9,7 @@ import {
 } from "#src/testing/test-ids.ts";
 import { advanceAccountCursor } from "#src/database/durable/account-cursor-repository.ts";
 import { updateLastMatchTime } from "#src/database/account-cursors.ts";
+import { runCursorRepairUnderRowLock } from "#src/database/migration-replay.test-fixtures.ts";
 
 const { prisma } = createTestDatabase("durable-account-cursor");
 
@@ -199,6 +199,39 @@ describe("a polling-activity refresh of an account with a cursor", () => {
       lastMatchTime: NEWER_AT,
     });
   });
+
+  test("completes lastProcessedMatchId when V2 finishes the backfilled seed match", async () => {
+    await updateLastMatchTime(PUUID, NEWER_AT, prisma);
+
+    // An older match still cannot rewind the seeded polling instant.
+    expect(
+      await advanceAccountCursor(prisma, {
+        puuid: PUUID,
+        matchId: OLDER_MATCH,
+        matchTime: OLDER_AT,
+      }),
+    ).toEqual({ outcome: "already-applied" });
+
+    // Finishing the exact seed match sets lastProcessedMatchId once, then stays idempotent.
+    expect(
+      await advanceAccountCursor(prisma, {
+        puuid: PUUID,
+        matchId: NEWER_MATCH,
+        matchTime: NEWER_AT,
+      }),
+    ).toEqual({ outcome: "applied" });
+    expect(await storedCursor()).toEqual({
+      lastProcessedMatchId: NEWER_MATCH,
+      lastMatchTime: NEWER_AT,
+    });
+    expect(
+      await advanceAccountCursor(prisma, {
+        puuid: PUUID,
+        matchId: NEWER_MATCH,
+        matchTime: NEWER_AT,
+      }),
+    ).toEqual({ outcome: "already-applied" });
+  });
 });
 
 describe("the account cursor time repair migration", () => {
@@ -302,31 +335,13 @@ describe("the account cursor time repair migration", () => {
         cursorAdvancedAt: NEWER_AT,
       },
     });
-    const locked = Promise.withResolvers<true>();
-    const release = Promise.withResolvers<true>();
-
-    // A cursor writer holds the row mid-advance, so the repair takes its
-    // snapshot of the drifted row and then waits on the row lock.
-    const writer = prisma.$transaction(
-      async (tx) => {
-        await tx.account.updateMany({
-          where: { puuid: PUUID },
-          data: {
-            lastProcessedMatchId: UNPROCESSED_MATCH,
-            lastMatchTime: LATEST_AT,
-          },
-        });
-        locked.resolve(true);
-        await release.promise;
-      },
-      { timeout: 30_000 },
-    );
-    await locked.promise;
-    const repair = applyRepair();
-    await waitForBlockedRepair();
-    release.resolve(true);
-    await writer;
-    await repair;
+    await runCursorRepairUnderRowLock({
+      prisma,
+      puuid: PUUID,
+      lastProcessedMatchId: UNPROCESSED_MATCH,
+      lastMatchTime: LATEST_AT,
+      applyRepair,
+    });
 
     expect(await storedCursor()).toEqual({
       lastProcessedMatchId: UNPROCESSED_MATCH,
@@ -334,27 +349,3 @@ describe("the account cursor time repair migration", () => {
     });
   });
 });
-
-const BlockedQueriesSchema = z.array(z.object({ blocked: z.number() }));
-
-/**
- * Resolve once the repair statement is waiting on the writer's row lock.
- *
- * Matched on the migration's leading comment: `pg_stat_activity.query` is
- * truncated at `track_activity_query_size`, so the SQL body may be cut off.
- */
-async function waitForBlockedRepair(): Promise<void> {
-  for (let attempt = 0; attempt < 200; attempt += 1) {
-    const rows = BlockedQueriesSchema.parse(
-      await prisma.$queryRawUnsafe(
-        `SELECT count(*)::int AS blocked FROM pg_stat_activity
-         WHERE datname = current_database()
-           AND wait_event_type = 'Lock'
-           AND query LIKE '-- Repair post-match cursors%'`,
-      ),
-    );
-    if ((rows[0]?.blocked ?? 0) > 0) return;
-    await Bun.sleep(25);
-  }
-  throw new Error("The repair never blocked on the writer's row lock");
-}

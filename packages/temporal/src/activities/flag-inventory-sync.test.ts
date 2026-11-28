@@ -120,6 +120,7 @@ function buildFakeFlagsService() {
   }
 
   const authHeaders: (string | null)[] = [];
+  const actorHeaders: (string | null)[] = [];
   const upstreamFetch: FlagsHttpFetcher = (input, init) => {
     const request = input instanceof Request ? input : undefined;
     const url = parseRequestUrl(input);
@@ -127,6 +128,7 @@ function buildFakeFlagsService() {
     const headers = new Headers(request?.headers);
     new Headers(init?.headers).forEach((v, k) => headers.set(k, v));
     authHeaders.push(headers.get("authorization"));
+    actorHeaders.push(headers.get("x-flags-actor"));
 
     if (method === "GET" && url.pathname === "/v1/diff") {
       return Promise.resolve(buildDiffResponse(store));
@@ -137,7 +139,7 @@ function buildFakeFlagsService() {
     );
   };
 
-  return { store, authHeaders, upstreamFetch };
+  return { store, authHeaders, actorHeaders, upstreamFetch };
 }
 
 describe("Flags inventory reconciler activity", () => {
@@ -164,6 +166,11 @@ describe("Flags inventory reconciler activity", () => {
     expect(results).toHaveLength(20);
     expect(
       fake.authHeaders.every((header) => header === "Bearer machine-secret"),
+    ).toBe(true);
+    expect(
+      fake.actorHeaders.every(
+        (header) => header === "temporal-flag-inventory-sync",
+      ),
     ).toBe(true);
 
     const scoutBeta = results.find(

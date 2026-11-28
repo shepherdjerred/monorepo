@@ -110,7 +110,30 @@
       "resolvedDescription": "Sivir hurls her crossblade like a boomerang, dealing {{ totaldamage }} to all enemies it cuts through. Hitting non-champions reduces the damage to subsequent targets, down to a minimum of 40%.",
       "unresolved": [
         "totaldamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 299.3,
+        "lineWidth": 90,
+        "missileSpeed": 1350,
+        "missiles": [
+          {
+            "name": "sivirqmissile",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1450,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Ricochet",
@@ -182,7 +205,15 @@
         ]
       },
       "resolvedDescription": "For the next 4 seconds, Sivir gains 20/25/30/35/40% Attack Speed and her auto attacks are empowered to bounce to additional surrounding enemies dealing 40/42.5/45/47.5/50% AD physical damage each bounce for up to 8 bounces. These bounces critically strike if the attack generating them does.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": 1400,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Spell Shield",
@@ -233,7 +264,15 @@
         ]
       },
       "resolvedDescription": "Sivir creates a magical barrier for 1.5 seconds that blocks the next incoming enemy Ability. If an ability is blocked, Sivir restores 60/65/70/75/80% AD (+50% AP) health and triggers Fleet of Foot.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "On The Hunt",
@@ -302,7 +341,15 @@
         ]
       },
       "resolvedDescription": "Sivir rallies her nearby allies, granting them 20/25/30% Move Speed for 8/10/12 seconds. Sivir's attacks against champions while On The Hunt reduce the cooldown of her basic abilities by 0.5 seconds. Takedowns on recently damaged enemies refreshes the duration of the hunt.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.25,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

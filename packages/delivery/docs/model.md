@@ -299,8 +299,15 @@ or an explicit operator composition (manual).
 - R2. An automatic set revision is composed in the same transaction that
   verifies its build, or by a tracking recomposition (R7). It takes the
   build's new and retained artifacts and carries every unchanged component
-  forward from its base. If the result equals its base in every digest, no
-  set revision is created.
+  forward from its base. A CI publication can retain an artifact before a
+  concurrent pipeline's newer artifact becomes visible. When both producing
+  builds have a comparable order key in the same service and repository and
+  the retained original precedes the base component's producer, composition
+  carries the base component forward. The publication keeps its exact
+  retention record. Later producers skip that stale original when choosing
+  a comparison base while the newer component is live. Requirements (A3)
+  are checked against the resulting set. If the result equals its base in
+  every digest, no set revision is created.
 - R3. A manual set revision never becomes the base of an automatic one. A
   manual set revision is a hotfix: the next automatic set revision does not
   carry it forward, and its change persists only by landing in source.
@@ -542,7 +549,11 @@ which releases them (D11).
   Cancellation, rejection, or an alarm (W2) suppresses that
   selection until a newer eligible set revision exists or an operator asks
   explicitly. Automatic request identity keys on the environment's last
-  terminal deployment, not on the binding generation.
+  terminal deployment, not on the binding generation. A newer eligible
+  automatic worker release may take the slot of an unclaimed automated
+  host retirement. Supersession and the replacement request commit together.
+  The superseded retirement can be proposed again with fresh proof after a
+  different set revision is accepted.
 - D4. Cancellation is a request to stop at a safe boundary, never an
   assertion that effects were undone.
 - D5. An ambiguous external effect ends in `recovery-required`. Only an
@@ -702,6 +713,12 @@ edges, with automatic flags and approval policy.
 - M2. A `promote` deployment requires its selected set revision to be
   accepted in the source environment, with that environment's monitor
   `settled` (W3), at admission time, and rechecks on retry.
+- M3. Related worker rollouts claim one at a time across each promotion-source
+  edge. A queued worker rollout waits while a rollout on the other end of the
+  edge is running or holds recovery ownership, even if the catalog has since
+  replaced the owning promotion's frozen source edge. Admission rechecks M2
+  when the waiting promotion retries its claim. Same-set host retirements
+  preserve routing and can proceed independently across the edge.
 
 ### 4.17 Acquisition intent
 

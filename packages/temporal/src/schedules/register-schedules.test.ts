@@ -419,6 +419,22 @@ test("billed LLM cost remains paused until the candidate receives all Workflow t
 });
 
 describe("ops overview schedules", () => {
+  test.each([
+    ["ops-ci-dashboard", "runOpsCiDashboard", "1 minute"],
+    ["ops-ci-dashboard-timings", "runOpsCiDashboardTimings", "15 minutes"],
+  ] as const)(
+    "%s has an independent cadence and skips overlaps",
+    (id, workflowType, every) => {
+      expect(findScheduleById(id)).toMatchObject({
+        workflowType,
+        args: [],
+        timing: { kind: "interval", every },
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        overlap: ScheduleOverlapPolicy.SKIP,
+      });
+    },
+  );
+
   test("the snapshot runs every five minutes, skipping overlaps and stale catchup", () => {
     expect(findScheduleById("ops-snapshot")).toMatchObject({
       workflowType: "runOpsSnapshot",
@@ -588,12 +604,16 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // publish Activity. No workflow-level sleeps; Activity timeouts and retry
   // budgets fit inside the five-minute execution timeout.
   "runOpsSnapshot",
+  "runOpsCiDashboard",
+  "runOpsCiDashboardTimings",
   // Awaits a single triggerOpsDigest Activity; the dashboard renders and
   // sends. No workflow-level sleeps.
   "runOpsDigest",
   // Awaits a single bounded enrichRenovateVersionDeltas Activity on the ops
   // queue. No workflow-level sleeps.
   "runRenovateDeltaEnrichment",
+  "runDailyRenovateRanking",
+  "runRenovateBundleDispatch",
   // Loops up to five bounded syncLlmArchiveIndex Activities on the infra queue
   // and continues as new if more objects remain; no workflow-level sleeps.
   "runLlmArchiveIndex",
@@ -655,7 +675,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runStormPlotReconciliationWorkflow",
   "runRwfRecordingArchiveWorkflow",
   "reconcileStormCompanionsWorkflow",
-  "runBugsinkHousekeepingWorkflow",
   // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
   "runScoutImageGcWorkflow",
@@ -681,6 +700,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Repeats one bounded delete-batch Activity (at most 50 times per run) while
   // batches come back full; no Workflow-level sleeps.
   "scoutCrawlFrontierPruneWorkflow",
+  // Repeats one bounded batch Activity (at most 20 times per run) while batches
+  // come back full; no Workflow-level sleeps.
+  "scoutRankRefreshWorkflow",
   "scoutPipelineReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",

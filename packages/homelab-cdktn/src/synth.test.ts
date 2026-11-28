@@ -4,6 +4,7 @@ import { z } from "zod";
 import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { SYNTHESIZED_STACKS } from "#src/app.ts";
 import { TAILNET_POLICY } from "#src/stacks/tailscale-policy.ts";
+import { useSynthesizedApp } from "#src/testing.ts";
 import {
   staleStacks,
   synthesize,
@@ -33,10 +34,7 @@ const ConfigurationSchema = z.looseObject({
   output: z.record(z.string(), z.unknown()).optional(),
 });
 
-async function configuration(stack: (typeof SYNTHESIZED_STACKS)[number]) {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(JSON.parse(synthesized.get(stack) ?? ""));
-}
+const readStack = useSynthesizedApp();
 
 function addresses(resource: Record<string, Record<string, unknown>>) {
   return Object.entries(resource)
@@ -62,8 +60,8 @@ describe("synthesized OpenTofu configuration", () => {
     );
   });
 
-  test("github keeps the addresses, imports and forgotten webhook of its state", async () => {
-    const github = await configuration("github");
+  test("github keeps the addresses, imports and forgotten webhook of its state", () => {
+    const github = readStack("github", ConfigurationSchema);
     expect(addresses(github.resource)).toEqual([
       "github_repository.monorepo",
       "github_repository.shepherdjerred",
@@ -95,8 +93,8 @@ describe("synthesized OpenTofu configuration", () => {
 });
 
 describe("dockerhub", () => {
-  test("keeps one protected repository per registered image, its imports and retirements", async () => {
-    const dockerhub = await configuration("dockerhub");
+  test("keeps one protected repository per registered image, its imports and retirements", () => {
+    const dockerhub = readStack("dockerhub", ConfigurationSchema);
     expect(addresses(dockerhub.resource)).toEqual([
       "docker_hub_repository.charts_bootstrap",
       "docker_hub_repository.image",
@@ -200,8 +198,8 @@ describe("dockerhub", () => {
 });
 
 describe("tailscale", () => {
-  test("keeps the one policy resource and encodes the policy with its keys untouched", async () => {
-    const tailscale = await configuration("tailscale");
+  test("keeps the one policy resource and encodes the policy with its keys untouched", () => {
+    const tailscale = readStack("tailscale", ConfigurationSchema);
     expect(addresses(tailscale.resource)).toEqual(["tailscale_acl.homelab"]);
     expect(tailscale.resource["tailscale_acl"]?.["homelab"]).toEqual({
       acl: "${jsonencode(local.policy)}",
@@ -276,8 +274,8 @@ describe("tailscale", () => {
 });
 
 describe("arr", () => {
-  test("keeps every *arr address, the ignored indexer fields and sensitive inputs", async () => {
-    const arr = await configuration("arr");
+  test("keeps every *arr address, the ignored indexer fields and sensitive inputs", () => {
+    const arr = readStack("arr", ConfigurationSchema);
     expect(addresses(arr.resource)).toEqual([
       "prowlarr_application.radarr",
       "prowlarr_application.sonarr",
@@ -361,8 +359,8 @@ describe("arr", () => {
 });
 
 describe("dockerhub-tokens", () => {
-  test("keeps one protected token per purpose, its account reads and the handoff output", async () => {
-    const tokens = await configuration("dockerhub-tokens");
+  test("keeps one protected token per purpose, its account reads and the handoff output", () => {
+    const tokens = readStack("dockerhub-tokens", ConfigurationSchema);
     expect(addresses(tokens.resource)).toEqual([
       "docker_access_token.automation",
     ]);

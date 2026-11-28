@@ -26,6 +26,7 @@ const CONTAINER = `smoke-temporal-worker-${String(process.pid)}`;
 // Each entry is the cheapest invocation that proves the binary is installed and
 // runnable without credentials or network. All exit 0 on success.
 const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
+  { name: "node", args: ["node", "--version"] },
   { name: "gh", args: ["gh", "--version"] },
   { name: "git-lfs", args: ["git-lfs", "--version"] },
   { name: "kubectl", args: ["kubectl", "version", "--client"] },

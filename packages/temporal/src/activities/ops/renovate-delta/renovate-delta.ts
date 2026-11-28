@@ -304,7 +304,10 @@ export async function runRenovateDeltaEnrichmentPipeline(
   }
   for (const deferred of deferredMisses) {
     const prior = existingByBranch[deferred.branch];
-    if (prior?.targetVersion === deferred.targetVersion) {
+    if (
+      prior?.targetVersion === deferred.targetVersion &&
+      prior.effectiveFromVersion === deferred.effectiveFromVersion
+    ) {
       deltasByBranch[deferred.branch] = prior;
     }
   }

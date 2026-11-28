@@ -111,3 +111,38 @@ test.each(BENCHMARK_CASES)(
     expect(error).not.toContain("via service-account");
   },
 );
+
+const NEW_COMMAND_BAD_ARGS = [
+  ["scorecard", "--bogus"],
+  ["scorecard", "--since", "0h"],
+  ["scorecard", "extra"],
+  ["maintenance", "retry"],
+  ["maintenance", "retry", "not-a-kind"],
+  ["maintenance", "retry", "ci-images", "workspace-golden"],
+  ["maintenance", "retry", "ci-images", "--bogus"],
+].map((args) => ({ label: args.join(" "), args }));
+
+test.each(NEW_COMMAND_BAD_ARGS)(
+  "scorecard and maintenance retry ($label) reject bad arguments with exit 2 before authentication",
+  async ({ args }) => {
+    const { output, error, code } = await runCi(args);
+    expect(code, error).toBe(2);
+    expect(output).toBe("");
+    expect(error).not.toContain("ZodError");
+    expect(error.trim().startsWith("[")).toBe(false);
+    expect(error).not.toContain("via service-account");
+  },
+);
+
+test("scorecard and maintenance retry help is credential-free and listed", async () => {
+  const scorecard = await runCi(["scorecard", "--help"]);
+  expect(scorecard.code, scorecard.error).toBe(0);
+  expect(scorecard.output).toContain("toolkit ci scorecard");
+  const retry = await runCi(["maintenance", "retry", "--help"]);
+  expect(retry.code, retry.error).toBe(0);
+  expect(retry.output).toContain("toolkit ci maintenance retry <kind>");
+  expect(retry.output).toContain("workspace-golden");
+  expect(`${scorecard.error}${retry.error}`).not.toContain(
+    "via service-account",
+  );
+});

@@ -1,4 +1,5 @@
 import type { HealthReport, HealthStatus } from "#lib/github/types.ts";
+import { formatStaleBaseLine } from "#lib/ci/stale-base/evaluate.ts";
 
 function getStatusEmoji(status: HealthStatus): string {
   switch (status) {
@@ -29,6 +30,9 @@ export function formatHealthReport(report: HealthReport): string {
   lines.push(`## PR Health Report: #${String(report.prNumber)}`);
   lines.push("");
   lines.push(`**URL:** ${report.prUrl}`);
+  if (report.staleBase !== undefined) {
+    lines.push(`**Base Freshness:** ${formatStaleBaseLine(report.staleBase)}`);
+  }
   lines.push("");
 
   // Overall status

@@ -237,6 +237,28 @@
         "!sandbox/**"
       ]
     },
+    // Flag-usage index freshness. The index is a syntactic scan of every
+    // in-scope consumer, so any TypeScript or Java source (and the package.json
+    // names it reports) is an input; the scan's own exclusions are negated.
+    "//#check-flag-usage": {
+      "inputs": [
+        "scripts/checks/check-flag-usage.ts",
+        "scripts/generate/flag-usage.ts",
+        "scripts/generate/flag-usage-extract.ts",
+        "scripts/generate/flag-usage-scopes.json",
+        "scripts/lib/run.ts",
+        ".prettierrc.json",
+        "packages/feature-flags/src/managed-flag-inventory.json",
+        "packages/config/src/source.ts",
+        "packages/flags/src/flag-usage.generated.json",
+        "packages/**/package.json",
+        "packages/**/*.{ts,tsx,java}",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/sandbox/**",
+        "!**/generated/**"
+      ]
+    },
     "//#check-test-standardization": {
       "inputs": [
         "package.json",
@@ -359,7 +381,8 @@
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
     "//#prettier-scout": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_PRETTIER_SCOUT_CHANGED_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -381,7 +404,8 @@
       ]
     },
     "//#prettier-homelab": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_PRETTIER_HOMELAB_CHANGED_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -403,7 +427,8 @@
       ]
     },
     "//#prettier-packages": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_PRETTIER_PACKAGES_CHANGED_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -427,7 +452,8 @@
       ]
     },
     "//#prettier-root": {
-      "env": ["CI_CHANGED_BASE", "CI_ROOT_CHECK_INPUTS_SHA256"],
+      "env": ["CI_PRETTIER_ROOT_CHANGED_SHA256", "CI_ROOT_CHECK_INPUTS_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -478,9 +504,11 @@
       "dependsOn": [
         "@homelab/cdktn#generate",
         "@shepherdjerred/alert-dashboard#generate",
+        "@shepherdjerred/artifacts#generate",
         "@shepherdjerred/delivery#generate",
         "@shepherdjerred/errors#generate",
         "@shepherdjerred/golink#generate",
+        "@shepherdjerred/incidents#generate",
         "@shepherdjerred/tracker#generate",
         "@shepherdjerred/media#generate",
         "@shepherdjerred/birmel#generate",
@@ -776,7 +804,9 @@
         "packages/scout-for-lol/scripts/check-asset-sizes.ts",
         "packages/scout-for-lol/assets/**",
         "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-loading/**",
-        "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-splash/**"
+        "packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-splash/**",
+        "packages/scout-for-lol/packages/data/src/meta/snapshot-v2-budget.ts",
+        "packages/scout-for-lol/packages/frontend/src/data/generated/champion-meta/**"
       ]
     },
     "//#guard:migration": {

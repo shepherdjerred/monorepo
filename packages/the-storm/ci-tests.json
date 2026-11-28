@@ -14,10 +14,18 @@
       "args": ["-p", "plugin", "test"]
     },
     {
+      "runner": "gradle",
+      "group": "jvm",
+      "tier": "extended",
+      "name": "rwfbots-simulation",
+      "args": ["-p", "plugin", ":rwfbots:simulationTest"]
+    },
+    {
       "runner": "vitest",
       "group": "tools",
       "args": [
         "tests/pins.test.ts",
+        "tests/gameplay-fixtures.test.ts",
         "tests/rcon.test.ts",
         "tests/rwf-recording.test.ts",
         "tests/rwf-status.test.ts",
@@ -86,7 +94,7 @@
   "excludedSuites": [
     {
       "path": "tests/e2e",
-      "reason": "The paper-smoke-pr Woodpecker lane runs only plugin.e2e.test.ts and server.e2e.test.ts through test:smoke. The committer runs applicable extended gameplay checks locally through test:e2e. The reporting task does not start Paper."
+      "reason": "The nightly paper-smoke-nightly Woodpecker workflow (not pull requests) runs only plugin.e2e.test.ts and server.e2e.test.ts through test:smoke. The committer runs applicable extended gameplay checks locally through test:e2e. The reporting task does not start Paper."
     },
     {
       "path": "tests/full",

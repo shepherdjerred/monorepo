@@ -3,9 +3,9 @@ import { z } from "zod";
 import { asuswrtProviderPin } from "homelab/scripts/tofu/asuswrt-provider.ts";
 import {
   ProviderBlocksSchema,
-  synthesizedStack,
   VariablesSchema,
   VersionedTerraformSchema,
+  useSynthesizedApp,
 } from "#src/testing.ts";
 
 // This stack's state is not encrypted, so it has no `encryption` block.
@@ -19,9 +19,8 @@ const ConfigurationSchema = z.looseObject({
   ),
 });
 
-async function asuswrt() {
-  return await synthesizedStack("asuswrt", ConfigurationSchema);
-}
+const readStack = useSynthesizedApp();
+const asuswrt = () => readStack("asuswrt", ConfigurationSchema);
 
 /** Every address of the stack's state, with the device alias that owns it. */
 const ADDRESSES = {
@@ -45,8 +44,8 @@ const ADDRESSES = {
   "asuswrt_wireless_network.wl1": "router",
 } as const;
 
-test("asuswrt keeps every address of its state on the device that owns it", async () => {
-  const { resource, ...rest } = await asuswrt();
+test("asuswrt keeps every address of its state on the device that owns it", () => {
+  const { resource, ...rest } = asuswrt();
   // State records each resource's provider alias, so a resource moved to
   // another device's provider would be planned against the wrong device.
   const owners = Object.fromEntries(
@@ -70,8 +69,8 @@ test("asuswrt keeps every address of its state on the device that owns it", asyn
   expect(rest).not.toHaveProperty("removed");
 });
 
-test("asuswrt configures one aliased provider per device with the shared login", async () => {
-  const { provider, variable } = await asuswrt();
+test("asuswrt configures one aliased provider per device with the shared login", () => {
+  const { provider, variable } = asuswrt();
   expect(provider["asuswrt"]).toEqual(
     [
       { alias: "router", host: "192.168.1.1" },
@@ -94,8 +93,8 @@ test("asuswrt configures one aliased provider per device with the shared login",
   expect(variable["asuswrt_username"]).not.toHaveProperty("sensitive");
 });
 
-test("asuswrt never manages a wireless passphrase or the BE86U backhaul radios", async () => {
-  const { resource } = await asuswrt();
+test("asuswrt never manages a wireless passphrase or the BE86U backhaul radios", () => {
+  const { resource } = asuswrt();
   const wireless = resource["asuswrt_wireless_network"] ?? {};
   expect(Object.keys(wireless)).toHaveLength(4);
   for (const [name, network] of Object.entries(wireless)) {
@@ -106,7 +105,7 @@ test("asuswrt never manages a wireless passphrase or the BE86U backhaul radios",
 });
 
 test("asuswrt requires exactly the provider version built from this repository", async () => {
-  const { terraform } = await asuswrt();
+  const { terraform } = asuswrt();
   const pin = await asuswrtProviderPin();
   expect(pin.bindings).toBe(true);
   expect(terraform.required_providers).toEqual({

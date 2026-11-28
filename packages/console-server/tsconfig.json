@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "@tsconfig/strictest/tsconfig.json",
+    "@tsconfig/node-lts/tsconfig.json",
+    "@tsconfig/recommended/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "types": ["@types/bun"],
+    "lib": ["ESNext"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "target": "es2022"
+  }
+}

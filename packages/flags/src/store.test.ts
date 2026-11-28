@@ -36,22 +36,25 @@ test("seedFromInventory adds newly declared inventory keys to existing deploymen
 
     // Simulate a database seeded by an older image that lacked `omittedFlag.key`
     // and carried operator customizations on `dares_enabled`.
-    store.seedDocuments([
-      {
-        id: "scout/prod",
-        flags: [
-          customized,
-          ...projected.filter(
-            (flag) =>
-              flag.key !== customizedKey && flag.key !== omittedFlag.key,
-          ),
-        ],
-      },
-    ]);
+    store.seedDocuments(
+      [
+        {
+          id: "scout/prod",
+          flags: [
+            customized,
+            ...projected.filter(
+              (flag) =>
+                flag.key !== customizedKey && flag.key !== omittedFlag.key,
+            ),
+          ],
+        },
+      ],
+      { kind: "system", id: "seed" },
+    );
     expect(store.flag("scout/prod", omittedFlag.key)).toBeUndefined();
     expect(store.document("scout/prod")?.revision).toBe(1);
 
-    const reseeded = store.seedFromInventory();
+    const reseeded = store.seedFromInventory({ kind: "system", id: "seed" });
     expect(reseeded.seeded).not.toContain("scout/prod");
 
     // Newly declared inventory key is now present and revision bumped for ETag clients.
@@ -64,7 +67,7 @@ test("seedFromInventory adds newly declared inventory keys to existing deploymen
     expect(store.flag("scout/prod", customizedKey)?.flag).toEqual(customized);
 
     // A subsequent restart with no new keys keeps revision unchanged.
-    const steady = store.seedFromInventory();
+    const steady = store.seedFromInventory({ kind: "system", id: "seed" });
     expect(steady.seeded).toEqual([]);
     expect(store.document("scout/prod")?.revision).toBe(2);
   } finally {

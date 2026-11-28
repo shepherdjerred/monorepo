@@ -4,7 +4,7 @@ import {
   ResourcesSchema,
   VersionedTerraformSchema,
   enforcedEncryption,
-  synthesizedStack,
+  useSynthesizedApp,
 } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
@@ -20,13 +20,13 @@ const ConfigurationSchema = z.looseObject({
   removed: z.unknown().optional(),
 });
 
-async function applicationSecrets() {
-  return synthesizedStack("application-secrets", ConfigurationSchema);
-}
+const readStack = useSynthesizedApp();
+const applicationSecrets = () =>
+  readStack("application-secrets", ConfigurationSchema);
 
 describe("application-secrets", () => {
-  test("keeps the one for_each resource, read from the stack's own catalog", async () => {
-    const { resource, locals, data } = await applicationSecrets();
+  test("keeps the one for_each resource, read from the stack's own catalog", () => {
+    const { resource, locals, data } = applicationSecrets();
     expect(Object.keys(resource)).toEqual(["random_password"]);
     expect(Object.keys(resource["random_password"] ?? {})).toEqual([
       "credentials",
@@ -62,8 +62,8 @@ describe("application-secrets", () => {
     expect(data).toBeUndefined();
   });
 
-  test("keeps the import addresses adopt-application-secrets.ts verifies", async () => {
-    const configuration = await applicationSecrets();
+  test("keeps the import addresses adopt-application-secrets.ts verifies", () => {
+    const configuration = applicationSecrets();
     // The adoption runner accepts a plan only when every change is at
     // random_password.credentials["<key>"]; the import must land there.
     expect(configuration.import).toEqual([
@@ -77,8 +77,8 @@ describe("application-secrets", () => {
     expect(configuration.removed).toBeUndefined();
   });
 
-  test("keeps the sensitive handoff output", async () => {
-    const { output } = await applicationSecrets();
+  test("keeps the sensitive handoff output", () => {
+    const { output } = applicationSecrets();
     expect(output).toEqual({
       application_secret_handoffs: {
         description:
@@ -90,8 +90,8 @@ describe("application-secrets", () => {
     });
   });
 
-  test("keeps the variables, the provider constraint and the encryption its state was written with", async () => {
-    const { variable, provider, terraform } = await applicationSecrets();
+  test("keeps the variables, the provider constraint and the encryption its state was written with", () => {
+    const { variable, provider, terraform } = applicationSecrets();
     expect(variable).toEqual({
       tofu_state_encryption_passphrase: {
         description:

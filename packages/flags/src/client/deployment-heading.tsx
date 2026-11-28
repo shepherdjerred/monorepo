@@ -7,11 +7,13 @@ import { stageLabel, splitDeploymentId } from "./model.ts";
 import { comparePath, pairedStage } from "./views/compare-model.ts";
 import { DriftChip } from "./views/drift-chip.tsx";
 import { deploymentCounts, itemCount } from "./views/drift-model.ts";
+import { FetchLiveness } from "./views/usage-panel.tsx";
 import { useDrift } from "./views/views-api.ts";
 
 /**
- * A deployment's opening: the catalog as eyebrow and the stage as title, with
- * its revision, drift and a link to compare it with its other stage.
+ * A deployment's opening: the catalog as eyebrow and the stage as title, when
+ * a consumer last fetched it, its revision, drift and a link to compare it
+ * with its other stage.
  */
 export function DeploymentHeading({
   catalog,
@@ -35,6 +37,7 @@ export function DeploymentHeading({
     <PageHeading
       eyebrow={catalog}
       title={stageLabel(stage)}
+      description={<FetchLiveness deployment={id} />}
       actions={
         <>
           {meta === undefined ? null : (

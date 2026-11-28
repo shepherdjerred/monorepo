@@ -5,6 +5,11 @@ import type {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { runPromtoolFixture } from "./platform/promtool-fixture.ts";
 import {
+  CI_NODE_CPU_HEADROOM_IDLE_RATIO,
+  CI_PENDING_QUEUE_FOR,
+  CI_PENDING_STEPS_THRESHOLD,
+} from "./woodpecker-queue.ts";
+import {
   CI_JOB_POD_PATTERN,
   CI_POD_CHILD_CGROUP_PATTERN,
   CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
@@ -60,6 +65,14 @@ function recordingRule(name: string): PrometheusRuleSpecGroupsRules {
 
 function alertRule(name: string): PrometheusRuleSpecGroupsRules {
   return findRule((rule) => rule.alert === name);
+}
+
+// Two CPUs, each counting idle seconds at `idleRate` per second.
+function cpus(idleRate: number) {
+  return [0, 1].map((cpu) => ({
+    series: `node_cpu_seconds_total{node="liskov",mode="idle",cpu="${String(cpu)}"}`,
+    values: `0+${String(idleRate * 60)}x20`,
+  }));
 }
 
 describe("Woodpecker CI I/O recording rules", () => {
@@ -266,20 +279,51 @@ describe("Woodpecker CI I/O informational alerts", () => {
     expect(rule.labels?.["severity"]).toBe("info");
   });
 
-  // An available agent Deployment that the server does not see leaves
-  // workflows queued forever with nothing obviously broken.
-  it("detects running agents that the server has no connection from", () => {
-    const rule = alertRule("WoodpeckerAgentDisconnected");
-    const expression = ruleExpression(rule);
-    expect(expression).toContain('deployment="woodpecker-agent"');
-    expect(expression).toContain(
-      'absent(woodpecker_worker_count{namespace="woodpecker"})',
-    );
-    expect(expression).toContain(
-      'max(woodpecker_worker_count{namespace="woodpecker"}) == 0',
-    );
-    expect(rule.for).toBe("5m");
-    expect(rule.labels?.["severity"]).toBe("info");
+  it("alerts on a sustained Woodpecker queue while liskov has CPU headroom", async () => {
+    const rule = alertRule("WoodpeckerPendingQueueWithCpuHeadroom");
+    const expr = ruleExpression(rule);
+    expect(CI_PENDING_STEPS_THRESHOLD).toBe(20);
+    expect(CI_NODE_CPU_HEADROOM_IDLE_RATIO).toBe(0.4);
+    // Held 30 minutes it fired 20 times in 14 days; 2 hours keeps it to a
+    // sustained regression.
+    expect(CI_PENDING_QUEUE_FOR).toBe("2h");
+    expect(rule.for).toBe(CI_PENDING_QUEUE_FOR);
+    expect(rule.labels?.["severity"]).toBe("warning");
+    expect(rule.labels?.["category"]).toBe("ci");
+
+    const scenario = (
+      name: string,
+      pending: number,
+      idleRate: number,
+      expected: number | undefined,
+    ) => ({
+      interval: "1m",
+      name,
+      input_series: [
+        {
+          series: 'woodpecker_pending_steps{namespace="woodpecker"}',
+          values: `${String(pending)}x20`,
+        },
+        ...cpus(idleRate),
+      ],
+      promql_expr_test: [
+        {
+          expr,
+          eval_time: "15m",
+          exp_samples:
+            expected === undefined ? [] : [{ labels: "{}", value: expected }],
+        },
+      ],
+    });
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        scenario("queued with spare CPU", 253, 0.7, 253),
+        // At 80% busy the node is genuinely saturated: not this signature.
+        scenario("queued and saturated", 253, 0.2, undefined),
+        scenario("short queue with spare CPU", 20, 0.7, undefined),
+      ],
+    });
   });
 
   /**
@@ -318,9 +362,8 @@ describe("Woodpecker CI I/O informational alerts", () => {
     const alerts = [
       alertRule("WoodpeckerCIIOTelemetryMissing"),
       alertRule("WoodpeckerCIPodLifetimeWritesSeen24hBudgetExceeded"),
-      alertRule("WoodpeckerAgentDisconnected"),
     ];
-    expect(alerts).toHaveLength(3);
+    expect(alerts).toHaveLength(2);
     expect(alerts.every((rule) => rule.labels?.["severity"] === "info")).toBe(
       true,
     );

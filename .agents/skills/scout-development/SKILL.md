@@ -70,14 +70,16 @@ the SPA behind `dev:web`, `frontend` and `docs-site` are Astro, and
 `design-system` serves its Storybook catalog on port 6006.
 
 Verify UI changes in the browser rather than from source, and keep the
-screenshot or recording for the PR (scope `PINCHTAB_SESSION` and close opened
-tabs when driving PinchTab directly, or use `toolkit screenshot`):
+screenshot or recording in an isolated per-agent temp directory (never share
+fixed `/tmp/*` or root scratchpad paths across parallel subagents; scope
+`PINCHTAB_SESSION` and close opened tabs when driving PinchTab directly):
 
 ```bash
-toolkit screenshot scout-app /app/ --out /tmp/scout-app.png
+SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/scout-XXXXXX")"
+toolkit screenshot scout-app /app/ --out "$SCRATCH/scout-app.png"
 # Or against your own isolated dev:web port with a scoped PinchTab session:
 PINCHTAB_SESSION="$SES" pinchtab nav "http://localhost:${WEB_PORT}/app/"
-PINCHTAB_SESSION="$SES" pinchtab screenshot -o /tmp/scout-app.png
+PINCHTAB_SESSION="$SES" pinchtab screenshot -o "$SCRATCH/scout-app.png"
 ```
 
 Run focused tasks for only the affected Scout workspaces, then the relevant

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -103,20 +103,23 @@ describe("root check input contract", () => {
     } finally {
       await rm(repository, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 
-  test("direct Turbo execution without the producer cannot cache a passing root check", async () => {
+  describe("direct Turbo execution without the producer", () => {
     const script = path.join(import.meta.dir, "run-shard-check.ts");
-    const repository = await mkdtemp(path.join(tmpdir(), "root-input-cli-"));
-    // Keep the real CLI and Git fingerprint, without making its refusal depend
-    // on metadata traversal of an unrelated full checkout.
-    const environment = {
-      ...Bun.env,
-      GIT_DIR: path.join(repository, ".git"),
-      GIT_WORK_TREE: repository,
-      GIT_INDEX_FILE: undefined,
-    };
-    try {
+    let repository = "";
+    let environment: Record<string, string | undefined> = {};
+
+    beforeAll(async () => {
+      repository = await mkdtemp(path.join(tmpdir(), "root-input-cli-"));
+      // Keep the real CLI and Git fingerprint, without making its refusal depend
+      // on metadata traversal of an unrelated full checkout.
+      environment = {
+        ...Bun.env,
+        GIT_DIR: path.join(repository, ".git"),
+        GIT_WORK_TREE: repository,
+        GIT_INDEX_FILE: undefined,
+      };
       const initialized = Bun.spawnSync(["git", "init", "--quiet"], {
         cwd: repository,
         env: environment,
@@ -128,7 +131,21 @@ describe("root check input contract", () => {
         env: environment,
       });
       expect(staged.exitCode, staged.stderr.toString()).toBe(0);
-      for (const key of [undefined, "bad", "a".repeat(64)]) {
+    }, 15_000);
+
+    afterAll(async () => {
+      if (repository !== "") {
+        await rm(repository, { recursive: true, force: true });
+      }
+    });
+
+    test.each([
+      ["unset", undefined],
+      ["malformed", "bad"],
+      ["mismatched", "a".repeat(64)],
+    ] as const)(
+      "cannot cache a passing root check when fingerprint is %s",
+      (_label, key) => {
         const result = Bun.spawnSync(["bun", script, "large-files", "root"], {
           env: {
             ...environment,
@@ -138,9 +155,8 @@ describe("root check input contract", () => {
         });
         expect(result.exitCode).not.toBe(0);
         expect(result.stderr.toString()).toContain("freshly fingerprinted");
-      }
-    } finally {
-      await rm(repository, { recursive: true, force: true });
-    }
+      },
+      15_000,
+    );
   });
 });

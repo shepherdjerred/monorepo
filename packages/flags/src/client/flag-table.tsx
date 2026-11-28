@@ -54,6 +54,8 @@ export type FlagTableProps = {
   readonly catalog: string;
   readonly stage: string;
   readonly flags: readonly FlagValue[];
+  /** Inventory descriptions by key, shown muted under each key. */
+  readonly descriptions?: ReadonlyMap<string, string> | undefined;
   readonly selectedKey: string | undefined;
   /** The active search; links carry it so a row click keeps the filter. */
   readonly query: string;
@@ -64,6 +66,7 @@ export function FlagTable({
   catalog,
   stage,
   flags,
+  descriptions,
   selectedKey,
   query,
 }: FlagTableProps): React.JSX.Element {
@@ -85,6 +88,7 @@ export function FlagTable({
         <tbody>
           {flags.map((flag) => {
             const selected = flag.key === selectedKey;
+            const description = descriptions?.get(flag.key);
             return (
               <tr key={flag.key} data-current={selected ? "" : undefined}>
                 <th scope="row" data-label="Flag">
@@ -95,6 +99,11 @@ export function FlagTable({
                   >
                     {flag.key}
                   </Link>
+                  {description === undefined ? null : (
+                    <span className="fl-desc" title={description}>
+                      {description}
+                    </span>
+                  )}
                 </th>
                 <td data-label="State">
                   <FlagStateCell flag={flag} />

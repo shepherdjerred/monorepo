@@ -129,3 +129,17 @@ export const opsSnapshotPublishedTimestampSeconds = new Gauge({
   help: "Unix timestamp of the last ops snapshot accepted by the dashboard",
   registers: [register],
 });
+
+export const incidentsSignalPostOk = new Gauge({
+  name: "incidents_signal_post_ok",
+  help: "Whether the last signal post to Hub's Incidents module succeeded (1) or failed (0), by producer",
+  labelNames: ["source"] as const,
+  registers: [register],
+});
+
+export const incidentsSignalLastSuccessTimestampSeconds = new Gauge({
+  name: "incidents_signal_last_success_timestamp_seconds",
+  help: "Unix timestamp of the last signal Hub's Incidents module accepted, by producer",
+  labelNames: ["source"] as const,
+  registers: [register],
+});

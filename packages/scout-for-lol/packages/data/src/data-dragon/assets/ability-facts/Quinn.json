@@ -21,7 +21,15 @@
         ]
       },
       "resolvedDescription": "Valor, Quinn's Demacian eagle, periodically marks enemies with Harrier. Quinn's first basic attack against Harrier targets will deal bonus physical damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Blinding Assault",
@@ -93,7 +101,15 @@
         ]
       },
       "resolvedDescription": "Quinn orders Valor to dive, making the first enemy hit with Harrier, reducing their vision radius for 1.75 seconds and dealing 65/100/135/170/205 (+80/85/90/95/100% bonus AD) (+50% AP) physical damage to all surrounding enemies. If the first enemy struck is not a champion, it is Disarmed for 1.75 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": 60,
+        "missileSpeed": 1550,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Heightened Senses",
@@ -165,7 +181,44 @@
         ]
       },
       "resolvedDescription": "Passive: Attacking a Harrier target grants Quinn 28/41/54/67/80% Attack Speed and 20/25/30/35/40% Move Speed for 2 seconds. Active: Valor reveals a large area nearby for 2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 1200,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "quinnwenhanced",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "quinnwtimingmissile",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1350,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Vault",
@@ -216,7 +269,15 @@
         ]
       },
       "resolvedDescription": "Quinn dashes to an enemy, dealing 40/65/90/115/140 (+20% bonus AD) physical damage and marking them with Harrier. Quinn then leaps backwards from the target, slightly Knocking them Back and Slowing them by 50%, decaying over 1.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 250,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Behind Enemy Lines",
@@ -270,7 +331,15 @@
         ]
       },
       "resolvedDescription": "Quinn calls to Valor, pairing up after channeling for 2 seconds gaining 70/100/130% Move Speed and allowing her to Recast this Ability. Attacking or using Blinding Assault or Vault automatically Recasts this Ability. Recast: Quinn and Valor perform an aerial maneuver, dealing 60/90/120 (+35% bonus AD) physical damage, marking champions with Harrier, and ending this Ability.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": 300,
+        "lineWidth": 200,
+        "missileSpeed": 2200,
+        "missiles": []
+      }
     }
   }
 }

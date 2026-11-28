@@ -47,4 +47,16 @@
       font-size: 1rem;
     }
   }
+
+  @media (forced-colors: active) {
+    .choice[data-active="true"] select {
+      border-color: Highlight;
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+    .choice select:focus-visible {
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+  }
 }

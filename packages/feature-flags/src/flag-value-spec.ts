@@ -222,6 +222,51 @@ export const ModelIdSchema = z
   .max(200)
   .regex(/^\S+$/u, "Model id must not contain whitespace");
 
+/** The JSON Schema keyword that carries a model-id flag's `ModelRoute`. */
+export const MODEL_ROUTE_KEYWORD = "x-model-route";
+
+/**
+ * A model capability a consumer asserts before calling: the catalog's
+ * `capabilities.tools` / `capabilities.structuredOutputs` booleans, or
+ * `imageInput` for `"image"` in `capabilities.inputModalities`.
+ */
+export const ModelCapabilityRequirementSchema = z.enum([
+  "tools",
+  "structuredOutputs",
+  "imageInput",
+]);
+export type ModelCapabilityRequirement = z.infer<
+  typeof ModelCapabilityRequirementSchema
+>;
+
+/**
+ * The `@shepherdjerred/llm-models` route a model-id flag's consumer resolves:
+ * a native provider endpoint (with any capabilities it asserts), or the Codex
+ * or Claude Agent SDK route. Editors use it to offer catalog models that
+ * route; the registry still accepts any `ModelIdSchema` string, because the
+ * catalog lives outside this package.
+ */
+export const ModelRouteSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("native"),
+    endpoint: z.enum(["language", "embedding", "image", "decisions"]),
+    requires: z.array(ModelCapabilityRequirementSchema).min(1).optional(),
+  }),
+  z.strictObject({ kind: z.literal("codexSdk") }),
+  z.strictObject({ kind: z.literal("claudeAgentSdk") }),
+]);
+export type ModelRoute = z.infer<typeof ModelRouteSchema>;
+
+/**
+ * `ModelIdSchema` tagged with the route its consumer needs. The tag is JSON
+ * Schema metadata (`x-model-route`) and does not change what parses.
+ */
+export function modelIdFor(route: ModelRoute) {
+  return ModelIdSchema.meta({
+    [MODEL_ROUTE_KEYWORD]: ModelRouteSchema.parse(route),
+  });
+}
+
 /** A Discord snowflake as decimal digits. */
 export const SnowflakeSchema = z.string().regex(/^\d{1,25}$/u);
 

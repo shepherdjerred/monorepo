@@ -11,6 +11,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { parseAllDocuments, stringify } from "yaml";
 import { z } from "zod";
 import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-publication.ts";
+import { deliveryAlertRules } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/monitoring.ts";
+import { INCIDENT_ALERTNAMES } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/incidents-alerts.ts";
 
 const CDK8S_DIR = import.meta.dir.replace(/\/src\/resources\/monitoring$/u, "");
 const DIST_DIR = `${CDK8S_DIR}/dist`;
@@ -22,6 +24,7 @@ type RouteNode = {
   receiver?: string;
   matchers?: string[];
   group_by?: string[];
+  continue?: boolean;
   routes?: RouteNode[];
 };
 
@@ -30,6 +33,7 @@ const RouteNodeSchema: z.ZodType<RouteNode> = z.lazy(() =>
     receiver: z.string().optional(),
     matchers: z.array(z.string()).optional(),
     group_by: z.array(z.string()).optional(),
+    continue: z.boolean().optional(),
     routes: z.array(RouteNodeSchema).optional(),
   }),
 );
@@ -224,18 +228,39 @@ function matcherMatches(
   }
 }
 
-function resolveReceiver(
+/**
+ * Every receiver an alert notifies, in Alertmanager's order: each matching
+ * child adds its receiver and stops the walk unless it sets `continue`; the
+ * parent's receiver applies only when no child matched at all.
+ */
+function resolveReceivers(
   route: RouteNode,
   labels: Record<string, string>,
-): string | undefined {
+): (string | undefined)[] {
+  const receivers: (string | undefined)[] = [];
   for (const child of route.routes ?? []) {
     if (
       (child.matchers ?? []).every((matcher) => matcherMatches(matcher, labels))
     ) {
-      return child.receiver ?? route.receiver;
+      receivers.push(child.receiver ?? route.receiver);
+      if (child.continue !== true) break;
     }
   }
-  return route.receiver;
+  return receivers.length === 0 ? [route.receiver] : receivers;
+}
+
+/** The one receiver an alert notifies; fails when it notifies several. */
+function resolveReceiver(
+  route: RouteNode,
+  labels: Record<string, string>,
+): string | undefined {
+  const receivers = resolveReceivers(route, labels);
+  if (receivers.length !== 1) {
+    throw new Error(
+      `expected one receiver for ${JSON.stringify(labels)}, got ${receivers.join(", ")}`,
+    );
+  }
+  return receivers[0];
 }
 
 const GO_HARNESS_PATH = `${CDK8S_DIR}/../../../ops-model/scripts/alertmanager-render.go`;
@@ -639,5 +664,148 @@ describe("Alerts route selection", () => {
         severity: "warning",
       }),
     ).toBe("alerts");
+  });
+});
+
+describe("Incidents auto-open route", () => {
+  let route: RouteNode;
+
+  /** Every label set the route tests above pin, plus the Delivery alerts. */
+  const LABEL_FIXTURES: Record<string, string>[] = [
+    { alertname: "XcodeCloudBuildFailed", severity: "warning" },
+    { alertname: "KubePodCrashLooping", severity: "critical" },
+    {
+      alertname: "AlertDashboardDown",
+      severity: "critical",
+      alert_dashboard_fallback: "true",
+    },
+    {
+      alertname: "ServiceProbeDown",
+      namespace: "alert-dashboard",
+      severity: "warning",
+    },
+    {
+      alertname: "SomethingInfo",
+      namespace: "alert-dashboard",
+      severity: "info",
+    },
+    {
+      alertname: "AlertmanagerFailedToSendAlerts",
+      namespace: "prometheus",
+      severity: "warning",
+      integration: "webhook",
+    },
+    {
+      alertname: "AlertmanagerFailedToSendAlerts",
+      namespace: "monitoring",
+      severity: "warning",
+      integration: "email",
+    },
+    { alertname: "Watchdog" },
+    { alertname: "SomethingInfo", severity: "info" },
+    { alertname: "TemporalAgentTaskTimingOut", severity: "warning" },
+    {
+      alertname: "RoborockDirtyWaterTankFull",
+      category: "household",
+      severity: "warning",
+    },
+    {
+      alertname: "LitterRobotWasteCritical",
+      category: "household",
+      severity: "critical",
+    },
+    {
+      alertname: "VacuumRunInterrupted",
+      category: "household",
+      severity: "info",
+    },
+    ...deliveryAlertRules(true).map((rule) => ({
+      alertname: rule.alert,
+      namespace: "delivery",
+      ...rule.labels,
+    })),
+  ];
+
+  beforeAll(async () => {
+    if (renderedApps === "") renderedApps = await renderApps();
+    route = findAlertmanagerRoute(renderedApps);
+  }, 120_000);
+
+  it("posts to Hub's authenticated Incidents receiver with resolved notifications", () => {
+    const receiver = findReceiverNamed(renderedApps, "incidents");
+    expect(WebhookConfigsSchema.parse(receiver["webhook_configs"])).toEqual([
+      {
+        send_resolved: true,
+        max_alerts: 100,
+        url: "http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341/api/incidents/alertmanager",
+        http_config: {
+          authorization: {
+            type: "Bearer",
+            credentials_file:
+              "/etc/alertmanager/secrets/alert-dashboard-secrets/WEBHOOK_TOKEN",
+          },
+        },
+      },
+    ]);
+    expect(receiver["email_configs"]).toBeUndefined();
+  });
+
+  it("names only alerts Delivery's rules define", () => {
+    const defined = new Set(deliveryAlertRules(true).map((rule) => rule.alert));
+    for (const alertname of INCIDENT_ALERTNAMES) {
+      expect(defined.has(alertname), alertname).toBe(true);
+    }
+  });
+
+  it("copies each curated Delivery alert to Incidents and still notifies the Alerts ledger", () => {
+    for (const alertname of INCIDENT_ALERTNAMES) {
+      expect(
+        resolveReceivers(route, {
+          alertname,
+          namespace: "delivery",
+          severity: "warning",
+        }),
+        alertname,
+      ).toEqual(["incidents", "alerts"]);
+    }
+  });
+
+  it("leaves uncurated Delivery alerts off the Incidents receiver", () => {
+    for (const alertname of [
+      "DeliveryMonitorAlarmed",
+      "DeliveryStaleOwnershipReleased",
+    ]) {
+      expect(
+        resolveReceivers(route, {
+          alertname,
+          namespace: "delivery",
+          severity: "warning",
+        }),
+      ).toEqual(["alerts"]);
+    }
+  });
+
+  it("changes no other receiver: removing the Incidents route yields the same notifications minus Incidents", () => {
+    const withoutIncidents: RouteNode = {
+      ...route,
+      routes: (route.routes ?? []).filter(
+        (child) => child.receiver !== "incidents",
+      ),
+    };
+    expect(route.routes?.[0]).toMatchObject({
+      receiver: "incidents",
+      continue: true,
+    });
+    expect(
+      (route.routes ?? []).filter((child) => child.receiver === "incidents"),
+    ).toHaveLength(1);
+    for (const labels of LABEL_FIXTURES) {
+      expect(
+        resolveReceivers(route, labels).filter(
+          (receiver) => receiver !== "incidents",
+        ),
+        JSON.stringify(labels),
+      ).toEqual(resolveReceivers(withoutIncidents, labels));
+    }
   });
 });

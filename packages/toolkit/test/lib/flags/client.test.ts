@@ -52,8 +52,10 @@ test("rejects a flags URL that carries credentials", () => {
 
 test("deployments --json prints the document list and sends no token", async () => {
   let authorization: string | null = "unset";
+  let actor: string | null = "unset";
   const { io, text } = capture(async (input, init) => {
     authorization = new Headers(init?.headers).get("authorization");
+    actor = new Headers(init?.headers).get("x-flags-actor");
     expect(input.href).toBe("https://flags.example.test/v1/deployments");
     return jsonResponse(200, {
       deployments: [{ id: "scout/prod", revision: 1, flagCount: 2 }],
@@ -65,6 +67,7 @@ test("deployments --json prints the document list and sends no token", async () 
   });
   expect(code).toBe(0);
   expect(authorization).toBeNull();
+  expect(actor).toBeNull();
   expect(text()).toContain("scout/prod");
   expect(text()).not.toContain(TOKEN);
 });
@@ -103,8 +106,10 @@ test("human apply sends the service origin and no login or token", async () => {
 
 test("apply conflict exits 2 and does not print the machine token", async () => {
   let authorization = "";
+  let actor: string | null = null;
   const { io, text } = capture(async (_input, init) => {
     authorization = new Headers(init?.headers).get("authorization") ?? "";
+    actor = new Headers(init?.headers).get("x-flags-actor");
     return jsonResponse(409, {
       error: "revision conflict",
       revision: 9,
@@ -119,6 +124,7 @@ test("apply conflict exits 2 and does not print the machine token", async () => 
   });
   expect(code).toBe(2);
   expect(authorization).toBe(`Bearer ${TOKEN}`);
+  expect(actor).toBe("toolkit");
   expect(text()).toContain("revision conflict at 9");
   expect(text()).not.toContain(TOKEN);
 });

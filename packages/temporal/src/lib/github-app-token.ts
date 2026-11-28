@@ -15,6 +15,7 @@ export type GitHubAppTokenDeps = {
   readonly now?: () => number;
   readonly random?: () => number;
   readonly sleep?: (ms: number) => Promise<void>;
+  readonly permissions?: Readonly<Record<string, "read">>;
 };
 
 export type GitHubAppTokenResult = {
@@ -237,7 +238,9 @@ export async function createGitHubAppInstallationToken(
       Authorization: `Bearer ${jwt}`,
       "X-GitHub-Api-Version": GITHUB_API_VERSION,
     },
-    body: "{}",
+    body: JSON.stringify(
+      deps.permissions === undefined ? {} : { permissions: deps.permissions },
+    ),
   };
 
   let lastError: Error | undefined;

@@ -85,7 +85,15 @@ export function changedGuardMatches(
 
 function directlySelected(step: CiStep, context: SelectionContext): boolean {
   if (step.defaultBranchOnly === true && !onDefaultBranch(context)) {
-    return false;
+    // A pull request is the only other work event; it runs the step only when
+    // the changed files name one of the step's pull-request exceptions.
+    return (
+      context.event === "pull_request" &&
+      step.pullRequestInclude !== undefined &&
+      context.changedFiles.some((file) =>
+        matchesAny(step.pullRequestInclude ?? [], file),
+      )
+    );
   }
   if (step.events !== undefined) {
     const event = normalizeEvent(context.event);

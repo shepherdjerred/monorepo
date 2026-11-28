@@ -1,18 +1,19 @@
 import path from "node:path";
-import { Hono, type Context } from "hono";
-import { secureHeaders } from "hono/secure-headers";
-import type { PlatformSiteEntry } from "#domain/platform-sites.ts";
 import {
-  buildCatalog,
-  computeManualShadows,
-  resolveRedirect,
-  toManualLinkItem,
-} from "#domain/resolver.ts";
+  createConsoleServer,
+  identityOf,
+  LOOPBACK_PROXIES,
+  tailscaleIdentity,
+  type ConsoleEnv,
+  type ConsoleServer,
+} from "@shepherdjerred/console-server";
+import type { Context, Hono } from "hono";
+import type { PlatformSiteEntry } from "#domain/platform-sites.ts";
+import { buildCatalog, resolveRedirect } from "#domain/resolver.ts";
 import type { ManualLinkRepository } from "#infrastructure/db.ts";
 import {
   createGolinkMetrics,
   reportError,
-  traceRequest,
   type GolinkMetrics,
 } from "#infrastructure/telemetry.ts";
 import {
@@ -20,9 +21,13 @@ import {
   RESERVED_SLUGS,
   UpsertManualLinkInputSchema,
   validateShortSlug,
-  type LinksDirectoryResponse,
-  type Viewer,
 } from "#shared/contract.ts";
+import {
+  createLinksService,
+  LinksError,
+  type LinksService,
+} from "./links-service.ts";
+import { golinkRouter, viewerOf } from "./trpc-router.ts";
 
 export type GolinkAppDeps = {
   readonly repo: ManualLinkRepository;
@@ -33,7 +38,13 @@ export type GolinkAppDeps = {
   readonly writesEnabled: () => Promise<boolean>;
   readonly metrics?: GolinkMetrics;
   readonly clientRoot?: string;
+  readonly port?: number;
+  readonly hostname?: string;
+  /** Runs after the listener drains (discovery, database, flags, telemetry). */
+  readonly onShutdown?: () => Promise<void>;
 };
+
+type GolinkContext = Context<ConsoleEnv>;
 
 const DEFAULT_CLIENT_ROOT = path.resolve(import.meta.dir, "../../dist/client");
 
@@ -50,21 +61,6 @@ const FALLBACK_INDEX_HTML = [
   "  </body>",
   "</html>",
 ].join("\n");
-
-function headerOrNull(value: string | undefined): string | null {
-  if (value === undefined) {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function extractViewer(header: (name: string) => string | undefined): Viewer {
-  return {
-    login: headerOrNull(header("Tailscale-User-Login")),
-    displayName: headerOrNull(header("Tailscale-User-Name")),
-  };
-}
 
 function safeDecodeSegment(segment: string): string {
   try {
@@ -98,39 +94,9 @@ function parseRedirectPath(rawUrl: string): {
   };
 }
 
-async function resolveClientFile(
-  clientRoot: string,
-  relativePath: string,
-): Promise<ReturnType<typeof Bun.file> | null> {
-  const resolvedRoot = path.resolve(clientRoot);
-  const stripped = relativePath.replace(/^\/+/u, "");
-  const candidate = path.resolve(resolvedRoot, stripped);
-  if (!candidate.startsWith(`${resolvedRoot}${path.sep}`)) {
-    return null;
-  }
-  const file = Bun.file(candidate);
-  return (await file.exists()) ? file : null;
-}
-
 async function readIndexHtml(clientRoot: string): Promise<string> {
-  const indexFile = await resolveClientFile(clientRoot, "index.html");
-  return indexFile === null ? FALLBACK_INDEX_HTML : indexFile.text();
-}
-
-function classifyRouteForTrace(pathname: string): string {
-  if (pathname === "/healthz" || pathname === "/readyz") {
-    return pathname;
-  }
-  if (pathname === "/metrics" || pathname === "/.export") {
-    return pathname;
-  }
-  if (pathname.startsWith("/api/")) {
-    return "/api";
-  }
-  if (pathname.startsWith("/assets/")) {
-    return "/assets";
-  }
-  return pathname === "/" ? "/" : "/:short";
+  const indexFile = Bun.file(path.join(clientRoot, "index.html"));
+  return (await indexFile.exists()) ? indexFile.text() : FALLBACK_INDEX_HTML;
 }
 
 async function recordClickSafely(
@@ -144,101 +110,40 @@ async function recordClickSafely(
   }
 }
 
-export function createGolinkApp(deps: GolinkAppDeps): Hono {
-  const app = new Hono();
-  const tailnetDomain = deps.tailnetDomain ?? "tailnet-1a49.ts.net";
-  const metrics = deps.metrics ?? createGolinkMetrics();
-  const clientRoot = deps.clientRoot ?? DEFAULT_CLIENT_ROOT;
+function linksErrorResponse(c: GolinkContext, error: unknown): Response {
+  if (error instanceof LinksError) {
+    return error.kind === "writes-disabled"
+      ? c.json({ error: error.message }, 403)
+      : c.json({ error: error.message }, 500);
+  }
+  throw error;
+}
 
-  app.use(secureHeaders());
-
-  app.use(async (c, next) => {
-    const route = classifyRouteForTrace(c.req.path);
-    await traceRequest(c.req.raw, route, next);
-  });
-
-  app.get("/healthz", (c) => c.text("ok", 200));
-
-  app.get("/readyz", async (c) => {
-    const healthy = await deps.repo.ping();
-    return healthy ? c.text("ready", 200) : c.text("not ready", 503);
-  });
-
-  app.get("/metrics", async () => {
-    const [manualLinks, dynamicAliasesEnabled] = await Promise.all([
-      deps.repo.list(),
-      deps.dynamicAliasesEnabled(),
-    ]);
-    const catalog = buildCatalog({
-      manualLinks,
-      ingressHosts: deps.getIngressHosts(),
-      platformSites: deps.platformSites,
-      tailnetDomain,
-      dynamicAliasesEnabled,
-    });
-    metrics.updateLinksConfigured(catalog.links, catalog.shortcuts.length);
-    return new Response(await metrics.register.metrics(), {
-      status: 200,
-      headers: { "Content-Type": metrics.register.contentType },
-    });
-  });
-
-  app.get("/.export", async (c) => {
-    const manualLinks = await deps.repo.list();
-    const lines = manualLinks.map((link) =>
-      JSON.stringify({
-        Short: link.short,
-        Long: link.targetUrl,
-        Created: link.createdAt.toISOString(),
-        LastEdit: link.updatedAt.toISOString(),
-        Owner: link.createdBy,
-      }),
-    );
-    const body = lines.length === 0 ? "" : `${lines.join("\n")}\n`;
-    return c.body(body, 200, {
-      "Content-Type": "application/x-ndjson; charset=utf-8",
-      "Cache-Control": "no-store",
-    });
-  });
-
+/**
+ * `/api/links` as REST. The browser now uses the `links` tRPC procedures;
+ * these stay, unchanged, for the callers listed in the README until their
+ * request count is zero (serve both, move callers, then delete).
+ */
+function registerRestLinkRoutes(
+  app: Hono<ConsoleEnv>,
+  links: LinksService,
+  writesEnabled: () => Promise<boolean>,
+): void {
   app.get("/api/links", async (c) => {
-    const [manualLinks, dynamicAliasesEnabled, writesEnabled] =
-      await Promise.all([
-        deps.repo.list(),
-        deps.dynamicAliasesEnabled(),
-        deps.writesEnabled(),
-      ]);
-    const catalog = buildCatalog({
-      manualLinks,
-      ingressHosts: deps.getIngressHosts(),
-      platformSites: deps.platformSites,
-      tailnetDomain,
-      dynamicAliasesEnabled,
-    });
-    metrics.updateLinksConfigured(catalog.links, catalog.shortcuts.length);
-
-    const payload: LinksDirectoryResponse = {
-      viewer: extractViewer((name) => c.req.header(name)),
-      dynamicAliasesEnabled,
-      writesEnabled,
-      links: catalog.links,
-      shortcuts: catalog.shortcuts,
-    };
-    return c.json(payload, 200);
+    const identity = await identityOf(c);
+    return c.json(await links.directory(viewerOf(identity)), 200);
   });
 
   app.post("/api/links", async (c) => {
-    if (!(await deps.writesEnabled())) {
+    if (!(await writesEnabled())) {
       return c.json({ error: "Golink writes are currently disabled." }, 403);
     }
-
     let rawBody: unknown;
     try {
       rawBody = await c.req.json();
     } catch {
       return c.json({ error: "Request body must be valid JSON." }, 400);
     }
-
     const parsed = UpsertManualLinkInputSchema.safeParse(rawBody);
     if (!parsed.success) {
       const joined = parsed.error.issues
@@ -247,26 +152,16 @@ export function createGolinkApp(deps: GolinkAppDeps): Hono {
       const message = joined.length > 0 ? joined : "Invalid link input.";
       return c.json({ error: message }, 400);
     }
-
-    const viewer = extractViewer((name) => c.req.header(name));
-    const createdBy = viewer.login ?? "manual";
-    const saved = await deps.repo.upsert(parsed.data, createdBy);
-    const dynamicAliasesEnabled = await deps.dynamicAliasesEnabled();
-    const shadows = computeManualShadows({
-      short: saved.short,
-      ingressHosts: deps.getIngressHosts(),
-      platformSites: deps.platformSites,
-      tailnetDomain,
-      dynamicAliasesEnabled,
-    });
-    const item = toManualLinkItem(saved, shadows);
-    return item === null
-      ? c.json({ error: "Stored destination URL is invalid." }, 500)
-      : c.json(item, 200);
+    const identity = await identityOf(c);
+    try {
+      return c.json(await links.upsert(parsed.data, viewerOf(identity)), 200);
+    } catch (error) {
+      return linksErrorResponse(c, error);
+    }
   });
 
   app.delete("/api/links/:short", async (c) => {
-    if (!(await deps.writesEnabled())) {
+    if (!(await writesEnabled())) {
       return c.json({ error: "Golink writes are currently disabled." }, 403);
     }
     const short = normalizeShortSlug(c.req.param("short"));
@@ -274,50 +169,23 @@ export function createGolinkApp(deps: GolinkAppDeps): Hono {
     if (validationError !== null) {
       return c.json({ error: validationError }, 400);
     }
-    await deps.repo.delete(short);
-    return c.json({ deleted: true }, 200);
+    try {
+      return c.json(await links.remove(short), 200);
+    } catch (error) {
+      return linksErrorResponse(c, error);
+    }
   });
 
   app.all("/api/*", (c) => c.json({ error: "Not found" }, 404));
+}
 
-  app.get("/assets/*", async (c) => {
-    const file = await resolveClientFile(clientRoot, c.req.path);
-    if (file === null) {
-      return c.notFound();
-    }
-    return new Response(file, {
-      status: 200,
-      headers: {
-        "Content-Type": file.type,
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-  });
+export function createGolinkServer(deps: GolinkAppDeps): ConsoleServer {
+  const tailnetDomain = deps.tailnetDomain ?? "tailnet-1a49.ts.net";
+  const metrics = deps.metrics ?? createGolinkMetrics();
+  const clientRoot = deps.clientRoot ?? DEFAULT_CLIENT_ROOT;
+  const links = createLinksService({ ...deps, tailnetDomain, metrics });
 
-  app.all("/assets/*", (c) => c.notFound());
-
-  for (const staticName of ["favicon.ico", "favicon.svg", "robots.txt"]) {
-    app.get(`/${staticName}`, async (c) => {
-      const file = await resolveClientFile(clientRoot, staticName);
-      if (file === null) {
-        return c.notFound();
-      }
-      return new Response(file, {
-        status: 200,
-        headers: {
-          "Content-Type": file.type,
-          "Cache-Control": "public, max-age=3600",
-        },
-      });
-    });
-  }
-
-  app.get("/", async (c) => {
-    const html = await readIndexHtml(clientRoot);
-    return c.html(html, 200, { "Cache-Control": "no-cache" });
-  });
-
-  const handleRedirect = async (c: Context): Promise<Response> => {
+  const handleRedirect = async (c: GolinkContext): Promise<Response> => {
     const { short, subpath, search } = parseRedirectPath(c.req.url);
     if (RESERVED_SLUGS.has(short)) {
       return c.json({ error: "Not found" }, 404);
@@ -361,20 +229,61 @@ export function createGolinkApp(deps: GolinkAppDeps): Hono {
     return c.json({ error: "Link not found", short }, 404);
   };
 
-  app.get("/:short", (c) => handleRedirect(c));
-  app.get("/:short/*", (c) => handleRedirect(c));
-
-  app.onError((error, c) => {
-    console.error(
-      JSON.stringify({
-        message: "golink_request_failed",
-        path: c.req.path,
-        error: error.message,
-      }),
-    );
-    reportError(error);
-    return c.json({ error: "Internal server error" }, 500);
+  return createConsoleServer({
+    name: "golink",
+    port: deps.port ?? 7352,
+    ...(deps.hostname === undefined ? {} : { hostname: deps.hostname }),
+    // The in-Pod Tailscale sidecar proxies from loopback; identity headers
+    // from any other peer (Prometheus, Temporal) are ignored.
+    identity: [tailscaleIdentity({ trustedProxies: LOOPBACK_PROXIES })],
+    metrics: {
+      registry: metrics.register,
+      collect: async () => {
+        const [manualLinks, dynamicAliasesEnabled] = await Promise.all([
+          deps.repo.list(),
+          deps.dynamicAliasesEnabled(),
+        ]);
+        const catalog = buildCatalog({
+          manualLinks,
+          ingressHosts: deps.getIngressHosts(),
+          platformSites: deps.platformSites,
+          tailnetDomain,
+          dynamicAliasesEnabled,
+        });
+        metrics.updateLinksConfigured(catalog.links, catalog.shortcuts.length);
+      },
+    },
+    health: { ready: { database: async () => deps.repo.ping() } },
+    trpc: {
+      router: golinkRouter,
+      createContext: (input) => ({ ...input, links }),
+    },
+    staticDir: clientRoot,
+    // `/<slug>` is a redirect, so an unknown path is never the SPA shell.
+    spaFallback: false,
+    routes: (app) => {
+      app.get("/.export", async (c) => {
+        const manualLinks = await deps.repo.list();
+        const lines = manualLinks.map((link) =>
+          JSON.stringify({
+            Short: link.short,
+            Long: link.targetUrl,
+            Created: link.createdAt.toISOString(),
+            LastEdit: link.updatedAt.toISOString(),
+            Owner: link.createdBy,
+          }),
+        );
+        const body = lines.length === 0 ? "" : `${lines.join("\n")}\n`;
+        return c.body(body, 200, {
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "Cache-Control": "no-store",
+        });
+      });
+      registerRestLinkRoutes(app, links, deps.writesEnabled);
+      app.get("/:short", handleRedirect);
+      app.get("/:short/*", handleRedirect);
+    },
+    onError: reportError,
+    ...(deps.onShutdown === undefined ? {} : { onShutdown: deps.onShutdown }),
   });
-
-  return app;
 }

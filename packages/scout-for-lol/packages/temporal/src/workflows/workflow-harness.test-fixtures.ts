@@ -36,7 +36,11 @@ export type ScoutWorkflowHarness = {
    * store it closes over. That is also why the workflow suite runs with
    * `--no-file-parallelism`.
    */
-  startWorkers: (activities: object) => Promise<void>;
+  startWorkers: (
+    activities: object,
+    /** Activities served on the background queue, for a Workflow that uses it. */
+    background?: object,
+  ) => Promise<void>;
 };
 
 /**
@@ -77,7 +81,7 @@ export function useScoutWorkflowHarness(
     sleep: async (duration) => {
       await current().sleep(duration);
     },
-    startWorkers: async (activities) => {
+    startWorkers: async (activities, background) => {
       const live = current();
       await pool.start(
         await Worker.create({
@@ -95,6 +99,16 @@ export function useScoutWorkflowHarness(
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );
+      if (background !== undefined) {
+        await pool.start(
+          await Worker.create({
+            connection: live.nativeConnection,
+            taskQueue: scoutTaskQueues(stage).background,
+            activities: background,
+            maxConcurrentActivityTaskExecutions: 4,
+          }),
+        );
+      }
     },
   };
 }

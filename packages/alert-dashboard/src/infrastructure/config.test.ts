@@ -10,6 +10,8 @@ const base = {
   DATABASE_URL: "file:./data/alert-dashboard-test.db",
   GRAFANA_API_KEY: "viewer-token",
   GRAFANA_URL: "http://grafana.monitoring.svc:3000",
+  INCIDENTS_DATABASE_URL:
+    "postgresql://incidents:secret@incidents-postgresql:5432/incidents_db",
   OPS_INGEST_TOKEN: "b".repeat(32),
   PROMETHEUS_URL: "http://prometheus-operated.prometheus:9090",
 };
@@ -35,6 +37,16 @@ describe("environment boundary", () => {
     expect(() => readConfig({ ...base, OPS_INGEST_TOKEN: "short" })).toThrow();
     const { PROMETHEUS_URL: _url, ...withoutPrometheus } = base;
     expect(() => readConfig(withoutPrometheus)).toThrow();
+  });
+
+  test("requires a PostgreSQL URL for the incidents database", () => {
+    const { INCIDENTS_DATABASE_URL: _url, ...withoutIncidents } = base;
+    expect(() => readConfig(withoutIncidents)).toThrow(
+      /INCIDENTS_DATABASE_URL/u,
+    );
+    expect(() =>
+      readConfig({ ...base, INCIDENTS_DATABASE_URL: "file:./incidents.db" }),
+    ).toThrow(/postgres/u);
   });
 
   test("requires every Mail setting when email is enabled", () => {

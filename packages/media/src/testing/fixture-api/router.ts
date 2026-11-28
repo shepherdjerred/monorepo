@@ -119,19 +119,15 @@ function respond(
 }
 
 /**
- * Answer one request from the endpoint table. Only reads are served: the
- * fixture API holds no state, so a write gets a typed 501 instead of a
+ * Answer one request from the endpoint table. Reads and declared idempotent
+ * mount-time checks are served; any other write gets a typed 501 instead of a
  * response that pretends something changed.
  */
 export function routeFixture(input: RouteInput): FixtureOutcome {
-  if (input.method !== "GET") {
-    return failure(
-      501,
-      "fixture_read_only",
-      "The fixture API is read-only; this change was not saved.",
-    );
-  }
   for (const compiled of COMPILED) {
+    if (compiled.endpoint.method !== input.method) {
+      continue;
+    }
     const match = compiled.pattern.exec(input.url.pathname);
     if (match === null) {
       continue;
@@ -140,9 +136,15 @@ export function routeFixture(input: RouteInput): FixtureOutcome {
       ? failure(403, "forbidden", "Library owner access is required.")
       : respond(compiled.endpoint, requestFor(compiled, match, input));
   }
-  return failure(
-    404,
-    "fixture_missing",
-    `The fixture API has no fixture for ${input.url.pathname}.`,
-  );
+  return input.method === "GET"
+    ? failure(
+        404,
+        "fixture_missing",
+        `The fixture API has no fixture for ${input.url.pathname}.`,
+      )
+    : failure(
+        501,
+        "fixture_read_only",
+        "The fixture API is read-only; this change was not saved.",
+      );
 }

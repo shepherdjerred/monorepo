@@ -29,7 +29,7 @@ export type SafeFetchResult = {
 };
 
 const DEFAULT_TIMEOUT_MS = 15_000;
-const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
+const DEFAULT_MAX_BYTES = 15 * 1024 * 1024;
 const DEFAULT_MAX_REDIRECTS = 5;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const FORBIDDEN_HOST_SUFFIXES = [

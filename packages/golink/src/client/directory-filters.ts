@@ -1,35 +1,5 @@
-import {
-  RESERVED_SLUGS,
-  normalizeShortSlug,
-  type LinkItem,
-} from "#shared/contract.ts";
+import type { LinkItem } from "#shared/contract.ts";
 import type { KindCounts, KindFilter } from "./directory-sections.tsx";
-
-export function extractInitialMissingSlug(): string | null {
-  const params = new URLSearchParams(globalThis.location.search);
-  const queryMissing = params.get("missing");
-  if (queryMissing !== null) {
-    const normalized = normalizeShortSlug(queryMissing);
-    if (normalized.length > 0 && !RESERVED_SLUGS.has(normalized)) {
-      return normalized;
-    }
-  }
-
-  const pathname = globalThis.location.pathname;
-  if (pathname === "/" || pathname === "/index.html") {
-    return null;
-  }
-  let rawSegment = pathname.replaceAll(/^\/+|\/+$/gu, "");
-  try {
-    rawSegment = decodeURIComponent(rawSegment);
-  } catch {
-    // Keep raw path when percent-decoding fails.
-  }
-  const candidate = normalizeShortSlug(rawSegment);
-  return candidate.length === 0 || RESERVED_SLUGS.has(candidate)
-    ? null
-    : candidate;
-}
 
 function isEditableElement(target: EventTarget | null): boolean {
   return (
@@ -53,15 +23,6 @@ export function isSearchShortcut(event: KeyboardEvent): boolean {
       event.target instanceof Element && event.target.closest("dialog") !== null
     )
   );
-}
-
-export function clearUrlPathToRoot(): void {
-  if (
-    globalThis.location.pathname !== "/" ||
-    globalThis.location.search.length > 0
-  ) {
-    globalThis.history.replaceState(null, "", "/");
-  }
 }
 
 export function computeKindCounts(links: readonly LinkItem[]): KindCounts {

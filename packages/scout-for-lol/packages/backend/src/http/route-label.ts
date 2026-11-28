@@ -43,6 +43,10 @@ const PATTERN_ROUTES: readonly { pattern: RegExp; label: string }[] = [
     label: "/api/meta/v1/champions/:id",
   },
   {
+    pattern: /^\/api\/meta\/v1\/matchups\/[^/]+$/,
+    label: "/api/meta/v1/matchups/:id",
+  },
+  {
     pattern: /^\/api\/meta\/v1\/matchups\/[^/]+\/[^/]+$/,
     label: "/api/meta/v1/matchups/:a/:b",
   },

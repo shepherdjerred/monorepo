@@ -6,6 +6,7 @@ import {
   requirePin,
 } from "homelab/scripts/tofu/provider-versions.ts";
 import { SYNTHESIZED_STACKS } from "#src/app.ts";
+import { pinnedProviderVersion } from "#src/homelab-stack.ts";
 import { bindingSpecification } from "#scripts/generate-bindings.ts";
 import {
   exactPinConfiguration,
@@ -199,6 +200,58 @@ describe("lock refresh", () => {
       fresh
         .replace('constraints = "3.4.1"', 'constraints = "~> 3.0"')
         .replace('constraints = "7.17.1"', 'constraints = "~> 7.0"'),
+    );
+  });
+
+  test("keeps range constraints while advancing exact-version constraints to the new pin", async () => {
+    const pins = await loadProviderPins();
+    expect(pinnedProviderVersion("registry.opentofu.org/docker/docker")).toBe(
+      requirePin(pins, "registry.opentofu.org/docker/docker").version,
+    );
+    const fresh = [
+      'provider "registry.opentofu.org/1password/onepassword" {',
+      '  version     = "3.4.1"',
+      '  constraints = "3.4.1"',
+      "  hashes = [",
+      '    "h1:new=",',
+      "  ]",
+      "}",
+      "",
+      'provider "registry.opentofu.org/docker/docker" {',
+      '  version     = "0.9.0"',
+      '  constraints = "0.9.0"',
+      "}",
+      "",
+      'provider "registry.terraform.io/ippontech/anthropic" {',
+      '  version     = "1.96.0"',
+      '  constraints = "1.96.0"',
+      "}",
+      "",
+    ].join("\n");
+    const previous = [
+      'provider "registry.opentofu.org/docker/docker" {',
+      '  version     = "0.8.0"',
+      '  constraints = "0.8.0"',
+      "}",
+      "",
+      'provider "registry.terraform.io/ippontech/anthropic" {',
+      '  version     = "1.95.1"',
+      '  constraints = "= 1.95.1"',
+      "}",
+      "",
+      'provider "registry.opentofu.org/1password/onepassword" {',
+      '  version     = "3.3.1"',
+      '  constraints = "~> 3.0"',
+      "  hashes = [",
+      '    "h1:old=",',
+      "  ]",
+      "}",
+      "",
+    ].join("\n");
+    expect(withConstraintsOf(fresh, previous)).toBe(
+      fresh
+        .replace('constraints = "3.4.1"', 'constraints = "~> 3.0"')
+        .replace('constraints = "1.96.0"', 'constraints = "= 1.96.0"'),
     );
   });
 

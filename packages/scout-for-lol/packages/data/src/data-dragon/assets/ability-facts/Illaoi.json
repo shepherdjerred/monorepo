@@ -97,7 +97,15 @@
       "resolvedDescription": "Passive: Slam damage is increased by 10/15/20/25/30% (currently {{ spell.illaoiq:tentacledamagetotal }} physical damage). Active: Illaoi swings her idol, causing a Tentacle to Slam forward.",
       "unresolved": [
         "spell.illaoiq:tentacledamagetotal"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.75,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Harsh Lesson",
@@ -178,7 +186,15 @@
       "resolvedDescription": "Illaoi's next Attack causes her to leap at the target, dealing an additional {{ healthpercenttotal }} max Health physical damage. When she strikes, nearby Tentacles will Slam at the target.",
       "unresolved": [
         "healthpercenttotal"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 350,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Test of Spirit",
@@ -273,7 +289,44 @@
       "resolvedDescription": "Illaoi pulls the spirit from an enemy champion for 7 seconds. The spirit can be damaged like a champion, with {{ echopercent }} of that damage echoing to its owner. If the spirit dies or the target leaves its range, the target becomes marked for 4 seconds and is Slowed by 80% for 1.5 seconds. Marked enemies spawn Tentacles if possible. Tentacles will automatically Slam at spirits and marked enemies once every 4-3 (based on level) seconds.",
       "unresolved": [
         "echopercent"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 50,
+        "missileSpeed": 0,
+        "missiles": [
+          {
+            "name": "illaoiemis",
+            "width": 50,
+            "movement": "FixedSpeedMovement",
+            "speed": 1900,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "illaoiespiritmissile",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Leap of Faith",
@@ -312,7 +365,15 @@
         ]
       },
       "resolvedDescription": "Illaoi smashes her idol into the ground, dealing 150/250/350 (+50% bonus AD) physical damage to nearby enemies and spawning a Tentacle for each enemy champion hit. For the next 8 seconds, Tentacles are untargetable and Slam 50% faster, and Harsh Lesson has a 2 second cooldown.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "AreaClamped",
+        "castTime": 0.5,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

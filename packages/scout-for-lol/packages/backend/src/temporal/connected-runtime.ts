@@ -162,6 +162,7 @@ type InteractiveActivities = Pick<
 type BackgroundActivities = Pick<
   ScoutTemporalActivities,
   | "fetchInitialHistoryPage"
+  | "refreshStaleRanks"
   | "importExploreHistory"
   | "importExploreTimelines"
   | "reconcileIngestion"

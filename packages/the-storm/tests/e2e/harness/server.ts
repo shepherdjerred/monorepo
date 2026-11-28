@@ -126,7 +126,7 @@ export type StartServerOptions = ModuleConfigOverrides & {
 
 /** Docker limits and the JVM heap (itzg's MEMORY) for the server container. */
 export type ServerResources = {
-  cpus: number;
+  cpus?: number;
   /** The JVM heap, as itzg's MEMORY reads it (8G). */
   heap: string;
   /** The container memory limit, as `docker create --memory` reads it (10g). */
@@ -437,7 +437,9 @@ export async function startServer(
     ...(options.resources === undefined
       ? []
       : [
-          `--cpus=${options.resources.cpus.toString()}`,
+          ...(options.resources.cpus === undefined
+            ? []
+            : [`--cpus=${options.resources.cpus.toString()}`]),
           `--memory=${options.resources.memoryLimit}`,
         ]),
     ...envArgs(

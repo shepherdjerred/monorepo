@@ -169,11 +169,6 @@
       "kind": "platform"
     },
     {
-      "id": "bugsink",
-      "title": "Bugsink",
-      "kind": "platform"
-    },
-    {
       "id": "ci",
       "title": "CI (Woodpecker)",
       "kind": "platform"
@@ -234,6 +229,12 @@
       "title": "Errors",
       "kind": "product",
       "package": "errors"
+    },
+    {
+      "id": "artifacts",
+      "title": "Artifacts",
+      "kind": "product",
+      "package": "artifacts"
     }
   ],
   "services": [
@@ -1992,25 +1993,6 @@
       }
     },
     {
-      "id": "bugsink",
-      "title": "Bugsink",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "bugsink",
-      "components": [
-        {
-          "name": "chart:bugsink",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["bugsink"],
-        "argoApps": ["bugsink"]
-      }
-    },
-    {
       "id": "ci",
       "title": "CI runtime images",
       "lifecycle": "active",
@@ -2741,6 +2723,34 @@
           }
         ]
       }
+    },
+    {
+      "id": "artifacts",
+      "title": "Artifacts",
+      "package": "artifacts",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "artifacts",
+      "components": [
+        {
+          "name": "image:artifacts",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:artifacts",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["artifacts"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "artifacts": "inactive"
+        },
+        "charts": ["artifacts"]
+      }
     }
   ],
   "environments": [
@@ -2773,7 +2783,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "scout-beta/3",
+      "recipeRevisionId": "scout-beta/4",
       "configurationRevisionId": "scout-beta/2"
     },
     {
@@ -3185,7 +3195,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/2",
-      "configurationRevisionId": "argocd/prod/22"
+      "configurationRevisionId": "argocd/prod/23"
     },
     {
       "id": "tofu-anthropic/prod",
@@ -3329,7 +3339,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus/prod/2",
-      "configurationRevisionId": "prometheus/prod/12"
+      "configurationRevisionId": "prometheus/prod/15"
     },
     {
       "id": "prometheus-adapter/prod",
@@ -3376,7 +3386,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "tempo/prod/2",
+      "recipeRevisionId": "tempo/prod/3",
       "configurationRevisionId": "tempo/prod/1"
     },
     {
@@ -3384,7 +3394,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "pyroscope/prod/2",
+      "recipeRevisionId": "pyroscope/prod/3",
       "configurationRevisionId": "pyroscope/prod/2"
     },
     {
@@ -3410,14 +3420,6 @@
       "automatic": true,
       "recipeRevisionId": "promtail/prod/1",
       "configurationRevisionId": "promtail/prod/1"
-    },
-    {
-      "id": "bugsink/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "bugsink/prod/2",
-      "configurationRevisionId": "bugsink/prod/1"
     },
     {
       "id": "woodpecker/prod",
@@ -3449,7 +3451,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "seaweedfs/prod/2",
-      "configurationRevisionId": "seaweedfs/prod/2"
+      "configurationRevisionId": "seaweedfs/prod/3"
     },
     {
       "id": "velero/prod",
@@ -3685,46 +3687,6 @@
     {
       "dependent": "blackbox-exporter/prod",
       "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cert-manager/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "bugsink/prod",
-      "prerequisite": "postgres-operator/prod",
       "rule": "any-accepted"
     },
     {
@@ -4400,6 +4362,11 @@
     {
       "dependent": "ops-dashboard/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "postgres-operator/prod",
       "rule": "any-accepted"
     },
     {
@@ -5190,11 +5157,6 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "arcade/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "bugsink/prod",
       "rule": "any-accepted"
     },
     {

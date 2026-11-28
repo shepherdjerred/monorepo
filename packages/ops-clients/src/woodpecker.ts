@@ -1,7 +1,9 @@
+import { Buffer } from "node:buffer";
 import { z } from "zod";
 import {
   bearer,
   fetchJson,
+  UpstreamError,
   type Fetch,
 } from "@shepherdjerred/ops-clients/http.ts";
 
@@ -45,22 +47,60 @@ const StepSchema = z.object({
 });
 
 const WorkflowSchema = z.object({
+  id: z.int().positive().optional(),
   pid: z.number().int().positive(),
   name: z.string(),
   state: z.enum(PIPELINE_STATUSES),
   started: z.number().int().default(0),
   finished: z.number().int().default(0),
+  depends_on: z.array(z.string()).nullish(),
   children: z.array(StepSchema).nullable().default([]),
 });
 
-const PipelineDetailSchema = PipelineSchema.extend({
+const PipelineSummarySchema = PipelineSchema.extend({
+  id: z.int().positive().optional(),
   event: z.string(),
   branch: z.string(),
+  ref: z.string().default(""),
+  refspec: z.string().default(""),
+  rerun_count: z.int().nonnegative().default(0),
+  pr_draft: z.boolean().default(false),
+  event_reason: z.array(z.string()).nullish(),
+});
+
+const PipelineDetailSchema = PipelineSummarySchema.extend({
   author: z.string(),
   started: z.number().int(),
   forge_url: z.string(),
   workflows: z.array(WorkflowSchema).nullable().default([]),
 });
+
+const QueueTaskSchema = z.object({
+  id: z.string().min(1),
+  pid: z.int().positive(),
+  name: z.string(),
+  repo_id: z.int().positive(),
+  pipeline_id: z.int().nonnegative().optional(),
+  pipeline_number: z.int().positive().optional(),
+  created: z.int().nonnegative(),
+  dependencies: z.array(z.string()).nullish(),
+  dep_status: z.record(z.string(), z.enum(PIPELINE_STATUSES)).nullish(),
+});
+
+const QueueSchema = z.object({
+  paused: z.boolean(),
+  stats: z.object({
+    pending_count: z.int().nonnegative(),
+    waiting_on_deps_count: z.int().nonnegative(),
+    running_count: z.int().nonnegative(),
+    worker_count: z.int().nonnegative(),
+  }),
+  pending: z.array(QueueTaskSchema),
+  waiting_on_deps: z.array(QueueTaskSchema),
+  running: z.array(QueueTaskSchema),
+});
+
+const PipelineConfigSchema = z.object({ name: z.string(), data: z.base64() });
 
 export type WoodpeckerStep = {
   pid: number;
@@ -74,17 +114,17 @@ export type WoodpeckerStep = {
 };
 
 export type WoodpeckerWorkflow = {
+  id: string | null;
   pid: number;
   name: string;
   state: WoodpeckerPipelineStatus;
   startedAt: string | undefined;
   finishedAt: string | undefined;
+  dependsOn: string[];
   steps: WoodpeckerStep[];
 };
 
-export type WoodpeckerPipelineDetail = WoodpeckerPipeline & {
-  event: string;
-  branch: string;
+export type WoodpeckerPipelineDetail = WoodpeckerPipelineSummary & {
   author: string;
   startedAt: string | undefined;
   forgeUrl: string;
@@ -101,6 +141,39 @@ export type WoodpeckerPipeline = {
   message: string;
   createdAt: string;
   finishedAt: string | undefined;
+};
+
+export type WoodpeckerPipelineSummary = WoodpeckerPipeline & {
+  id: number | null;
+  event: string;
+  branch: string;
+  ref: string;
+  refspec: string;
+  attempt: number;
+  isDraft: boolean;
+  eventReasons: string[];
+};
+
+export type WoodpeckerQueueTask = {
+  id: string;
+  repoId: number;
+  pipelineId: number | null;
+  pipelineNumber: number | null;
+  pid: number;
+  name: string;
+  state: "ready" | "waiting" | "running";
+  pipelineCreatedAt: string | null;
+  dependencies: string[];
+  dependencyStates: Record<string, WoodpeckerPipelineStatus>;
+};
+
+export type WoodpeckerQueue = {
+  paused: boolean;
+  ready: number;
+  waitingOnDependencies: number;
+  running: number;
+  workerCount: number;
+  tasks: WoodpeckerQueueTask[];
 };
 
 /**
@@ -129,7 +202,25 @@ function optionalIso(seconds: number): string | undefined {
   return seconds === 0 ? undefined : isoFromUnix(seconds);
 }
 
-/** Read-only Woodpecker REST client scoped to one repository. */
+function queueTasks(
+  tasks: readonly z.infer<typeof QueueTaskSchema>[],
+  state: WoodpeckerQueueTask["state"],
+): WoodpeckerQueueTask[] {
+  return tasks.map((task) => ({
+    id: task.id,
+    repoId: task.repo_id,
+    pipelineId: task.pipeline_id === 0 ? null : (task.pipeline_id ?? null),
+    pipelineNumber: task.pipeline_number ?? null,
+    pid: task.pid,
+    name: task.name,
+    state,
+    pipelineCreatedAt: optionalIso(task.created) ?? null,
+    dependencies: task.dependencies ?? [],
+    dependencyStates: task.dep_status ?? {},
+  }));
+}
+
+/** Read-only Woodpecker REST client with repository-scoped pipeline reads. */
 export class WoodpeckerClient {
   readonly #baseUrl: string;
   readonly #token: string;
@@ -146,6 +237,47 @@ export class WoodpeckerClient {
     this.#token = options.token;
     this.#repoId = options.repoId;
     this.#fetch = options.fetch ?? fetch;
+  }
+
+  #read<T extends z.ZodType>(
+    url: string | URL,
+    schema: T,
+    signal?: AbortSignal,
+  ) {
+    return fetchJson(
+      this.#fetch,
+      {
+        upstream: "woodpecker",
+        url: typeof url === "string" ? new URL(url, this.#baseUrl) : url,
+        init: {
+          headers: { accept: "application/json", ...bearer(this.#token) },
+        },
+        ...(signal === undefined ? {} : { signal }),
+      },
+      schema,
+    );
+  }
+
+  #summary(
+    pipeline: z.infer<typeof PipelineSummarySchema>,
+  ): WoodpeckerPipelineSummary {
+    return {
+      id: pipeline.id ?? null,
+      number: pipeline.number,
+      status: pipeline.status,
+      url: this.#pipelineUrl(pipeline.number),
+      commit: pipeline.commit,
+      message: pipeline.message,
+      createdAt: isoFromUnix(pipeline.created),
+      finishedAt: optionalIso(pipeline.finished),
+      event: pipeline.event,
+      branch: pipeline.branch,
+      ref: pipeline.ref,
+      refspec: pipeline.refspec,
+      attempt: pipeline.rerun_count,
+      isDraft: pipeline.pr_draft,
+      eventReasons: pipeline.event_reason ?? [],
+    };
   }
 
   /**
@@ -166,17 +298,7 @@ export class WoodpeckerClient {
     url.searchParams.set("branch", branch);
     url.searchParams.set("event", "push");
     url.searchParams.set("perPage", String(count));
-    const pipelines = await fetchJson(
-      this.#fetch,
-      {
-        upstream: "woodpecker",
-        url,
-        init: {
-          headers: { accept: "application/json", ...bearer(this.#token) },
-        },
-      },
-      z.array(PipelineSchema),
-    );
+    const pipelines = await this.#read(url, z.array(PipelineSchema));
     return pipelines.map((pipeline) => ({
       number: pipeline.number,
       status: pipeline.status,
@@ -188,43 +310,82 @@ export class WoodpeckerClient {
     }));
   }
 
-  /** One pipeline with its workflows and steps. */
-  async pipeline(number: number): Promise<WoodpeckerPipelineDetail> {
+  /** One page of run metadata. Woodpecker orders by descending pipeline number. */
+  async pipelines(options: {
+    page: number;
+    perPage: number;
+    status?: WoodpeckerPipelineStatus;
+    events?: readonly string[];
+    after?: string;
+    signal?: AbortSignal;
+  }): Promise<WoodpeckerPipelineSummary[]> {
     const url = new URL(
-      `/api/repos/${String(this.#repoId)}/pipelines/${String(number)}`,
+      `/api/repos/${String(this.#repoId)}/pipelines`,
       this.#baseUrl,
     );
-    const pipeline = await fetchJson(
-      this.#fetch,
-      {
-        upstream: "woodpecker",
-        url,
-        init: {
-          headers: { accept: "application/json", ...bearer(this.#token) },
-        },
-      },
-      PipelineDetailSchema,
+    url.searchParams.set("page", String(options.page));
+    url.searchParams.set("perPage", String(options.perPage));
+    if (options.status !== undefined)
+      url.searchParams.set("status", options.status);
+    if (options.events !== undefined)
+      url.searchParams.set("event", options.events.join(","));
+    if (options.after !== undefined)
+      url.searchParams.set("after", options.after);
+    const pipelines = await this.#read(
+      url,
+      z.array(PipelineSummarySchema),
+      options.signal,
     );
-    const pipelineUrl = this.#pipelineUrl(pipeline.number);
+    return pipelines.map((pipeline) => this.#summary(pipeline));
+  }
+
+  /** Instance-wide scheduler state. Woodpecker requires administrator access. */
+  async queue(signal?: AbortSignal): Promise<WoodpeckerQueue> {
+    const queue = await this.#read("/api/queue/info", QueueSchema, signal);
     return {
-      number: pipeline.number,
-      status: pipeline.status,
-      url: pipelineUrl,
-      commit: pipeline.commit,
-      message: pipeline.message,
-      createdAt: isoFromUnix(pipeline.created),
-      finishedAt: optionalIso(pipeline.finished),
+      paused: queue.paused,
+      ready: queue.stats.pending_count,
+      waitingOnDependencies: queue.stats.waiting_on_deps_count,
+      running: queue.stats.running_count,
+      workerCount: queue.stats.worker_count,
+      tasks: [
+        ...queueTasks(queue.pending, "ready"),
+        ...queueTasks(queue.waiting_on_deps, "waiting"),
+        ...queueTasks(queue.running, "running"),
+      ],
+    };
+  }
+
+  /** One pipeline with its workflows and steps. */
+  async pipeline(
+    number: number,
+    signal?: AbortSignal,
+  ): Promise<WoodpeckerPipelineDetail> {
+    const pipeline = await this.#read(
+      `/api/repos/${String(this.#repoId)}/pipelines/${String(number)}`,
+      PipelineDetailSchema,
+      signal,
+    );
+    if (pipeline.number !== number) {
+      throw new UpstreamError(
+        "woodpecker",
+        "pipeline response did not match the requested run",
+      );
+    }
+    const summary = this.#summary(pipeline);
+    return {
+      ...summary,
       startedAt: optionalIso(pipeline.started),
-      event: pipeline.event,
-      branch: pipeline.branch,
       author: pipeline.author,
       forgeUrl: pipeline.forge_url,
       workflows: (pipeline.workflows ?? []).map((workflow) => ({
+        id: workflow.id === undefined ? null : String(workflow.id),
         pid: workflow.pid,
         name: workflow.name,
         state: workflow.state,
         startedAt: optionalIso(workflow.started),
         finishedAt: optionalIso(workflow.finished),
+        dependsOn: workflow.depends_on ?? [],
         steps: (workflow.children ?? []).map((step) => ({
           pid: step.pid,
           name: step.name,
@@ -233,10 +394,27 @@ export class WoodpeckerClient {
           type: step.type,
           startedAt: optionalIso(step.started),
           finishedAt: optionalIso(step.finished),
-          url: `${pipelineUrl}/${String(step.pid)}`,
+          url: `${summary.url}/${String(step.pid)}`,
         })),
       })),
     };
+  }
+
+  /** Stored exact-run configuration. Woodpecker JSON-encodes file bytes as base64. */
+  async pipelineConfig(
+    number: number,
+    signal?: AbortSignal,
+  ): Promise<{ name: string; data: string }[]> {
+    const files = await this.#read(
+      `/api/repos/${String(this.#repoId)}/pipelines/${String(number)}/config`,
+      z.array(PipelineConfigSchema),
+      signal,
+    );
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    return files.map(({ name, data }) => ({
+      name,
+      data: decoder.decode(Buffer.from(data, "base64")),
+    }));
   }
 
   #pipelineUrl(number: number) {

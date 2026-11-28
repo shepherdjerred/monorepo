@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { isDeepStrictEqual } from "node:util";
 import {
   flagDeployments,
   type FlagDeployment,
@@ -13,7 +14,14 @@ import {
 } from "@shepherdjerred/feature-flags/flag-write-validation.ts";
 import { projectDeploymentFlags } from "@shepherdjerred/feature-flags/project-deployment.ts";
 import { unreadFlagDocuments } from "@shepherdjerred/feature-flags/unread-documents.ts";
+import { FlagAuditLog, type FlagsActor } from "./audit.ts";
+import { migrate } from "./migrations.ts";
 import { FlagValueSchema } from "./schema.ts";
+
+export type FlagStoreOptions = {
+  /** Clock for audit rows and the migration's `audit_started_at`. */
+  readonly now?: () => Date;
+};
 
 export type DeploymentDocument = {
   readonly id: string;
@@ -97,9 +105,20 @@ function parseFlag(body: string, key: string): FlagValue {
 }
 
 export class FlagStore {
-  private constructor(private readonly db: Database) {}
+  /** Attributed write history; rows are written inside each write transaction. */
+  readonly audit: FlagAuditLog;
 
-  static open(path: string): FlagStore {
+  private constructor(
+    private readonly db: Database,
+    now: () => Date,
+  ) {
+    this.audit = new FlagAuditLog(db, now);
+  }
+
+  static open(
+    path: string,
+    { now = () => new Date() }: FlagStoreOptions = {},
+  ): FlagStore {
     const db = new Database(path);
     db.run("PRAGMA foreign_keys = ON");
     if (path !== ":memory:") db.run("PRAGMA journal_mode = WAL");
@@ -117,7 +136,13 @@ export class FlagStore {
         PRIMARY KEY (deployment_id, key)
       )
     `);
-    return new FlagStore(db);
+    try {
+      migrate(db, now());
+    } catch (error) {
+      db.close();
+      throw error;
+    }
+    return new FlagStore(db, now);
   }
 
   /** Deployments from `deployments` that do not yet have a stored document. */
@@ -135,6 +160,7 @@ export class FlagStore {
   private insertDeploymentIfAbsent(
     id: string,
     flags: readonly FlagValue[],
+    actor: FlagsActor,
   ): boolean {
     const insertDeployment = this.db.query(
       "INSERT INTO deployment (id, revision) VALUES (?, 1) ON CONFLICT DO NOTHING",
@@ -146,6 +172,15 @@ export class FlagStore {
       if (insertDeployment.run(id).changes === 0) return false;
       for (const flag of flags) {
         insertFlag.run(id, flag.key, JSON.stringify(flag));
+        this.audit.record({
+          deploymentId: id,
+          key: flag.key,
+          action: "create",
+          actor,
+          revisionAfter: 1,
+          before: null,
+          after: flag,
+        });
       }
       return true;
     });
@@ -157,14 +192,16 @@ export class FlagStore {
    * declared inventory keys on existing deployments without overwriting stored
    * flag values or targeting rules.
    */
-  seedFromInventory(): { readonly seeded: readonly string[] } {
+  seedFromInventory(actor: FlagsActor): {
+    readonly seeded: readonly string[];
+  } {
     const seeded: string[] = [];
     for (const deployment of flagDeployments) {
       const flags = projectDeploymentFlags(deployment);
-      if (this.insertDeploymentIfAbsent(deployment.id, flags)) {
+      if (this.insertDeploymentIfAbsent(deployment.id, flags, actor)) {
         seeded.push(deployment.id);
       } else {
-        const created = this.createMissing(deployment.id, flags);
+        const created = this.createMissing(deployment.id, flags, actor);
         if (!created.ok) {
           throw new Error(
             `failed to seed missing flags for ${deployment.id}: ${created.failure.kind}`,
@@ -181,10 +218,11 @@ export class FlagStore {
    */
   seedDocuments(
     documents: readonly { id: string; flags: readonly FlagValue[] }[],
+    actor: FlagsActor,
   ): { readonly seeded: readonly string[] } {
     const seeded: string[] = [];
     for (const document of documents) {
-      if (this.insertDeploymentIfAbsent(document.id, document.flags)) {
+      if (this.insertDeploymentIfAbsent(document.id, document.flags, actor)) {
         seeded.push(document.id);
       }
     }
@@ -243,12 +281,15 @@ export class FlagStore {
    * Writes named flags when the revision matches. A mismatch writes nothing,
    * including flags later in the same request. A batch with any undeclared
    * key, wrong type, or invalid variant value is refused before the revision
-   * check and writes nothing.
+   * check and writes nothing. Each flag that differs from the stored body gets
+   * a `create` or `update` audit row; an identical flag gets none, though the
+   * revision still advances.
    */
   apply(
     id: string,
     expectedRevision: number,
     flags: readonly FlagValue[],
+    actor: FlagsActor,
   ):
     | { readonly ok: true; readonly revision: number }
     | { readonly ok: false; readonly failure: ApplyFailure } {
@@ -261,8 +302,22 @@ export class FlagStore {
     const write = this.db.transaction(() => {
       const gate = this.gateRevision(id, expectedRevision);
       if (gate.kind !== "current") return gate;
+      const stored = new Map(
+        gate.document.flags.map((flag) => [flag.key, flag]),
+      );
       for (const flag of flags) {
         upsert.run(id, flag.key, JSON.stringify(flag));
+        const before = stored.get(flag.key);
+        if (before !== undefined && isDeepStrictEqual(before, flag)) continue;
+        this.audit.record({
+          deploymentId: id,
+          key: flag.key,
+          action: before === undefined ? "create" : "update",
+          actor,
+          revisionAfter: expectedRevision + 1,
+          before: before ?? null,
+          after: flag,
+        });
       }
       this.bumpRevision(id, expectedRevision, "apply");
       return { kind: "written" as const, revision: expectedRevision + 1 };
@@ -281,6 +336,7 @@ export class FlagStore {
   createMissing(
     id: string,
     flags: readonly FlagValue[],
+    actor: FlagsActor,
   ):
     | {
         readonly ok: true;
@@ -304,6 +360,15 @@ export class FlagStore {
       for (const flag of flags) {
         if (present.has(flag.key)) continue;
         insert.run(id, flag.key, JSON.stringify(flag));
+        this.audit.record({
+          deploymentId: id,
+          key: flag.key,
+          action: "create",
+          actor,
+          revisionAfter: current.revision + 1,
+          before: null,
+          after: flag,
+        });
         created.push(flag.key);
       }
       if (created.length === 0) {
@@ -330,12 +395,14 @@ export class FlagStore {
 
   /**
    * Deletes every named key when the revision matches and every key exists.
-   * Otherwise the document is unchanged.
+   * Otherwise the document is unchanged. Each key's final body is kept in its
+   * `retire` audit row, written before the delete in the same transaction.
    */
   retire(
     id: string,
     expectedRevision: number,
     keys: readonly string[],
+    actor: FlagsActor,
   ):
     | { readonly ok: true; readonly revision: number }
     | { readonly ok: false; readonly failure: RetireFailure } {
@@ -349,11 +416,24 @@ export class FlagStore {
     const write = this.db.transaction(() => {
       const gate = this.gateRevision(id, expectedRevision);
       if (gate.kind !== "current") return gate;
-      const present = new Set(gate.document.flags.map((flag) => flag.key));
+      const present = new Map(
+        gate.document.flags.map((flag) => [flag.key, flag]),
+      );
       const missing = keys.filter((key) => !present.has(key));
       if (missing.length > 0)
         return { kind: "missing" as const, keys: missing };
-      for (const key of keys) remove.run(id, key);
+      for (const key of keys) {
+        this.audit.record({
+          deploymentId: id,
+          key,
+          action: "retire",
+          actor,
+          revisionAfter: expectedRevision + 1,
+          before: present.get(key) ?? null,
+          after: null,
+        });
+        remove.run(id, key);
+      }
       this.bumpRevision(id, expectedRevision, "retire");
       return { kind: "retired" as const, revision: expectedRevision + 1 };
     });

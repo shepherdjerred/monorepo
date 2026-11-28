@@ -4,7 +4,10 @@ import { tmpdir } from "node:os";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import path from "node:path";
-import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
+import {
+  firstPartyImageRepository,
+  imageRegistry,
+} from "@shepherdjerred/version-catalog/image-registry";
 import { againstDebt } from "@shepherdjerred/homelab/cdk8s/src/fleet-policy/fleet.ts";
 import { UPSTREAM_CONTAINERS_WITHOUT_REQUESTS } from "@shepherdjerred/homelab/cdk8s/src/fleet-policy/debt-allowlists.ts";
 import { workloadContainers } from "@shepherdjerred/homelab/cdk8s/src/testing/workload-containers.ts";
@@ -36,7 +39,9 @@ import { workloadContainers } from "@shepherdjerred/homelab/cdk8s/src/testing/wo
 // CI-only: skip in local `bun run test` unless explicitly enabled.
 // To run locally: HELM_RENDER_TEST=1 bun run test -- src/argocd-helm-render.test.ts
 const shouldRun =
-  Bun.env["CI"] === "true" || Bun.env["HELM_RENDER_TEST"] === "1";
+  Bun.env["CI"] === "true" ||
+  Bun.env["CI"] === "woodpecker" ||
+  Bun.env["HELM_RENDER_TEST"] === "1";
 
 const DIST_DIR = path.join(import.meta.dir, "../dist");
 const APPS_YAML = path.join(DIST_DIR, "apps.k8s.yaml");
@@ -46,6 +51,18 @@ const INTERNAL_REPOS = [
   "charts.tailnet-1a49.ts.net",
   "registry-1.docker.io/shepherdjerred",
 ];
+
+// Upstream charts mirrored into the internal Charts registry for Delivery
+// delegation; render against their canonical upstream Helm repo here.
+const MIRRORED_EXTERNAL_CHARTS: Readonly<Record<string, string>> = {
+  minecraft: "https://itzg.github.io/minecraft-server-charts/",
+};
+
+const SYNTHETIC_DIGEST = `sha256:${"f".repeat(64)}`;
+const SELECTED_DIGEST_DEPENDENCY_PATTERN =
+  /\{\{ printf "selected@%s" \(last \(splitList "@" \(required `Delivery requires image:([a-z0-9-]+)` \(get \(get \(\.Values\.delivery \| default dict\) "dependencies" \| default dict\) "\1"\)\)\)\) \}\}/gu;
+const DIRECT_DEPENDENCY_PATTERN =
+  /\{\{ required `Delivery requires image:([a-z0-9-]+)` \(get \(get \(\.Values\.delivery \| default dict\) "dependencies" \| default dict\) "\1"\) \}\}/gu;
 
 // Git repos (not Helm chart repos) — skip
 const GIT_REPOS = ["github.com/dotdc/", "github.com/adyanth/"];
@@ -202,40 +219,96 @@ function isOciRegistry(repoURL: string): boolean {
   return !repoURL.startsWith("https://");
 }
 
+function resolveExternalRepoUrl(
+  chart: string,
+  repoURL: string,
+): string | undefined {
+  if (repoURL.includes("charts.tailnet-1a49.ts.net")) {
+    return MIRRORED_EXTERNAL_CHARTS[chart];
+  }
+  return isInternalOrGitRepo(repoURL) ? undefined : repoURL;
+}
+
+function resolveDeliveryPlaceholdersInString(value: string): string {
+  return value
+    .replaceAll(
+      SELECTED_DIGEST_DEPENDENCY_PATTERN,
+      `selected@${SYNTHETIC_DIGEST}`,
+    )
+    .replaceAll(
+      DIRECT_DEPENDENCY_PATTERN,
+      (_match, name: string) =>
+        `${firstPartyImageRepository(name)}:0.0.0@${SYNTHETIC_DIGEST}`,
+    );
+}
+
+function resolveDeliveryPlaceholders(value: unknown): unknown {
+  if (typeof value === "string") {
+    return resolveDeliveryPlaceholdersInString(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveDeliveryPlaceholders(item));
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        resolveDeliveryPlaceholders(child),
+      ]),
+    );
+  }
+  return value;
+}
+
+function toExternalChart(
+  appName: string,
+  namespace: string,
+  source: HelmSource,
+): ExternalChart | undefined {
+  if (!source.chart) return undefined;
+  const repoURL = resolveExternalRepoUrl(source.chart, source.repoURL);
+  if (repoURL === undefined) return undefined;
+  return {
+    appName,
+    namespace,
+    chart: source.chart,
+    repoURL,
+    version: source.targetRevision,
+    values:
+      source.helm?.valuesObject === undefined
+        ? undefined
+        : z
+            .record(z.string(), z.unknown())
+            .parse(resolveDeliveryPlaceholders(source.helm.valuesObject)),
+    parameters: source.helm?.parameters?.map((param) => ({
+      name: param.name,
+      value: resolveDeliveryPlaceholdersInString(param.value),
+    })),
+    releaseName: source.helm?.releaseName,
+    isOci: isOciRegistry(repoURL),
+  };
+}
+
 function extractExternalCharts(yamlContent: string): ExternalChart[] {
-  const documents = parseAllDocuments(yamlContent);
   const charts: ExternalChart[] = [];
 
-  for (const doc of documents) {
-    const json = doc.toJSON() as unknown;
-    const result = ApplicationSchema.safeParse(json);
+  for (const doc of parseAllDocuments(yamlContent)) {
+    const result = ApplicationSchema.safeParse(doc.toJSON() as unknown);
     if (!result.success) continue;
 
     const app = result.data;
-    const sources: HelmSource[] = [];
-
-    if (app.spec.source) {
-      sources.push(app.spec.source);
-    }
-    if (app.spec.sources) {
-      sources.push(...app.spec.sources);
-    }
+    const sources = [
+      ...(app.spec.source ? [app.spec.source] : []),
+      ...(app.spec.sources ?? []),
+    ];
 
     for (const source of sources) {
-      if (!source.chart) continue; // No chart = git source, skip
-      if (isInternalOrGitRepo(source.repoURL)) continue;
-
-      charts.push({
-        appName: app.metadata.name,
-        namespace: app.spec.destination.namespace,
-        chart: source.chart,
-        repoURL: source.repoURL,
-        version: source.targetRevision,
-        values: source.helm?.valuesObject,
-        parameters: source.helm?.parameters,
-        releaseName: source.helm?.releaseName,
-        isOci: isOciRegistry(source.repoURL),
-      });
+      const external = toExternalChart(
+        app.metadata.name,
+        app.spec.destination.namespace,
+        source,
+      );
+      if (external !== undefined) charts.push(external);
     }
   }
 
@@ -692,5 +765,96 @@ describe("transient helm error classification", () => {
       expect(d).toBeGreaterThanOrEqual(6000);
       expect(d).toBeLessThanOrEqual(10_000);
     }
+  });
+});
+
+describe("extractExternalCharts discovery and Delivery placeholder binding", () => {
+  it("rewrites mirrored minecraft charts at charts.tailnet-1a49.ts.net while skipping first-party charts", () => {
+    const fixture = `
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minecraft-tsmc
+spec:
+  destination:
+    namespace: minecraft-tsmc
+  source:
+    chart: minecraft
+    repoURL: https://charts.tailnet-1a49.ts.net
+    targetRevision: 5.4.0
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: birmel
+spec:
+  destination:
+    namespace: birmel
+  source:
+    chart: birmel
+    repoURL: https://charts.tailnet-1a49.ts.net
+    targetRevision: ~2.0.0-0
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: charts
+spec:
+  destination:
+    namespace: charts
+  source:
+    chart: charts-bootstrap
+    repoURL: registry-1.docker.io/shepherdjerred
+    targetRevision: ~2.0.0-0
+`;
+    const extracted = extractExternalCharts(fixture);
+    expect(extracted).toEqual([
+      {
+        appName: "minecraft-tsmc",
+        namespace: "minecraft-tsmc",
+        chart: "minecraft",
+        repoURL: "https://itzg.github.io/minecraft-server-charts/",
+        version: "5.4.0",
+        values: undefined,
+        parameters: undefined,
+        releaseName: undefined,
+        isOci: false,
+      },
+    ]);
+  });
+
+  it("substitutes synthetic digests for root-chart Delivery requires image placeholders", () => {
+    const fixture = `
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+spec:
+  destination:
+    namespace: prometheus
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 93.6.1
+    helm:
+      valuesObject:
+        prometheus:
+          prometheusSpec:
+            containers:
+              - name: authenticated-gateway
+                image: '{{ required \`Delivery requires image:caddy-s3proxy\` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "caddy-s3proxy") }}'
+        openebs:
+          zfsPlugin:
+            image:
+              tag: '{{ printf "selected@%s" (last (splitList "@" (required \`Delivery requires image:zfs-driver\` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "zfs-driver")))) }}'
+`;
+    const extracted = extractExternalCharts(fixture);
+    expect(extracted).toHaveLength(1);
+    const serialized = JSON.stringify(extracted[0]?.values);
+    expect(serialized).not.toContain("Delivery requires image:");
+    expect(serialized).toContain(
+      `docker.io/shepherdjerred/caddy-s3proxy:0.0.0@${SYNTHETIC_DIGEST}`,
+    );
+    expect(serialized).toContain(`selected@${SYNTHETIC_DIGEST}`);
   });
 });

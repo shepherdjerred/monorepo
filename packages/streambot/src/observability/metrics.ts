@@ -299,6 +299,20 @@ export const streamSegmentDurationSeconds = new Histogram({
   registers: [register],
 });
 
+/** Close one segment's metrics: it is no longer active, and it is counted and timed by outcome. */
+export function recordStreamSegmentEnd(
+  labels: {
+    readonly transport: string;
+    readonly hardware: string;
+    readonly outcome: string;
+  },
+  durationSeconds: number,
+): void {
+  streamActive.dec();
+  streamSegmentsTotal.inc(labels);
+  streamSegmentDurationSeconds.observe(labels, durationSeconds);
+}
+
 export const playbackPositionSeconds = new Gauge({
   name: "streambot_playback_position_seconds",
   help: "Current playback position of the active segment, in seconds",

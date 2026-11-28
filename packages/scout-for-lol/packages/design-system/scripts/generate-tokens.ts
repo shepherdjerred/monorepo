@@ -28,6 +28,9 @@ const ColorsSchema = z.object({
   successOnSurface: HexColorSchema,
   warning: HexColorSchema,
   warningText: HexColorSchema,
+  // Same split as danger and success: warning-coloured text on an ordinary
+  // background, where the fill is too dark to read on the dark themes.
+  warningOnSurface: HexColorSchema,
   danger: HexColorSchema,
   dangerText: HexColorSchema,
   // `danger` fills a surface and `dangerText` is the text on that fill. Danger

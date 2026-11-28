@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import type { Pipeline } from "#src/schemas.ts";
+import type { AuthorizationResult } from "#src/authorization.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
 import {
   DISABLED_PERFORMANCE,
@@ -17,14 +18,14 @@ export async function benchmarkResponse(
     trustedGateImage?: string;
   },
   pipeline: Pipeline,
-  identity: { defaultBranch: string; owner: boolean },
+  identity: { defaultBranch: string; authorization: AuthorizationResult },
 ) {
   let benchmark;
   try {
     benchmark = benchmarkRequest(
       pipeline,
       identity.defaultBranch,
-      identity.owner,
+      identity.authorization,
     );
   } catch {
     return context.json(
@@ -51,7 +52,7 @@ export async function benchmarkResponse(
           branch: pipeline.branch,
           defaultBranch: identity.defaultBranch,
           draft: false,
-          maintenance: true,
+          canary: true,
         }),
         {
           commit: pipeline.commit,

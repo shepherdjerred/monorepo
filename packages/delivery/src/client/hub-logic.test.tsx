@@ -312,6 +312,21 @@ describe("change feed keys", () => {
       }),
     ).toEqual([["hub"], ["activity"]]);
   });
+
+  it("refreshes approvals when a saved platform plan is decided", () => {
+    for (const action of [
+      "platform.plan_approved",
+      "platform.plan_rejected",
+    ] as const)
+      expect(
+        keysForChange({
+          id: "p1",
+          domain: changeDomain(action),
+          action,
+          entityId: "d1",
+        }),
+      ).toContainEqual(["approvals"]);
+  });
 });
 
 describe("search params", () => {

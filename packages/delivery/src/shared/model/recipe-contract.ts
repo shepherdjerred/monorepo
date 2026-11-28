@@ -465,10 +465,11 @@ const nonCompoundRecipes = [
   OperatorRunRecipeSchema,
 ] as const;
 
-/** The steps of the Application a non-compound recipe deploys, if any. */
-function applicationSteps(
+/** Steps a non-compound member contributes to compound content and archive rules. */
+function compoundMemberSteps(
   definition: z.infer<(typeof nonCompoundRecipes)[number]>,
 ): readonly { kind: string }[] {
+  if (definition.kind === "static-site") return [{ kind: "static-site" }];
   if (definition.kind === "kubernetes-application") return definition.steps;
   const wrapped =
     definition.kind === "operator-run" ? definition.wrapped : null;
@@ -501,12 +502,12 @@ export const CompoundRecipeSchema = z
     "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
   )
   .superRefine((recipe, context) => {
-    const applications = recipe.subRecipes
-      .map((sub) => applicationSteps(sub.definition))
+    const members = recipe.subRecipes
+      .map((sub) => compoundMemberSteps(sub.definition))
       .filter((steps) => steps.length > 0);
     for (const message of [
-      ...contentStepRefusals(applications.flat()),
-      ...sharedArchiveRelease(applications),
+      ...contentStepRefusals(members.flat()),
+      ...sharedArchiveRelease(members),
     ])
       context.addIssue({ code: "custom", message });
   });

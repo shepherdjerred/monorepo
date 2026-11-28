@@ -14,7 +14,6 @@ import { createPinchtabChart } from "./cdk8s-charts/pinchtab.ts";
 import { createArcadeChart } from "./cdk8s-charts/games/arcade.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/platform/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
-import { createBugsinkChart } from "./cdk8s-charts/platform/bugsink.ts";
 import { createWoodpeckerChart } from "./cdk8s-charts/platform/woodpecker.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
@@ -60,6 +59,8 @@ import {
 } from "./cdk8s-charts/charts.ts";
 
 import { createCiCacheChart } from "./cdk8s-charts/ci-cache.ts";
+
+import { createArtifactsChart } from "./cdk8s-charts/artifacts.ts";
 
 /**
  * Sets up all charts for the application
@@ -107,7 +108,6 @@ export async function setupCharts(app: App): Promise<void> {
   createPinchtabChart(app);
   createArcadeChart(app);
   createGrafanaDbChart(app);
-  createBugsinkChart(app);
   createWoodpeckerChart(app);
   createTasknotesChart(app);
   createAlertDashboardChart(app);
@@ -132,6 +132,8 @@ export async function setupCharts(app: App): Promise<void> {
   createChartsBootstrapChart(app);
 
   createCiCacheChart(app);
+
+  createArtifactsChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

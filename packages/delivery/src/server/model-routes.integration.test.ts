@@ -15,6 +15,7 @@ import {
   ServiceLifecycleViewSchema,
 } from "#shared/model/route-contract.ts";
 import { RecoveryIntentV2Schema } from "#shared/recovery-intent.ts";
+import { RollbackCandidatesSchema } from "#shared/model/selection-contract.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { arcadeRegistration, publishCiRunner } from "#testing/model-fixture.ts";
@@ -291,5 +292,81 @@ describe("catalog, lifecycle and restore", () => {
         kind: "deploy",
       }),
     ).toBe(409);
+  });
+
+  test("rollback-candidates omits pre-cutover unselected and non-revisioned history on the HTTP route (AI-432)", async () => {
+    const deployment = await requestDeploy();
+    await context.delivery.claim(deployment.id, testExecutor);
+    await context.delivery.finish(
+      deployment.id,
+      {
+        status: "succeeded",
+        message: "Accepted",
+        observedRevisionId: context.fixture.versionSet.id,
+        recoveryRequired: false,
+        evidence: [
+          { kind: "reconciliation", summary: "reconciled" },
+          { kind: "acceptance", summary: "accepted" },
+        ],
+      },
+      testExecutor,
+    );
+    const db = context.cluster.database;
+    const sourceBuild = await db.build.findFirstOrThrow();
+    await db.pipeline.create({
+      data: {
+        id: "arcade/legacy",
+        definition: { kind: "manual", reason: "pre-cutover legacy row" },
+      },
+    });
+    await db.deployment.createMany({
+      data: [
+        {
+          id: "pre-cutover-tofu",
+          requestId: "pre-cutover/tofu",
+          environmentId: "arcade/prod",
+          serviceId: "arcade",
+          versionSetRevisionId: context.fixture.versionSet.id,
+          pipelineRevisionId:
+            deployment.selection?.recipeRevisionId ?? "arcade/1",
+          configurationId:
+            deployment.selection?.configurationRevisionId ?? "config/1",
+          catalogRevision: "v1-backfill",
+          platformSnapshot: { kind: "tofu", stack: "tailscale" },
+          platformSourceBuildId: sourceBuild.id,
+          expectedGeneration: 0,
+          kind: "tofu-apply",
+          status: "succeeded",
+          requestedBy: OPERATOR,
+          finishedAt: new Date(0),
+        },
+        {
+          id: "pre-cutover-legacy-id",
+          requestId: "pre-cutover/legacy",
+          environmentId: "arcade/prod",
+          serviceId: "arcade",
+          versionSetRevisionId: context.fixture.versionSet.id,
+          pipelineRevisionId: "arcade/legacy",
+          configurationId:
+            deployment.selection?.configurationRevisionId ?? "config/1",
+          catalogRevision: "v1-backfill",
+          expectedGeneration: 0,
+          kind: "deploy",
+          status: "succeeded",
+          requestedBy: OPERATOR,
+          finishedAt: new Date(1000),
+        },
+      ],
+    });
+    const response = await call(
+      "GET",
+      `/environments/${prod}/rollback-candidates`,
+      "deployer",
+    );
+    expect(response.status).toBe(200);
+    const parsed = RollbackCandidatesSchema.parse(response.json);
+    expect(parsed.candidates.map((entry) => entry.deploymentId)).toEqual([
+      deployment.id,
+    ]);
   });
 });

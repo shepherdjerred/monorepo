@@ -27,8 +27,8 @@ import {
   PlayerMatchHistoryInput,
   PlayerProfileInput,
   getPlayerMatchHistory,
-  getPlayerProfileSummary,
 } from "#src/lib/player-profile/queries.ts";
+import { getPlayerProfileSummary } from "#src/lib/player-profile/profile-summary.ts";
 import { getPlayerRankHistory } from "#src/lib/player-profile/rank-history.ts";
 import {
   SuggestTeammatesInputSchema,

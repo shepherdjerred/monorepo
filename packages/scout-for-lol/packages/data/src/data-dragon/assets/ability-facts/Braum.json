@@ -100,7 +100,31 @@
         ]
       },
       "resolvedDescription": "Braum propels freezing ice from his shield, dealing 75/120/165/210/255 (+2.5% max Health) magic damage to the first enemy hit and Slowing them by 70% decaying over 2 seconds. Applies a stack of Concussive Blows.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1100,
+        "missiles": [
+          {
+            "name": "braumqmissile",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "W": {
       "name": "Stand Behind Me",
@@ -172,7 +196,15 @@
         ]
       },
       "resolvedDescription": "Braum leaps to an allied champion or minion. On arrival, Braum grants the target 20/25/30/35/40 (+12% bonus Armor) Armor and 20/25/30/35/40 (+12% bonus Magic Resist) Magic Resist for 3 seconds. Braum grants himself 20/25/30/35/40 (+36% bonus Armor) Armor and 20/25/30/35/40 (+36% bonus Magic Resist) Magic Resist for the same duration.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 650,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Unbreakable",
@@ -230,7 +262,15 @@
         ]
       },
       "resolvedDescription": "Braum raises his shield for 3/3.25/3.5/3.75/4 seconds, intercepting enemy missiles from the chosen direction, causing them to hit Braum and then be destroyed. The first missile Braum blocks deals no damage, and subsequent projectiles deal 35/40/45/50/55% reduced damage. Braum gains 10% Move Speed while his shield is raised.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.01,
+        "radius": 350,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Glacial Fissure",
@@ -299,7 +339,30 @@
         ]
       },
       "resolvedDescription": "Braum slams the ground sending forth a fissure that Knocks Up enemies in its path and nearby Braum, and deals 150/250/350 (+60% AP) magic damage. The first target hit is Knocked Up for between 0.6 and 1/1.5/2 seconds, increasing with distance from Braum. All others hit are Knocked Up for 0.6 seconds. The fissure also creates a zone for 4 seconds, that Slows by 40/50/60%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.5,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "braumrmissile",
+            "width": 115,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

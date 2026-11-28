@@ -1673,6 +1673,70 @@ async fn an_unavailable_overlay_stays_down_for_the_game_and_the_window_keeps_run
     Ok(())
 }
 
+#[cfg(unix)]
+#[tokio::test]
+async fn an_unavailable_overlay_that_closes_stdin_immediately_still_records_its_reason()
+-> TestResult {
+    use scout_desktop_ipc::ChatCoachKind;
+
+    let scratch = scratch_directory()?;
+    let log = scratch.join("overlay-closed-stdin.log");
+    let log_argument = log.to_str().ok_or("scratch path is not Unicode")?;
+    let DetachedRelay { relay, parts, .. } = ChatRelay::detached_coach();
+    parts.send_replace(super::overlay::tests::parts_with_coach(
+        ChatCoachKind::Pregame,
+        "Control dragon pit",
+    ));
+    let overlay = sh(
+        &format!(
+            "printf '{{\"type\":\"hello\",\"protocol\":{PROTOCOL_VERSION}}}\\n'\n\
+             printf '{{\"type\":\"unavailable\",\"reason\":\"no click-through\"}}\\n'\n\
+             exec 0<&-\n\
+             exit 0"
+        ),
+        &[log_argument],
+    );
+    let mut harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::InProgress,
+        |supervisor| supervisor.with_chat(relay).with_overlay(overlay, None),
+    )?;
+    harness.wait_for(|status| status.running).await?;
+    tokio::time::timeout(PATIENCE, async {
+        while !harness
+            .diagnostics
+            .events()
+            .iter()
+            .any(|event| event.summary().contains("no click-through"))
+        {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await?;
+    assert!(
+        !log.exists(),
+        "no frame is written once the overlay is down"
+    );
+    assert!(harness.status.borrow().running);
+
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    assert!(
+        !diagnostics
+            .events()
+            .iter()
+            .any(|event| event.summary().contains("did not take its hello")
+                || event.summary().contains("stopped reading frames")),
+        "write failure after Unavailable must not record broken-pipe fallback"
+    );
+    std::fs::remove_dir_all(directory)?;
+    std::fs::remove_dir_all(scratch)?;
+    Ok(())
+}
+
 /// The real overlay on this screen, driven by the real supervisor through a
 /// mock gameflow: champion select, then `InProgress` with the game plan (and,
 /// in the beta build, what Scout noticed), the overlay keys, then the end of

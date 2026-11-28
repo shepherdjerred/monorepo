@@ -1,4 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import {
   Button,
@@ -9,20 +11,9 @@ import {
   Tag,
   type ThemeStore,
 } from "@shepherdjerred/console-ui";
+import { normalizeShortSlug, type LinkItem } from "#shared/contract.ts";
 import {
-  normalizeShortSlug,
-  type LinkItem,
-  type LinksDirectoryResponse,
-} from "#shared/contract.ts";
-import {
-  deleteManualLink,
-  fetchLinksDirectory,
-  saveManualLink,
-} from "./api.ts";
-import {
-  clearUrlPathToRoot,
   computeKindCounts,
-  extractInitialMissingSlug,
   isSearchShortcut,
   matchesSearchAndKind,
 } from "./directory-filters.ts";
@@ -43,20 +34,37 @@ import {
   syncShortInputValidity,
   syncTargetInputValidity,
 } from "./validation.ts";
+import { errorMessage, useTRPC } from "./trpc.ts";
 
 const INITIAL_SHORT_ERROR = "Enter a short link name, such as docs or ha.";
 const INITIAL_TARGET_ERROR = "Enter an http:// or https:// destination URL.";
 
-export function App({ theme }: { theme: ThemeStore }) {
-  const initialMissing = useMemo(() => extractInitialMissingSlug(), []);
-
-  const [directory, setDirectory] = useState<LinksDirectoryResponse | null>(
-    null,
+export function App({
+  theme,
+  missingSlug,
+}: {
+  readonly theme: ThemeStore;
+  /** `?missing=`: a go/ name that did not resolve. */
+  readonly missingSlug: string | null;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const directoryQuery = useQuery(trpc.links.list.queryOptions());
+  const saveLink = useMutation(trpc.links.upsert.mutationOptions());
+  const deleteLink = useMutation(trpc.links.delete.mutationOptions());
+  const directory = directoryQuery.data ?? null;
+  const loadError = directoryQuery.isError
+    ? errorMessage(directoryQuery.error, "Unable to load shortlink directory.")
+    : null;
+  const reloadDirectory = useCallback(
+    async () =>
+      queryClient.invalidateQueries({ queryKey: trpc.links.list.queryKey() }),
+    [queryClient, trpc],
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const [missingSlug, setMissingSlug] = useState<string | null>(initialMissing);
+  const clearMissingSlug = useCallback(() => {
+    void navigate({ to: "/", search: {}, replace: true });
+  }, [navigate]);
   const [formMode, setFormMode] = useState<FormMode>({ kind: "create" });
   const [shortValue, setShortValue] = useState("");
   const [targetValue, setTargetValue] = useState("");
@@ -83,53 +91,28 @@ export function App({ theme }: { theme: ThemeStore }) {
     ReturnType<typeof globalThis.setTimeout> | undefined
   >(undefined);
 
-  const reloadDirectory = useCallback(async (signal?: AbortSignal) => {
-    setLoadError(null);
-    try {
-      const response = await fetchLinksDirectory(signal);
-      setDirectory(response);
-      setIsLoading(false);
-    } catch (error) {
-      if (signal?.aborted === true) {
-        return;
-      }
-      setLoadError(
-        error instanceof Error
-          ? error.message
-          : "Unable to load shortlink directory.",
-      );
-      setIsLoading(false);
+  const shellRef = useCallback((node: HTMLDivElement | null) => {
+    if (node === null) {
+      return;
     }
-  }, []);
-
-  const shellRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (node === null) {
+    // On the document, so `/` works while focus is on the page body too.
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (!isSearchShortcut(event)) {
         return;
       }
-      const controller = new AbortController();
-      void reloadDirectory(controller.signal);
-      // On the document, so `/` works while focus is on the page body too.
-      const onKeyDown = (event: KeyboardEvent): void => {
-        if (!isSearchShortcut(event)) {
-          return;
-        }
-        event.preventDefault();
-        searchInputRef.current?.focus();
-        searchInputRef.current?.select();
-      };
-      document.addEventListener("keydown", onKeyDown);
+      event.preventDefault();
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    };
+    document.addEventListener("keydown", onKeyDown);
 
-      return () => {
-        controller.abort();
-        document.removeEventListener("keydown", onKeyDown);
-        if (copyResetTimerRef.current !== undefined) {
-          globalThis.clearTimeout(copyResetTimerRef.current);
-        }
-      };
-    },
-    [reloadDirectory],
-  );
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      if (copyResetTimerRef.current !== undefined) {
+        globalThis.clearTimeout(copyResetTimerRef.current);
+      }
+    };
+  }, []);
 
   const formRef = useCallback((node: HTMLFormElement | null) => {
     formElementRef.current = node;
@@ -232,19 +215,16 @@ export function App({ theme }: { theme: ThemeStore }) {
     setStatusMessage(null);
 
     try {
-      const saved = await saveManualLink({
+      const saved = await saveLink.mutateAsync({
         short: normalizeShortSlug(shortValue),
         targetUrl: targetValue.trim(),
       });
-      setMissingSlug(null);
-      clearUrlPathToRoot();
+      clearMissingSlug();
       formDialogRef.current?.close();
       setStatusMessage(`Saved go/${saved.short} → ${saved.targetUrl}`);
       await reloadDirectory();
     } catch (error) {
-      setMutationError(
-        error instanceof Error ? error.message : "Unable to save shortlink.",
-      );
+      setMutationError(errorMessage(error, "Unable to save shortlink."));
     } finally {
       setIsSubmitting(false);
     }
@@ -259,15 +239,11 @@ export function App({ theme }: { theme: ThemeStore }) {
     setActionError(null);
     setStatusMessage(null);
     try {
-      await deleteManualLink(item.short);
+      await deleteLink.mutateAsync({ short: item.short });
       setStatusMessage(`Deleted manual link go/${item.short}.`);
       await reloadDirectory();
     } catch (error) {
-      setActionError(
-        error instanceof Error
-          ? error.message
-          : `Unable to delete go/${item.short}.`,
-      );
+      setActionError(errorMessage(error, `Unable to delete go/${item.short}.`));
     } finally {
       setDeletingShort(null);
       deleteDialogRef.current?.close();
@@ -340,10 +316,7 @@ export function App({ theme }: { theme: ThemeStore }) {
               onCreate={() => {
                 handleNewLink(activeMissingSlug);
               }}
-              onDismiss={() => {
-                setMissingSlug(null);
-                clearUrlPathToRoot();
-              }}
+              onDismiss={clearMissingSlug}
             />
           )}
 
@@ -374,15 +347,14 @@ export function App({ theme }: { theme: ThemeStore }) {
             onQueryChange={setQuery}
             onKindFilterChange={setKindFilter}
             loadError={loadError}
-            isInitialLoading={isLoading && directory === null}
+            isInitialLoading={directoryQuery.isPending}
             items={filteredLinks}
             totalCount={links.length}
             writesEnabled={writesEnabled}
             copiedShort={copiedShort}
             deletingShort={deletingShort}
             onRetry={() => {
-              setIsLoading(true);
-              void reloadDirectory();
+              void directoryQuery.refetch();
             }}
             onCopy={(short) => {
               void handleCopyLink(short);

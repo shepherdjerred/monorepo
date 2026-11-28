@@ -104,7 +104,44 @@
         ]
       },
       "resolvedDescription": "Soraka calls down a star, dealing 85/120/155/190/225 (+35% AP) magic damage and Slowing by 30% for 1.5 seconds. Hitting an enemy champion grants Soraka Rejuvenation, which restores 60/75/90/105/120 (+30% AP) Health over 2.5 seconds and grants 20/22.5/25/27.5/30% Move Speed decaying over the same duration.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 230,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": [
+          {
+            "name": "sorakaqmissile",
+            "width": 1,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "sorakaqreturnmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Astral Infusion",
@@ -162,7 +199,15 @@
         ]
       },
       "resolvedDescription": "Soraka restores 90/110/130/150/170 (+50% AP) Health to another allied champion. If Soraka is affected by Rejuvenation, the Health cost will be reduced by 80/85/90/95/100%, and the target will gain Rejuvenation for 2.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Equinox",
@@ -213,7 +258,15 @@
         ]
       },
       "resolvedDescription": "Soraka creates a starfield that deals 70/95/120/145/170 (+40% AP) magic damage to champions. The field lingers for 1.5 seconds, Silencing enemies inside. When the zone disappears, champions inside the zone are Rooted for 1/1.25/1.5/1.75/2 second(s) and take 70/95/120/145/170 (+40% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 260,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Wish",
@@ -249,7 +302,15 @@
       "resolvedDescription": "Soraka calls upon divine powers, restoring 150/250/350 (+50% AP) Health to all allied champions, regardless of distance. Healing is increased to {{ ampedhealing }} on targets below 40% Health.",
       "unresolved": [
         "ampedhealing"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.25,
+        "radius": 25000,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

@@ -22,9 +22,9 @@
   ],
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
-    "test": "bun run build && bun --no-install --bun vitest --config ../../vitest.config.ts run test/",
-    "typecheck": "bun run build && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bun run build && eslint .",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test/",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "eslint .",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {

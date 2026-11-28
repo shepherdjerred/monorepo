@@ -1,5 +1,9 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
+import {
+  normalizeTestDatabaseName,
+  testDatabaseName,
+} from "./test-database.ts";
 import {
   type DatabaseOwner,
   decideSweep,
@@ -176,5 +180,45 @@ describe("template rebuild decision", () => {
 
   test("never drops a partial build that has connections", () => {
     expect(rebuild(owned(), dead, 1).action).toBe("refuse");
+  });
+});
+
+describe("test database naming", () => {
+  test("produces distinct valid 63-byte identifiers in the same millisecond", () => {
+    const spy = vi.spyOn(Date, "now").mockReturnValue(NOW);
+    try {
+      const longName =
+        "retired-economy-migration-integration-with-extra-descriptive-words";
+      const first = testDatabaseName(longName);
+      const second = testDatabaseName(longName);
+
+      expect(first).not.toBe(second);
+      for (const candidate of [first, second]) {
+        expect(Buffer.byteLength(candidate, "utf8")).toBe(63);
+        expect(candidate).toMatch(/^scout_test_[a-z0-9_]+$/u);
+        expect(candidate).toContain(
+          `_${process.pid.toString()}_${NOW.toString(36)}_`,
+        );
+      }
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  test("normalizes timestamp-only replay names while keeping unique names stable", () => {
+    const spy = vi.spyOn(Date, "now").mockReturnValue(NOW);
+    try {
+      const raw = `scout_test_drop_economy_${NOW.toString()}`;
+      const normalizedA = normalizeTestDatabaseName(raw);
+      const normalizedB = normalizeTestDatabaseName(raw);
+
+      expect(normalizedA).not.toBe(raw);
+      expect(normalizedA).not.toBe(normalizedB);
+      expect(Buffer.byteLength(normalizedA, "utf8")).toBeLessThanOrEqual(63);
+      expect(normalizedA).toMatch(/^scout_test_drop_economy_/u);
+      expect(normalizeTestDatabaseName(normalizedA)).toBe(normalizedA);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

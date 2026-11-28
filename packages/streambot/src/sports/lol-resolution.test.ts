@@ -24,6 +24,7 @@ const video: probe.MediaInfo = {
   audioCodec: "unknown",
   audioChannels: undefined,
   durationSeconds: undefined,
+  ranked: {},
 };
 const audio: probe.MediaInfo = {
   ...video,
@@ -114,6 +115,12 @@ test.each([false, true])(
         resolved: result,
         startSeconds: 0,
         volumePercent: 100,
+        audioProcessing: {
+          dialogDownmix: false,
+          loudnessNormalization: false,
+          liveResync: false,
+          trackRanking: false,
+        },
         pipelineMode: "sw",
       }),
     );

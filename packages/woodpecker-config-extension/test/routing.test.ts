@@ -56,7 +56,7 @@ describe("agent pool routing", () => {
     },
   );
 
-  test.each([{ maintenance: true }, { extended: true }])(
+  test.each([{ canary: true }, { extended: true }])(
     "keeps default-branch background work %j in the PR pool at draft priority",
     (background) => {
       for (const event of ["manual", "push"]) {
@@ -70,6 +70,28 @@ describe("agent pool routing", () => {
       }
     },
   );
+
+  /**
+   * The `pr` agent's first-in-first-out queue held the golden workspace
+   * refresh for hours behind the PR backlog. Maintenance has its own agent,
+   * and is admitted ahead of waiting ready PR pods at main's priority.
+   */
+  test("routes Temporal maintenance to its own pool at main priority", () => {
+    for (const event of ["manual", "push"]) {
+      for (const draft of [false, true]) {
+        expect(
+          routeSteps(
+            [verify],
+            { ...context, event, draft, maintenance: true },
+            image,
+          )[0]?.agentLabels,
+        ).toEqual({
+          "ci-pool": "maintenance",
+          "kueue.x-k8s.io/priority-class": "ci-main",
+        });
+      }
+    }
+  });
 
   test("uses draft priority without changing the verification graph", () => {
     const routed = routeSteps(steps, { ...context, draft: true }, image);

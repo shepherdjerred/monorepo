@@ -13,6 +13,7 @@ import {
   readRequiredHandoff,
   writeJsonHandoff,
 } from "../../lib/ci/ci-handoff.ts";
+import { createRetryingDeliveryFetch } from "../../lib/delivery/retry-fetch.ts";
 import { DELIVERY_IMAGE_DIGESTS_HANDOFF } from "../../lib/ci/image-publication-handoff.ts";
 import { requireEnv, runAllowExit } from "../../lib/run.ts";
 import { publishUpstreamSources } from "../../lib/ci/upstream-source-publication.ts";
@@ -42,6 +43,7 @@ if (fresh || changed.exitCode === 0) {
         headers: {
           Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}`,
         },
+        fetch: createRetryingDeliveryFetch(),
       }).latestQualifiedArtifact({
         serviceId: "trmnl-dashboard",
         component: "image:trmnl-dashboard",

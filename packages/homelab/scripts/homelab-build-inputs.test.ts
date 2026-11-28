@@ -1,3 +1,4 @@
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -16,6 +17,7 @@ const nestedWorkspace = "src/cdk8s/";
  */
 const DESIRED_STATE_INPUTS = new Set([
   "src/tofu/discord/desired-state.json",
+  "src/tofu/provider-versions.json",
   "src/tofu/anthropic-federation/desired-state.json",
   "src/tofu/google/desired-state.json",
 ]);
@@ -75,14 +77,25 @@ async function dependentDirectories(): Promise<string[]> {
   return dependents;
 }
 
+async function listTypeScriptFiles(directory: string): Promise<string[]> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      if (entry.name === "node_modules" || entry.name === "dist") return [];
+      const fullPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) return listTypeScriptFiles(fullPath);
+      return entry.isFile() && /\.tsx?$/u.test(entry.name) ? [fullPath] : [];
+    }),
+  );
+  return nested.flat();
+}
+
 /** The homelab modules a dependent workspace imports directly. */
 async function importedModules(directory: string): Promise<string[]> {
   const modules: string[] = [];
-  for await (const file of new Bun.Glob("**/*.{ts,tsx}").scan({
-    cwd: directory,
-  })) {
-    if (/(?:^|\/)(?:node_modules|dist)\//u.test(file)) continue;
-    const text = await Bun.file(path.join(directory, file)).text();
+  for (const fullPath of await listTypeScriptFiles(directory)) {
+    const text = await Bun.file(fullPath).text();
+    if (!text.includes("homelab/")) continue;
     for (const specifier of specifiers(text)) {
       if (SELF.test(specifier)) {
         modules.push(
@@ -125,6 +138,9 @@ describe("homelab build inputs", () => {
       );
     expect(configuration.tasks.build.inputs).toContain(
       "src/talos/seccomp/promotion-policy.json",
+    );
+    expect(configuration.tasks.build.inputs).toContain(
+      "src/tofu/provider-versions.json",
     );
   });
 
