@@ -549,7 +549,11 @@ which releases them (D11).
   Cancellation, rejection, or an alarm (W2) suppresses that
   selection until a newer eligible set revision exists or an operator asks
   explicitly. Automatic request identity keys on the environment's last
-  terminal deployment, not on the binding generation.
+  terminal deployment, not on the binding generation. A newer eligible
+  automatic worker release may take the slot of an unclaimed automated
+  host retirement. Supersession and the replacement request commit together.
+  The superseded retirement can be proposed again with fresh proof after a
+  different set revision is accepted.
 - D4. Cancellation is a request to stop at a safe boundary, never an
   assertion that effects were undone.
 - D5. An ambiguous external effect ends in `recovery-required`. Only an

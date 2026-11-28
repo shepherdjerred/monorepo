@@ -992,8 +992,11 @@ environments without required approval, and their live, unreferenced hosts
 other than the accepted candidate. For each environment it runs the read-only
 retirement proof below and proposes the first host that passes through
 `POST /api/v1/workers/:id/auto-retire`. Delivery then requests the same
-`retire-host` deployment as `delivery/auto-retire`. A host whose retirement
-ever failed or was canceled is never offered again, so an operator decides it.
+`retire-host` deployment as `delivery/auto-retire`. A newer eligible automatic
+worker release may supersede a queued automated retirement before it claims.
+The same host can be offered again with fresh proof after a different set
+revision is accepted. A failed retirement or an operator cancellation leaves
+that host to an operator.
 
 The executor supplies fresh proof when claiming retirement and again immediately
 before effects. Every served namespace/queue must exclude the retired build from

@@ -12,6 +12,7 @@ import {
 import { reconcilePlatform } from "./platform/selection.ts";
 import { legacyPipelineOf } from "./execution/legacy-recipe.ts";
 import { reconcileAutomaticRebind } from "./selection/automatic-rebind.ts";
+import type { RetirementReplacement } from "./selection/retirement-precedence.ts";
 import {
   releaseStrandedOwnership,
   releaseTerminalOwnership,
@@ -80,12 +81,21 @@ async function reconcileEnvironment(
       { row, definition, last },
       actor,
     );
-  return (await automaticSelectionBlocked.call(this, last, target.id, actor))
+  const replaceRetirementId =
+    last?.kind === "retire-host" ? last.id : undefined;
+  const blocked =
+    replaceRetirementId === undefined &&
+    (await automaticSelectionBlocked.call(this, last, target.id, actor));
+  return blocked
     ? null
     : requestAutomatic.call(
         this,
         row,
-        { id: target.id, kind: automaticKind(definition.kind) },
+        {
+          id: target.id,
+          kind: automaticKind(definition.kind),
+          replaceRetirementId,
+        },
         actor,
       );
 }
@@ -362,9 +372,10 @@ export async function submitAutomatic(
   delivery: Delivery,
   input: Parameters<Delivery["createDeployment"]>[0],
   actor: Principal,
+  replacement?: RetirementReplacement,
 ) {
   try {
-    return await delivery.createDeployment(input, actor, true);
+    return await delivery.createDeployment(input, actor, replacement ?? true);
   } catch (error) {
     if (error instanceof DeliveryError && error.code === "CONFLICT")
       return null;
@@ -379,7 +390,11 @@ export async function requestAutomatic(
     generation: number;
     promotionSourceEnvironmentId: string | null;
   },
-  target: { id: string; kind: "deploy" | "channel-publish" },
+  target: {
+    id: string;
+    kind: "deploy" | "channel-publish";
+    replaceRetirementId: string | undefined;
+  },
   actor: Principal,
 ) {
   const after = await lastTerminalId(this.database, row.id);
@@ -402,5 +417,11 @@ export async function requestAutomatic(
           sourceEnvironmentId: row.promotionSourceEnvironmentId,
         },
     actor,
+    target.replaceRetirementId === undefined
+      ? undefined
+      : {
+          retirementId: target.replaceRetirementId,
+          versionSetId: target.id,
+        },
   );
 }
