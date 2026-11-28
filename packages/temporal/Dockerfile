@@ -57,45 +57,20 @@ RUN bun install --frozen-lockfile \
   --filter '@homelab/cdk8s' \
   --filter '@shepherdjerred/toolkit'
 
-# ── build: gitignored artifacts (shared dist + compiled toolkit) ────────────
-# Toolkit needs the shared daemon helpers, MC protocol exports, and their
-# shared lighting schema and Tracker contract at compile time. Workspace
-# manifests are in deps.
+# ── build: gitignored shared dist artifacts and the Argo CD bundle ──────────
+# The artifact builds below read only these packages: three self-contained
+# dist builds and the Argo CD client bundle (bun build --sourcemap lists Homelab
+# scripts and src, ops-model and scripts/lib). The Prisma client and the toolkit
+# binary build in their own stages, so their inputs do not rerun these steps.
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
-  packages/scout-for-lol/tsconfig.base.json \
-  packages/temporal \
-  packages/the-storm/package.json \
-  packages/the-storm/promotion/ \
-  packages/delivery/src/shared \
   packages/homelab \
   scripts/lib \
-  packages/media \
-  packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
-  packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
-  packages/homelab/src/domain-registry.ts \
-  packages/homelab/src/domain-registry.json \
-  packages/feature-flags \
-  packages/code-review \
+  packages/ops-model \
   packages/glitter-context \
   packages/home-assistant \
   packages/llm-models \
-  packages/scout-for-lol/packages/domain \
-  packages/scout-for-lol/packages/data \
-  packages/toolkit \
-  packages/errors/src/shared \
-  packages/tracker/src/shared \
-  packages/unix-socket-daemon/src \
-  packages/mc-harness/src/protocol \
-  packages/mc-build/src/registry/lighting.ts \
-  packages/config \
-  packages/bugsink-config \
-  packages/text \
-  packages/ops-model \
-  packages/ops-clients \
-  packages/version-catalog/package.json \
-  packages/version-catalog/src \
   ./
 # Home Assistant is published with a dist-based export. Build it in the
 # artifact stage so the runtime image does not resolve the workspace link to a
@@ -111,14 +86,44 @@ RUN cd packages/llm-models && bun run build
 # bundles the language-neutral JSON before Temporal imports it at startup.
 RUN cd packages/glitter-context && bun run build
 RUN bun build packages/homelab/scripts/argocd/argocd.ts --target=bun --outfile=packages/temporal/dist/delivery-argocd.js
+
+# ── media-generate: the Prisma client, keyed on the media package alone ─────
+# Its own stage so an edit elsewhere in the build closure (Temporal, Homelab,
+# scripts) does not regenerate an unchanged client.
+FROM deps AS media-generate
+COPY --parents packages/media ./
 # Media activities use the generated Prisma client, including on Node workers.
 RUN cd packages/media && bun run generate
+
+# ── toolkit-build: the compiled CLI, keyed on the toolkit's source closure ──
 # Compile the in-tree toolkit CLI into a single static binary. The
 # homelab-audit runbook + preflight shell out through toolkit workflows and
 # native CLI passthroughs (`alerts`, `bugsink`, `prom`, `loki`, `grafana`);
 # it's compiled here (not `bun add -g`) because it lives in the workspace
 # source. `--external ffmpeg-static` matches the package's own build script (a
-# native shim that must not be bundled).
+# native shim that must not be bundled). The COPY is the bundle's source
+# closure (bun build --sourcemap) plus the packages' own manifests and
+# tsconfigs, so a Temporal-only edit keeps this layer cached.
+FROM deps AS toolkit-build
+COPY --parents \
+  tsconfig.base.json \
+  packages/toolkit \
+  packages/code-review \
+  packages/config \
+  packages/llm-models \
+  packages/ops-model \
+  packages/delivery/src/shared \
+  packages/errors/src/shared \
+  packages/tracker/src/shared \
+  packages/unix-socket-daemon/src \
+  packages/mc-harness/src/protocol \
+  packages/mc-build/src/registry/lighting.ts \
+  packages/scout-for-lol/tsconfig.base.json \
+  packages/scout-for-lol/packages/domain \
+  packages/scout-for-lol/packages/data \
+  packages/version-catalog/package.json \
+  packages/version-catalog/src \
+  ./
 RUN cd packages/toolkit && bun build ./src/index.ts --compile --external ffmpeg-static --outfile=/usr/local/bin/toolkit \
     && chmod +x /usr/local/bin/toolkit \
     && toolkit --version
@@ -510,7 +515,21 @@ RUN set -e; \
 # the source COPY so a source edit doesn't re-push this layer.
 COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 
-# Scoped source closure (toolkit ships only as the compiled binary below).
+# Built artifacts, kept BEFORE the source COPY: they change only with their own
+# stages' inputs, so a source edit neither re-copies them nor makes the exact-
+# digest smoke re-extract them. Their paths (dist/, generated/) are excluded
+# from the build context, so the source COPY below never overwrites them.
+COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
+COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
+COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
+COPY --from=build /app/packages/temporal/dist/delivery-argocd.js packages/temporal/dist/delivery-argocd.js
+COPY --from=media-generate /app/packages/media/generated packages/media/generated
+COPY --from=toolkit-build /usr/local/bin/toolkit /usr/local/bin/toolkit
+COPY --from=media-regex-build /out/media-regex /opt/media-regex
+RUN ln -s /opt/media-regex/RegexOracle /usr/local/bin/RegexOracle \
+    && bun -e 'const request = {protocolVersion: 1, requests: [{pattern: "(?<=Movie[ .])2160p", value: "Movie.2160P.WEB"}, {pattern: "(?<!HD)TV", value: "HDTV"}, {pattern: "(", value: "invalid"}]}; const result = Bun.spawnSync(["RegexOracle"], {stdin: Buffer.from(JSON.stringify(request)), stdout: "pipe", stderr: "pipe"}); if (result.exitCode !== 0) throw new Error("Media regex runtime failed"); const output = JSON.parse(result.stdout.toString()); if (output.protocolVersion !== 1 || output.engine !== "dotnet-ignorecase" || output.culture !== "en-US" || JSON.stringify(output.observations.map(item => item.result)) !== JSON.stringify(["match", "no_match", "unknown"])) throw new Error("Media regex protocol mismatch");'
+
+# Scoped source closure (toolkit ships only as the compiled binary above).
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
@@ -577,16 +596,6 @@ COPY --parents \
   packages/ops-clients \
   ./
 
-# Built artifacts from the build stage.
-COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
-COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
-COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
-COPY --from=build /app/packages/temporal/dist/delivery-argocd.js packages/temporal/dist/delivery-argocd.js
-COPY --from=build /app/packages/media/generated packages/media/generated
-COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
-COPY --from=media-regex-build /out/media-regex /opt/media-regex
-RUN ln -s /opt/media-regex/RegexOracle /usr/local/bin/RegexOracle
-
 # Verify the copied toolkit binary boots, then ensure the HA schema: the worker
 # imports `#generated/ha-schema.ts` (type-only, but keep the file present so
 # any runtime `import` resolves). ensure-ha-schema copies the committed stub
@@ -600,7 +609,6 @@ RUN toolkit --version \
     && 7zz i >/dev/null \
     && python3 -c 'import fcntl' \
     && test -f packages/media/src/filesystem/lock-helper.py
-RUN bun -e 'const request = {protocolVersion: 1, requests: [{pattern: "(?<=Movie[ .])2160p", value: "Movie.2160P.WEB"}, {pattern: "(?<!HD)TV", value: "HDTV"}, {pattern: "(", value: "invalid"}]}; const result = Bun.spawnSync(["RegexOracle"], {stdin: Buffer.from(JSON.stringify(request)), stdout: "pipe", stderr: "pipe"}); if (result.exitCode !== 0) throw new Error("Media regex runtime failed"); const output = JSON.parse(result.stdout.toString()); if (output.protocolVersion !== 1 || output.engine !== "dotnet-ignorecase" || output.culture !== "en-US" || JSON.stringify(output.observations.map(item => item.result)) !== JSON.stringify(["match", "no_match", "unknown"])) throw new Error("Media regex protocol mismatch");'
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown
