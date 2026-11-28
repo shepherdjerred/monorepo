@@ -93,6 +93,7 @@ const { positionals, values } = parseArgs({
     "authored-turret-catalog": { type: "string" },
     "authored-turret-catalog-sha256": { type: "string" },
     "turrets-from-replay": { type: "boolean" },
+    "chaos-turret-collapse": { type: "string" },
     "nexus-models": { type: "string" },
     "authored-nexus-catalog": { type: "string" },
     "authored-nexus-catalog-sha256": { type: "string" },
@@ -219,6 +220,12 @@ assert.ok(
 const turretCatalogPath = values["authored-turret-catalog"];
 const turretCatalogDigest = values["authored-turret-catalog-sha256"];
 const decodeTurrets = values["turrets-from-replay"] === true;
+const chaosTurretCollapseDirectory = values["chaos-turret-collapse"];
+assert.ok(
+  chaosTurretCollapseDirectory === undefined ||
+    (decodeTurrets && privatePackageOutput !== undefined),
+  "Chaos turret collapse requires replay-derived turrets and a private package",
+);
 assert.equal(
   turretCatalogPath === undefined,
   turretCatalogDigest === undefined,
@@ -1944,6 +1951,43 @@ if (values["turret-placements"] !== undefined) {
         ...binding,
         settledRubble: rubbleById.get(binding.participantId),
       }));
+      if (chaosTurretCollapseDirectory !== undefined) {
+        const { chaosTurretCollapseModelPath, chaosTurretCollapsePaths } =
+          await import("./research/native-terrain-turret-collapse-assets.mjs");
+        const binding = scene.structureModelBindings.find(
+          ({ participantId }) => participantId === 1,
+        );
+        assert.equal(binding?.url, chaosTurretCollapseModelPath);
+        const inputs = [
+          [
+            "joint-bindings.json",
+            chaosTurretCollapsePaths.bindings,
+            "application/json",
+          ],
+          [
+            "collapse.clip",
+            chaosTurretCollapsePaths.clip,
+            "application/octet-stream",
+          ],
+          [
+            "model.skl",
+            chaosTurretCollapsePaths.rig,
+            "application/octet-stream",
+          ],
+        ];
+        for (const [file, route, mime] of inputs) {
+          const resource = await readFile(
+            join(chaosTurretCollapseDirectory, file),
+          );
+          assert.equal(
+            sha256(resource),
+            route.split("/").at(-1).split(".")[0],
+            `Unreviewed Chaos turret collapse asset: ${file}`,
+          );
+          structures.routes.set(route, [resource, mime]);
+        }
+        binding.collapse = chaosTurretCollapsePaths;
+      }
     } else
       scene.structureModels = {
         bindings: structures.bindings,

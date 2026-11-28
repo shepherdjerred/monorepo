@@ -124,8 +124,8 @@ export function validateWorkerAnimationCues(
   }
 }
 
-function compileClip(
-  cue: Cue,
+export function compileOrdinalClip(
+  cue: Pick<Cue, "model" | "rig" | "clip" | "bindings">,
   read: (resource: string) => Promise<ArrayBuffer>,
 ) {
   return Promise.all([
@@ -170,7 +170,7 @@ export async function loadRecordedChampionAnimations(
     assets.set(path, pending);
     return pending;
   };
-  const clips = new Map<string, ReturnType<typeof compileClip>>();
+  const clips = new Map<string, ReturnType<typeof compileOrdinalClip>>();
   const compileCue = async (cue: Cue) => {
     const key = [
       cue.participantId,
@@ -179,7 +179,7 @@ export async function loadRecordedChampionAnimations(
       cue.clip,
       cue.bindings,
     ].join("|");
-    const compiled = clips.get(key) ?? compileClip(cue, readOnce);
+    const compiled = clips.get(key) ?? compileOrdinalClip(cue, readOnce);
     clips.set(key, compiled);
     const { sampler, palette } = await compiled;
     if (cue.endSeconds > cue.timeSeconds + sampler.duration / cue.rate + 1e-6)

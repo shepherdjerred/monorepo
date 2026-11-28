@@ -152,7 +152,14 @@ export function readOrdinalAccessor(
 
 function prepareGlb(
   bytes,
-  { participantId, skinScale, hiddenRanges, inactiveModelRange, settledRubble },
+  {
+    participantId,
+    skinScale,
+    hiddenRanges,
+    inactiveModelRange,
+    settledRubble,
+    collapse,
+  },
 ) {
   const { gltf, binary } = readOrdinalChampionGlb(bytes);
   const meshNode = gltf.nodes[gltf.scenes[gltf.scene ?? 0].nodes[0]];
@@ -179,6 +186,11 @@ function prepareGlb(
   )
     throw Error("Inactive model ranges must be hidden by the authored skin");
   const hidden = new Set();
+  const collapseNames = collapse === undefined ? [] : ["stage2", "stage3"];
+  if (collapseNames.some((name) => !hide.has(name)))
+    throw Error(
+      "Turret collapse stages must start hidden in the authored skin",
+    );
   const textures = new Map();
   const primitives = [];
   let topY = -Infinity;
@@ -188,9 +200,10 @@ function prepareGlb(
       throw Error(`Missing ordinal material for champion ${participantId}`);
     const name = material.name.toLowerCase();
     const inactive = inactiveNames.has(name);
+    const collapseThroughPhase = collapseNames.indexOf(name) + 1;
     if (hide.has(name)) {
       hidden.add(name);
-      if (!inactive) continue;
+      if (!inactive && collapseThroughPhase === 0) continue;
     }
     const textureInfo = material.pbrMetallicRoughness?.baseColorTexture;
     const texture = gltf.textures?.[textureInfo?.index];
@@ -221,7 +234,7 @@ function prepareGlb(
       { 5126: 4 },
       3,
     );
-    if (!inactive) {
+    if (!inactive && collapseThroughPhase === 0) {
       const vertexBytes = new DataView(
         positions.data.buffer,
         positions.data.byteOffset,
@@ -280,6 +293,7 @@ function prepareGlb(
       throw Error(`Invalid ordinal triangles for champion ${participantId}`);
     primitives.push({
       inactive,
+      collapseThroughPhase,
       positions,
       uv,
       indices,
@@ -442,9 +456,12 @@ export function createChampionModelRenderer(gl, models, createProgram) {
       }
       const parts = [];
       const inactiveParts = [];
+      const firstCollapseParts = [];
+      const lastCollapseParts = [];
       const attributesUploaded = new Map();
       for (const {
         inactive = false,
+        collapseThroughPhase = 0,
         positions,
         uv,
         indices,
@@ -491,18 +508,28 @@ export function createChampionModelRenderer(gl, models, createProgram) {
             );
         }
         uploadBuffer(gl.ELEMENT_ARRAY_BUFFER, indices.data);
-        (inactive ? inactiveParts : parts).push({
+        const part = {
           array,
           indexCount: indices.count,
           indexType: indices.type,
           indexOffset: indices.offset,
           texture: uploaded.get(image),
           alphaCutoff,
-        });
+        };
+        if (collapseThroughPhase > 0) {
+          firstCollapseParts.push(part);
+          if (collapseThroughPhase === 2) lastCollapseParts.push(part);
+        } else (inactive ? inactiveParts : parts).push(part);
       }
       if (gl.getError() !== gl.NO_ERROR)
         throw Error(`Could not upload champion model ${id}`);
-      actors.set(id, { skinScale, paletteSize, parts, inactiveParts });
+      actors.set(id, {
+        skinScale,
+        paletteSize,
+        parts,
+        inactiveParts,
+        collapseParts: [firstCollapseParts, lastCollapseParts],
+      });
     }
   } catch (error) {
     dispose();
@@ -521,6 +548,8 @@ export function createChampionModelRenderer(gl, models, createProgram) {
         position,
         basis = identity,
         inactive = false,
+        collapsePhase = 0,
+        palette: instancePalette,
       } of markers) {
         const actor = actors.get(participantId);
         if (
@@ -536,7 +565,8 @@ export function createChampionModelRenderer(gl, models, createProgram) {
         gl.uniform3fv(actorOrigin, position);
         gl.uniform1f(actorScale, actor.skinScale);
         gl.uniformMatrix3fv(actorBasis, false, basis);
-        const palette = animationPalettes?.get(participantId);
+        const palette =
+          instancePalette ?? animationPalettes?.get(participantId);
         gl.uniform1i(animated, palette === undefined ? 0 : 1);
         if (palette !== undefined) {
           if (
@@ -562,6 +592,12 @@ export function createChampionModelRenderer(gl, models, createProgram) {
           );
           gl.activeTexture(gl.TEXTURE0);
         }
+        const visibleParts =
+          collapsePhase > 0
+            ? actor.collapseParts[collapsePhase - 1]
+            : inactive
+              ? actor.inactiveParts
+              : actor.parts;
         for (const {
           array,
           indexCount,
@@ -569,7 +605,7 @@ export function createChampionModelRenderer(gl, models, createProgram) {
           indexOffset,
           texture,
           alphaCutoff: cutoff,
-        } of inactive ? actor.inactiveParts : actor.parts) {
+        } of visibleParts) {
           gl.bindVertexArray(array);
           gl.bindTexture(gl.TEXTURE_2D, texture);
           gl.uniform1f(alphaCutoff, cutoff);

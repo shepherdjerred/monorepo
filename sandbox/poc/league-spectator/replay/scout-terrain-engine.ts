@@ -76,6 +76,14 @@ function matchesReviewedModel(
   );
 }
 
+function matchesDigestInPath(
+  file: { sha256: string } | undefined,
+  path: string,
+) {
+  const digest = path.slice(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
+  return file?.sha256 === digest;
+}
+
 function recordedTimeline(
   data: ReturnType<typeof prepareScene>,
 ): NonNullable<ReplayPresentationCapabilities["timelineEvents"]> {
@@ -280,6 +288,14 @@ export const createReplayEngine: ReplayEngineFactory = async ({
           "invalid-package",
           "A turret model disagrees with its reviewed archive binding.",
         );
+      for (const url of Object.values(binding?.collapse ?? {})) {
+        const resource = url.slice(1);
+        if (!matchesDigestInPath(files.get(resource), resource))
+          throw new ReplayCapabilityError(
+            "invalid-package",
+            "A turret collapse resource disagrees with its reviewed archive binding.",
+          );
+      }
     }
   }
   const inhibitorCatalog = scene.workerMotion?.inhibitorCatalog;
@@ -327,11 +343,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     for (const { rig, bindings, clip } of actions) {
       for (const url of [rig, bindings, clip]) {
         const path = url.slice(1);
-        const digest = path.slice(
-          path.lastIndexOf("/") + 1,
-          path.lastIndexOf("."),
-        );
-        if (files.get(path)?.sha256 !== digest)
+        if (!matchesDigestInPath(files.get(path), path))
           throw new ReplayCapabilityError(
             "invalid-package",
             "A champion animation resource disagrees with the rendering package inventory.",

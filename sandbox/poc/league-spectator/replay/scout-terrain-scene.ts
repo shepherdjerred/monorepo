@@ -52,12 +52,17 @@ import {
   terrainPositionProtocol,
 } from "./tools/research/native-terrain-byte-codecs.mjs";
 import { createNavgridGroundHeight } from "./tools/research/native-terrain-ground.mjs";
+import { chaosTurretCollapseModelPath } from "./tools/research/native-terrain-turret-collapse-assets.mjs";
 import { sampleNativeTerrainMotion } from "./tools/research/native-terrain-motion-sample.mjs";
 import { sampleNativeTerrainWorldUnits } from "./tools/research/native-terrain-world-unit-sample.mjs";
 import {
   prepareTeamVision,
   TeamVisionSchema,
 } from "./scout-terrain-team-vision.ts";
+import {
+  ChaosTurretCollapseSchema,
+  loadRecordedTurretCollapse,
+} from "./scout-terrain-turret-collapse.ts";
 
 type ReadTerrainAsset = (path: string) => Promise<ArrayBuffer>;
 
@@ -144,6 +149,7 @@ const inhibitorModelBinding = modelBinding.extend({
   inactiveModelRange: z.literal("Destroyed").optional(),
 });
 const renderedTurretBinding = modelBinding.extend({
+  collapse: ChaosTurretCollapseSchema.optional(),
   settledRubble: z
     .union([
       z.strictObject({
@@ -767,7 +773,7 @@ const TerrainSceneFields = z.object({
   terrainVisibility: TerrainVisibilitySchema.optional(),
   championModels: ChampionModelsSchema.optional(),
   structureModels: structureModelData
-    .extend({ bindings: z.array(modelBinding).min(1) })
+    .extend({ bindings: z.array(renderedTurretBinding).min(1) })
     .refine(
       hasDistinctTurretContexts,
       "Expected 22 accounted-for turret contexts",
@@ -903,7 +909,14 @@ export const SceneSchema = TerrainSceneFields.refine(
     (scene) => {
       const catalog = scene.workerMotion?.turretCatalog;
       const bindings = scene.structureModelBindings;
-      if (catalog === undefined) return bindings === undefined;
+      if (catalog === undefined)
+        return (
+          bindings === undefined &&
+          scene.structureModels?.bindings.every(
+            ({ collapse, settledRubble }) =>
+              collapse === undefined && settledRubble === undefined,
+          ) !== false
+        );
       const ids = new Set<number>(catalog.models.map(([, id]) => id));
       return (
         scene.identity.build === catalog.build &&
@@ -914,9 +927,15 @@ export const SceneSchema = TerrainSceneFields.refine(
         scene.turretLosses === undefined &&
         bindings !== undefined &&
         bindings.every(
-          ({ participantId, url, settledRubble, hiddenRanges }) =>
+          ({ participantId, url, settledRubble, hiddenRanges, collapse }) =>
             ids.delete(participantId) &&
             url.startsWith("/structure-models/") &&
+            (collapse === undefined ||
+              (participantId === 1 &&
+                url === chaosTurretCollapseModelPath &&
+                settledRubble !== undefined &&
+                hiddenRanges.includes("Stage2") &&
+                hiddenRanges.includes("Stage3"))) &&
             (settledRubble === undefined ||
               (settledRubble.ranges.length === participantId + 1 &&
                 settledRubble.ranges.every((range) =>
@@ -1214,6 +1233,10 @@ export type RendererModule = {
       nexusModels?: LoadedChampionModels;
       inhibitorModels?: LoadedChampionModels;
       worldUnitModels?: LoadedChampionModels;
+      animationPalettesAt?: Awaited<
+        ReturnType<typeof loadRecordedChampionAnimations>
+      >;
+      turretCollapseAt?: Awaited<ReturnType<typeof loadRecordedTurretCollapse>>;
       recordedParticles?: LoadedTerrainParticles;
     },
   ) => {
@@ -2628,17 +2651,32 @@ export async function loadRenderer(
   render: RendererModule,
   hasRecordedParticles: boolean,
 ) {
-  const [metadata, bytes, animationPalettesAt] = await Promise.all([
-    read("/map.json").then(parseTerrainJson),
-    read("/map.bin"),
-    scene.championAnimationCues === undefined
-      ? undefined
-      : loadRecordedChampionAnimations(
-          scene.championAnimationCues,
-          scene.identity.durationMilliseconds / 1000,
-          read,
-        ),
-  ]);
+  const chaosTurret = scene.structureModels?.bindings.find(
+    ({ collapse }) => collapse !== undefined,
+  );
+  const [metadata, bytes, animationPalettesAt, turretCollapseAt] =
+    await Promise.all([
+      read("/map.json").then(parseTerrainJson),
+      read("/map.bin"),
+      scene.championAnimationCues === undefined
+        ? undefined
+        : loadRecordedChampionAnimations(
+            scene.championAnimationCues,
+            scene.identity.durationMilliseconds / 1000,
+            read,
+          ),
+      chaosTurret?.collapse === undefined ||
+      chaosTurret.settledRubble === undefined
+        ? undefined
+        : loadRecordedTurretCollapse(
+            {
+              url: chaosTurret.url,
+              collapse: chaosTurret.collapse,
+              settledRubble: chaosTurret.settledRubble,
+            },
+            read,
+          ),
+    ]);
   signal.throwIfAborted();
   const materials = await loadTerrainBindings(scene.terrainMaterials, read);
   let renderer: ReturnType<RendererModule["createTerrainRenderer"]>;
@@ -2694,6 +2732,7 @@ export async function loadRenderer(
       inhibitorModels,
       worldUnitModels,
       animationPalettesAt,
+      turretCollapseAt,
       recordedParticles,
     });
   } finally {

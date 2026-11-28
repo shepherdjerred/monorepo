@@ -458,8 +458,20 @@ The `.8428` package draws the original settled `Rubble` and `RubbleBase`
 ranges after the recorded turret loss and the authored collapse clip duration.
 The opening models still hide those ranges. The settled ranges use the root
 joint only. Compared with samples from the authored `Destroyed` clips, their
-static vertices differ by at most 0.023 world units. Collapse animation and
-destruction effects still require playback support.
+static vertices differ by at most 0.023 world units.
+For Chaos turret skin 3, the private package can include the original `Death`
+clip and its authored range switches. Prepare the clip from the exact Map11
+archive and turret model catalog, then pass the output directory to
+`--chaos-turret-collapse` with `--turrets-from-replay`.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-chaos-turret-collapse.mjs $leagueInstallation $authoredTurretCatalogDirectory $macGameExecutable $newPrivateCollapseDirectory uv run --with capstone --with unicorn python
+```
+
+The browser anchors the clip to the corroborated turret loss. It draws
+`Stage2` and `Stage3` until authored frame 16 and draws `Stage3` until frame 57
+reveals the settled rubble. This covers the skinned mesh. Destruction VFX and
+sound remain outside this animation path.
 For current-build inhibitors, use `--authored-inhibitor-catalog` and
 `--authored-inhibitor-catalog-sha256` in place of the prepared inhibitor
 manifest. The builder matches the authored registration order to the replay's

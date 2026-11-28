@@ -17,7 +17,7 @@ const sceneFiles = new Set([
   "replay-motion-decoder.bin",
 ]);
 const assetPath =
-  /^(?:map-textures|champion-models|champion-animations|structure-models|nexus-models|inhibitor-models|world-unit-models|item-icons)\//;
+  /^(?:map-textures|champion-models|champion-animations|structure-models|structure-animations|nexus-models|inhibitor-models|world-unit-models|item-icons)\//;
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 export async function readLocalRecordedParticles(path, digest, identity) {

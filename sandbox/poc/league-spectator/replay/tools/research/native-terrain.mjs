@@ -319,6 +319,7 @@ export function createTerrainRenderer(
     inhibitorModels,
     worldUnitModels,
     animationPalettesAt,
+    turretCollapseAt,
     recordedParticles,
   } = {},
 ) {
@@ -660,10 +661,17 @@ export function createTerrainRenderer(
               )
                 return [instance];
               const delay = turretRubbleDelays.get(participantId);
-              return delay !== undefined &&
-                frame.timeSeconds >= destroyedAtSeconds + delay
-                ? [{ ...instance, inactive: true }]
-                : [];
+              const elapsed = frame.timeSeconds - destroyedAtSeconds;
+              if (delay !== undefined && elapsed >= delay)
+                return [{ ...instance, inactive: true }];
+              if (participantId === 1 && turretCollapseAt !== undefined)
+                return [
+                  {
+                    ...instance,
+                    ...turretCollapseAt(instance.context, elapsed),
+                  },
+                ];
+              return [];
             });
       modelRenderer.draw(
         viewProjection.elements,

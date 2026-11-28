@@ -8,7 +8,12 @@ import type { drawsNear } from "#replay-e2e/recorded-world-assertions.ts";
 
 const TurretRubbleBindings = z.object({
   structureModelBindings: z
-    .array(z.object({ settledRubble: z.object({}).optional() }))
+    .array(
+      z.object({
+        collapse: z.object({}).optional(),
+        settledRubble: z.object({}).optional(),
+      }),
+    )
     .optional(),
 });
 
@@ -28,6 +33,7 @@ const witnesses = [
     transition: 1693,
     settled: 1694.3,
     rubbleDraws: [2946, 6378],
+    collapse: true,
   },
 ];
 
@@ -48,13 +54,14 @@ async function verifyRecordedTurretRubble(page: Page, root: string) {
     transition,
     settled,
     rubbleDraws,
+    collapse,
   } of witnesses) {
-    const drawsAt = async (seconds: number) => {
+    const frameAt = async (seconds: number) => {
       await seek(page, seconds);
-      const { actorOrigins, actorIndexCounts } = await readRecordedDraw(page);
-      return actorOrigins
+      const draw = await readRecordedDraw(page);
+      const indices = draw.actorOrigins
         .flatMap((origin, index) => {
-          const count = actorIndexCounts[index];
+          const count = draw.actorIndexCounts[index];
           return count !== undefined &&
             position.every(
               (value, axis) =>
@@ -64,16 +71,58 @@ async function verifyRecordedTurretRubble(page: Page, root: string) {
             : [];
         })
         .sort((left, right) => left - right);
+      return { indices, draw };
     };
-    const live = await drawsAt(before);
+    const { indices: live } = await frameAt(before);
     expect(live.length).toBeGreaterThan(0);
-    const collapsing = await drawsAt(transition);
+    const { indices: collapsing } = await frameAt(transition);
     for (const range of rubbleDraws) {
       expect(live).not.toContain(range);
       expect(collapsing).not.toContain(range);
     }
-    expect(await drawsAt(settled)).toEqual(rubbleDraws);
-    expect(await drawsAt(before)).toEqual(live);
+    const { indices: rubble } = await frameAt(settled);
+    expect(rubble).toEqual(rubbleDraws);
+    if (
+      collapse === true &&
+      scene.structureModelBindings.some(
+        (binding) => binding.collapse !== undefined,
+      )
+    ) {
+      // Index counts identify Stage2/Stage3 in the pinned Chaos turret GLB.
+      const stage2 = 12_009;
+      const stage3 = 2976;
+      const paletteAt = async (seconds: number, expected: number[]) => {
+        const { indices, draw } = await frameAt(seconds);
+        expect(indices).toEqual(expected);
+        // The renderer uploads a palette before submitting the first authored range.
+        const firstRange = expected.includes(stage2) ? stage2 : stage3;
+        expect(
+          draw.actorIndexCounts.filter((count) => count === firstRange),
+        ).toEqual([firstRange]);
+        const palettes = draw.animationPaletteDraws.filter(
+          ({ indexCount }) => indexCount === firstRange,
+        );
+        expect(palettes).toHaveLength(1);
+        return palettes[0]?.hash;
+      };
+      const first = await paletteAt(1692.4, [stage3, stage2]);
+      const middle = await paletteAt(1692.6, [stage3, stage2]);
+      const beforeStage2Hide = await paletteAt(1692.8, [stage3, stage2]);
+      const afterStage2Hide = await paletteAt(1692.9, [stage3]);
+      const beforeRubble = await paletteAt(1694.2, [stage3]);
+      expect(
+        new Set([
+          first,
+          middle,
+          beforeStage2Hide,
+          afterStage2Hide,
+          beforeRubble,
+        ]).size,
+      ).toBe(5);
+      expect(await paletteAt(1692.6, [stage3, stage2])).toBe(middle);
+    }
+    const { indices: rewound } = await frameAt(before);
+    expect(rewound).toEqual(live);
   }
 }
 
