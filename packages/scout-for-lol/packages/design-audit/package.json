@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
-    "zod": "^4.4.3",
     "@playwright/test": "1.64.0",
     "@types/bun": "^1.4.5",
     "@typescript/native": "npm:typescript@7.0.2",
