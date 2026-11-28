@@ -161,13 +161,14 @@ async function resolveFallbackEntry(options: {
   if (options.qualifyPending === undefined) return options.initialLiveEntry;
   const currentLive = await liveSet(options.database, options.input.serviceId);
   if (currentLive === null) return null;
-  if (currentLive.id === options.initialLiveId) return options.initialLiveEntry;
-  return qualifiedEntry(
-    options.database,
-    currentLive.id,
-    options.input,
-    options.repositoryId,
-  );
+  return currentLive.id === options.initialLiveId
+    ? options.initialLiveEntry
+    : qualifiedEntry(
+        options.database,
+        currentLive.id,
+        options.input,
+        options.repositoryId,
+      );
 }
 
 export async function latestRetainableArtifact(
