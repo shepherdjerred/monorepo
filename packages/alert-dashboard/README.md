@@ -290,7 +290,9 @@ Required configuration is validated at startup: `DATABASE_URL` (a SQLite
 `file:` URL), `ALERTMANAGER_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN`,
 `GRAFANA_URL`, `GRAFANA_API_KEY`, `OPS_INGEST_TOKEN` (at least 32 characters;
 the bearer token the Temporal workflow presents), and `PROMETHEUS_URL` (the
-in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Outbound
+in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`), and
+`INCIDENTS_DATABASE_URL` (a `postgres://` URL for the incidents module's own
+database; Hub refuses to start without it). Outbound
 mail uses the credential `MAIL_API_TOKEN` and bootstrap connection setting
 `MAIL_API_URL`. The `traces` module uses
 `TRACES_INDEX_DB_PATH` (default `/data/llm-traces-index.db`) plus optional
@@ -607,6 +609,27 @@ A module that needs its own storage stays a separate workspace package that
 exports `./hub-server` and `./hub-client`. Its `src/modules/<id>/` adapter
 checks those exports with `satisfies` against the two module contracts, so
 the storage never enters this package.
+
+`src/modules/incidents/` is the first storage-backed module, and the first
+that takes writes from the browser. Its package,
+[`@shepherdjerred/incidents`](../incidents/README.md), owns its PostgreSQL
+database, schema, migrations, domain rules, and pages; this package never sees
+them.
+
+| Piece                 | Where                                                                                                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server half           | `server.ts` calls `createIncidentsHubServer` with `INCIDENTS_DATABASE_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN` (Alertmanager receiver), `OPS_INGEST_TOKEN`, and `APP_HOSTS.hub` |
+| Flags                 | The module's default reader, which is Hub's process-wide flag client (`alert-dashboard/prod`)                                                                                |
+| Client half           | `client.tsx` checks `incidentsHubClient`: routes under `/incidents`, one **Incidents** row in the Alerts group, a Home card, and palette search and commands                 |
+| Readiness             | `/readyz/incidents` pings the incidents database; `/readyz` does not                                                                                                         |
+| `dev:fixture` and e2e | `createFixtureIncidentsServerModule()` wraps `createIncidentsFixtureHubServer()`, an in-memory module with seeded incidents                                                  |
+| Image                 | The `Dockerfile` copies `packages/incidents`, generates its Prisma client in the build and runtime stages, and the smoke stage runs its `prisma --version`                   |
+| Migrations            | Applied by an init container with `prisma migrate deploy` from `packages/incidents`                                                                                          |
+
+The incident pages import only the package's shared contract, speak tRPC's
+HTTP format over `fetch`, and style themselves with console-ui tokens plus
+Hub's page-frame classes (`page-heading`, `eyebrow`, `back-link`,
+`block-heading`, and the loading, empty, and error states).
 
 `src/modules/traces/` (`id: "traces"`, mounted at `/traces`, `/api/traces`, and
 `/readyz/traces`) is Hub's LLM trace viewer: it queries Tempo (`<=30d` OTLP

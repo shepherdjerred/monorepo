@@ -22,7 +22,7 @@ import {
   reopenTarget,
   resolveTarget,
   STATUS_MOVES,
-} from "#domain/lifecycle.ts";
+} from "#shared/lifecycle.ts";
 import { take } from "#domain/command.ts";
 import {
   actor,

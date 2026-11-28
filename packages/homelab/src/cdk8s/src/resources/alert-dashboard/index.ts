@@ -9,11 +9,15 @@ import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/comm
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { MAIL_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import {
   flagsEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
-import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import {
+  FirstPartyWebService,
+  type FirstPartyInitContainer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
   PROMETHEUS_GATEWAY_PORT,
@@ -33,7 +37,47 @@ import {
 
 const IMAGE = firstPartyImageRecipe("alert-dashboard");
 
-export function createAlertDashboardDeployment(chart: Chart) {
+/**
+ * The Incidents module's database environment. Hub's own `DATABASE_URL` is
+ * its SQLite ledger, so the Incidents URL takes its own name; `DB_USER` and
+ * `DB_PASSWORD` stay ahead of it because kubelet expands only earlier
+ * variables.
+ */
+function incidentsDatabaseEnv(
+  database: SingleAppDatabase,
+): Record<string, EnvValue> {
+  const { DATABASE_URL: url, ...credentials } = database.env;
+  if (url === undefined) {
+    throw new Error("singleAppDatabase must provide DATABASE_URL");
+  }
+  return { ...credentials, INCIDENTS_DATABASE_URL: url };
+}
+
+/** Applies the Incidents module's Prisma migrations before Hub starts. */
+function incidentsMigrateContainer(
+  incidentsEnv: Record<string, EnvValue>,
+): FirstPartyInitContainer {
+  return {
+    name: "incidents-prisma-migrate",
+    image: IMAGE,
+    command: ["/bin/sh", "-c"],
+    args: [
+      "cd /app/packages/incidents && bunx --no-install prisma migrate deploy",
+    ],
+    resources: {
+      cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
+      memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+    },
+    securityContext: restrictedContainer(1000),
+    envVariables: { ...incidentsEnv, HOME: EnvValue.fromValue("/tmp") },
+  };
+}
+
+export function createAlertDashboardDeployment(
+  chart: Chart,
+  incidentsDatabase: SingleAppDatabase,
+) {
+  const incidentsEnv = incidentsDatabaseEnv(incidentsDatabase);
   return new FirstPartyWebService(chart, "alert-dashboard-web-service", {
     name: "alert-dashboard",
     port: 7341,
@@ -101,6 +145,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
               HOME: EnvValue.fromValue("/tmp"),
             },
           },
+          incidentsMigrateContainer(incidentsEnv),
         ],
         server: {
           image: IMAGE,
@@ -117,6 +162,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
           securityContext: restrictedContainer(1000),
           envVariables: {
             DATABASE_URL: EnvValue.fromValue("file:/data/alert-dashboard.db"),
+            ...incidentsEnv,
             HOME: EnvValue.fromValue("/tmp"),
             HOST: EnvValue.fromValue("0.0.0.0"),
             PORT: EnvValue.fromValue("7341"),
@@ -206,6 +252,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
             ports: [tcp(7343)],
           },
           dnsEgressRule(),
+          incidentsDatabase.egress,
           {
             to: [nsPeer("prometheus")],
             // Grafana, Alertmanager, and the ops series presets proxied from

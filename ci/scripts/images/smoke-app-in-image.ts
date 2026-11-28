@@ -178,6 +178,10 @@ const commands: Record<
       GRAFANA_API_KEY: "smoke-viewer-token",
       GRAFANA_URL: "http://127.0.0.1:13000",
       HOST: "127.0.0.1",
+      // Required at boot; nothing listens there, and Hub serves its pages
+      // while /readyz/incidents reports the unreachable database.
+      INCIDENTS_DATABASE_URL:
+        "postgresql://smoke:smoke@127.0.0.1:15471/incidents",
       OPS_INGEST_TOKEN: "smoke-ops-ingest-token-with-at-least-32-characters",
       PORT: "17341",
       MAIL_API_TOKEN: "smoke-mail-api-token",

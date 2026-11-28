@@ -130,8 +130,9 @@ export type IncidentsFixtureOptions = Omit<
 /**
  * An in-memory module seeded with realistic incidents, for Hub's
  * `dev:fixture` and e2e runs: an open sev1 Delivery incident under an active
- * dispatch lease, an owned main-ci incident with a suspect, a scheduled
- * maintenance, and a resolved incident. Flags default to the inventory
+ * dispatch lease, an owned main-ci incident with a suspect, an unowned
+ * observability incident past its takeover grace, a scheduled maintenance,
+ * and a resolved incident. Flags default to the inventory
  * defaults (no flag client needed).
  */
 export async function createIncidentsFixtureHubServer(

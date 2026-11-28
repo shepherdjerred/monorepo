@@ -89,6 +89,14 @@ describe("take", () => {
     });
   });
 
+  it("applies the grace to incidents only: anyone may own maintenance at once", () => {
+    const maintenance = record({ kind: "maintenance", systems: ["databases"] });
+    expect(
+      take(maintenance, contextAt(minutes(1), other), request(), SETTINGS)
+        .outcome,
+    ).toBe("owned");
+  });
+
   it("records force before the grace on the timeline", () => {
     const forced = take(
       record(),
@@ -167,6 +175,32 @@ describe("dispatch lease", () => {
       dispatchTokenHash: hashDispatchToken(TOKEN),
     });
     expect(JSON.stringify(decision.transition.next)).not.toContain(TOKEN);
+  });
+
+  it("refuses to dispatch a commander session for maintenance", () => {
+    const maintenance = record({
+      kind: "maintenance",
+      systems: ["databases"],
+    });
+    const attempt = () =>
+      take(
+        maintenance,
+        contextAt(minutes(10), other),
+        request({ dispatch: true }),
+        SETTINGS,
+      );
+    expect(attempt).toThrow(
+      expect.objectContaining({
+        name: "IncidentError",
+        code: "BAD_REQUEST",
+        message: expect.stringMatching(/only incidents dispatch/u),
+      }),
+    );
+    // Owning maintenance is still allowed; only the spawn path is refused.
+    expect(
+      take(maintenance, contextAt(minutes(10), other), request(), SETTINGS)
+        .outcome,
+    ).toBe("owned");
   });
 
   it("refuses to dispatch when spawning is disabled", () => {

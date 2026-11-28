@@ -1,7 +1,7 @@
 /** Mounts the module the way Hub does (`/api/incidents/*`, tRPC at `/api/incidents/trpc`). */
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { Hono } from "hono";
-import { z } from "zod";
+import type { z } from "zod";
 import type { IncidentsSettings } from "#domain/model.ts";
 import { staticIncidentsFlags } from "#infrastructure/flags.ts";
 import { createInMemoryIncidentsRepository } from "#infrastructure/in-memory-repository.ts";
@@ -11,6 +11,7 @@ import {
   type IncidentsHubServer,
 } from "#server/hub-server.ts";
 import { TakeCommandResultSchema } from "#shared/contract.ts";
+import { TrpcErrorSchema, TrpcResultSchema } from "#shared/trpc-wire.ts";
 import { T0 } from "#testing/records.ts";
 
 export const WEBHOOK_TOKEN = "webhook-token-for-tests";
@@ -30,15 +31,6 @@ export function agent(name: string) {
     name: "claude-code",
   } as const;
 }
-
-const TrpcResultSchema = z.object({ result: z.object({ data: z.unknown() }) });
-
-const TrpcErrorSchema = z.object({
-  error: z.object({
-    message: z.string(),
-    data: z.looseObject({ code: z.string(), incident: z.unknown().optional() }),
-  }),
-});
 
 export async function statusOf(
   response: Promise<Response> | Response,
