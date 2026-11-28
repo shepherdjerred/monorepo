@@ -54,9 +54,15 @@ function fts5Tokens(texts: readonly string[]): string[][] {
 }
 
 describe("unicode61-compatible search tokens", () => {
-  test("the committed table matches SQLite's unicode61 for every code point", () => {
-    expect(readUnicode61Table()).toEqual(committedTable);
-  });
+  // Tokenizes all 1.1M code points through SQLite: about 2 s on an idle
+  // machine, so it gets room on a loaded CI worker.
+  test(
+    "the committed table matches SQLite's unicode61 for every code point",
+    { timeout: 120_000 },
+    () => {
+      expect(readUnicode61Table()).toEqual(committedTable);
+    },
+  );
 
   test("tokenizes like FTS5 unicode61 across scripts, folds, and separators", () => {
     const expected = fts5Tokens(TOKENIZER_CORPUS);
