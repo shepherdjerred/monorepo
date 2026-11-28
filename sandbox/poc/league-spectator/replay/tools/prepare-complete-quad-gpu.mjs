@@ -11,16 +11,18 @@ import {
 } from "./particle-gpu-bindings.mjs";
 const [arg, ...options] = process.argv.slice(2),
   references = new Map();
-if (!arg || options.length % 2 || options.length > 4)
+if (!arg || options.length % 2 || options.length > 6)
   throw Error(
-    "Usage: prepare-complete-quad-gpu.mjs <cache> [--selected-color-reference <approved-primary-color-package>] [--selected-material-reference <approved-primary-native-observations>]",
+    "Usage: prepare-complete-quad-gpu.mjs <cache> [--selected-color-reference <approved-primary-color-package>] [--selected-material-reference <approved-primary-native-observations>] [--particle-color-recovery <recovery-roots.json>]",
   );
 for (let i = 0; i < options.length; i += 2) {
   const key = options[i];
   if (
-    !["--selected-color-reference", "--selected-material-reference"].includes(
-      key,
-    ) ||
+    ![
+      "--selected-color-reference",
+      "--selected-material-reference",
+      "--particle-color-recovery",
+    ].includes(key) ||
     references.has(key) ||
     !options[i + 1]
   )
@@ -28,7 +30,8 @@ for (let i = 0; i < options.length; i += 2) {
   references.set(key, options[i + 1]);
 }
 const selectedReference = references.get("--selected-color-reference"),
-  selectedMaterialReference = references.get("--selected-material-reference");
+  selectedMaterialReference = references.get("--selected-material-reference"),
+  colorRecovery = references.get("--particle-color-recovery");
 const cache = resolve(arg),
   assets = `${cache}/public`,
   decoder = `${assets}/decoder-16.21-macos`,
@@ -93,6 +96,7 @@ const colorBindings = await loadNativeParticleColorBindings({
   selectedReferenceBytes: selectedReference
     ? await raw(resolve(selectedReference))
     : null,
+  recovery: colorRecovery ? await Bun.file(colorRecovery).json() : null,
 });
 await captureDirectSourceInputs(
   [

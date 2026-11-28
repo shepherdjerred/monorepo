@@ -525,6 +525,14 @@ the replay values. Actual Recall state and the combined ranking remain open.
 
 ## Original cold texture defaults
 
+For an original particle color proof whose asset paths belong to an archived
+checkout, pass `--particle-color-recovery` to
+`../prepare-complete-quad-gpu.mjs`. Give it a JSON file with
+`recordedAssetRoot`, the original absolute public asset root, and `sourceRoot`,
+the absolute directory of recovered native Python sources. The quad builder
+resolves the archived asset paths under its own `public` directory and checks
+the original proof and every input digest.
+
 `../observe-original-particle-default-textures.py` executes original null and
 interned-empty texture-name controls for the selected slots, retaining the
 original wrapper/getter and complete GPU byte readback. The separate

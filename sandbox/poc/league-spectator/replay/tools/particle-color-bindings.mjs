@@ -1,15 +1,92 @@
 // Static build preparation only. Original slot-1 samplers on complete assets;
 // this does not claim native resource acquisition or replay effect activation.
-import { resolve } from "node:path";
+import { realpath } from "node:fs/promises";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 import { validateSelectedParticleColorRecords } from "./selected-particle-color-records.mjs";
 export const PARTICLE_COLOR_BINDINGS_SHA =
   "ba06d3700bc3835496ab14811d9b6db1f3acab620afdeef73e8c4a23c15000a3";
+
+async function recoveredProofFile(root, path) {
+  const file = await realpath(resolve(root, path));
+  const fromRoot = relative(root, file);
+  if (
+    !fromRoot ||
+    fromRoot === ".." ||
+    fromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(fromRoot)
+  )
+    throw Error("Recovered particle color proof file escapes its root");
+  return file;
+}
+
+export async function verifyParticleColorProofInputs({
+  assets,
+  inputs,
+  sources,
+  raw,
+  sha,
+  recovery = null,
+}) {
+  const tools = resolve(import.meta.dir);
+  const recordedAssetRoot =
+    typeof recovery?.recordedAssetRoot === "string"
+      ? recovery.recordedAssetRoot.replaceAll("\\", "/").replace(/\/$/, "")
+      : null;
+  if (
+    recovery !== null &&
+    (!/^(?:[A-Za-z]:\/|\/)[^:]+$/.test(recordedAssetRoot ?? "") ||
+      recordedAssetRoot
+        .split("/")
+        .some((part) => part === "." || part === "..") ||
+      typeof recovery.sourceRoot !== "string" ||
+      !isAbsolute(recovery.sourceRoot))
+  )
+    throw Error(
+      "Explicit recorded asset root and recovered source root required",
+    );
+  const assetRoot = recovery === null ? null : await realpath(assets);
+  const sourceRoot =
+    recovery === null ? null : await realpath(recovery.sourceRoot);
+  for (const [name, digest] of Object.entries(sources)) {
+    if (sourceRoot !== null && !/^[A-Za-z0-9_-]+\.py$/.test(name))
+      throw Error("Recovered particle color proof requires a source filename");
+    const file =
+      sourceRoot === null
+        ? `${tools}/${name}`
+        : await recoveredProofFile(sourceRoot, name);
+    if (sha(await raw(file)) !== digest)
+      throw Error(`Native particle color source changed: ${name}`);
+  }
+  for (const [path, digest] of Object.entries(inputs)) {
+    let file = path;
+    if (assetRoot !== null) {
+      const recordedPath = path.replaceAll("\\", "/");
+      const prefix = `${recordedAssetRoot}/`;
+      if (!recordedPath.startsWith(prefix))
+        throw Error("Unrecognized recorded particle color asset root");
+      const name = recordedPath.slice(prefix.length);
+      if (
+        name
+          .split("/")
+          .some(
+            (part) =>
+              !/^[A-Za-z0-9_. -]+$/.test(part) || part === "." || part === "..",
+          )
+      )
+        throw Error("Invalid recovered particle color asset path");
+      file = await recoveredProofFile(assetRoot, name);
+    }
+    if (sha(await raw(file)) !== digest)
+      throw Error(`Native particle color input changed: ${path}`);
+  }
+}
 
 export async function loadNativeParticleColorBindings({
   assets,
   raw,
   sha,
   selectedReferenceBytes = null,
+  recovery = null,
 }) {
   const bytes = await raw(`${assets}/latest-particle-color/package.json`);
   const selected = selectedReferenceBytes !== null;
@@ -33,7 +110,6 @@ export async function loadNativeParticleColorBindings({
     meta.entries.length !== meta.counts.emitters
   )
     throw Error("Unsupported native particle color contract");
-  const root = resolve(import.meta.dir);
   if (selected)
     await validateSelectedParticleColorRecords({
       meta,
@@ -46,12 +122,14 @@ export async function loadNativeParticleColorBindings({
       raw,
       sha,
     });
-  for (const [name, h] of Object.entries(meta.sources))
-    if (sha(await raw(`${root}/${name}`)) !== h)
-      throw Error(`Native particle color source changed: ${name}`);
-  for (const [path, h] of Object.entries(meta.inputs))
-    if (sha(await raw(path)) !== h)
-      throw Error(`Native particle color input changed: ${path}`);
+  await verifyParticleColorProofInputs({
+    assets,
+    inputs: meta.inputs,
+    sources: meta.sources,
+    raw,
+    sha,
+    recovery,
+  });
   const image = await raw(`${assets}/decoder-16.21-macos/image.bin`);
   if (sha(image) !== meta.decoderImageSha256)
     throw Error("Native color decoder image differs");
