@@ -139,6 +139,71 @@ describe("buildSoftwareVideoGraph", () => {
       }),
     ).toEqual({ kind: "filterChain", filters: ["scale=1280:720"] });
   });
+
+  test("text subtitles with fontsDir: libass gets the attached-fonts directory", () => {
+    const graph = buildSoftwareVideoGraph({
+      width: 1280,
+      height: 720,
+      inputColor: "sdr",
+      subtitle: {
+        path: "/tmp/streambot-subs/x/track.ass",
+        fontsDir: "/tmp/streambot-subs/x/fonts",
+        startTime: 0,
+      },
+      encoderOutFilters: [],
+    });
+    expect(graph).toEqual({
+      kind: "filterChain",
+      filters: [
+        "scale=1280:720",
+        "subtitles=filename=/tmp/streambot-subs/x/track.ass:fontsdir=/tmp/streambot-subs/x/fonts",
+      ],
+    });
+  });
+
+  test("image subtitles: filter_complex overlays the fitted subtitle stream after the tonemap", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1920,
+        height: 804,
+        inputColor: "hdr",
+        videoStreamIndex: 0,
+        subtitle: { kind: "image", streamIndex: 3 },
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterComplex",
+      graph: [
+        `[0:v:0]scale=1920:804,${SOFTWARE_TONEMAP_CHAIN}[main]`,
+        "[0:s:3]scale=1920:804:force_original_aspect_ratio=decrease," +
+          "pad=1920:804:-1:-1:color=black@0,format=bgra[subs]",
+        "[main][subs]overlay=eof_action=pass[vout]",
+      ],
+      mapLabel: "vout",
+    });
+  });
+
+  test("image subtitles + letterbox pad + encoder outFilters: subtitles fit the picture, centred on the padded frame", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        pad: { width: 1920, height: 1080 },
+        subtitle: { kind: "image", streamIndex: 0 },
+        encoderOutFilters: ["format=nv12|vaapi", "", "hwupload"],
+      }),
+    ).toEqual({
+      kind: "filterComplex",
+      graph: [
+        "[0:v]scale=1440:1080,pad=1920:1080:-1:-1:color=black[main]",
+        "[0:s:0]scale=1440:1080:force_original_aspect_ratio=decrease," +
+          "pad=1920:1080:-1:-1:color=black@0,format=bgra[subs]",
+        "[main][subs]overlay=eof_action=pass,format=nv12|vaapi,hwupload[vout]",
+      ],
+      mapLabel: "vout",
+    });
+  });
 });
 
 describe("buildVaapiVideoGraph", () => {
@@ -278,6 +343,50 @@ describe("buildVaapiVideoGraph", () => {
     expect(graph.graph[1]).toContain(
       String.raw`subtitles=filename=/tmp/it\'s \[v1\]\,final.srt:alpha=1`,
     );
+  });
+
+  test("text subtitles with fontsDir: escaped fontsdir before alpha on the canvas branch", () => {
+    const graph = buildVaapiVideoGraph({
+      width: 1280,
+      height: 720,
+      inputColor: "sdr",
+      subtitle: {
+        path: "/cache/abc.ass",
+        fontsDir: "/cache/abc,fonts",
+        startTime: 0,
+      },
+    });
+    if (graph.kind !== "filterComplex") {
+      throw new Error("expected a filterComplex graph");
+    }
+    expect(graph.graph[1]).toContain(
+      String.raw`subtitles=filename=/cache/abc.ass:fontsdir=/cache/abc\,fonts:alpha=1`,
+    );
+  });
+
+  test("image subtitles: the subtitle stream replaces the canvas, uploaded and blended with eof_action=pass", () => {
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 804,
+        frameRate: 30,
+        inputColor: "hdr",
+        uploadInput: true,
+        videoStreamIndex: 0,
+        subtitle: { kind: "image", streamIndex: 1 },
+      }),
+    ).toEqual({
+      kind: "filterComplex",
+      graph: [
+        "[0:v:0]hwupload,scale_vaapi=w=1920:h=804:format=p010," +
+          "tonemap_vaapi=format=nv12:t=bt709:m=bt709:p=bt709[base]",
+        "[0:s:1]scale=1920:804:force_original_aspect_ratio=decrease," +
+          "pad=1920:804:-1:-1:color=black@0,format=bgra,hwupload[subs]",
+        // Not shortest=1: the subtitle stream ends before the video does.
+        "[base][subs]overlay_vaapi=eof_action=pass[vout]",
+      ],
+      mapLabel: "vout",
+    });
   });
 
   test("interlaced: deinterlace_vaapi ahead of the scale, after the upload in upload mode", () => {

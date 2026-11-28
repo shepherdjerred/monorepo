@@ -55,29 +55,44 @@ type Fakes = {
   ffmpegLog: string;
 };
 
-async function setup(withCache: boolean): Promise<Fakes> {
+/** ffprobe JSON for the default fixture: one burnable embedded English subrip track. */
+const ENGLISH_SUBRIP = `{"streams":[{"codec_name":"subrip","tags":{"language":"eng"}}]}`;
+/** ffprobe JSON for an anime-style MKV: one ASS track and one attached font. */
+const ASS_TRACK = `{"streams":[{"codec_name":"ass","tags":{"language":"eng"}}]}`;
+const FONT_ATTACHMENT = `{"streams":[{"codec_name":"ttf","tags":{"filename":"Sign.ttf","mimetype":"application/x-truetype-font"}}]}`;
+
+async function setup(
+  withCache: boolean,
+  probe: { subtitles?: string; attachments?: string } = {},
+): Promise<Fakes> {
   const bin = await tmpDir("subcache-bin-");
   const media = await tmpDir("subcache-media-");
   const cacheDir = await tmpDir("subcache-cache-");
   const ffmpegLog = path.join(bin, "ffmpeg.calls");
   const ffprobeLog = path.join(bin, "ffprobe.calls");
 
-  // One burnable embedded English subrip track.
+  // `-select_streams s` lists subtitle tracks; `-select_streams t` lists attachments.
   const ffprobe = await fakeBin(
     bin,
     "ffprobe",
     ffprobeLog,
-    `printf '{"streams":[{"codec_name":"subrip","tags":{"language":"eng"}}]}'`,
+    `case "$*" in *"-select_streams t"*) printf '%s' '${probe.attachments ?? "{}"}' ;; *) printf '%s' '${probe.subtitles ?? ENGLISH_SUBRIP}' ;; esac`,
   );
-  // Write a minimal SRT to the dest (the last positional arg), mimicking `-c:s srt <dest>`. The
-  // dest-must-end-in-`.srt` guard mirrors real ffmpeg's muxer auto-detect: it picks the output format
-  // from the trailing extension and errors on anything unknown (PR #1172 shipped `.srt.tmp` and broke
-  // every cached extraction in prod). Keep this guard — it's the regression test for that class of bug.
+  // Write a minimal subtitle to the dest (the last positional arg), mimicking `-c:s srt <dest>` /
+  // `-c:s copy -f ass <dest>`, and each `-dump_attachment:t:<i> <path>` font. The dest-must-end-in-
+  // `.srt`/`.ass` guard mirrors real ffmpeg's muxer auto-detect: it picks the output format from the
+  // trailing extension and errors on anything unknown (PR #1172 shipped `.srt.tmp` and broke every
+  // cached extraction in prod). Keep this guard — it's the regression test for that class of bug.
   const ffmpeg = await fakeBin(
     bin,
     "ffmpeg",
     ffmpegLog,
-    `for dest in "$@"; do :; done\ncase "$dest" in *.srt) ;; *) echo "fake-ffmpeg: dest must end in .srt, got: $dest" >&2; exit 1 ;; esac\nprintf '1\\n00:00:01,000 --> 00:00:02,000\\nhi\\n' > "$dest"`,
+    [
+      `prev=""`,
+      `for arg in "$@"; do case "$prev" in -dump_attachment:t:*) printf 'font' > "$arg" || exit 1 ;; esac; prev="$arg"; dest="$arg"; done`,
+      `case "$dest" in *.srt|*.ass) ;; *) echo "fake-ffmpeg: dest must end in .srt or .ass, got: $dest" >&2; exit 1 ;; esac`,
+      String.raw`printf '1\n00:00:01,000 --> 00:00:02,000\nhi\n' > "$dest"`,
+    ].join("\n"),
   );
 
   const moviePath = path.join(media, "Movie.mkv");
@@ -106,7 +121,7 @@ describe("embedded subtitle cache", () => {
       undefined,
       signal,
     );
-    if (first === undefined) {
+    if (first?.kind !== "text") {
       throw new Error("expected a resolved subtitle on the first play");
     }
     expect(first.path.startsWith(cacheDir)).toBe(true);
@@ -122,7 +137,7 @@ describe("embedded subtitle cache", () => {
       undefined,
       signal,
     );
-    if (second === undefined) {
+    if (second?.kind !== "text") {
       throw new Error("expected a resolved subtitle on the second play");
     }
     expect(second.path).toBe(first.path);
@@ -149,7 +164,7 @@ describe("embedded subtitle cache", () => {
       undefined,
       signal,
     );
-    if (reExtracted === undefined) {
+    if (reExtracted?.kind !== "text") {
       throw new Error("expected a resolved subtitle after the file changed");
     }
     expect(reExtracted.cleanupPath).toBeUndefined();
@@ -166,11 +181,12 @@ describe("embedded subtitle cache", () => {
       undefined,
       signal,
     );
-    if (resolved === undefined) {
+    if (resolved?.kind !== "text") {
       throw new Error("expected a resolved subtitle");
     }
-    // Uncached extraction → one-shot temp file the streamer unlinks (cleanupPath === path).
-    expect(resolved.cleanupPath).toBe(resolved.path);
+    // Uncached extraction → a one-shot per-item temp directory the streamer removes.
+    expect(resolved.cleanupPath).toBe(path.dirname(resolved.path));
+    expect(resolved.path.endsWith(".srt")).toBe(true);
     expect(resolved.path.startsWith(cacheDir)).toBe(false);
     expect(await Bun.file(resolved.path).exists()).toBe(true);
   });
@@ -200,7 +216,7 @@ describe("resolveSubtitleForFile trackRef bypass (exact pick from the picker)", 
       { trackRef: { kind: "embedded", subtitleIndex: 0, codec: "subrip" } },
       signal,
     );
-    if (resolved === undefined) {
+    if (resolved?.kind !== "text") {
       throw new Error("expected a resolved subtitle");
     }
     expect(resolved.path.startsWith(cacheDir)).toBe(true);
@@ -219,12 +235,179 @@ describe("resolveSubtitleForFile trackRef bypass (exact pick from the picker)", 
       { trackRef: { kind: "sidecar", file: "Movie.es.srt" } },
       signal,
     );
-    if (resolved === undefined) {
+    if (resolved?.kind !== "text") {
       throw new Error("expected a resolved subtitle");
     }
     // Staged sidecars are always a one-shot temp copy (never the shared cache).
     expect(resolved.cleanupPath).toBe(resolved.path);
     const text = await readFile(resolved.path, "utf8");
     expect(text).toContain("hola");
+  });
+
+  test("an embedded image trackRef resolves to the input's own stream without running ffmpeg", async () => {
+    const { config, moviePath, ffmpegLog } = await setup(true);
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      {
+        trackRef: {
+          kind: "embedded",
+          subtitleIndex: 3,
+          codec: "hdmv_pgs_subtitle",
+        },
+      },
+      new AbortController().signal,
+    );
+    expect(resolved).toEqual({
+      kind: "image",
+      subtitleIndex: 3,
+      codec: "hdmv_pgs_subtitle",
+    });
+    expect(await Bun.file(ffmpegLog).exists()).toBe(false);
+  });
+});
+
+describe("ASS tracks keep their styling and fonts", () => {
+  test("cached: extracts .ass once with its fonts, and a cache hit returns both", async () => {
+    const { config, moviePath, cacheDir, ffmpegLog } = await setup(true, {
+      subtitles: ASS_TRACK,
+      attachments: FONT_ATTACHMENT,
+    });
+    const signal = new AbortController().signal;
+
+    const first = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      undefined,
+      signal,
+    );
+    if (first?.kind !== "text") throw new Error("expected a text subtitle");
+    expect(first.path.startsWith(cacheDir)).toBe(true);
+    expect(first.path.endsWith(".ass")).toBe(true);
+    expect(first.cleanupPath).toBeUndefined();
+    expect(first.fontsDir).toBe(first.path.replace(/\.ass$/u, ".fonts"));
+    expect(
+      await Bun.file(path.join(first.fontsDir ?? "", "font-0.ttf")).exists(),
+    ).toBe(true);
+
+    const second = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      undefined,
+      signal,
+    );
+    expect(second).toEqual(first);
+    expect(await callCount(ffmpegLog)).toBe(1);
+  });
+
+  test("uncached: track and fonts share one per-item temp directory that is the cleanup unit", async () => {
+    const { config, moviePath, cacheDir } = await setup(false, {
+      subtitles: ASS_TRACK,
+      attachments: FONT_ATTACHMENT,
+    });
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      undefined,
+      new AbortController().signal,
+    );
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
+    expect(resolved.path.startsWith(cacheDir)).toBe(false);
+    expect(path.basename(resolved.path)).toBe("track.ass");
+    expect(resolved.cleanupPath).toBe(path.dirname(resolved.path));
+    expect(resolved.fontsDir).toBe(
+      path.join(resolved.cleanupPath ?? "", "fonts"),
+    );
+    expect(
+      await Bun.file(path.join(resolved.fontsDir ?? "", "font-0.ttf")).exists(),
+    ).toBe(true);
+  });
+
+  test("an ASS track without font attachments burns with system fonts (no fontsDir)", async () => {
+    const { config, moviePath } = await setup(true, { subtitles: ASS_TRACK });
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      undefined,
+      new AbortController().signal,
+    );
+    if (resolved?.kind !== "text") throw new Error("expected a text subtitle");
+    expect(resolved.path.endsWith(".ass")).toBe(true);
+    expect(resolved.fontsDir).toBeUndefined();
+  });
+});
+
+describe("automatic selection never burns a foreign-language track", () => {
+  const FRENCH_ONLY = `{"streams":[{"codec_name":"subrip","tags":{"language":"fre"}}]}`;
+
+  test("a file whose only track is foreign plays without subtitles", async () => {
+    const { config, moviePath, ffmpegLog } = await setup(true, {
+      subtitles: FRENCH_ONLY,
+    });
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      undefined,
+      new AbortController().signal,
+    );
+    expect(resolved).toBeUndefined();
+    expect(await Bun.file(ffmpegLog).exists()).toBe(false);
+  });
+
+  test("an explicit pick of that foreign track still burns it", async () => {
+    const { config, moviePath } = await setup(true, {
+      subtitles: FRENCH_ONLY,
+    });
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { trackRef: { kind: "embedded", subtitleIndex: 0, codec: "subrip" } },
+      new AbortController().signal,
+    );
+    expect(resolved?.kind).toBe("text");
+  });
+
+  test("a sublang request for that language burns it", async () => {
+    const { config, moviePath } = await setup(true, {
+      subtitles: FRENCH_ONLY,
+    });
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { language: "fr" },
+      new AbortController().signal,
+    );
+    expect(resolved?.kind).toBe("text");
+  });
+
+  test("an untagged (und) track is still auto-burned", async () => {
+    const { config, moviePath } = await setup(true, {
+      subtitles: `{"streams":[{"codec_name":"subrip","tags":{"language":"und"}}]}`,
+    });
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      undefined,
+      new AbortController().signal,
+    );
+    expect(resolved?.kind).toBe("text");
+  });
+
+  test("an English PGS track is preferred over a foreign text track", async () => {
+    const { config, moviePath, ffmpegLog } = await setup(true, {
+      subtitles: `{"streams":[{"codec_name":"subrip","tags":{"language":"ita"},"disposition":{"forced":1}},{"codec_name":"hdmv_pgs_subtitle","tags":{"language":"eng"}}]}`,
+    });
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      undefined,
+      new AbortController().signal,
+    );
+    expect(resolved).toEqual({
+      kind: "image",
+      subtitleIndex: 1,
+      codec: "hdmv_pgs_subtitle",
+    });
+    expect(await Bun.file(ffmpegLog).exists()).toBe(false);
   });
 });

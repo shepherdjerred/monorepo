@@ -42,6 +42,7 @@ import {
   formatCoordination,
   type CoordinationSummary,
 } from "#lib/forum.ts";
+import { incidentSuffix, redMainIncident } from "#lib/incidents/main-ci.ts";
 import {
   mainFailure,
   reportCommandError,
@@ -69,6 +70,8 @@ export async function reportResult(
 ): Promise<void> {
   const { signal, coordination } = options;
   const report = await resultReport(result, observer, signal);
+  // Advisory: the lookup never throws, so the exit code below is unchanged.
+  const incident = await redMainIncident(result.verdict.outcome === "main_red");
   console.log(
     sanitizeText(
       json
@@ -76,11 +79,12 @@ export async function reportResult(
             {
               ...report,
               ...(coordination === undefined ? {} : { coordination }),
+              ...(incident === undefined ? {} : { incident }),
             },
             null,
             2,
           )
-        : `${formatResult(report)}${coordination === undefined ? "" : `\n${formatCoordination(coordination)}`}`,
+        : `${formatResult(report)}${coordination === undefined ? "" : `\n${formatCoordination(coordination)}`}${incidentSuffix(incident)}`,
       [observer.github.token, observer.woodpecker.token],
     ),
   );
@@ -391,13 +395,15 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
           secrets,
         )
       : [];
+  const incident = await redMainIncident(main.state === "red");
   const report = {
     ...summarizeMain(main, observer),
     diagnostics,
     coordination: await coordinationSummary(["main", "ci"]),
+    ...(incident === undefined ? {} : { incident }),
     guidance:
       main.state === "red"
-        ? "Main is red. Read active threads with toolkit forum list --json; follow an owned recovery, repair main if your changes caused the failure, or claim/post a notice (--owner me) to fix an unowned blocker when no better owner is working on it. Otherwise continue your task."
+        ? "Main is red. Check the main-ci incident below (toolkit incident wait INC-N, or take it if you caused it) and read active threads with toolkit forum list --json; follow an owned recovery, repair main if your changes caused the failure, or claim/post a notice (--owner me) to fix an unowned blocker when no better owner is working on it. Otherwise continue your task."
         : "Pending builds are expected; main's current build is shown separately from its last verdict.",
   };
   const text = [
@@ -413,7 +419,7 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
       ].join("\n"),
     ),
     report.guidance,
-    formatCoordination(report.coordination),
+    formatCoordination(report.coordination) + incidentSuffix(incident),
   ].join("\n");
   console.log(
     sanitizeText(json ? JSON.stringify(report, null, 2) : text, secrets),

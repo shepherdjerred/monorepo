@@ -68,10 +68,12 @@ export async function runStreamWithFallback(
 async function cleanupSubtitle(
   subtitle: ResolvedSubtitle | undefined,
 ): Promise<void> {
-  // No cleanupPath → a persistent subtitle-cache entry shared across plays; never unlink it.
-  if (subtitle?.cleanupPath === undefined) return;
+  // An image track is the input's own stream (nothing staged). No cleanupPath → a persistent
+  // subtitle-cache entry shared across plays; never unlink it.
+  if (subtitle?.kind !== "text" || subtitle.cleanupPath === undefined) return;
   try {
-    await rm(subtitle.cleanupPath, { force: true });
+    // Recursive: an uncached ASS extraction stages its track and fonts in one per-item directory.
+    await rm(subtitle.cleanupPath, { recursive: true, force: true });
   } catch (error) {
     log.warn("failed to remove subtitle temp file", {
       path: subtitle.cleanupPath,

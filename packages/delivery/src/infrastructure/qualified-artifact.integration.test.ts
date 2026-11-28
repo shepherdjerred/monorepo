@@ -1,4 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
+import { DeliveryError } from "#domain/error.ts";
+import type { QualificationRequest } from "#infrastructure/qualification.ts";
 import type { PublishBuild } from "#shared/contract.ts";
 import { useDeliveryHttp } from "#testing/delivery-http-fixture.ts";
 import { testExecutor, testPublisher, testOperator } from "#testing/seed.ts";
@@ -9,6 +11,13 @@ const query = {
   kind: "image" as const,
 };
 const readerToken = "read-only-qualified-artifact-test-credential";
+let qualifyImpl: (
+  input: QualificationRequest,
+) => Promise<"pending" | "verified" | "failed"> = () =>
+  Promise.resolve("pending");
+beforeEach(() => {
+  qualifyImpl = () => Promise.resolve("pending");
+});
 const harness = useDeliveryHttp({
   machineCredentials: [
     {
@@ -22,6 +31,7 @@ const harness = useDeliveryHttp({
   ],
   writesEnabled: false,
   defaultToken: readerToken,
+  qualifyBuild: (input) => qualifyImpl(input),
 });
 const { client } = harness;
 async function publication(
@@ -892,5 +902,104 @@ test("a failed root reference fails a platform source and removes it as a retain
     ).toEqual({ status: "failed" });
   expect(await buildRow(concurrent.buildId)).toMatchObject({
     qualificationReason: `Retained artifact ${sibling.artifactId} (${query.component}) belongs to build ${sibling.buildId}, which failed qualification`,
+  });
+});
+
+describe("on-read pending qualification for latest-retainable (B2)", () => {
+  test("settles a canceled Woodpecker pipeline synchronously on read so the successor retains the live base and avoids B2 failure", async () => {
+    const live = await publication(10, "verified");
+    const canceledFirst = await publication(11);
+    const canceledSibling = await platformSource(11, canceledFirst.artifactId);
+    const stillRunning = await retaining(12, canceledFirst.artifactId);
+
+    const woodpeckerCalls: string[] = [];
+    qualifyImpl = (request) => {
+      woodpeckerCalls.push(request.ciUrl);
+      return Promise.resolve(
+        request.ciUrl.endsWith("/pipeline/11") ? "failed" : "pending",
+      );
+    };
+
+    const metricsBeforeResponse = await harness.app.request("/metrics");
+    const metricsBefore = await metricsBeforeResponse.text();
+    const failedBefore = Number(
+      /delivery_retainable_pending_qualifications_total\{outcome="failed"\} (\d+)/u.exec(
+        metricsBefore,
+      )?.[1] ?? "0",
+    );
+
+    // Pipeline 13 reads latest-retainable for both services:
+    // - For scout-for-lol: pipeline 12 is still running, but its retained base
+    //   (pipeline 11) is canceled in Woodpecker, so both 12 and 11 are skipped
+    //   and live pipeline 10 is returned.
+    expect(await retainableId(13)).toBe(live.artifactId);
+    expect(await buildRow(canceledFirst.buildId)).toMatchObject({
+      status: "failed",
+    });
+
+    // Pipeline 13 retains live.artifactId and qualifies cleanly without B2 build.incompatible.
+    const successor = await retaining(13, live.artifactId);
+    expect(
+      await harness.delivery.qualify(
+        successor.buildId,
+        "verified",
+        testExecutor,
+      ),
+    ).toEqual({ status: "verified" });
+
+    // Multi-build memoization within one request: gitops platformSource(20) and
+    // root publication(20) share pipeline 20 (queried once), then gitops walks
+    // down to platformSource(11) and settles it too.
+    woodpeckerCalls.length = 0;
+    const unpaidRoot = await publication(20);
+    const unpaidPlatform = await platformSource(20, unpaidRoot.artifactId);
+    qualifyImpl = (request) => {
+      woodpeckerCalls.push(request.ciUrl);
+      return Promise.resolve("failed");
+    };
+    await expect(
+      client().latestRetainableArtifact({
+        serviceId: "gitops",
+        component: "chart:apps",
+        kind: "chart",
+        beforePipeline: 21,
+      }),
+    ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });
+    expect(woodpeckerCalls).toEqual([
+      "https://woodpecker.sjer.red/repos/1/pipeline/20",
+      "https://woodpecker.sjer.red/repos/1/pipeline/11",
+    ]);
+    expect(await buildRow(unpaidPlatform.buildId)).toMatchObject({
+      status: "failed",
+    });
+    expect(await buildRow(canceledSibling.buildId)).toMatchObject({
+      status: "failed",
+    });
+    expect(await buildRow(stillRunning.buildId)).toMatchObject({
+      status: "pending",
+    });
+
+    const metricsAfterResponse = await harness.app.request("/metrics");
+    const metricsAfter = await metricsAfterResponse.text();
+    const failedAfter = Number(
+      /delivery_retainable_pending_qualifications_total\{outcome="failed"\} (\d+)/u.exec(
+        metricsAfter,
+      )?.[1] ?? "0",
+    );
+    expect(failedAfter).toBeGreaterThan(failedBefore);
+  });
+
+  test("treats transient PAUSED Woodpecker unavailability as leaving the candidate pending rather than 503-failing artifact reads", async () => {
+    await publication(10, "verified");
+    const pending = await publication(11);
+    qualifyImpl = () =>
+      Promise.reject(
+        new DeliveryError("PAUSED", "CI qualification unavailable (503)"),
+      );
+
+    expect(await retainableId(12)).toBe(pending.artifactId);
+    expect(await buildRow(pending.buildId)).toMatchObject({
+      status: "pending",
+    });
   });
 });

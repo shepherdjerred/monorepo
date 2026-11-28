@@ -20,16 +20,12 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "1.4.5",
-    "@typescript-eslint/utils": "^8.72.2",
     "eslint": "^10.7.0",
-    "eslint-plugin-unicorn": "^78.0.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.72.2",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "5.1.2",
     "@vitest/coverage-istanbul": "5.1.2"

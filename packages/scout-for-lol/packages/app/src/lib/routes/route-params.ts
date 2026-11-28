@@ -34,6 +34,10 @@ export const ConsumerChampionParamsSchema = z.object({
   championId: z.coerce.number().pipe(ChampionIdSchema),
 });
 
+export const ConsumerLiveGameParamsSchema = z.object({
+  riotMatchId: RiotMatchIdSchema,
+});
+
 export const ConsumerMatchParamsSchema = z.object({
   playerId: z.coerce.number().pipe(PlayerIdSchema),
   matchId: RiotMatchIdSchema,
@@ -117,6 +121,12 @@ export function useConsumerChampionParams(): z.infer<
   typeof ConsumerChampionParamsSchema
 > {
   return parseRouteParams(ConsumerChampionParamsSchema, useParams());
+}
+
+export function useConsumerLiveGameParams(): z.infer<
+  typeof ConsumerLiveGameParamsSchema
+> {
+  return parseRouteParams(ConsumerLiveGameParamsSchema, useParams());
 }
 
 export function useConsumerMatchParams(): z.infer<

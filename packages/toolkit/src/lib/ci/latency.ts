@@ -37,7 +37,7 @@ function phaseKind(workflow: string, step: string): string {
   if (step === "clone") return "checkout";
   if (step === "bootstrap") return "bootstrap";
   if (workflow.includes("review")) return "review";
-  if (workflow === "verify" || workflow === "playwright-e2e")
+  if (["verify", "playwright-e2e", "playwright-media-e2e"].includes(workflow))
     return "verification";
   if (["images", "helm-push", "publish", "github-release"].includes(workflow))
     return "publication";

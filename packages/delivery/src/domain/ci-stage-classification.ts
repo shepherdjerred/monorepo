@@ -16,6 +16,7 @@ const WORKFLOW_STAGES: Record<string, CiStage> = {
   "alert-dashboard-sqlite": "build",
   verify: "test",
   "playwright-e2e": "test",
+  "playwright-media-e2e": "test",
   "docker-e2e": "test",
   "trmnl-validate": "test",
   semgrep: "test",

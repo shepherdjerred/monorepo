@@ -237,7 +237,8 @@ export const ConfigSchema = z.strictObject({
     enabled: z.boolean().default(true),
     /**
      * Language preference order (e.g. `en`, `eng`, `en-US`). Matched against sidecar/embedded/yt-dlp
-     * track languages; falls back to the first available track when none match.
+     * track languages. Only a track in one of these languages (or with no language tag) is burned
+     * automatically; when none match, playback has no subtitles until the user picks a track.
      */
     languages: z.array(z.string().min(1)).default(["en", "eng", "en-US"]),
     /** For yt-dlp sources: fall back to auto-generated captions when no human subtitles exist. */

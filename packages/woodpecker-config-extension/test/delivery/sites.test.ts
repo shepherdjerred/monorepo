@@ -29,6 +29,7 @@ test("every static producer publishes immutable archives with no activation cred
   expect(step.dependsOn).toEqual([
     "verify",
     "playwright-e2e",
+    "playwright-media-e2e",
     "resume-build",
     "scout-site-archives",
   ]);

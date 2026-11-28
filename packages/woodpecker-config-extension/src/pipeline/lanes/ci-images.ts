@@ -116,7 +116,9 @@ function ciServiceRegistrationStep(images: CiImages): CiStep {
       DOCKERHUB_READ_LOGIN,
       "bun --no-install ci/scripts/images/register-ci-service-build.ts",
     ],
-    dependsOn: ["verify"],
+    // Wait for image and chart producers so zero Delivery builds are registered
+    // before the pipeline enters its post-verify publication phase.
+    dependsOn: ["verify", "images", "helm-push"],
     defaultBranchOnly: true,
     timeoutMinutes: 10,
     resources: LIGHT_TIER,

@@ -20,16 +20,21 @@ reference.
 
 - `ci wait` owns one foreground wait pinned to a PR head. Recheck merge inputs
   before reporting ready; never turn queue latency or a requested timeout into
-  a CI failure. If main is red, read active forum threads and failure evidence:
-  follow an owned recovery, repair failures your changes caused, or claim/post
-  a `notice` (`--owner me`) before picking up an unowned blocker with no better
-  active owner; otherwise continue your task.
+  a CI failure. If main is red, the report names the main-ci incident: take it
+  when you caused it, otherwise `incident wait` on it (`incident-response`);
+  otherwise continue your task.
 - `artifacts wait` claims over the service's tRPC, subscribes to its event
   stream first, re-claims on every wake and reconnect, and acknowledges only
   after stdout is flushed; a dropped stream never ends it. The CLI imports only
   `@shepherdjerred/artifacts/contract` and `/procedures`, never server code,
   sends no token (the Tailscale login is the credential), and redacts content
   tokens from everything it prints.
+- `incident wait` holds one change stream and arms one timer for the next
+  server deadline; it never polls. The server's compare-and-set dispatch lease
+  is the only lock: never add a client-side one. The dispatch token never
+  reaches argv, output, logs, or the first message (which downstream tools put
+  on command lines); the message carries a handle to a private token file.
+  Incident lookups in `ci` reports are advisory and never change an exit code.
 - `pr health` compares local merge-tree, the exact-head Woodpecker pipeline,
   and GitHub metadata. The exact-head pipeline wins over lagging summaries.
 - `deployed` keeps merge, image publication, catalog pin, ArgoCD state, running

@@ -1,3 +1,4 @@
+import { subtitleFormatLabel } from "@shepherdjerred/streambot/sources/subtitle-formats.ts";
 import type { SubtitleTrackRef } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   subtitleTrackRef,
@@ -248,6 +249,10 @@ function candidateLabel(candidate: SubtitleCandidate): string {
       : "") +
     (candidate.modifier === null ? "" : " · " + candidate.modifier) +
     " · " +
-    candidate.kind
+    candidate.kind +
+    // A remux often carries the same language as text and image (PGS) tracks.
+    (candidate.kind === "embedded"
+      ? " " + subtitleFormatLabel(candidate.codec)
+      : "")
   );
 }

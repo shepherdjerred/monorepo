@@ -32,6 +32,7 @@ export function useDeliveryHttp(options: {
   machineCredentials: RuntimeConfig["machineCredentials"];
   writesEnabled: boolean;
   defaultToken: string;
+  qualifyBuild?: Parameters<typeof createApp>[0]["qualifyBuild"];
 }) {
   let cluster: TestCluster;
   let delivery: Delivery;
@@ -43,7 +44,7 @@ export function useDeliveryHttp(options: {
       delivery,
       ciOrigin: "https://woodpecker.sjer.red",
       ciRepositoryId: 1,
-      qualifyBuild: () => Promise.resolve("verified"),
+      qualifyBuild: options.qualifyBuild ?? (() => Promise.resolve("pending")),
       peerAddress: () => "127.0.0.1",
       config: {
         publicOrigin: "http://delivery.test",

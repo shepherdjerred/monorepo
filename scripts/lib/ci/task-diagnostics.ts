@@ -91,6 +91,7 @@ const BrowserSelectionSchema = z.object({
     .regex(/^[a-f\d]{40}$/u)
     .nullable(),
   mode: z.enum(["all", "selected"]),
+  partition: z.enum(["all", "primary", "media"]).optional(),
   targets: z.array(z.object({ package: Name, cache: Name })),
 });
 
@@ -134,7 +135,12 @@ export const TaskDiagnosticsSchema = z.object({
   version: z.literal(1),
   pipeline: z.string().regex(/^\d+$/u),
   commit: z.string().regex(/^[a-f\d]{40}$/u),
-  workflow: z.enum(["verify", "playwright-e2e", "verify-extended"]),
+  workflow: z.enum([
+    "verify",
+    "playwright-e2e",
+    "playwright-media-e2e",
+    "verify-extended",
+  ]),
   startedAt: Timestamp,
   finishedAt: Timestamp,
   exitCode: z.number().int(),
@@ -266,8 +272,11 @@ export async function collectTaskDiagnostics(
   );
   const selectionPath = path.join(root, "playwright-selection-report.json");
   const selectionFile = Bun.file(selectionPath);
+  const isBrowserWorkflow =
+    identity.workflow === "playwright-e2e" ||
+    identity.workflow === "playwright-media-e2e";
   const browserSelection =
-    identity.workflow === "playwright-e2e" && (await selectionFile.exists())
+    isBrowserWorkflow && (await selectionFile.exists())
       ? BrowserSelectionSchema.parse(await readBoundedJson(selectionPath))
       : undefined;
   return TaskDiagnosticsSchema.parse({
