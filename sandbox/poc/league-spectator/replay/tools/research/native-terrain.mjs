@@ -1,5 +1,6 @@
 import { PerspectiveCamera, Vector3 } from "/three.core.js";
 import { createChampionModelRenderer } from "./native-terrain-actors.mjs";
+import { createRecordedParticleRenderer } from "./native-terrain-recorded-particles.mjs";
 import {
   createChampionOverhead,
   projectChampionTop,
@@ -318,6 +319,7 @@ export function createTerrainRenderer(
     inhibitorModels,
     worldUnitModels,
     animationPalettesAt,
+    recordedParticles,
   } = {},
 ) {
   const gl = canvas.getContext("webgl2", {
@@ -459,9 +461,11 @@ export function createTerrainRenderer(
     ),
   );
   let disposed = false;
+  let particleRenderer;
   function dispose() {
     if (disposed) return;
     disposed = true;
+    particleRenderer?.dispose();
     overhead?.dispose();
     gl.bindVertexArray(null);
     gl.useProgram(null);
@@ -476,6 +480,11 @@ export function createTerrainRenderer(
     gl.deleteProgram(program);
   }
   try {
+    if (recordedParticles !== undefined)
+      particleRenderer = createRecordedParticleRenderer(
+        gl,
+        recordedParticles.assets,
+      );
     if (
       championModels !== undefined ||
       structureModels !== undefined ||
@@ -696,6 +705,12 @@ export function createTerrainRenderer(
       drawMarkers(
         frame.markers.flatMap(({ position, teamId }) => [...position, teamId]),
         13 * ratio,
+      );
+    if (particleRenderer !== undefined && options.showRecordedParticles)
+      particleRenderer.draw(
+        viewProjection.elements,
+        camera,
+        recordedParticles.sampleAt(frame.timeSeconds),
       );
     if (
       championModels !== undefined &&

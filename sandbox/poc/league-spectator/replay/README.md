@@ -774,6 +774,21 @@ alpha cutoff and a frame without a draw. This establishes the buffer layout
 under the supplied geometry and textures. Recorded playback has its own
 activation, material, and visibility checks.
 
+The recorded Scout preview can draw the seven reviewed Heimerdinger W impacts
+from the saved `16.23.841.8428` Rift replay. Prepare the track with the reviewed
+placement, native curve, texture, and shader receipts.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-native-terrain-recorded-particles.mjs --placements $placementReceipt --flash $flashReceipt --bubble $bubbleReceipt --textures $textureReceipt --vertex $translatedVertex --pixel $translatedPixel --out $newPrivateParticleDirectory
+```
+
+Pass the resulting `recorded-particles.json` to the private package builder with
+`--recorded-particles` and its SHA-256 with `--recorded-particles-sha256`. The
+player draws the measured particle samples during playback and after seeking in
+All vision. The preview uses the cold color-remap resource and a camera-facing
+quad. Active match remapping, other effects, and team visibility for particles
+remain outside the preview.
+
 The animation verifier samples an explicitly chosen authored clip against the
 original joint layout and checks exact rewind. The death verifier joins
 corroborated recorded deaths to authored clip and sound references from the

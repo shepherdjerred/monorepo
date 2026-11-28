@@ -25,6 +25,7 @@ import {
 import {
   observeRecordedReplayRequests,
   seek,
+  verifyRecordedParticlePreview,
 } from "./recorded-replay-fixture.ts";
 import {
   readRecordedTerrainRanges,
@@ -494,4 +495,5 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
       },
       testInfo,
     );
+  await verifyRecordedParticlePreview(page, fixture);
 });

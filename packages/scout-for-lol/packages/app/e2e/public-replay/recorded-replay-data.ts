@@ -476,6 +476,7 @@ export async function readRecordedReplay() {
       directWorldObservations || capabilities.directChampionObservations,
     announcerEvents: scene.workerMotion?.announcerEvents,
     announcerPreview: inventory.capabilities.announcerPreview,
+    particlePreview: inventory.capabilities.particlePreview,
     championAnimationCueCount: championAnimationCues?.length ?? 0,
     ...capabilities,
     descriptor: {

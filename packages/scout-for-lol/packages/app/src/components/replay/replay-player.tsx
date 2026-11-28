@@ -61,6 +61,24 @@ export function ReplayPlayer(props: {
   );
 }
 
+function ReplayParticleCoverage({
+  presentation,
+}: {
+  presentation: {
+    capabilities: ReplayPresentationCapabilities | undefined;
+  } | null;
+}) {
+  if (
+    presentation?.capabilities?.particlePreview !== "verified-partial-effects"
+  )
+    return null;
+  return (
+    <p className="px-3 pt-2 text-xs text-muted-foreground">
+      Verified partial effects · Heimerdinger W impacts in All vision
+    </p>
+  );
+}
+
 /** Shared session ownership for the public player and explicitly labeled local research. */
 export function ReplaySessionPlayer(props: {
   initialize: (
@@ -328,6 +346,7 @@ export function ReplaySessionPlayer(props: {
       </div>
       {ready && (
         <>
+          <ReplayParticleCoverage presentation={presentation} />
           <ReplayControls
             state={state}
             controls={controls}

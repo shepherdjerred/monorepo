@@ -57,6 +57,8 @@ const { positionals, values } = parseArgs({
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
     "announcer-catalog": { type: "string" },
+    "recorded-particles": { type: "string" },
+    "recorded-particles-sha256": { type: "string" },
     "worker-decompressor": { type: "string" },
     "camera-globals": { type: "string" },
     "terrain-materials": { type: "string" },
@@ -2847,6 +2849,16 @@ if (announcerCatalogDirectory !== undefined) {
 }
 const source = (name) =>
   Bun.file(new URL(`./research/${name}`, import.meta.url));
+const particleManifest = values["recorded-particles"];
+const particleDigest = values["recorded-particles-sha256"];
+assert.ok(
+  (particleManifest === undefined && particleDigest === undefined) ||
+    (particleManifest !== undefined &&
+      particleDigest !== undefined &&
+      privatePackageOutput !== undefined &&
+      currentBuild),
+  "Recorded particles require a pinned manifest and the private current package",
+);
 const routes = new Map([
   ["/", [source("native-terrain.html"), "text/html; charset=utf-8"]],
   [
@@ -2864,6 +2876,13 @@ const routes = new Map([
   [
     "/native-terrain-overhead.mjs",
     [source("native-terrain-overhead.mjs"), "text/javascript; charset=utf-8"],
+  ],
+  [
+    "/native-terrain-recorded-particles.mjs",
+    [
+      source("native-terrain-recorded-particles.mjs"),
+      "text/javascript; charset=utf-8",
+    ],
   ],
   ["/three.core.js", [Bun.file(threeCore), "text/javascript; charset=utf-8"]],
   ["/map.json", [metadata, "application/json"]],
@@ -2907,14 +2926,23 @@ if (motionWorker !== undefined) {
 }
 assert.ok(await Bun.file(threeCore).exists(), "Missing local Three.js vendor");
 if (privatePackageOutput !== undefined) {
-  const { writeLocalScoutTerrainPackage } =
+  const { readLocalRecordedParticles, writeLocalScoutTerrainPackage } =
     await import("./build-local-scout-terrain-package.mjs");
+  const particleFiles =
+    particleManifest === undefined
+      ? undefined
+      : await readLocalRecordedParticles(
+          particleManifest,
+          particleDigest,
+          identity,
+        );
   const result = await writeLocalScoutTerrainPackage({
     output: privatePackageOutput,
     identity,
     routes,
     threeCore,
     announcerFiles,
+    particleFiles,
   });
   console.log(JSON.stringify(result));
   process.exit(0);

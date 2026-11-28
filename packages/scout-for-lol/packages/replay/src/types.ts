@@ -4,6 +4,7 @@ export type ReplayPresentationCapabilities = Readonly<{
   directedCamera: boolean;
   rates?: readonly number[];
   announcerPreview?: "female1-en-us";
+  particlePreview?: "verified-partial-effects";
   minimapUrl?: string;
   unitVisibility?: true;
   timelineEvents?: readonly Readonly<{

@@ -1,5 +1,10 @@
 import { expect, type Page } from "@playwright/test";
-import { apiPath, packagePrefix } from "./recorded-replay-data.ts";
+import { readRecordedDraw } from "./recorded-draw-probe.ts";
+import {
+  apiPath,
+  packagePrefix,
+  type readRecordedReplay,
+} from "./recorded-replay-data.ts";
 
 export async function observeRecordedReplayRequests(
   page: Page,
@@ -37,4 +42,31 @@ export async function seek(page: Page, seconds: number) {
   }, String(seconds));
   await expect(slider).toHaveValue(String(seconds));
   await expect(slider).toHaveAttribute("aria-busy", "false");
+}
+
+export async function verifyRecordedParticlePreview(
+  page: Page,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+) {
+  if (fixture.particlePreview === undefined) return;
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  const count = async () => {
+    const draw = await readRecordedDraw(page);
+    return draw.recordedParticleDraws;
+  };
+  const expectAt = async (seconds: number, draws: number) => {
+    await seek(page, seconds);
+    await expect.poll(count).toBe(draws);
+  };
+  await vision.selectOption("all");
+  await expectAt(2094.9, 0);
+  // Two detached impacts with two authored components each.
+  await expectAt(2095.2, 4);
+  await vision.selectOption("blue");
+  await expect.poll(count).toBe(0);
+  await vision.selectOption("all");
+  await expect.poll(count).toBe(4);
+  await expectAt(2095.6, 0);
+  await expectAt(2095.2, 4);
+  await expectAt(2094.9, 0);
 }

@@ -43,6 +43,10 @@ import {
   NeutralObjectiveWorkerKillsSchema,
 } from "./scout-terrain-objectives.ts";
 import {
+  loadRecordedTerrainParticles,
+  type LoadedTerrainParticles,
+} from "./scout-terrain-particles.ts";
+import {
   currentTerrainPositionBuild,
   terrainPositionBuild,
   terrainPositionProtocol,
@@ -1190,6 +1194,7 @@ export type RendererModule = {
       nexusModels?: LoadedChampionModels;
       inhibitorModels?: LoadedChampionModels;
       worldUnitModels?: LoadedChampionModels;
+      recordedParticles?: LoadedTerrainParticles;
     },
   ) => {
     draw: (
@@ -1200,6 +1205,7 @@ export type RendererModule = {
         useFollowDefaults?: true;
         distance?: number;
         zoom?: number;
+        showRecordedParticles?: boolean;
         championHealthAt?: (
           participantId: number,
           timeSeconds: number,
@@ -2600,6 +2606,7 @@ export async function loadRenderer(
   signal: AbortSignal,
   read: ReadTerrainAsset,
   render: RendererModule,
+  hasRecordedParticles: boolean,
 ) {
   const [metadata, bytes, animationPalettesAt] = await Promise.all([
     read("/map.json").then(parseTerrainJson),
@@ -2620,7 +2627,14 @@ export async function loadRenderer(
   let nexusModels: LoadedChampionModels | undefined;
   let inhibitorModels: LoadedChampionModels | undefined;
   let worldUnitModels: LoadedChampionModels | undefined;
+  let recordedParticles: LoadedTerrainParticles | undefined;
   try {
+    if (hasRecordedParticles)
+      recordedParticles = await loadRecordedTerrainParticles(
+        read,
+        scene.identity,
+        signal,
+      );
     if (scene.championModels !== undefined)
       championModels = await render.loadChampionModels(
         scene.championModels.bindings,
@@ -2660,6 +2674,7 @@ export async function loadRenderer(
       inhibitorModels,
       worldUnitModels,
       animationPalettesAt,
+      recordedParticles,
     });
   } finally {
     if (championModels !== undefined)
@@ -2672,6 +2687,7 @@ export async function loadRenderer(
     if (worldUnitModels !== undefined)
       render.closeChampionModelImages(worldUnitModels);
     await materials?.closeImages();
+    recordedParticles?.closeImages();
   }
   return renderer;
 }

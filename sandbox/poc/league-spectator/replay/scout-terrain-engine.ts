@@ -340,6 +340,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     }
   }
   const announcerProfile = localManifest.capabilities.announcerPreview;
+  const particlePreview = localManifest.capabilities.particlePreview;
   if (
     announcerProfile === undefined &&
     scene.workerMotion?.announcerEvents !== undefined
@@ -348,12 +349,14 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "invalid-package",
       "Replay-derived announcements require the announcer preview capability.",
     );
-  if (announcerProfile !== undefined) {
+  if (announcerProfile !== undefined || particlePreview !== undefined) {
     const replayDigest = await sha256Hex(replay);
     if (replayDigest !== localManifest.capabilities.replaySha256)
       throw new ReplayCapabilityError(
         "incompatible-build",
-        "The announcer preview belongs to another saved replay.",
+        particlePreview === undefined
+          ? "The announcer preview belongs to another saved replay."
+          : "The particle preview belongs to another saved replay.",
       );
   }
   if (
@@ -419,6 +422,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     signal,
     read,
     terrainRenderer,
+    particlePreview !== undefined,
   );
   let width = canvas.clientWidth || canvas.width;
   let height = canvas.clientHeight || canvas.height;
@@ -465,6 +469,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
               height,
               devicePixelRatio,
               zoom: zoom(),
+              showRecordedParticles: perspective === "all",
               isVisible,
               ...(data.championHealthAt === undefined
                 ? {}
@@ -552,6 +557,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       rates: [0.5, 1, 2, 4],
       minimapUrl,
       timelineEvents,
+      ...(particlePreview === undefined ? {} : { particlePreview }),
       ...(announcer === undefined ? {} : { announcerPreview: "female1-en-us" }),
     },
     ...(announcer === undefined

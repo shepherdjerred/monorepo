@@ -10,5 +10,6 @@ export const LocalScoutTerrainManifestSchema =
       rosterCoverage: z.literal("recorded-replay"),
       replaySha256: z.string().regex(/^[0-9a-f]{64}$/),
       announcerPreview: z.literal("female1-en-us").optional(),
+      particlePreview: z.literal("verified-partial-effects").optional(),
     }),
   });
