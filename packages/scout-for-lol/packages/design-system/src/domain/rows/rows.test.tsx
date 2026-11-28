@@ -334,6 +334,21 @@ describe("ChampionCard", () => {
     expect(html).not.toContain("scout-champion-card__tier");
   });
 
+  test("shows a note under the figures, without a tier", () => {
+    const html = renderToStaticMarkup(
+      <ChampionCard
+        champion="Garen"
+        href="#garen"
+        winRate={48.9}
+        games={410}
+        note="Wins lane, loses the game"
+      />,
+    );
+    expect(html).toContain("scout-champion-card__note");
+    expect(html).toContain("Wins lane, loses the game");
+    expect(html).toContain("from 410 games");
+  });
+
   test("leaves out the win rate and games when they are not given", () => {
     const html = renderToStaticMarkup(
       <ChampionCard

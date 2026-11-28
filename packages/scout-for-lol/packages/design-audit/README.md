@@ -1,16 +1,16 @@
 # Scout design audit
 
-The design audit exercises all 63 shipped Scout public, documentation, and app
-routes through a deliberate 684-case matrix. Every route gets all four themes
+The design audit exercises all 64 shipped Scout public, documentation, and app
+routes through a deliberate 702-case matrix. Every route gets all four themes
 on Chromium desktop, classic-light responsive coverage on Chromium tablet and
-mobile, and modern-light coverage on WebKit desktop and mobile. The 18 visual
+mobile, and modern-light coverage on WebKit desktop and mobile. The 19 visual
 golden routes retain the complete four-theme, four-viewport Chromium matrix.
 It is read-only: app forms are rendered and keyboard-tested, but no mutation is
 submitted.
 
-The deduplicated total is 252 all-route Chromium desktop cases, 126 all-route
-classic-light Chromium tablet/mobile cases, 180 additional golden-route
-Chromium theme/viewport cases, and 126 all-route modern-light WebKit
+The deduplicated total is 256 all-route Chromium desktop cases, 128 all-route
+classic-light Chromium tablet/mobile cases, 190 additional golden-route
+Chromium theme/viewport cases, and 128 all-route modern-light WebKit
 desktop/mobile cases.
 
 Run the deterministic checks locally with:

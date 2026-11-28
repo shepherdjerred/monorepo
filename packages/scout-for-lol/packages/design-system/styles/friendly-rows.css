@@ -538,6 +538,14 @@ a.scout-sticker:hover .scout-face {
   white-space: nowrap;
 }
 
+/* A short fact under the figures, such as "Wins lane, loses the game". */
+.scout-champion-card__note {
+  white-space: normal;
+  text-wrap: balance;
+  line-height: 1.3;
+  padding-block: 4px;
+}
+
 /* ---------- narrower ---------- */
 
 @media (max-width: 720px) {

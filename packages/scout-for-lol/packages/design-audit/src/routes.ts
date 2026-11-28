@@ -44,6 +44,13 @@ const publicRoutes: AuditRoute[] = [
     golden: true,
   },
   {
+    name: "matchup",
+    surface: "public",
+    path: "/champions/ahri/middle/vs/syndra/",
+    authenticated: false,
+    golden: true,
+  },
+  {
     name: "privacy",
     surface: "public",
     path: "/privacy/",

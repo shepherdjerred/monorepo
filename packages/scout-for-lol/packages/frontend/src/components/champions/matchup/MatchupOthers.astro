@@ -1,0 +1,40 @@
+---
+import { ChampionCard } from "@scout-for-lol/design-system/domain/rows/champion-card";
+import type { MatchupPageModel } from "#src/components/champions/matchup/model.ts";
+
+interface Props {
+  championName: string;
+  /** The champion page this matchup belongs to, "See Ahri in Mid". */
+  home: { href: string; label: string };
+  others: MatchupPageModel["others"];
+}
+
+const { championName, home, others } = Astro.props;
+---
+
+{others.length > 0 && (
+  <section
+    class="scout-soft-panel scout-soft-panel--open"
+    aria-labelledby="others-h"
+  >
+    <div class="champions-head">
+      <h2 id="others-h">{championName} against someone else</h2>
+      <a class="champions-link" href={home.href}>
+        {home.label}
+      </a>
+    </div>
+    <ul class="champions-cards champions-cards-five">
+      {others.map((row) => (
+        <li>
+          <ChampionCard
+            champion={row.id}
+            href={row.href}
+            winRate={row.winRate}
+            games={row.games}
+            {...(row.note === null ? {} : { note: row.note })}
+          />
+        </li>
+      ))}
+    </ul>
+  </section>
+)}

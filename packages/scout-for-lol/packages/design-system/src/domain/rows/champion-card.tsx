@@ -28,6 +28,8 @@ export type ChampionCardProps = {
   laneGames?: number;
   /** "S tier". */
   tier?: string;
+  /** A short fact under the figures: "Wins lane, loses the game". */
+  note?: string;
   className?: string;
 };
 
@@ -41,6 +43,7 @@ export function ChampionCard({
   laneWinRate,
   laneGames,
   tier,
+  note,
   className,
 }: ChampionCardProps) {
   return (
@@ -73,9 +76,16 @@ export function ChampionCard({
           )}
         </span>
       )}
-      {tier === undefined ? null : (
+      {tier === undefined && note === undefined ? null : (
         <span className="scout-champion-card__tier-slot">
-          <span className="scout-champion-card__tier">{tier}</span>
+          {tier === undefined ? null : (
+            <span className="scout-champion-card__tier">{tier}</span>
+          )}
+          {note === undefined ? null : (
+            <span className="scout-champion-card__tier scout-champion-card__note">
+              {note}
+            </span>
+          )}
         </span>
       )}
     </a>

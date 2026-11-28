@@ -383,6 +383,116 @@
   white-space: nowrap;
 }
 
+/* A matchup row that has its own page is a link: it tints like a card does. */
+a.champions-vs {
+  margin-inline: -8px;
+  padding: 4px 8px;
+  border-radius: var(--scout-radius-panel);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.champions-vs:hover {
+  background: var(--scout-surface-inset);
+}
+
+a.champions-vs:hover .scout-face {
+  --scout-face-ground: var(--scout-surface-inset);
+}
+
+/* ---------- matchup page ---------- */
+
+.champions-duel {
+  min-height: 20rem;
+}
+
+.champions-duel .champions-crumb {
+  justify-content: center;
+}
+
+.champions-duel .champions-h1 {
+  font-size: 50px;
+}
+
+.champions-vs-word {
+  color: var(--scout-color-text-muted);
+  font-weight: 500;
+}
+
+.champions-duel .champions-lead {
+  margin-top: 14px;
+}
+
+.champions-duel .champions-sub {
+  max-width: 64ch;
+  margin-top: 6px;
+}
+
+.champions-side {
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.champions-duel .champions-honest {
+  max-width: 70ch;
+  margin-top: 14px;
+}
+
+.champions-mu-fig {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-top: 18px;
+}
+
+.champions-mu-label {
+  flex-basis: 100%;
+  font-weight: 600;
+}
+
+.champions-mu-fig b {
+  font: 700 20px/1.3 var(--scout-font-display);
+}
+
+.champions-mu-lane .scout-win-rate[data-variant="range"] {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.champions-mu-usual {
+  margin-top: 30px;
+}
+
+.champions-facts {
+  display: grid;
+  gap: 12px 40px;
+  margin-top: 16px;
+}
+
+.champions-facts li {
+  padding-top: 14px;
+  box-shadow: 0 -2px 0
+    color-mix(in srgb, var(--scout-color-text) 12%, transparent);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.champions-in {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.champions-in .scout-asset-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
 /* ---------- cards ---------- */
 
 .champions-cards {
@@ -390,6 +500,10 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
   margin-top: 16px;
+}
+
+.champions-cards-five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .champions-cards > li {

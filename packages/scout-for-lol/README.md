@@ -108,9 +108,12 @@ are one-shot and each command starts a new saved conversation.
   detection, marketing showcase refresh, image GC, champion-meta snapshot
   refresh)
 - The public champion pages (`/champions/`, `/champions/<slug>/`,
-  `/champions/<slug>/<role>/`) are static, built from the committed snapshot v2
-  (below) on the friendly design system: the index reads `index.json` and the
-  champion files for its lane figures, a champion page its one champion file.
+  `/champions/<slug>/<role>/`, `/champions/<slug>/<role>/vs/<opponent>/`) are
+  static, built from the committed snapshot v2 (below) on the friendly design
+  system: the index reads `index.json` and the champion files for its lane
+  figures, a champion page its one champion file, a matchup page its one
+  matchup file. A matchup page exists for exactly the opponents a champion file
+  lists, and the champion page links only those.
   Every page states the patch, queue, rank bracket and the days its games were
   played; an API with nothing published yields an empty snapshot, which renders
   "No champion data yet" and hides the Champions navigation link.

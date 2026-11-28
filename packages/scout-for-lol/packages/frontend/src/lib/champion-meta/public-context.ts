@@ -1,5 +1,8 @@
-import type { MetaContext } from "@scout-for-lol/data/meta/meta-serving.ts";
-import { bracketLabel, queueLabel } from "./snapshot.ts";
+import type {
+  MetaContext,
+  MetaRole,
+} from "@scout-for-lol/data/meta/meta-serving.ts";
+import { bracketLabel, queueLabel, roleLabel } from "./snapshot.ts";
 import type { SnapshotIndex } from "./snapshot-v2-schema.ts";
 
 /**
@@ -102,4 +105,18 @@ export function championContextLine(
   const line = `From ${games.toLocaleString("en-US")} ${games === 1 ? "game" : "games"} on ${contextWords(context)}, ${gamesWindow(index)}.`;
   const lane = hasLane ? laneWindow(index) : null;
   return lane === null ? line : `${line} Lane figures from ${lane}.`;
+}
+
+/**
+ * "Mid. From 679 games on patch 16.23, Ranked Solo/Duo, Emerald to Diamond,
+ * 7 to 20 Nov. Lane figures from 14 to 20 Nov." for one matchup page: the
+ * games the matchup was played in, not the champion's.
+ */
+export function matchupContextLine(
+  role: MetaRole,
+  games: number,
+  index: SnapshotIndex,
+  hasLane: boolean,
+): string {
+  return `${roleLabel(role)}. ${championContextLine(games, index, hasLane)}`;
 }

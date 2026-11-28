@@ -1,0 +1,46 @@
+---
+import { AssetIcon } from "@scout-for-lol/design-system/domain/rows/asset-icon";
+import { formatPercent } from "@scout-for-lol/design-system/domain/profile/win-rate-bar";
+import {
+  gamesLabel,
+  type SpellFact,
+} from "#src/components/champions/matchup/model.ts";
+
+interface Props {
+  championName: string;
+  spellFact: SpellFact | null;
+}
+
+const { championName, spellFact } = Astro.props;
+---
+
+{spellFact !== null && (
+  <section
+    class="scout-soft-panel scout-soft-panel--open"
+    aria-labelledby="says-h"
+  >
+    <h2 id="says-h">What the numbers say</h2>
+    <ul class="champions-facts">
+      <li>
+        {championName} players who take{" "}
+        <span class="champions-in">
+          {spellFact.better.assets.map((asset) => (
+            <AssetIcon asset={asset} label="" />
+          ))}
+          {spellFact.better.label}
+        </span>{" "}
+        win this more often than those who take{" "}
+        <span class="champions-in">
+          {spellFact.worse.assets.map((asset) => (
+            <AssetIcon asset={asset} label="" />
+          ))}
+          {spellFact.worse.label}:
+        </span>{" "}
+        <b>{formatPercent(spellFact.better.winRate)}</b> from{" "}
+        {gamesLabel(spellFact.better.games)} against{" "}
+        <b>{formatPercent(spellFact.worse.winRate)}</b> from{" "}
+        {gamesLabel(spellFact.worse.games)}.
+      </li>
+    </ul>
+  </section>
+)}
