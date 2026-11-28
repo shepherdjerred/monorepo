@@ -519,6 +519,15 @@ whose `local-exec` provisioners call the AWS CLI with the deployment identity.
 A plan never shows a provisioner's script, so a zero-change plan does not
 cover one: `packages/homelab-cdktn/src/seaweedfs.test.ts` pins each script.
 
+SeaweedFS stores these `Expiration` rules but does not enforce them: it has no
+lifecycle worker, so a rule alone deletes nothing. The `seaweedfs-lifecycle-enforcer`
+Temporal schedule enforces every Enabled prefix-and-days rule instead, reading
+each bucket's live configuration (what this stack wrote) daily. It reports
+candidates until its mode flag is `delete`; see
+[Enforce SeaweedFS lifecycle expiry](../../../docs/wiki/src/content/docs/how-to/enforce-seaweedfs-lifecycle-expiry.md)
+to read its report and enable deletes. Rules it cannot reproduce exactly (tag
+filters, `Date`, versioning, transitions) are reported, never applied.
+
 ### Tailscale
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.

@@ -4493,6 +4493,42 @@
       "thresholdRollouts": []
     },
     {
+      "key": "seaweedfs-lifecycle-enforcer-mode",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "seaweedfs-lifecycle-enforcer",
+      "purpose": "Whether the daily SeaweedFS lifecycle sweep only reports Expiration candidates (report) or deletes them (delete). Deletes also need the schedule unpaused and honour the per-run cap and bucket allowlist; the schedule starts paused. SeaweedFS does not enforce Expiration itself.",
+      "type": "variant",
+      "default": "report",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "seaweedfs-lifecycle-enforcer-max-deletes",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "seaweedfs-lifecycle-enforcer",
+      "purpose": "Per-run cap on objects the SeaweedFS lifecycle sweep deletes in delete mode, across all buckets.",
+      "type": "variant",
+      "default": "20000",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "seaweedfs-lifecycle-enforcer-buckets",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "seaweedfs-lifecycle-enforcer",
+      "purpose": "Comma-separated bucket allowlist for SeaweedFS lifecycle deletes in delete mode; * means every bucket with a lifecycle configuration. Buckets outside the list are still reported.",
+      "type": "variant",
+      "default": "*",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-promotion-enabled",
       "owner": "the-storm",
       "namespace": "temporal",

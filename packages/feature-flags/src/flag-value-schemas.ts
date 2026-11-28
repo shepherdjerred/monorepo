@@ -312,6 +312,21 @@ export const flagValueSchemas = {
   "woodpecker-log-retention-days": variantNumber(
     z.number().int().min(30).max(3650),
   ),
+  "seaweedfs-lifecycle-enforcer-mode": variantString(
+    z.enum(["report", "delete"]),
+  ),
+  "seaweedfs-lifecycle-enforcer-max-deletes": variantNumber(
+    z.number().int().min(1).max(1_000_000),
+  ),
+  "seaweedfs-lifecycle-enforcer-buckets": variantString(
+    z.union([
+      z.literal("*"),
+      commaListSchema(
+        "[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]",
+        "Expected comma-separated bucket names, or * for every bucket",
+      ),
+    ]),
+  ),
   "the-storm-promotion-settings": variantJson(PromotionSettingsSchema),
   "the-storm-reddit-outreach-settings": variantJson(
     RedditOutreachSettingsSchema,
