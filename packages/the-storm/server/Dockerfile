@@ -97,7 +97,7 @@ ENV TYPE=PAPER \
   VERSION=26.3 \
   CFG_PROXY_PROTOCOL=false \
   CFG_COREPROTECT_DONATION_KEY="" \
-  PAPER_CUSTOM_JAR=/opt/paper/paper-26.3-251.jar \
+  PAPER_CUSTOM_JAR=/opt/paper/paper-26.3-252.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
   JVM_OPTS="-Dpaper.maxChatCommandInputSize=4096 -Dchunky.maxWorkingCount=4 -Dchunky.awaitTicketRemoval=true" \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \
