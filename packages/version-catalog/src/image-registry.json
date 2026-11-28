@@ -15,6 +15,7 @@
     { "name": "ci-playwright", "visibility": "private" },
     { "name": "delivery", "visibility": "private" },
     { "name": "errors", "visibility": "private" },
+    { "name": "experiments", "visibility": "private" },
     { "name": "feeds", "visibility": "private" },
     { "name": "flags", "visibility": "private" },
     { "name": "glitter-boys-launcher", "visibility": "private" },

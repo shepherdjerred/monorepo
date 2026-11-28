@@ -82,7 +82,10 @@ export function pairKey(fileA: string, fileB: string): string {
 }
 
 function toRepoRelative(name: string, repoRoot: string): string {
-  const rel = path.isAbsolute(name) ? path.relative(repoRoot, name) : name;
+  const ordinaryPath = name.replace(/^[/\\]{2}\?[/\\]/u, "");
+  const rel = path.isAbsolute(ordinaryPath)
+    ? path.relative(repoRoot, ordinaryPath)
+    : ordinaryPath;
   return rel.replaceAll("\\", "/");
 }
 
