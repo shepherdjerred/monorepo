@@ -915,6 +915,18 @@ $ribbonBaseDigest = (Get-FileHash -LiteralPath "$ribbonTrackDirectory/recorded-p
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-maokai-ribbon.mjs --outer $ribbonTrackDirectory $ribbonBaseDigest $newPrivateOuterMotionReceipt $privateRibbonReceipts $newPrivateOuterTrackDirectory
 ```
 
+To discover Maokai R launches across a saved .8428 Rift replay, use the same
+replay and canonical Match-V5 inputs as the paired proof.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/discover-recorded-maokai-launches.mjs $rofl $matchV5 $matchV5Sha256 $macGameExecutable $newPrivateLaunchReceipt uv run --with unicorn python
+```
+
+The private output identifies launch packets with the native Maokai R spell
+key, lists subsequent packets for those actors, and records unresolved
+original descriptor calls. Discovery does not establish how those later
+packets change movement or extend the rendered track.
+
 The Heimerdinger Ammo Spend author extends that same track with the `bubble`
 camera quad at two recorded detached creates. It binds the reviewed create and
 stop receipts, two matching native control runs, and the exact texture mip.
@@ -984,6 +996,29 @@ foreach ($control in '0.125', '0.875', 'seeded') {
 }
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-senna-w-flare.mjs "$continuousBillboardTrackDirectory/recorded-particles.json" $reviewedFightCatalog $fightPlacements $fullReplayStopReceipt "$privateSennaReceiptDirectory/native-0.125.json" "$privateSennaReceiptDirectory/native-0.875.json" "$privateSennaReceiptDirectory/native-seeded.json" $leagueInstallation $textureExporterDll $newPrivateParticleDirectory
 ```
+
+For whole-match playback, keep that verified track as the immutable asset
+source. Extract the target replay's complete creation and stop inventories
+from second zero through a clock later than the replay duration. Use those
+receipts with the effect catalog author described below.
+
+```powershell
+$createDigest = bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath --opcode 938 $newPrivateCreateCorpus
+uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/extract-recorded-heimer-impacts.py $macGameExecutable $newPrivateCreateCorpus $newPrivateCreateReceipt --inventory 0 $inventoryEnd --corpus-sha256 $createDigest
+$stopDigest = bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $replayPath --opcode 1164 $newPrivateStopCorpus
+uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/extract-recorded-particle-stops.py $macGameExecutable $newPrivateStopCorpus $stopDigest $newPrivateStopReceipt --window 0 $inventoryEnd
+$wholeCatalogDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $wholeEffectCatalog).Hash.ToLowerInvariant()
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-senna-w-billboards.mjs "$verifiedSennaReferenceTrackDirectory/recorded-particles.json" $replayPath $wholeEffectCatalog $wholeCatalogDigest $newPrivateParticleDirectory
+```
+
+The producer binds each placement to the target replay's opening roster,
+resolved WAD definition, and archived packet receipt. It accepts the verified
+detached placement and scale/rate pair and excludes requests interrupted
+before the flare's lifetime ends. If no placement qualifies it reports the
+reason counts. To retain existing effects, append
+`--base-track $baseTrackManifest --base-track-sha256 $baseTrackDigest`. The base
+must be a schema 5 or 6 track for the same replay. The author replaces only
+the Senna flare placements and retains the other effects and assets.
 
 The Illaoi spawn probe records the original `Ground_SLOW2` world-space quads
 at the detached replay origin. It initializes the inner render system's UV

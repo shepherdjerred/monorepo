@@ -29,7 +29,7 @@ export async function readLocalRecordedParticles(path, digest, identity) {
     "Recorded particle manifest digest differs",
   );
   const track = JSON.parse(bytes);
-  assert.ok([1, 2, 3, 4, 5, 6].includes(track.schema));
+  assert.ok([1, 2, 3, 4, 5, 6, 7].includes(track.schema));
   assert.equal(track.kind, "recorded-native-terrain-particles");
   assert.equal(track.build, "16.23.841.8428");
   assert.equal(track.build, identity.build);
@@ -48,7 +48,7 @@ export async function readLocalRecordedParticles(path, digest, identity) {
           components.flatMap(({ texture, palette }) => [texture, palette]),
         ),
   );
-  if (track.schema >= 4) {
+  if (track.schema >= 4 && track.schema <= 6) {
     expectedTextures.add(track.worldRibbon.texture);
     expectedTextures.add(track.worldRibbon.palette);
   }
@@ -77,7 +77,11 @@ export async function readLocalRecordedParticles(path, digest, identity) {
   assert.equal(declaredTextures.size, expectedTextures.size);
   assert.ok([...expectedTextures].every((file) => declaredTextures.has(file)));
   const shaders = [track.shaders.vertex, track.shaders.fragment];
-  if (track.schema >= 3) shaders.push(track.shaders.noAlphaTestFragment);
+  if (
+    (track.schema >= 3 && track.schema <= 6) ||
+    (track.schema === 7 && track.shaders.noAlphaTestFragment !== undefined)
+  )
+    shaders.push(track.shaders.noAlphaTestFragment);
   if (maskedQuad !== undefined)
     shaders.push(maskedQuad.vertexShader, maskedQuad.fragmentShader);
   for (const [file, pattern] of [

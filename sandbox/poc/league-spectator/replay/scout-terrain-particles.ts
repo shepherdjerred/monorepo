@@ -53,6 +53,7 @@ const familyComponent = quadComponent.extend({
   billboard: billboardProgram.optional(),
 });
 const programComponent = familyComponent.extend({ alphaTest: z.boolean() });
+const depthComponent = programComponent.extend({ depthTest: z.boolean() });
 const familyId = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
 const family = z.object({
   id: familyId,
@@ -127,9 +128,7 @@ const depthStateTrack = indexedRibbonTrack.extend({
   families: z
     .array(
       family.extend({
-        components: z
-          .array(programComponent.extend({ depthTest: z.boolean() }))
-          .min(1),
+        components: z.array(depthComponent).min(1),
       }),
     )
     .min(1),
@@ -164,6 +163,15 @@ const maskedWorldTrack = depthStateTrack.extend({
       .max(256),
   }),
 });
+const billboardDepthTrack = familyTrack.extend({
+  schema: z.literal(7),
+  families: z
+    .array(family.extend({ components: z.array(depthComponent).min(1) }))
+    .min(1),
+  shaders: trackIdentity.shape.shaders.extend({
+    noAlphaTestFragment: glsl.optional(),
+  }),
+});
 const particleTrack = z.discriminatedUnion("schema", [
   singleFamilyTrack,
   familyTrack,
@@ -171,6 +179,7 @@ const particleTrack = z.discriminatedUnion("schema", [
   indexedRibbonTrack,
   depthStateTrack,
   maskedWorldTrack,
+  billboardDepthTrack,
 ]);
 
 function normalizeTrack(track: z.infer<typeof particleTrack>) {
@@ -322,10 +331,12 @@ export async function loadRecordedTerrainParticles(
     "noAlphaTestFragment" in track.shaders
       ? track.shaders.noAlphaTestFragment
       : undefined;
+  const needsNoAlphaTest = components.some(
+    (entry) => "alphaTest" in entry && !entry.alphaTest,
+  );
   if (
-    noAlphaTestFragment !== undefined &&
-    (track.shaders.fragment === noAlphaTestFragment ||
-      !components.some((entry) => "alphaTest" in entry && !entry.alphaTest))
+    (noAlphaTestFragment !== undefined) !== needsNoAlphaTest ||
+    track.shaders.fragment === noAlphaTestFragment
   )
     throw new Error(
       "The recorded particle track lacks a distinct untested-alpha program.",

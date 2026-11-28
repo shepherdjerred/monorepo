@@ -1,8 +1,9 @@
-"""Author a pinned detached Heimer W impact track from complete ROFL packet bodies."""
+"""Decode exact-build Map11 particle creations through the archived packet handler."""
 
 import argparse
 import json
 import math
+import re
 import struct
 import sys
 from hashlib import sha256
@@ -214,15 +215,26 @@ def main():
         metavar=("START", "END"),
         help="Inventory every creation entry within a half-open replay-clock interval",
     )
+    parser.add_argument("--corpus-sha256", help="Bind an inventory to a different replay packet corpus")
     args = parser.parse_args()
-    source = json.loads(args.packets.read_text(encoding="utf-8-sig"))
+    corpus_bytes = args.packets.read_bytes()
+    if args.corpus_sha256 is not None:
+        if args.inventory is None:
+            parser.error("An explicit corpus digest requires inventory mode")
+        if sha256(corpus_bytes).hexdigest() != args.corpus_sha256:
+            raise ValueError("The recorded particle-create corpus digest differs")
+        if not args.output.parent.resolve().is_relative_to(Path(".cache").resolve()) or args.output.exists():
+            raise ValueError("Expected a fresh private .cache output")
+    source = json.loads(corpus_bytes.decode("utf-8-sig"))
+    if args.corpus_sha256 is not None and source.get("opcode") != 938:
+        raise ValueError("Expected a recorded particle-create corpus")
     packets = source["packets"]
-    if (source["build"], source["protocol"], source["replaySha256"], len(packets)) != (
-        CURRENT_BUILD,
-        PROTOCOL,
-        REPLAY_SHA256,
-        PACKET_COUNT,
+    replay_digest = source["replaySha256"]
+    if (source["build"], source["protocol"]) != (CURRENT_BUILD, PROTOCOL) or not re.fullmatch(
+        "[a-f0-9]{64}", replay_digest
     ):
+        raise ValueError("Unsupported recorded particle-create corpus identity")
+    if args.corpus_sha256 is None and (replay_digest, len(packets)) != (REPLAY_SHA256, PACKET_COUNT):
         raise ValueError("Replay identity differs from the exact roster binding")
     reader = GroupedReader(read_replication_image(args.archive.read_bytes(), CURRENT_BUILD))
     if args.inventory is not None:
@@ -297,7 +309,7 @@ def main():
         "schema": 1,
         "build": CURRENT_BUILD,
         "protocol": PROTOCOL,
-        "replaySha256": REPLAY_SHA256,
+        "replaySha256": replay_digest,
         "executableSha256": CURRENT_ARCHIVE_SHA256,
         "packetCount": packet_count,
         "groupCount": group_count,
@@ -309,7 +321,11 @@ def main():
         result["window"] = args.inventory
         result["mode"] = "creation-inventory"
         result["lifecycleEvidence"] = "creation-only"
-    args.output.write_bytes((json.dumps(result, indent=2) + "\n").encode("utf-8"))
+    if args.corpus_sha256 is not None:
+        result["corpusSha256"] = args.corpus_sha256
+    mode = "xb" if args.corpus_sha256 is not None else "wb"
+    with args.output.open(mode) as handle:
+        handle.write((json.dumps(result, indent=2) + "\n").encode("utf-8"))
     entry_kind = "creation entries" if args.inventory is not None else "detached impacts"
     print(f"Verified {len(events)} {entry_kind} in {packet_count} fully consumed packets")
 

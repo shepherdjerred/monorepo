@@ -105,9 +105,7 @@ def main():
         elif rva == 0x88F270 and collision_probe is not None:
             state = engine.reg_read(reg.UC_X86_REG_RSI)
             argument = struct.unpack("<Q", engine.mem_read(state + 0x10, 8))[0]
-            collision_probe["childArguments"].append(
-                struct.unpack("<I3f", engine.mem_read(argument, 16))
-            )
+            collision_probe["childArguments"].append(struct.unpack("<I3f", engine.mem_read(argument, 16)))
             # Stop before the child consumes the live missile velocity and
             # target object. Only activation of this child is demonstrated.
             returned = 0
@@ -157,8 +155,13 @@ def main():
 
     vm.hook_add(unicorn.UC_HOOK_CODE, modeled_boundary)
     inputs = json.load(sys.stdin)
+    select_maokai_r = inputs.get("selectMaokaiR", False)
+    if select_maokai_r and build != "16.23.841.8428":
+        raise ValueError("Maokai R discovery requires the reviewed .8428 decoder")
+    unsupported_launches = []
+    unresolved_descriptors = []
     results = []
-    for context, hex_payload in inputs["creation"]:
+    for creation_index, (context, hex_payload) in enumerate(inputs["creation"]):
         payload = bytes.fromhex(hex_payload)
         if not 1 <= len(payload) <= 1024:
             raise ValueError("Invalid missile body length")
@@ -175,8 +178,20 @@ def main():
         if vm.reg_read(reg.UC_X86_REG_AL) != 1 or consumed != len(payload):
             raise ValueError(f"Native missile reader rejected body for {context}")
         call(0x845240, descriptor)
-        call(0x842310, descriptor, obj + 0x58)
+        try:
+            call(0x842310, descriptor, obj + 0x58)
+        except unicorn.UcError as error:
+            instruction = vm.reg_read(reg.UC_X86_REG_RIP) - image.base
+            if select_maokai_r and instruction == 0x557B67:
+                unresolved_descriptors.append({"entity": context, "creationIndex": creation_index})
+                continue
+            raise ValueError(
+                f"Native descriptor boundary for {context} at {instruction:#x}; "
+                f"source name count {len(source_names)}, spell key count {len(spell_keys)}"
+            ) from error
         raw = vm.mem_read(descriptor, 0x190)
+        if select_maokai_r and ("Maokai" not in source_names or 0x0187CC63 not in spell_keys):
+            continue
         if len(entity_keys) != 2 or entity_keys[0] != entity_keys[1] or len(source_names) != 1 or len(spell_keys) != 1:
             raise ValueError(f"Ambiguous native missile identity for {context}")
         entity_id = struct.unpack_from("<I", raw, 0x9C)[0]
@@ -189,15 +204,19 @@ def main():
         vm.reg_write(reg.UC_X86_REG_R15, obj)
         call(0x6E587E, rbp=frame, end=image.base + 0x6E58EA)
         if vm.reg_read(reg.UC_X86_REG_RCX):
+            if select_maokai_r:
+                unsupported_launches.append([context, "separate-placement-override"])
+                continue
             raise ValueError(f"Separate placement override belongs to {context}")
 
         vm.reg_write(reg.UC_X86_REG_R13, obj)
         call(0x8920E2, end=image.base + 0x892132)
-        (elapsed_seconds,) = struct.unpack(
-            "<f", struct.pack("<I", vm.reg_read(reg.UC_X86_REG_EAX))
-        )
+        (elapsed_seconds,) = struct.unpack("<f", struct.pack("<I", vm.reg_read(reg.UC_X86_REG_EAX)))
         forced_source = raw[0x158]
         if forced_source != 1:
+            if select_maokai_r:
+                unsupported_launches.append([context, "caster-relative-placement"])
+                continue
             raise ValueError(f"Expected recorded-source placement for {context}")
         start_xyz = struct.unpack_from("<3f", raw, 0xD0)
         start, local_offset = descriptor + 0x300, descriptor + 0x340
@@ -212,12 +231,14 @@ def main():
             if position != start_xyz:
                 raise ValueError(f"Original recorded-source branch changed XYZ for {context}")
             (height_offset,) = struct.unpack("<f", vm.mem_read(start + 0xC, 4))
-            native_starts.append({
-                "groundRebase": bool(ground_rebase),
-                "terrainControlHeight": terrain_probe_height,
-                "positionXYZ": position,
-                "planeHeightOffset": height_offset,
-            })
+            native_starts.append(
+                {
+                    "groundRebase": bool(ground_rebase),
+                    "terrainControlHeight": terrain_probe_height,
+                    "positionXYZ": position,
+                    "planeHeightOffset": height_offset,
+                }
+            )
         terrain_probe_height = None
 
         results.append(
@@ -233,6 +254,7 @@ def main():
                 "packetElapsedSeconds": elapsed_seconds,
                 "nativeRecordedSourceStarts": native_starts,
                 "bodyBytes": consumed,
+                **({"creationIndex": creation_index} if select_maokai_r else {}),
             }
         )
     controller_vectors = []
@@ -278,7 +300,11 @@ def main():
             # default constructors and factories. A bounded backing store
             # supplies only vector capacity to the missile.
             missile, staged, active, event_argument, handled = (
-                0x10007000, 0x10007800, 0x10007900, 0x10007A00, 0x10007B00
+                0x10007000,
+                0x10007800,
+                0x10007900,
+                0x10007A00,
+                0x10007B00,
             )
             vm.mem_write(missile + 0x3C0, struct.pack("<3Q", active, active, active + 32))
             vm.mem_write(missile + 0x3E0, struct.pack("<3Q", staged, staged, staged + 32))
@@ -302,6 +328,14 @@ def main():
             {
                 "decoderSha256": digest,
                 "records": results,
+                **(
+                    {
+                        "unsupportedMaokaiLaunches": unsupported_launches,
+                        "unresolvedDescriptors": unresolved_descriptors,
+                    }
+                    if select_maokai_r
+                    else {}
+                ),
                 "controllerVectors": controller_vectors,
                 "componentVectors": component_vectors,
                 "componentActivations": component_activations,

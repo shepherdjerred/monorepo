@@ -67,7 +67,6 @@ const WorldRibbon = z.object({
   ),
 });
 const DepthQualifiedParticleTrack = FamilyParticleTrack.extend({
-  worldRibbon: WorldRibbon,
   families: z.array(
     z.object({
       id: z.string(),
@@ -97,11 +96,14 @@ export async function readRecordedParticleTrack(
       }),
       DepthQualifiedParticleTrack.extend({
         schema: z.literal(5),
+        worldRibbon: WorldRibbon,
       }),
       DepthQualifiedParticleTrack.extend({
         schema: z.literal(6),
+        worldRibbon: WorldRibbon,
         worldMaskedQuad: WorldRibbon,
       }),
+      DepthQualifiedParticleTrack.extend({ schema: z.literal(7) }),
     ])
     .parse(
       await Bun.file(path.join(fixture.root, "recorded-particles.json")).json(),
@@ -350,19 +352,32 @@ function sennaFlareWitnesses(
   );
   if (flare === undefined) return [];
   const creates = track.effects.filter(({ family }) => family === flare.id);
-  expect(creates).toHaveLength(1);
   expect(flare.components).toHaveLength(2);
-  const [create] = creates;
-  if (create === undefined) throw new Error("Missing recorded Senna flare.");
-  const witnesses = [
-    [1719.9, 0],
-    [1720, 2],
-    [1720.1, 0],
-    [1720, 2],
-  ] as const;
-  return witnesses.map(([seconds, draws]) => {
-    expect(expectedFor(create.start, flare.components, seconds)).toBe(draws);
-    return [seconds, expectedParticleDraws(track, seconds)] as const;
+  const first = creates[0];
+  const last = creates.at(-1);
+  if (first === undefined || last === undefined)
+    throw new Error("Missing recorded Senna flare.");
+  const firstSample = Math.max(
+    ...flare.components.map(({ samples }) =>
+      Math.min(...samples.map(({ age }) => age)),
+    ),
+  );
+  const lifetime = Math.max(...flare.components.map((part) => part.lifetime));
+  return [...new Set([first, last])].flatMap(({ start }) => {
+    const before = (Math.ceil(start * 10) - 1) / 10;
+    const active = Math.ceil((start + firstSample) * 10) / 10;
+    const expired = Math.ceil((start + lifetime) * 10) / 10;
+    return (
+      [
+        [before, 0],
+        [active, 2],
+        [expired, 0],
+        [active, 2],
+      ] as const
+    ).map(([seconds, draws]) => {
+      expect(expectedFor(start, flare.components, seconds)).toBe(draws);
+      return [seconds, expectedParticleDraws(track, seconds)] as const;
+    });
   });
 }
 
@@ -418,7 +433,7 @@ export async function verifyRecordedParticlePreview(
     await expectAt(1719, 1);
   }
   if (
-    (track.schema === 3 || "worldRibbon" in track) &&
+    (track.schema === 3 || track.schema === 7 || "worldRibbon" in track) &&
     track.families.some(({ id }) => id === "senna-soul-death")
   ) {
     await expectAt(254.7, 0);

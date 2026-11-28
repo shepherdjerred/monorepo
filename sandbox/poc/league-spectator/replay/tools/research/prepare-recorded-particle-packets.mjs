@@ -7,13 +7,15 @@ import { readRecordedRiftEffectPackets } from "./recorded-rift-effect-packets.mj
 
 // Keep the original replay and extracted packet bodies in the local authoring process.
 const [path, flag, opcodeArgument, output, ...extra] = process.argv.slice(2);
-const stops =
-  flag === "--opcode" && opcodeArgument === "1164" && Boolean(output);
-if (!path || extra.length !== 0 || (flag !== undefined && !stops))
+const corpusFile =
+  flag === "--opcode" &&
+  (opcodeArgument === "938" || opcodeArgument === "1164") &&
+  Boolean(output);
+if (!path || extra.length !== 0 || (flag !== undefined && !corpusFile))
   throw Error(
-    "Usage: bun prepare-recorded-particle-packets.mjs <local replay.rofl> [--opcode 1164 <fresh .cache JSON>]",
+    "Usage: bun prepare-recorded-particle-packets.mjs <local replay.rofl> [--opcode 938|1164 <fresh .cache JSON>]",
   );
-if (stops) {
+if (corpusFile) {
   const [cache, parent] = await Promise.all([
     realpath(".cache"),
     realpath(dirname(output)),
@@ -28,7 +30,7 @@ const replay = openReplay(bytes);
 const decompress = (input, output) =>
   zstdDecompressSync(input, { maxOutputLength: output.length });
 const packets = [];
-const selectedOpcode = stops ? 1164 : 938;
+const selectedOpcode = opcodeArgument === "1164" ? 1164 : 938;
 for (const {
   opcode,
   timeSeconds,
@@ -43,7 +45,7 @@ for (const {
       context,
       Buffer.from(payload).toString("hex"),
     ]);
-if (stops) {
+if (corpusFile) {
   const corpus = {
     replaySha256: sha256,
     build: replay.build,

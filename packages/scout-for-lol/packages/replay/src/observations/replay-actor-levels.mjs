@@ -17,7 +17,7 @@ export const maximumReplayActorLevel = (
   { allowCurrentBuild = false } = {},
 ) =>
   allowCurrentBuild &&
-  replay.build === "16.23.841.8428" &&
+  (replay.build === "16.23.841.8428" || replay.build === "16.23.841.3489") &&
   replay.protocol === "8bbfcd5af2bc92db"
     ? 20
     : supportsLevelOverride(replay)
