@@ -477,10 +477,11 @@ function syntheticFiles(count: number, content = "{}\n", offset = 0) {
 }
 
 describe("snapshot v2 refresh guard", () => {
-  const LIMIT = SNAPSHOT_V2_MAX_CHANGED_FILES;
+  // A small limit exercises the same guard as the production 2,500 in milliseconds.
+  const LIMIT = 10;
 
-  test("the limit is below the 3,000 files a GitHub pull request lists", () => {
-    expect(LIMIT).toBe(2500);
+  test("the production limit is 2,500, below the 3,000 files a GitHub pull request lists", () => {
+    expect(SNAPSHOT_V2_MAX_CHANGED_FILES).toBe(2500);
   });
 
   test("counts added, rewritten and removed files, and not unchanged ones", () => {
@@ -508,20 +509,25 @@ describe("snapshot v2 refresh guard", () => {
     const under = await refreshSnapshotDirectory(
       target,
       syntheticFiles(LIMIT - 1),
+      LIMIT,
     );
     expect(changedFileCount(under)).toBe(LIMIT - 1);
     // One more file added to the same directory reaches the limit exactly.
-    const at = await refreshSnapshotDirectory(target, syntheticFiles(LIMIT));
+    const at = await refreshSnapshotDirectory(
+      target,
+      syntheticFiles(LIMIT),
+      LIMIT,
+    );
     expect(changedFileCount(at)).toBe(1);
     const full = await refreshSnapshotDirectory(
       target,
       syntheticFiles(LIMIT, '{"week":2}\n'),
+      LIMIT,
     );
     expect(changedFileCount(full)).toBe(LIMIT);
     const written = await readSnapshotDirectory(target);
     expect(written.size).toBe(LIMIT);
-    // Writes about 7,500 real files; the default 5s timeout is too short on a loaded machine.
-  }, 60_000);
+  });
 
   test("refuses a change set over the limit, names AI-1031 and plan (b), and writes nothing", async () => {
     const target = path.join(directory, "champion-meta");
@@ -530,7 +536,7 @@ describe("snapshot v2 refresh guard", () => {
 
     // Every file rewritten and one more added: LIMIT + 1 changes.
     const week2 = syntheticFiles(LIMIT + 1, '{"week":2}\n');
-    const refused = refreshSnapshotDirectory(target, week2);
+    const refused = refreshSnapshotDirectory(target, week2, LIMIT);
     await expect(refused).rejects.toThrow(
       new RegExp(`${(LIMIT + 1).toString()} files`, "u"),
     );
@@ -544,10 +550,10 @@ describe("snapshot v2 refresh guard", () => {
 
   test("removed files count too: replacing a big snapshot with a small different one can trip it", async () => {
     const target = path.join(directory, "champion-meta");
-    await refreshSnapshotDirectory(target, syntheticFiles(2000));
+    await refreshSnapshotDirectory(target, syntheticFiles(8), LIMIT);
     await expect(
-      refreshSnapshotDirectory(target, syntheticFiles(600, "{}\n", 10_000)),
-    ).rejects.toThrow(/2600 files \(600 added, 0 rewritten, 2000 removed\)/u);
+      refreshSnapshotDirectory(target, syntheticFiles(3, "{}\n", 100), LIMIT),
+    ).rejects.toThrow(/11 files \(3 added, 0 rewritten, 8 removed\)/u);
   });
 
   test("a refresh over the size budget names AI-1031 and plan (b) too", () => {

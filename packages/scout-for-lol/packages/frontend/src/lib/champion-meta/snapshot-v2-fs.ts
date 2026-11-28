@@ -105,18 +105,20 @@ export function assertChangeSetWithinLimit(
 
 /**
  * Replace the committed snapshot directory with `files`, after checking the
- * change set against the limit. The limit is checked before anything is
- * removed, so a refused refresh leaves the directory as it was.
+ * change set against `limit` (the production limit unless a caller passes
+ * another, as tests do). The limit is checked before anything is removed, so
+ * a refused refresh leaves the directory as it was.
  */
 export async function refreshSnapshotDirectory(
   directory: string,
   files: SnapshotTexts,
+  limit: number = SNAPSHOT_V2_MAX_CHANGED_FILES,
 ): Promise<SnapshotChangeSet> {
   const changes = snapshotChangeSet(
     await readSnapshotDirectory(directory),
     files,
   );
-  assertChangeSetWithinLimit(changes);
+  assertChangeSetWithinLimit(changes, limit);
   await writeSnapshotDirectory(directory, files);
   return changes;
 }
