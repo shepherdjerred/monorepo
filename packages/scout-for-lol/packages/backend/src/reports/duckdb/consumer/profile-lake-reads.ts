@@ -22,9 +22,9 @@ import {
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
 import {
-  inLakeScope,
-  type LakeReadScope,
-} from "#src/reports/duckdb/consumer/lake-read-scope.ts";
+  inLakePage,
+  type LakePage,
+} from "#src/reports/duckdb/consumer/pages/lake-page.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
@@ -144,11 +144,11 @@ export function fullMatchRowsSql(sourceSql: string): string {
 export async function fetchFullMatch(options: {
   matchId: RiotMatchId;
   lakeDir?: string;
-  scope?: LakeReadScope;
+  page?: LakePage;
   /** `all` finds a crawled game too (Explore's match cards); default tracked. */
   population?: LakePopulation;
 }): Promise<LakeMatchParticipantRow[]> {
-  return await inLakeScope(options, async (files, session) => {
+  return await inLakePage(options, async (files, session) => {
     const source = buildMatchesSource(
       files,
       {
@@ -208,9 +208,9 @@ export async function fetchTimelineCoverage(options: {
   matchId: RiotMatchId;
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
-  scope?: LakeReadScope;
+  page?: LakePage;
 }): Promise<LakeTimelineCoverage | null> {
-  return await inLakeScope(options, async (files, session) => {
+  return await inLakePage(options, async (files, session) => {
     const source = buildTimelineCoverageSource(files, {
       sql: "match_id = ?",
       params: [scalarParam(options.matchId)],
@@ -277,9 +277,9 @@ export async function fetchTimelineEventPage(options: {
   participantIds?: number[];
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
-  scope?: LakeReadScope;
+  page?: LakePage;
 }): Promise<TimelineEventRead[]> {
-  return await inLakeScope(options, async (files, session) => {
+  return await inLakePage(options, async (files, session) => {
     const clauses = ["match_id = ?"];
     const params: BoundParam[] = [scalarParam(options.matchId)];
     if (options.eventTypes !== undefined) {
@@ -406,9 +406,9 @@ export async function fetchTimelineCheckpointFrames(options: {
   matchId: RiotMatchId;
   checkpointMs: number;
   lakeDir?: string;
-  scope?: LakeReadScope;
+  page?: LakePage;
 }): Promise<LaneDeltaFrame[]> {
-  return await inLakeScope(options, async (files, session) => {
+  return await inLakePage(options, async (files, session) => {
     const source = buildTimelineParticipantFramesSource(files, {
       sql: "match_id = ? AND frame_timestamp_ms >= ? AND frame_timestamp_ms < ?",
       params: [

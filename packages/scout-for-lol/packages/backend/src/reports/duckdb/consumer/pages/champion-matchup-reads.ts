@@ -8,7 +8,8 @@ import {
   type PlayerProfileGameWindow,
   type QueueType,
 } from "@scout-for-lol/data";
-import { withPageLakeSession } from "#src/reports/duckdb/consumer/pages/page-session.ts";
+import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
+import { runSource } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   entryAccountPairs,
   entryGamesSource,
@@ -120,7 +121,7 @@ export async function fetchChampionMatchupInputs(options: {
     frames: [],
   };
   if (pairs.length === 0) return empty;
-  return await withPageLakeSession(options.lakeDir, async (page) => {
+  return await withLakePage(options.lakeDir, async (page) => {
     const gamesSource = entryGamesSource(page.files, {
       pairs,
       queues: options.queues,
@@ -135,7 +136,8 @@ export async function fetchChampionMatchupInputs(options: {
     if (gamesSource === undefined) return empty;
     const ranked = rankedEntryGames(gamesSource, pairs);
     const window = gameWindow(options.games);
-    const games = await page.run({
+    const games = await runSource({
+      session: page.session,
       source: gamesSource,
       leadingParams: ranked.leadingParams,
       trailingParams: window.params,
@@ -154,7 +156,8 @@ export async function fetchChampionMatchupInputs(options: {
     const participants =
       participantsSource === undefined
         ? []
-        : await page.run({
+        : await runSource({
+            session: page.session,
             source: participantsSource,
             sql:
               `SELECT match_id, queue, queue_id, game_mode, game_type, map_id, participant_id, ` +
@@ -173,7 +176,8 @@ export async function fetchChampionMatchupInputs(options: {
     const frames =
       framesSource === undefined
         ? []
-        : await page.run({
+        : await runSource({
+            session: page.session,
             source: framesSource,
             sql:
               `SELECT match_id, participant_id, frame_timestamp_ms, total_gold, minions_killed, ` +

@@ -1,20 +1,16 @@
-import type {
-  DiscordAccountId,
-  DiscordGuildId,
-  LeaguePuuid,
-} from "@scout-for-lol/data";
-import { afterAll, beforeAll, beforeEach } from "vitest";
+import type { DiscordGuildId } from "@scout-for-lol/data";
+import { afterAll, beforeAll, beforeEach, expect } from "vitest";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { resetConfigurationForTests } from "#src/configuration.ts";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   addFlagOverride,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import { countReportSlotsTaken } from "#src/reports/duckdb/instance.ts";
 import { resetTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 
 const PLAYER_PROFILE_FLAG = "scout-consumer-player-profiles-enabled";
@@ -88,43 +84,24 @@ export function registerConsumerProfileFeatureTestLifecycle(options: {
   });
 }
 
-/** A tracked player with one Riot account, as the consumer routes find them. */
-export async function createTrackedPlayer(
-  prisma: ExtendedPrismaClient,
-  options: {
-    guildId: DiscordGuildId;
-    alias: string;
-    puuid: LeaguePuuid;
-    creatorDiscordId: DiscordAccountId;
-    createdAt: Date;
-    discordId?: DiscordAccountId;
-  },
-) {
-  const row = await prisma.player.create({
-    data: {
-      serverId: options.guildId,
-      alias: options.alias,
-      creatorDiscordId: options.creatorDiscordId,
-      ...(options.discordId === undefined
-        ? {}
-        : { discordId: options.discordId }),
-      createdTime: options.createdAt,
-      updatedTime: options.createdAt,
-    },
-  });
-  await prisma.account.create({
-    data: {
-      serverId: options.guildId,
-      playerId: row.id,
-      alias: `${options.alias} account`,
-      puuid: options.puuid,
-      region: "AMERICA_NORTH",
-      creatorDiscordId: options.creatorDiscordId,
-      riotGameName: options.alias,
-      riotTagLine: "NA1",
-      createdTime: options.createdAt,
-      updatedTime: options.createdAt,
-    },
-  });
-  return row;
+/**
+ * Run `request` and assert it took exactly `expected` report-pool slots, then
+ * return what it resolved. A page that promises one lake slot per request
+ * wraps its call in this; a request refused before the lake expects none.
+ */
+export async function expectLakeSlots<T>(
+  expected: number,
+  request: () => Promise<T>,
+): Promise<T> {
+  const before = countReportSlotsTaken();
+  const result = await request();
+  expect(countReportSlotsTaken() - before).toBe(expected);
+  return result;
+}
+
+/** A page's whole request took exactly one lake slot. */
+export async function expectOneLakeSlot<T>(
+  request: () => Promise<T>,
+): Promise<T> {
+  return await expectLakeSlots(1, request);
 }

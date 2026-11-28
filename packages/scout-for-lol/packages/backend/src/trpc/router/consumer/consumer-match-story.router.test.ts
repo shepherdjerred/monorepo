@@ -3,7 +3,6 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test, vi } from "vitest";
-import type * as InstanceModule from "#src/reports/duckdb/instance.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -12,31 +11,16 @@ import {
 } from "@scout-for-lol/data";
 import {
   configureConsumerProfileFeatureTest,
-  createTrackedPlayer,
+  expectLakeSlots,
+  expectOneLakeSlot,
   registerConsumerProfileFeatureTestLifecycle,
 } from "#src/testing/consumer-profile-feature-test.ts";
+import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 import { storyMatchFixture } from "#src/testing/report-lake/story-match-fixture.ts";
 import { STORY_VIEWER_PARTICIPANT_ID } from "#src/testing/report-lake/story-match-seats.ts";
-
-// Counts every report-pool slot a call takes, by wrapping the real pool.
-const slots = vi.hoisted(() => ({ taken: 0 }));
-vi.mock("#src/reports/duckdb/instance.ts", async () => {
-  const actual = await vi.importActual<typeof InstanceModule>(
-    "#src/reports/duckdb/instance.ts",
-  );
-  return {
-    ...actual,
-    withDuckDBConnection: (
-      ...args: Parameters<typeof actual.withDuckDBConnection>
-    ) => {
-      slots.taken += 1;
-      return actual.withDuckDBConnection(...args);
-    },
-  };
-});
 
 const guildId = DiscordGuildIdSchema.parse("100000000000000081");
 const profileFeature = configureConsumerProfileFeatureTest([guildId]);
@@ -58,10 +42,12 @@ function trackedPlayer(options: {
   alias: string;
   puuid: LeaguePuuid;
 }) {
-  return createTrackedPlayer(trpc.prisma, {
-    ...options,
-    creatorDiscordId: actor,
+  return seedConsumerPlayer(trpc.prisma, actor, {
+    serverId: options.guildId,
+    alias: options.alias,
+    puuids: [options.puuid],
     createdAt: created,
+    lastMatchTime: null,
   });
 }
 
@@ -162,10 +148,12 @@ async function recordRank(options: {
 describe("consumerMatch.story", () => {
   test("returns the timeline's moments, every build order and the skill order for a tracked match", async () => {
     const { viewer } = await seedStoryMatch();
-    slots.taken = 0;
-    const story = await trpc
-      .authedCaller(actor)
-      .consumerMatch.story({ playerId: viewer.id, matchId: MATCH });
+    const story = await expectOneLakeSlot(
+      async () =>
+        await trpc
+          .authedCaller(actor)
+          .consumerMatch.story({ playerId: viewer.id, matchId: MATCH }),
+    );
 
     expect(story.coverage).toBe("timeline");
     expect(story.remake).toBe(false);
@@ -250,7 +238,6 @@ describe("consumerMatch.story", () => {
     expect(
       story.goldLead?.points.find((point) => point.minute === 7)?.leadGold,
     ).toBe(-500);
-    expect(slots.taken).toBe(1);
   });
 
   test("takes one lake slot per call and none for a viewer outside the match", async () => {
@@ -261,11 +248,20 @@ describe("consumerMatch.story", () => {
       puuid: testPuuid("story-stranger"),
     });
     const caller = trpc.authedCaller(actor);
-    slots.taken = 0;
-    await caller.consumerMatch.story({ playerId: viewer.id, matchId: MATCH });
-    expect(slots.taken).toBe(1);
-    await caller.consumerMatch.story({ playerId: viewer.id, matchId: MATCH });
-    expect(slots.taken).toBe(2);
+    await expectOneLakeSlot(
+      async () =>
+        await caller.consumerMatch.story({
+          playerId: viewer.id,
+          matchId: MATCH,
+        }),
+    );
+    await expectOneLakeSlot(
+      async () =>
+        await caller.consumerMatch.story({
+          playerId: viewer.id,
+          matchId: MATCH,
+        }),
+    );
     await expect(
       caller.consumerMatch.story({ playerId: stranger.id, matchId: MATCH }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -319,21 +315,23 @@ describe("consumerMatch.story", () => {
   test("is forbidden outside the rollout and unavailable when membership cannot be confirmed", async () => {
     const { viewer } = await seedStoryMatch();
     const caller = trpc.authedCaller(actor);
+    // Neither refusal reaches the lake.
     trpc.setMembership([]);
-    await expect(
-      caller.consumerMatch.story({ playerId: viewer.id, matchId: MATCH }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expectLakeSlots(0, async () => {
+      await expect(
+        caller.consumerMatch.story({ playerId: viewer.id, matchId: MATCH }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    });
 
     trpc.setMembership([{ guildId, asAdmin: false }]);
     vi.spyOn(accessModule, "resolveConsumerGuildAccess").mockResolvedValueOnce({
       kind: "unavailable",
     });
-    slots.taken = 0;
-    await expect(
-      caller.consumerMatch.story({ playerId: viewer.id, matchId: MATCH }),
-    ).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
-    // Neither refusal reached the lake.
-    expect(slots.taken).toBe(0);
+    await expectLakeSlots(0, async () => {
+      await expect(
+        caller.consumerMatch.story({ playerId: viewer.id, matchId: MATCH }),
+      ).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
+    });
   });
 });
 
@@ -581,21 +579,25 @@ describe("consumerMatch.detail", () => {
       before: SOLO_BEFORE,
       after: SOLO_AFTER,
     });
-    slots.taken = 0;
-    await caller.consumerMatch.detail({ playerId: viewer.id, matchId: MATCH });
-    expect(slots.taken).toBe(1);
-    await caller.consumerMatch.detail({ playerId: viewer.id, matchId: MATCH });
-    expect(slots.taken).toBe(2);
+    for (let call = 0; call < 2; call += 1) {
+      await expectOneLakeSlot(
+        async () =>
+          await caller.consumerMatch.detail({
+            playerId: viewer.id,
+            matchId: MATCH,
+          }),
+      );
+    }
     await expect(
       caller.consumerMatch.detail({ playerId: stranger.id, matchId: MATCH }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
 
     trpc.setMembership([]);
-    slots.taken = 0;
-    await expect(
-      caller.consumerMatch.detail({ playerId: viewer.id, matchId: MATCH }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    expect(slots.taken).toBe(0);
+    await expectLakeSlots(0, async () => {
+      await expect(
+        caller.consumerMatch.detail({ playerId: viewer.id, matchId: MATCH }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    });
   });
 
   test("keeps its payload for a match with no timeline", async () => {
