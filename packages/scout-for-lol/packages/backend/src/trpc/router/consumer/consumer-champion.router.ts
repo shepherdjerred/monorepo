@@ -16,6 +16,7 @@ import {
   type ChampionComparisonSort,
 } from "@scout-for-lol/data";
 import { fetchChampionIndex } from "#src/reports/duckdb/consumer/pages/champion-index-reads.ts";
+import { fetchChampionBuildInputs } from "#src/reports/duckdb/consumer/pages/champion-build-reads.ts";
 import { fetchChampionMatchupInputs } from "#src/reports/duckdb/consumer/pages/champion-matchup-reads.ts";
 import { fetchChampionComparisons } from "#src/reports/duckdb/consumer/profile-champion-comparison.ts";
 import {
@@ -27,6 +28,7 @@ import {
   buildChampionIndex,
   QUALIFYING_GAMES,
 } from "#src/trpc/router/consumer/consumer-champion-index.ts";
+import { buildChampionBuilds } from "#src/trpc/router/consumer/champion-builds/champion-builds.ts";
 import { buildChampionMatchups } from "#src/trpc/router/consumer/consumer-champion-matchups.ts";
 import { LANE_DELTA_CHECKPOINT_MS } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
@@ -66,6 +68,11 @@ const PageScopeInput = z.object({
 const MatchupsInput = PageScopeInput.extend({
   championId: ChampionIdSchema,
   lane: LaneSchema,
+});
+
+const BuildsInput = PageScopeInput.extend({
+  championId: ChampionIdSchema,
+  lane: LaneSchema.optional(),
 });
 
 type ComparisonRow = {
@@ -191,6 +198,24 @@ export const consumerChampionRouter = router({
           people,
         }),
       };
+    }),
+  builds: protectedProcedure
+    .input(BuildsInput)
+    .query(async ({ ctx, input }) => {
+      const { people } = await getChampionPagePeople(ctx.user, input.guildIds);
+      const inputs = await fetchChampionBuildInputs({
+        championId: input.championId,
+        lane: input.lane,
+        entries: pageEntries(people),
+        games: input.games,
+        queues: input.queues,
+      });
+      return buildChampionBuilds({
+        championId: input.championId,
+        lane: input.lane,
+        inputs,
+        people,
+      });
     }),
   masteryLeaderboard: protectedProcedure
     .input(

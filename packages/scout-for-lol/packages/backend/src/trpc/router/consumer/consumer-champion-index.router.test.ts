@@ -58,6 +58,7 @@ describe("champion pages: access", () => {
         lane: "middle",
       }),
     compare: () => caller().consumerChampion.compare({ championId: AHRI.id }),
+    builds: () => caller().consumerChampion.builds({ championId: AHRI.id }),
   };
 
   test("a server without the rollout is forbidden, not unavailable", async () => {
@@ -85,6 +86,12 @@ describe("champion pages: access", () => {
       caller().consumerChampion.matchups({
         championId: AHRI.id,
         lane: "middle",
+        guildIds: [otherGuildId],
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      caller().consumerChampion.builds({
+        championId: AHRI.id,
         guildIds: [otherGuildId],
       }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -276,6 +283,7 @@ describe("champion pages: one lake slot per request", () => {
           lane: "middle",
         }),
       () => caller().consumerChampion.compare({ championId: AHRI.id }),
+      () => caller().consumerChampion.builds({ championId: AHRI.id }),
     ];
     for (const request of requests) {
       await expectOneLakeSlot(request);

@@ -37,6 +37,12 @@ const SKILL_BY_SLOT: ReadonlyMap<number, SkillKey> = new Map([
   [4, "R"],
 ]);
 
+/** The fields of a timeline event that a build is worked out from. */
+export type BuildEvent = Pick<
+  StoryEvent,
+  "event_type" | "event_timestamp_ms" | "item_id" | "before_id" | "after_id"
+>;
+
 type MutableStep = BuildStep & { undone: boolean };
 
 function latestStep(
@@ -50,7 +56,7 @@ function latestStep(
   return undefined;
 }
 
-function applyPurchase(steps: MutableStep[], event: StoryEvent): void {
+function applyPurchase(steps: MutableStep[], event: BuildEvent): void {
   if (event.item_id === null) return;
   const tier = TIER_BY_ITEM.get(event.item_id) ?? "other";
   if (EXCLUDED_TIERS.has(tier)) return;
@@ -64,7 +70,7 @@ function applyPurchase(steps: MutableStep[], event: StoryEvent): void {
   });
 }
 
-function applySale(steps: readonly MutableStep[], event: StoryEvent): void {
+function applySale(steps: readonly MutableStep[], event: BuildEvent): void {
   const step = latestStep(
     steps,
     (entry) =>
@@ -76,7 +82,7 @@ function applySale(steps: readonly MutableStep[], event: StoryEvent): void {
 }
 
 /** An undo with a `before_id` cancels a purchase; with only an `after_id`, a sale. */
-function applyUndo(steps: readonly MutableStep[], event: StoryEvent): void {
+function applyUndo(steps: readonly MutableStep[], event: BuildEvent): void {
   const beforeId = event.before_id ?? 0;
   const afterId = event.after_id ?? 0;
   if (beforeId !== 0) {
@@ -108,7 +114,7 @@ function applyUndo(steps: readonly MutableStep[], event: StoryEvent): void {
  *   an undo with no `before_id` and an `after_id` takes the sale back.
  * - Consumables and trinkets are not listed.
  */
-export function buildOrderFor(events: readonly StoryEvent[]): BuildStep[] {
+export function buildOrderFor(events: readonly BuildEvent[]): BuildStep[] {
   const steps: MutableStep[] = [];
   for (const event of events) {
     switch (event.event_type) {
