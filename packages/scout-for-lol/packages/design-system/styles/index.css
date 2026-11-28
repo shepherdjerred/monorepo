@@ -4,6 +4,7 @@
 @import "./friendly.css";
 @import "./friendly-domain.css";
 @import "./friendly-rows.css";
+@import "./friendly-recent-changes.css";
 
 * {
   border-color: var(--scout-color-border);

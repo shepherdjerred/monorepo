@@ -8,6 +8,11 @@ import {
   type PatchChangeLine,
   type PatchChangeSubject,
 } from "#src/data-dragon/patch-changes-schema.ts";
+import {
+  selectRecentChanges,
+  type RecentChangePatch,
+  type RecentChangesQuery,
+} from "#src/data-dragon/patch-changes-recent.ts";
 
 export const patchChanges = PatchChangesSchema.parse(patchChangesData);
 
@@ -20,4 +25,17 @@ export function getPatchChanges(
   return patchChanges.filter(
     (line) => line.subject.kind === kind && line.subject.id === subjectId,
   );
+}
+
+/**
+ * A champion's changes over the newest `patches` patches in the notes, grouped
+ * by patch, newest first. Unknown champions get an empty list.
+ */
+export function getRecentChampionChanges(
+  query: RecentChangesQuery,
+): RecentChangePatch[] {
+  return selectRecentChanges(patchChanges, {
+    ...query,
+    championId: z.number().int().positive().parse(query.championId),
+  });
 }
