@@ -115,6 +115,7 @@ async function runPairedProof(input) {
         ...env,
         SCOUT_REPLAY_E2E_REUSE_DIST: "1",
         SCOUT_REPLAY_E2E_WITH_ANNOUNCER: verifyAudio ? "1" : "0",
+        SCOUT_REPLAY_E2E_WITH_COMBAT_AUDIO: input.verifyCombatAudio ? "1" : "0",
         SCOUT_REPLAY_E2E_BACKEND_ORIGIN: url.origin,
         SCOUT_REPLAY_E2E_BACKEND_REPLAY_ID: replayId,
       },
@@ -241,6 +242,9 @@ if (process.argv[2] === "--help") {
     ownerChampion,
     directory,
     verifyAudio: manifest.capabilities.announcerPreview !== undefined,
+    verifyCombatAudio:
+      manifest.capabilities.mapId === 11 &&
+      manifest.capabilities.combatAudioComparison !== undefined,
   });
   console.log(
     `Paired upload and signed-out playback passed. Evidence: ${directory}`,

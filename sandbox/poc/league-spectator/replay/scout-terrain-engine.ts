@@ -12,7 +12,11 @@ import {
   type ReplayStateListener,
 } from "@scout-for-lol/replay/types";
 import { LocalScoutTerrainManifestSchema } from "../../../../packages/scout-for-lol/packages/app/e2e/public-replay/local-scout-terrain-manifest.ts";
-import { ScoutTerrainAnnouncer } from "./scout-terrain-announcer.ts";
+import { readBuildScopedCombatCueTimes } from "./scout-rift-combat-audio.ts";
+import {
+  ScoutTerrainAnnouncer,
+  sennaGroundHitWav,
+} from "./scout-terrain-announcer.ts";
 import { loadRecordedInventory } from "./scout-terrain-inventory.ts";
 import { neutralObjectiveLabel } from "./scout-terrain-objectives.ts";
 import {
@@ -427,9 +431,21 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const announcerProfile = capabilities.announcerPreview;
   const announcerEvents = scene.workerMotion?.announcerEvents;
   const particlePreview = recordedCapabilities?.particlePreview;
-  const combatAudioComparison =
+  const recordedCombatAudio =
     recordedCapabilities?.mapId === 11 &&
     recordedCapabilities.combatAudioComparison !== undefined;
+  const buildScopedCombatAudio =
+    buildScoped &&
+    capabilities.combatAudioComparison === "replay-decoded-dry-source";
+  if (
+    buildScopedCombatAudio &&
+    files.get(sennaGroundHitWav)?.sha256 !==
+      "02e373efb53b3f063203c1398b358ff064334e48191ed910673d7e36d73c0300"
+  )
+    throw new ReplayCapabilityError(
+      "invalid-package",
+      "The Rift combat audio media disagrees with the reviewed source.",
+    );
   const mayhemImpactComparison =
     localManifest.capabilities.mapId === 12 &&
     localManifest.capabilities.mayhemImpactComparison !== undefined;
@@ -456,11 +472,11 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     recordedCapabilities?.announcerPreview !== undefined ||
     particlePreview !== undefined ||
     mayhemImpactComparison ||
-    combatAudioComparison
+    recordedCombatAudio
   ) {
     const replayDigest = await sha256Hex(replay);
     if (replayDigest !== recordedCapabilities?.replaySha256) {
-      const source = combatAudioComparison
+      const source = recordedCombatAudio
         ? "combat audio comparison"
         : particlePreview === undefined && !mayhemImpactComparison
           ? "announcer preview"
@@ -509,6 +525,16 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     );
   const includeAnnouncer =
     announcerProfile !== undefined && loaded.announcerCues?.length !== 0;
+  const combatCueTimes = buildScopedCombatAudio
+    ? await readBuildScopedCombatCueTimes(
+        resources,
+        replay,
+        signal,
+        loaded.scene,
+      )
+    : undefined;
+  const combatAudioComparison =
+    recordedCombatAudio || Boolean(combatCueTimes?.length);
   const announcer =
     (includeAnnouncer || combatAudioComparison) &&
     typeof AudioContext !== "undefined"
@@ -520,6 +546,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
             announcer: includeAnnouncer,
             combat: combatAudioComparison,
             decodedCues: loaded.announcerCues,
+            combatCueTimes,
           },
         )
       : undefined;

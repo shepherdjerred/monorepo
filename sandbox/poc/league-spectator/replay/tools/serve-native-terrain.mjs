@@ -58,6 +58,8 @@ const { positionals, values } = parseArgs({
     "rift-startup-archive": { type: "string" },
     "rift-browser-startup-profile": { type: "string" },
     "rift-browser-startup-runtime": { type: "string" },
+    "rift-combat-audio-profile": { type: "string" },
+    "rift-combat-audio-wav": { type: "string" },
     "rift-minimap": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
@@ -149,6 +151,8 @@ const canonicalMatchDigest = values["canonical-match-sha256"];
 const riftStartupArchive = values["rift-startup-archive"];
 const riftBrowserStartupProfile = values["rift-browser-startup-profile"];
 const riftBrowserStartupRuntime = values["rift-browser-startup-runtime"];
+const riftCombatAudioProfile = values["rift-combat-audio-profile"];
+const riftCombatAudioWav = values["rift-combat-audio-wav"];
 assert.equal(
   riftBrowserStartupProfile === undefined,
   riftBrowserStartupRuntime === undefined,
@@ -158,6 +162,16 @@ assert.ok(
   riftBrowserStartupProfile === undefined ||
     (buildScoped && values["worker-decompressor"] !== undefined),
   "Browser startup admission requires a build-scoped Rift worker package",
+);
+assert.equal(
+  riftCombatAudioProfile === undefined,
+  riftCombatAudioWav === undefined,
+  "Supply both the combat creation profile and its reviewed sound",
+);
+assert.ok(
+  riftCombatAudioProfile === undefined ||
+    riftBrowserStartupProfile !== undefined,
+  "Replay-decoded combat audio requires the original Rift startup worker",
 );
 assert.ok(
   !buildScoped ||
@@ -3111,6 +3125,20 @@ if (privatePackageOutput !== undefined) {
                   riftBrowserStartupProfile,
                   riftBrowserStartupRuntime,
                   values["worker-decompressor"],
+                ),
+            ),
+        }),
+    ...(riftCombatAudioProfile === undefined
+      ? {}
+      : {
+          riftCombatAudioFiles:
+            await import("./research/build-rift-startup-worker.mjs").then(
+              ({ buildRiftCombatAudioWorker }) =>
+                buildRiftCombatAudioWorker(
+                  riftCombatAudioProfile,
+                  riftBrowserStartupRuntime,
+                  values["worker-decompressor"],
+                  riftCombatAudioWav,
                 ),
             ),
         }),

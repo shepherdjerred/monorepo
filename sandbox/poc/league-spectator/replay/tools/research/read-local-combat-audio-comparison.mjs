@@ -9,6 +9,12 @@ const wavSha256 =
   "02e373efb53b3f063203c1398b358ff064334e48191ed910673d7e36d73c0300";
 const digest = (bytes) => Bun.CryptoHasher.hash("sha256", bytes, "hex");
 
+export async function readReviewedCombatAudioWav(path) {
+  const audio = await readFile(path);
+  assert.equal(digest(audio), wavSha256, "Wrong verbatim decoded cue");
+  return audio;
+}
+
 function readComparisonClock(creationBytes, identity) {
   const receiptDigest = digest(creationBytes);
   const wholeReplay = receiptDigest === wholeReplayCreationSha256;
@@ -54,9 +60,8 @@ export async function readLocalCombatAudioComparison(inputPath, identity) {
   );
   const [creationBytes, audio] = await Promise.all([
     readFile(creationReceipt),
-    readFile(wav),
+    readReviewedCombatAudioWav(wav),
   ]);
-  assert.equal(digest(audio), wavSha256, "Wrong verbatim decoded cue");
   const timeline = {
     replaySha256: identity.replaySha256,
     scope: "packet-clock-dry-source",

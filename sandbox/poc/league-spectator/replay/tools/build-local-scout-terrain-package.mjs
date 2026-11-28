@@ -271,10 +271,15 @@ export async function writeLocalScoutTerrainPackage({
   particleFiles,
   impactComparisonFiles,
   riftStartupFiles,
+  riftCombatAudioFiles,
 }) {
   assert.ok(
     riftStartupFiles === undefined || buildScoped,
     "The original startup worker requires a build-scoped Rift package",
+  );
+  assert.ok(
+    riftCombatAudioFiles === undefined || riftStartupFiles !== undefined,
+    "Replay-decoded combat audio requires the original Rift startup worker",
   );
   if (buildScoped) {
     assert.deepEqual(map, { mapId: 11, gameMode: "CLASSIC" });
@@ -315,6 +320,8 @@ export async function writeLocalScoutTerrainPackage({
   );
   const resources = new Map([[entrypoint, await buildEngine(threeCore)]]);
   for (const [path, bytes] of riftStartupFiles ?? [])
+    resources.set(path, bytes);
+  for (const [path, bytes] of riftCombatAudioFiles ?? [])
     resources.set(path, bytes);
   if (impactComparisonFiles !== undefined) {
     assert.equal(particleFiles, undefined);
@@ -375,6 +382,9 @@ export async function writeLocalScoutTerrainPackage({
           ...(announcerFiles === undefined
             ? {}
             : { announcerPreview: "female1-en-us" }),
+          ...(riftCombatAudioFiles === undefined
+            ? {}
+            : { combatAudioComparison: "replay-decoded-dry-source" }),
         }
       : {
           ...map,

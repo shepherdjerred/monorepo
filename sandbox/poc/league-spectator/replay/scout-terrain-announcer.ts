@@ -63,6 +63,7 @@ const combatCueFields = {
   scope: z.literal("packet-clock-dry-source"),
   mediaId: z.literal(329446178),
 };
+export const sennaGroundHitWav = "combat-audio/329446178.wav";
 const combatClock = z.number().positive();
 export const CombatCueSchema = z.union([
   z.strictObject({ ...combatCueFields, timeSeconds: combatClock }),
@@ -100,6 +101,7 @@ export class ScoutTerrainAnnouncer {
       announcer: boolean;
       combat: boolean;
       decodedCues?: AnnouncerCues;
+      combatCueTimes?: readonly number[];
     },
   ) {}
 
@@ -143,6 +145,12 @@ export class ScoutTerrainAnnouncer {
   }
 
   async #readCombatCues(): Promise<Cue[]> {
+    if (this.options.combatCueTimes !== undefined)
+      return this.options.combatCueTimes.map((timeSeconds) => ({
+        resource: sennaGroundHitWav,
+        timeSeconds,
+        allVisionOnly: true,
+      }));
     const bytes = await this.resources.read("combat-audio/cue.json");
     const cue = CombatCueSchema.parse(
       JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
@@ -154,7 +162,7 @@ export class ScoutTerrainAnnouncer {
     if (duration !== undefined && times.some((time) => time >= duration))
       throw new Error("Combat audio cue exceeds the replay clock");
     return times.map((timeSeconds) => ({
-      resource: `combat-audio/${String(cue.mediaId)}.wav`,
+      resource: sennaGroundHitWav,
       timeSeconds,
       allVisionOnly: true,
     }));

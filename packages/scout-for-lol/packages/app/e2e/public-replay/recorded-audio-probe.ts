@@ -7,6 +7,7 @@ type RecordedAudioProbe = {
     id: number;
     frames: number;
     wavSha256: string;
+    startAt: number;
     delay: number;
     offset: number;
     rate: number;
@@ -94,6 +95,7 @@ export async function installRecordedAudioProbe(page: Page) {
               id,
               frames: this.buffer.length,
               wavSha256,
+              startAt: when,
               delay: when - (performance.now() - started) / 1000,
               offset,
               rate: this.playbackRate.value,

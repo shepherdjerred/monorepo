@@ -521,6 +521,23 @@ the original Map11 CLASSIC configuration before the world worker runs.
 The prepared pages cover the two startup captures and their malformed-packet
 controls. Additional startup layouts need their own comparison evidence.
 
+With original startup enabled, add `--rift-combat-audio-profile` and
+`--rift-combat-audio-wav` to derive the reviewed Senna W ground-hit cue times
+from the supplied replay. Use `prepare-recorded-particle-packets.mjs --opcode
+938` to extract the complete creation corpora from the saved exact-build Rift
+and Mayhem replays. Capture the pages from the repository root.
+
+```powershell
+uv run --offline --no-project --with unicorn==2.1.4 python sandbox/poc/league-spectator/replay/tools/research/prepare-rift-effect-create-pages.py $archive $privateCombatDirectory $riftCreationCorpus $mayhemCreationCorpus --senna-ground-hit-only
+```
+
+Pass the generated `profile.json` and the verified WAV for media 329446178.
+The build-scoped package contains the decoder and media. The browser checks
+the original map and opening skins, then derives the cue times from the raw
+grouped creation packets. The comparison covers detached Senna skin 18
+ground hits in all-vision mode with the original dry clip. Other skins,
+combat cues, and spatial mixing require separate evidence.
+
 To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose
@@ -674,8 +691,10 @@ Set `SCOUT_REPLAY_E2E_EXPECT_CHAMPION_OVERHEAD=1` for a package built with the
 champion nameplates. The test checks the recorded name, level, and resource
 gauge when following a champion, after a rewind, and under team visibility.
 The harness also tests announcer playback when the package declares the
-announcer preview. It releases the local backend after the browser test and
-prints the evidence directory under `.cache`.
+announcer preview, including the combat comparison if supplied. For
+replay-decoded combat audio, include the native `rift-senna-46-audio-receipt.json`
+in the oracle directory. The harness releases the local backend after the
+browser test and prints the evidence directory under `.cache`.
 
 In the app workspace, keep the manifest and ROFL inputs above. Once the receipt
 appears, select the game ID matching that ROFL and run against the uploaded

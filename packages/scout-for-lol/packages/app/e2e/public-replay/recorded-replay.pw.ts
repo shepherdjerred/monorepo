@@ -88,6 +88,15 @@ test("the build-scoped package rejects a same-build replay from the wrong map", 
       contentType: "application/vnd.riot.rofl",
     }),
   );
+  const combatRequests: string[] = [];
+  page.on("request", (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (
+      pathname.includes("/rift-combat-audio-") ||
+      pathname.includes("/combat-audio/")
+    )
+      combatRequests.push(pathname);
+  });
   await page.goto(replayPath);
   const player = page.getByRole("region", { name: "Replay player" });
   const hasStartupReader = [...fixture.paths.values()].includes(
@@ -101,6 +110,7 @@ test("the build-scoped package rejects a same-build replay from the wrong map", 
   await expect(
     player.getByRole("button", { name: "Play", exact: true }),
   ).toHaveCount(0);
+  expect(combatRequests).toEqual([]);
 });
 
 function verifyCameraProjection(

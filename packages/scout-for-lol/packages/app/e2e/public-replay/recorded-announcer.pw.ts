@@ -93,16 +93,20 @@ async function setupDirectAnnouncer(
   return oracle;
 }
 
-function expectedCombatAudio(paths: Iterable<string>) {
+function expectedCombatAudio(
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+) {
   const expected = Bun.env["SCOUT_REPLAY_E2E_WITH_COMBAT_AUDIO"] === "1";
-  const combatPaths = [...paths].filter((resource) =>
+  const replayDecoded = expected && fixture.buildScoped;
+  const combatPaths = [...fixture.paths.values()].filter((resource) =>
     resource.startsWith("combat-audio/"),
   );
-  expect(combatPaths.toSorted()).toEqual(
-    expected ? ["combat-audio/329446178.wav", "combat-audio/cue.json"] : [],
-  );
+  const expectedPaths = expected ? ["combat-audio/329446178.wav"] : [];
+  if (expected && !replayDecoded) expectedPaths.push("combat-audio/cue.json");
+  expect(combatPaths.toSorted()).toEqual(expectedPaths);
   return {
     expected,
+    replayDecoded,
     toggle: expected
       ? "Replay audio comparison"
       : "Announcer preview (Female1 English)",
@@ -111,12 +115,14 @@ function expectedCombatAudio(paths: Iterable<string>) {
 
 async function verifyCombatAudio(
   page: Page,
-  expected: boolean,
-  root: string,
+  combat: ReturnType<typeof expectedCombatAudio>,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
   requested: Iterable<string>,
 ) {
-  if (!expected) return;
-  const cueTimes = await readCombatCueTimes(root);
+  if (!combat.expected) return;
+  const cueTimes = combat.replayDecoded
+    ? await readDecodedCombatOracle(fixture)
+    : await readCombatCueTimes(fixture.root);
   const scheduledAt = (time: number) =>
     cueTimes.filter((cueTime) => cueTime + combatFrames / 44_100 > time).length;
   const play = page.getByRole("button", { name: "Play", exact: true });
@@ -133,6 +139,22 @@ async function verifyCombatAudio(
   };
   await pause.click();
   await speed.selectOption("1");
+  if (combat.replayDecoded) {
+    await seek(page, 100);
+    const priorCount = await combatCount();
+    await play.click();
+    await expect.poll(combatCount).toBe(priorCount + cueTimes.length);
+    const starts = await combatStarts();
+    const firstStart = starts[priorCount];
+    const firstCue = cueTimes[0];
+    if (firstStart === undefined || firstCue === undefined)
+      throw new Error("Missing decoded combat cue schedule");
+    for (const [index, cueTime] of cueTimes.entries())
+      expect(
+        (starts[priorCount + index]?.startAt ?? NaN) - firstStart.startAt,
+      ).toBeCloseTo(cueTime - firstCue, 7);
+    await pause.click();
+  }
   if (cueTimes.length > 1) {
     await seek(page, 993);
     const priorCount = await combatCount();
@@ -182,9 +204,45 @@ async function verifyCombatAudio(
   if (resumed === undefined) throw new Error("Missing resumed combat cue");
   expect(resumed.rate).toBe(4);
   expect(resumed.offset).toBeCloseTo(1720.5 - combatTime, 1);
+  const resources = [...requested];
   expect(
-    [...requested].filter((url) => url.includes("/combat-audio/")),
-  ).toHaveLength(2);
+    resources.filter((url) => url.includes("/combat-audio/")),
+  ).toHaveLength(combat.replayDecoded ? 1 : 2);
+  if (combat.replayDecoded) {
+    for (const resource of [
+      "rift-combat-audio-worker.mjs",
+      "rift-combat-audio-pages.bin",
+    ])
+      expect(resources.some((url) => url.endsWith(`/${resource}`))).toBe(true);
+  }
+}
+
+async function readDecodedCombatOracle(
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+) {
+  const root = Bun.env["SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY"];
+  if (root === undefined || root === "")
+    throw new Error(
+      "Set SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY for the combat oracle.",
+    );
+  const bytes = await Bun.file(
+    path.join(root, "rift-senna-46-audio-receipt.json"),
+  ).bytes();
+  expect(sha256(bytes)).toBe(
+    "d52f4b00406296913173dc8b487efc5c549ac59f60f6189d1bb3db7125e4708d",
+  );
+  const oracle = z
+    .object({
+      build: z.string(),
+      protocol: z.string(),
+      replaySha256: z.string(),
+      events: z.array(z.object({ stamp: z.number().positive() })).length(46),
+    })
+    .parse(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+  expect(oracle.build).toBe(fixture.descriptor.gameBuild);
+  expect(oracle.protocol).toBe(fixture.descriptor.protocol);
+  expect(oracle.replaySha256).toBe(fixture.descriptor.sha256);
+  return oracle.events.map(({ stamp }) => stamp);
 }
 
 async function readCombatCueTimes(root: string) {
@@ -218,7 +276,7 @@ test("announcer preview stays silent until enabled and follows the replay clock"
     throw new Error("A loopback base URL is required.");
   const fixture = await readRecordedReplay();
   const direct = fixture.announcerEvents !== undefined;
-  const combat = expectedCombatAudio(fixture.paths.values());
+  const combat = expectedCombatAudio(fixture);
   const clipPaths = [...fixture.paths.keys()].filter(
     (url) => url.includes("/announcer-preview/") && url.endsWith(".wav"),
   );
@@ -358,12 +416,7 @@ test("announcer preview stays silent until enabled and follows the replay clock"
     expect(transition.delay).toBeGreaterThan(0);
     expect(transition.delay).toBeCloseTo((cue.time - start) / playbackRate, 1);
   }
-  await verifyCombatAudio(
-    page,
-    combat.expected,
-    fixture.root,
-    traffic.requested,
-  );
+  await verifyCombatAudio(page, combat, fixture, traffic.requested);
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   const muted = await readRecordedAudioProbe(page);
