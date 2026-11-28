@@ -4,7 +4,6 @@ import {
   CRAWL_MAX_DEPTH,
   CRAWL_TIMELINE_PERCENT,
   crawlCooldownEnd,
-  crawlHardDisabledIn,
   crawlLookbackStart,
   crawlMatchesPerTick,
   puuidHash,
@@ -40,12 +39,6 @@ describe("crawl rules", () => {
     expect(crawlMatchesPerTick(1000)).toBe(5);
     expect(crawlMatchesPerTick(5500)).toBe(16);
     expect(crawlMatchesPerTick(55_000)).toBe(156);
-  });
-
-  test("hard-disable production only", () => {
-    expect(crawlHardDisabledIn("prod")).toBe(true);
-    expect(crawlHardDisabledIn("beta")).toBe(false);
-    expect(crawlHardDisabledIn("dev")).toBe(false);
   });
 
   test("hash a PUUID to 64 lowercase hex characters", () => {

@@ -3169,7 +3169,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-dynamic",
-      "purpose": "Run Scout's participant crawl: fetch matches of players near tracked matches on spare Riot rate and store them as identified raw segments. Production is also hard-disabled in code until crawl deletion, the privacy page and the Riot declaration are live.",
+      "purpose": "Run Scout's participant crawl: fetch matches of players near tracked matches on spare Riot rate and store them as identified raw segments.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -3178,9 +3178,9 @@
       "defaultOffExceptions": [
         {
           "environment": "prod",
-          "reason": "Production crawl is gated on crawl deletion, the privacy page and the Riot declaration, and the code hard-disables it in production until then.",
+          "reason": "Production crawl waits for the owner to switch the flag on; the code no longer hard-disables it, so with the flag off it is a no-op.",
           "issue": "AI-561",
-          "enableWhen": "Crawl deletion is deployed, the privacy page is live and the Riot declaration is made; then the production hard-disable is removed and the flag turned on.",
+          "enableWhen": "The owner turns the flag on in the production Flags deployment; the privacy page disclosure and crawl deletion are live.",
           "reviewBy": "2026-12-11"
         }
       ]

@@ -2668,15 +2668,17 @@ only once realtime has shown zero `would_defer` across 50k realtime requests.
 
 `src/league/crawl/` crawls players near tracked matches on spare Riot rate and
 keeps what it fetches as raw segments. It ships disabled:
-`scout-participant-crawl-enabled` is off in every environment and the code
-hard-disables production until crawl deletion, the privacy page and the Riot
-declaration are live. `scout-participant-crawl-daily-match-budget` (default
+`scout-participant-crawl-enabled` is off until switched on per environment, and
+that flag alone decides in every environment, production included; with it off
+the Activity returns a `disabled` tick without touching PostgreSQL, S3 or Riot.
+`scout-participant-crawl-daily-match-budget` (default
 1000, beta's first step; the ladder is 1000, 5500, 20000, 55000) caps matches
 stored per UTC day.
 
 - **Schedule and queue.** `scoutParticipantCrawlWorkflow` runs every minute
-  (overlap SKIP; both Schedules are created paused, and the enablement change
-  unpauses beta once the routed worker bundle exports the Workflow) and calls one Activity on `scout-{stage}-crawl`, polled by the
+  (overlap SKIP; both Schedules are created paused and reconciliation clears
+  that pause in both stages, since both worker bundles export the Workflow)
+  and calls one Activity on `scout-{stage}-crawl`, polled by the
   `activity-worker` pod. Each tick seeds from participants of tracked
   `MatchObservation` rows, visits a few eligible players (7-day cooldown,
   depth at most 2, both CHECKed in PostgreSQL), looks up their rank bracket

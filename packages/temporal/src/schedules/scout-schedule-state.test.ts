@@ -54,16 +54,44 @@ describe("declared beta Scout schedule activation", () => {
   });
 });
 
-describe("beta participant crawl schedule", () => {
-  test("reconciliation clears the created pause", () => {
-    const schedule = SCOUT_SCHEDULES.find(
-      (candidate) => candidate.id === "scout-beta-participant-crawl",
+function crawl(stage: "beta" | "prod") {
+  const schedule = SCOUT_SCHEDULES.find(
+    (candidate) => candidate.id === `scout-${stage}-participant-crawl`,
+  );
+  if (schedule === undefined) throw new Error(`no ${stage} crawl schedule`);
+  return schedule;
+}
+
+describe("participant crawl schedule activation", () => {
+  test.each(["beta", "prod"] as const)(
+    "reconciliation clears the created pause on %s",
+    (stage) => {
+      const schedule = crawl(stage);
+      const created = buildScheduleState(schedule, {});
+      expect(created.paused).toBe(true);
+      expect(buildScheduleState(schedule, {}, created)).toEqual({
+        paused: false,
+      });
+    },
+  );
+
+  test("production keeps an operator pause and any other note", () => {
+    const schedule = crawl("prod");
+    for (const previous of [
+      { paused: true },
+      { paused: true, note: "operator pause" },
+      { paused: true, note: retiredNotes[0] },
+    ]) {
+      expect(buildScheduleState(schedule, {}, previous)).toEqual(previous);
+    }
+  });
+
+  test("another production schedule keeps the crawl's pause", () => {
+    const created = buildScheduleState(crawl("prod"), {});
+    const other = SCOUT_SCHEDULES.find(
+      (candidate) => candidate.id === "scout-prod-postmatch-discovery",
     );
-    if (schedule === undefined) throw new Error("no beta crawl schedule");
-    const created = buildScheduleState(schedule, {});
-    expect(created.paused).toBe(true);
-    expect(buildScheduleState(schedule, {}, created)).toEqual({
-      paused: false,
-    });
+    if (other === undefined) throw new Error("no postmatch schedule");
+    expect(buildScheduleState(other, {}, created)).toEqual(created);
   });
 });
