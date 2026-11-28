@@ -589,10 +589,18 @@ appends only that checkpoint, never replays it, and then continues the original
 approved candidate. A changed journal, incomplete native migration or foreign
 owner refuses without removing maintenance or replacing the original backup.
 
-`--action inspect` verifies an already settled target without replaying its
-repair. Fresh native/target readback and the original PostgreSQL generation/lock
-CAS release quarantine without accepting the failed release. The same command
-resumes a settled intent whose exact host restoration acknowledgement was lost.
+`--action inspect` verifies the frozen desired target without replaying its
+repair. When the original Forum release container never reached migration and
+the previously accepted deployment still serves, use `--action inspect-prior`
+with the same intent. It requires exact terminal Job evidence, the original
+accepted source in Argo CD history, and two matching read-only observations of
+the prior runtime and its storage. Ambiguous, partial, or changed mutations
+keep quarantine held.
+
+Fresh native readback and the original PostgreSQL generation and lock
+release quarantine while preserving the failed result and last acceptance.
+Use `--action inspect` to resume a settled intent whose exact host restoration
+acknowledgement was lost.
 It restores only that host's UID/template and new Ready Pods. Stop the exact
 port-forward and resume dispatch after the restoration receipt is recorded.
 

@@ -27,6 +27,7 @@
         "scripts/cli-arguments.test.ts",
         "scripts/promotion",
         "scripts/rollout/content-delivery-recovery-operator.test.ts",
+        "scripts/rollout/content-delivery-recovery-forum-prior.test.ts",
         "scripts/rollout/temporal-operator-credentials.test.ts",
         "--exclude",
         "**/*.integration.test.ts"
