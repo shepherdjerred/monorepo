@@ -273,6 +273,14 @@ in the handoff bucket. With RAM scratch on, the step carries the
 private PostgreSQL clusters land in tmpfs. Both variables are echoed into the
 step's environment.
 
+The request emits a second, independent workflow, `paper-smoke-nightly`: the
+Paper and fake-brain services and the ten-minute smoke from
+`lanes/storm-e2e.ts`, which left the pull-request graph with the Playwright
+lane (`playwright-e2e` is `defaultBranchOnly`, with a `pullRequestInclude` exception for `ci/ci-playwright/**` so an image promotion PR still runs it before auto-merge). It has its own concurrency
+group, holds only the checkout download grant, and shares the request's
+draft-priority PR-pool routing. The dispatcher treats the pipeline as green only
+when both required workflows are present and succeed, so a red or missing `paper-smoke-nightly` fails the night.
+
 Woodpecker starts the manual pipeline at main's tip. When `CI_EXTENDED_SOURCE`
 is the tip, the workflow runs there. When it is behind the tip but still the
 newest verified main commit and the source cache is on, the workflow checks
@@ -431,7 +439,7 @@ pods; each agent fixes its queue label.
 
 Deploy mandatory-label agents and their queues before activating routing.
 Before allowing old and new agents to overlap, drain configurations generated
-without the shared Paper smoke concurrency cap. Retain the legacy agent until
+without the shared Paper smoke concurrency cap (it now runs nightly with its own group). Retain the legacy agent until
 all unlabelled workflows have finished; then remove it through the normal
 declarative release path. Routing labels prevent it from claiming new work.
 
@@ -483,7 +491,7 @@ Helm/GitOps publication uses `deployment` (Bun, Node, GitHub CLI, jq, Helm,
 ArgoCD, AWS CLI). OpenTofu containers use `tofu` (Bun and OpenTofu). These
 profiles resolve the checked-out `.mise.toml` pins even when the base image is
 older. Docker/buildx and Git remain prerequisites supplied by that image.
-Paper smoke uses `minecraft` (Bun, Java and Gradle), preserving its plugin build,
+The nightly Paper smoke uses `minecraft` (Bun, Java and Gradle), preserving its plugin build,
 sidecar preparation, smoke tests and ten-minute bound without bootstrapping
 Android or SwiftLint. Its Gradle dependency seed and workflow-local cache paths
 use the same preamble as exhaustive verification.

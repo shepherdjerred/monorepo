@@ -761,3 +761,14 @@ describe("promotion outcome", () => {
     }
   });
 });
+
+test("every ci-playwright promotion writes files the browser lane's pull-request exception selects", () => {
+  // The Woodpecker `playwright-e2e` lane runs on pull requests that change
+  // `ci/ci-playwright/**` (lanes/playwright.ts `pullRequestInclude`), which is
+  // how a promotion is exercised before it auto-merges.
+  expect(
+    ciImagePromotionFiles("ci-playwright").filter((file) =>
+      file.startsWith("ci/ci-playwright/"),
+    ).length,
+  ).toBeGreaterThanOrEqual(2);
+});

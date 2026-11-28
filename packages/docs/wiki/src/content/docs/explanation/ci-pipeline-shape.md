@@ -180,9 +180,9 @@ per-workspace classification.
 The extended tier runs in two places. The committer runs it locally for the
 workspaces a branch affects before marking the PR ready, and records the
 command and result in the PR body. A nightly Temporal schedule then dispatches
-a manual pipeline on main that emits one `verify-extended` workflow at the
-lowest admission priority, so it waits behind every pull request and main push,
-and runs the whole tier uncached (see the
+a manual pipeline on main that emits a `verify-extended` workflow and a
+`paper-smoke-nightly` workflow at the lowest admission priority, so they wait
+behind every pull request and main push, and run the whole tier uncached (see the
 [workflow inventory](/reference/temporal-workflows/)). That run is a safety net,
 not a main verdict: it gates no merge, and a red night raises an alert that
 names the pipeline, with `toolkit ci explain` giving the failing step.
@@ -230,15 +230,32 @@ fails.
 ## The lanes are phases, not duplicated test suites
 
 The [browser lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/playwright.ts)
-compares PRs against their target branch. Its
+runs on the default branch, and on a pull request only when it changes
+`ci/ci-playwright/**`. It was the one pull-request lane past 15 minutes (29
+minutes at p90, with 13% of runs reaching its 30-minute timeout) and used about
+a third of CI CPU, so other pull requests skip it and the committer runs the
+affected projects locally with `bun run e2e:affected` before marking the PR
+ready. The exception exists for the `ci-playwright` image promotion, which
+auto-merges once CI is green and bumps the pinned `@playwright/test` versions:
+without it nothing would run the candidate image until the next main push. It
+is keyed on that directory, not on `bun.lock` or a root `package.json`, which
+would bring the lane back for most pull requests. The command wraps the same
 [selector](https://github.com/shepherdjerred/monorepo/blob/main/ci/scripts/selection/run-playwright.ts)
-runs affected projects. When the base is unavailable, it runs all projects to
-preserve coverage.
+the lane uses and compares against the merge base with `origin/main`; unlike the
+lane, it stops with an error when that base cannot be found rather than running
+every project. See the
+[test tier reference](/reference/ci-test-tiers/#browser-and-paper-smoke-lanes).
+The accepted risk is the one the extended tier carries: a regression only a
+browser suite catches can reach main and fail the next main push, where this lane
+gates `sites`.
 
-Browser checks run alongside verification because their graph includes the
-builds they need. Completion and site publication wait for both lanes. Static
-wiki output has direct artifact checks, while browsers still exercise navigation
-and rendered behavior. The [portable Windows test graph](https://github.com/shepherdjerred/monorepo/blob/main/packages/tasknotes-windows/turbo.json)
+On main, browser checks run alongside verification because their graph includes
+the builds they need, and site publication waits for both lanes: `sites` deploys
+the `sjer-red-dist` and `wiki-dist` bundles the lane publishes. Static wiki
+output has direct artifact checks, while browsers still exercise navigation and
+rendered behavior. The Paper smoke is likewise off pull requests: it runs as a
+second workflow of the nightly extended pipeline, and committers run `test:smoke`
+locally. The [portable Windows test graph](https://github.com/shepherdjerred/monorepo/blob/main/packages/tasknotes-windows/turbo.json)
 produces test and coverage evidence in one execution; the coverage thresholds
 remain unchanged.
 
