@@ -11,6 +11,11 @@ import {
   type PlaywrightSelection,
 } from "./playwright-targets.ts";
 import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
+import {
+  parsePlaywrightPartition,
+  partitionPlaywrightSelection,
+  type PlaywrightPartition,
+} from "./playwright-partition.ts";
 
 const REPORT_PATH = "playwright-selection-report.json";
 
@@ -174,6 +179,7 @@ async function taskCacheStatuses(
 }
 
 async function writeReport(options: {
+  readonly partition: PlaywrightPartition;
   readonly base: string | null;
   readonly changedPaths: readonly string[];
   readonly selection: PlaywrightSelection;
@@ -184,6 +190,7 @@ async function writeReport(options: {
     `${JSON.stringify(
       {
         version: 1,
+        partition: options.partition,
         base: options.base,
         changedPaths: options.changedPaths,
         mode: options.selection.mode,
@@ -200,8 +207,14 @@ async function writeReport(options: {
   );
 }
 
-async function main(): Promise<number> {
-  const context = await selectionForBuild();
+async function main(args: readonly string[]): Promise<number> {
+  const partition = parsePlaywrightPartition(args);
+  const build = await selectionForBuild();
+  const context = {
+    ...build,
+    partition,
+    selection: partitionPlaywrightSelection(build.selection, partition),
+  };
   await writeReport(context);
   const selectedPackages = context.selection.targets.map(
     (target) => target.package,
@@ -287,4 +300,4 @@ async function main(): Promise<number> {
   return 0;
 }
 
-if (import.meta.main) process.exitCode = await main();
+if (import.meta.main) process.exitCode = await main(Bun.argv.slice(2));

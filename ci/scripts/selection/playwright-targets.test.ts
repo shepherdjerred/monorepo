@@ -6,6 +6,7 @@ import {
   additionalPlaywrightInstallFilters,
   selectPlaywrightTargets,
 } from "./playwright-targets.ts";
+import { partitionPlaywrightSelection } from "./playwright-partition.ts";
 
 const workspaces = new Map<string, WorkspacePackage>([
   [
@@ -101,6 +102,39 @@ function packages(
 }
 
 describe("Playwright target selection", () => {
+  test.each([
+    {
+      changed: ["packages/delivery/src/client/app.tsx"],
+      primary: ["@shepherdjerred/delivery"],
+      media: [],
+    },
+    {
+      changed: ["packages/media/src/client/library/page.tsx"],
+      primary: [],
+      media: ["@shepherdjerred/media"],
+    },
+    { changed: ["README.md"], primary: [], media: [] },
+  ])(
+    "filters a path selection with possible empty lanes for $changed",
+    async ({ changed, primary, media }) => {
+      const selected = await selectPlaywrightTargets(changed, ".", workspaces);
+      const primarySelection = partitionPlaywrightSelection(
+        selected,
+        "primary",
+      );
+      const mediaSelection = partitionPlaywrightSelection(selected, "media");
+
+      expect(packages(primarySelection)).toEqual(primary);
+      expect(packages(mediaSelection)).toEqual(media);
+      expect(primarySelection.mode).toBe("selected");
+      expect(mediaSelection.mode).toBe("selected");
+      expect({
+        ...primarySelection.reasons,
+        ...mediaSelection.reasons,
+      }).toEqual(selected.reasons);
+    },
+  );
+
   test("selects Facet browser acceptance for its same-origin server changes", async () => {
     const packageName = "@shepherdjerred/tasknotes-web";
     expect(
@@ -193,6 +227,7 @@ describe("Playwright target selection", () => {
   test("selects every target for shared browser machinery", async () => {
     for (const changedPath of [
       "ci/ci-playwright/Dockerfile",
+      "ci/scripts/selection/playwright-partition.ts",
       "ci/scripts/selectors/select-image-targets-lockfile.ts",
       "scripts/ci-test-manifest.json",
       "scripts/lib/json.ts",

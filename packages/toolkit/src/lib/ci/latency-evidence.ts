@@ -127,6 +127,7 @@ function selectedSteps(pipeline: WoodpeckerPipeline) {
                 [
                   "verify",
                   "playwright-e2e",
+                  "playwright-media-e2e",
                   "draft-preflight",
                   "release-please",
                 ].includes(workflow.name) ||

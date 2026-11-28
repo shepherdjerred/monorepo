@@ -1,6 +1,7 @@
 import { Testing } from "cdk8s";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { MatchLabelsSelectorSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
 import {
   COREPROTECT_ADDRESSES,
   createMinecraftTsmcEgress,
@@ -12,12 +13,8 @@ const Peer = z.object({
   ipBlock: z
     .object({ cidr: z.string(), except: z.array(z.string()).optional() })
     .optional(),
-  namespaceSelector: z
-    .object({ matchLabels: z.record(z.string(), z.string()).optional() })
-    .optional(),
-  podSelector: z
-    .object({ matchLabels: z.record(z.string(), z.string()).optional() })
-    .optional(),
+  namespaceSelector: MatchLabelsSelectorSchema.optional(),
+  podSelector: MatchLabelsSelectorSchema.optional(),
 });
 const Rule = z.object({ to: z.array(Peer), ports: z.array(Port) });
 const Policy = z.object({

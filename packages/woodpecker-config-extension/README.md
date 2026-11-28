@@ -40,6 +40,18 @@ guarantee a dependency-closed set, which the emitter then relies on.
   by the image lane, so baking them into this service would pin every build to
   whatever was current at deploy time.
 
+## Browser verification
+
+On main, `playwright-e2e` runs the selected browser projects outside Media and
+produces the tested site bundles. `playwright-media-e2e` runs Media when the
+same changed-file selector includes it. Both workflows have independent
+30-minute limits and must succeed before Sites can publish and Delivery can
+register the release. Each has its own diagnostic artifact.
+
+Playwright image-promotion pull requests and manual browser benchmarks keep a
+single workflow that runs the full selection. Historical main revisions that
+predate the partition also run the full selection in `playwright-e2e`.
+
 ## Dependency caches
 
 When the typed `woodpecker-ram-scratch-enabled` flag is on, the ordinary

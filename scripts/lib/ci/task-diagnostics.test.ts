@@ -253,22 +253,25 @@ test("browser selection strips exception text, paths and arbitrary metadata", as
   expect(JSON.stringify(report)).not.toContain("sentinel");
 });
 
-test("removes stale browser selection before execution and accepts fresh reports on coarse clocks", async () => {
-  const root = await repository();
-  const selection = path.join(root, "playwright-selection-report.json");
-  await Bun.write(selection, "old report");
-  await prepareDiagnostics("playwright-e2e", root);
-  expect(await Bun.file(selection).exists()).toBe(false);
-  const record = { base: null, mode: "selected", targets: [] };
-  await Bun.write(selection, JSON.stringify(record));
-  await utimes(selection, new Date(0), new Date(0));
-  const report = await collectTaskDiagnostics(
-    { ...identity, workflow: "playwright-e2e" },
-    new Set(),
-    root,
-  );
-  expect(report.browserSelection).toEqual(record);
-});
+test.each(["playwright-e2e", "playwright-media-e2e"] as const)(
+  "%s removes stale browser selection and accepts fresh reports on coarse clocks",
+  async (workflow) => {
+    const root = await repository();
+    const selection = path.join(root, "playwright-selection-report.json");
+    await Bun.write(selection, "old report");
+    await prepareDiagnostics(workflow, root);
+    expect(await Bun.file(selection).exists()).toBe(false);
+    const record = { base: null, mode: "selected", targets: [] };
+    await Bun.write(selection, JSON.stringify(record));
+    await utimes(selection, new Date(0), new Date(0));
+    const report = await collectTaskDiagnostics(
+      { ...identity, workflow },
+      new Set(),
+      root,
+    );
+    expect(report.browserSelection).toEqual(record);
+  },
+);
 
 test.each([0, 42])(
   "publishes even when the task exits %i",
@@ -569,7 +572,10 @@ async function wrapperFixture(root: string) {
   // real subprocesses from a checkout with no installed dependencies.
   await Bun.write(
     path.join(library, "ci-handoff.ts"),
-    'export async function writeJsonHandoff(key, report) { await Bun.write("published.json", JSON.stringify(report)); }',
+    `export async function writeJsonHandoff(key, report) {
+      await Bun.write("published-key", key);
+      await Bun.write("published.json", JSON.stringify(report));
+    }`,
   );
   await Bun.write(
     path.join(library, "ci-object-store-retry.ts"),
@@ -581,19 +587,43 @@ async function wrapperFixture(root: string) {
 test.each([
   { exitCode: 0, workflow: "verify" },
   { exitCode: 42, workflow: "verify-extended" },
+  { exitCode: 0, workflow: "playwright-e2e", partition: "primary" },
+  { exitCode: 42, workflow: "playwright-media-e2e", partition: "media" },
 ])(
   "collects in a fresh process after the child installs dependencies and exits $exitCode ($workflow)",
-  async ({ exitCode, workflow }) => {
+  async ({ exitCode, workflow, partition }) => {
     const root = await repository();
     const entrypoint = await wrapperFixture(root);
     const dependencies = new URL("../../node_modules", import.meta.url)
       .pathname;
+    const browserSelection =
+      partition === undefined
+        ? undefined
+        : {
+            base: null,
+            mode: "all",
+            partition,
+            targets: [
+              {
+                package:
+                  partition === "media"
+                    ? "@shepherdjerred/media"
+                    : "@shepherdjerred/tracker",
+                cache: "NOT_RUN",
+              },
+            ],
+          };
+    const writeBrowserReport =
+      browserSelection === undefined
+        ? ""
+        : `await Bun.write("playwright-selection-report.json", ${JSON.stringify(JSON.stringify(browserSelection))});`;
     const install = `
       import { mkdir, symlink } from "node:fs/promises";
       await symlink(${JSON.stringify(dependencies)}, "scripts/node_modules");
       await Bun.write(".turbo/runs/child.json", ${JSON.stringify(JSON.stringify(summary()))});
       await mkdir(".ci-reports/junit/test__package", { recursive: true });
       await Bun.write(".ci-reports/junit/test__package/vitest.xml", ${JSON.stringify(junitReport)});
+      ${writeBrowserReport}
       process.exit(${String(exitCode)});
     `;
     // Neither scratch nor Git metadata can provide a transfer directory. A
@@ -617,10 +647,13 @@ test.each([
     expect(stdout).toContain(
       `CI task diagnostics: ci-handoff/123/diagnostics-${workflow}.json`,
     );
+    expect(await Bun.file(path.join(root, "published-key")).text()).toBe(
+      `diagnostics-${workflow}`,
+    );
     expect(exit).toBe(exitCode);
-    const report: unknown = await Bun.file(
-      path.join(root, "published.json"),
-    ).json();
+    const report = TaskDiagnosticsSchema.parse(
+      await Bun.file(path.join(root, "published.json")).json(),
+    );
     expect(report).toMatchObject({
       pipeline: "123",
       workflow,
@@ -630,6 +663,7 @@ test.each([
       workspaceUsage: expect.objectContaining({ version: 1 }),
       testTimings: { version: 1, suites: [junitSuite] },
     });
+    expect(report.browserSelection).toEqual(browserSelection);
     expect(JSON.stringify(report)).not.toContain("sentinel");
   },
 );

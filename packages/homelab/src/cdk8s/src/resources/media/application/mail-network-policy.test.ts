@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createUnifiedMediaApplication } from "./index.ts";
 import { createMailChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/mail.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { MatchLabelsSelectorSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
 
 const ManifestDocSchema = z.looseObject({
   kind: z.string(),
@@ -14,12 +15,8 @@ const ManifestDocSchema = z.looseObject({
 });
 
 const NetpolPeerSchema = z.object({
-  namespaceSelector: z
-    .object({ matchLabels: z.record(z.string(), z.string()).optional() })
-    .optional(),
-  podSelector: z
-    .object({ matchLabels: z.record(z.string(), z.string()).optional() })
-    .optional(),
+  namespaceSelector: MatchLabelsSelectorSchema.optional(),
+  podSelector: MatchLabelsSelectorSchema.optional(),
   ipBlock: z.object({ cidr: z.string() }).optional(),
 });
 
@@ -32,9 +29,7 @@ const NetpolRuleSchema = z.object({
 });
 
 const NetpolSpecSchema = z.object({
-  podSelector: z.object({
-    matchLabels: z.record(z.string(), z.string()).optional(),
-  }),
+  podSelector: MatchLabelsSelectorSchema,
   policyTypes: z.array(z.string()),
   ingress: z.array(NetpolRuleSchema).optional(),
   egress: z.array(NetpolRuleSchema).optional(),

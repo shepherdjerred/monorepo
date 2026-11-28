@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { FileCodeIcon } from "lucide-react";
-import { Tag } from "@shepherdjerred/console-ui";
+import { Chip } from "@shepherdjerred/console-ui";
 import type { FlagsUsageResponse as FlagsUsage } from "@shepherdjerred/feature-flags/flags-wire.ts";
 import {
   useUsage,
@@ -173,11 +173,13 @@ export function UsagePanel({
                       {entry.file}
                     </a>
                     {entry.sites.map((site) => (
-                      <Tag key={site.kind} className="fl-usage-kind">
-                        {site.count > 1
-                          ? `${site.kind} ×${String(site.count)}`
-                          : site.kind}
-                      </Tag>
+                      <Chip key={site.kind}>
+                        <span className="ui-mono fl-usage-kind">
+                          {site.count > 1
+                            ? `${site.kind} ×${String(site.count)}`
+                            : site.kind}
+                        </span>
+                      </Chip>
                     ))}
                   </li>
                 ))}

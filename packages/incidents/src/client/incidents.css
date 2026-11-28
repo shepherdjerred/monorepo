@@ -221,11 +221,6 @@
   background: none;
 }
 
-.inc-table .ui-num {
-  font-family: var(--ui-font-mono);
-  font-variant-numeric: tabular-nums;
-}
-
 .inc-table td {
   height: auto;
   padding-block: 8px;
@@ -435,7 +430,7 @@
   align-items: end;
 }
 
-.inc-form-row > .ui-field {
+.inc-form-row > div {
   min-width: 0;
 }
 
@@ -450,7 +445,7 @@
   align-items: center;
 }
 
-.inc-page textarea.ui-field-control {
+.inc-page textarea {
   resize: vertical;
 }
 
@@ -569,56 +564,23 @@
   white-space: pre-wrap;
 }
 
-/* ---- Dialog ---- */
-.inc-dialog {
-  width: min(34rem, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  padding: 0;
-  border: 1px solid var(--ui-line);
-  border-radius: 12px;
-  background: var(--ui-panel);
-  color: var(--ui-ink);
-  overflow: auto;
-}
-
-.inc-dialog:modal {
+/* Keep scroll gestures inside the native action modal and its backdrop. */
+.inc-page dialog:modal {
   overscroll-behavior: contain;
 }
 
-.inc-dialog::backdrop {
+.inc-page dialog::backdrop {
   overflow: hidden;
   overscroll-behavior: contain;
-  background: color-mix(in srgb, black 45%, transparent);
 }
 
-.inc-dialog-form {
-  display: grid;
-  gap: 12px;
-  padding: 20px;
-}
-
-.inc-dialog-title {
-  margin: 0;
-  font-size: 1.1rem;
-  letter-spacing: -0.01em;
-}
-
-.inc-dialog-description {
-  margin: 0;
-  color: var(--ui-muted);
+.inc-action-description {
   overflow-wrap: anywhere;
 }
 
-.inc-dialog-error {
+.inc-action-error {
   margin: 0;
   color: var(--ui-sev-error-text);
-}
-
-.inc-dialog-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
 }
 
 /* ---- Declare ---- */
@@ -766,11 +728,12 @@
 }
 
 @media (pointer: coarse) {
-  .inc-page :is(.ui-field-control, select, input, textarea) {
+  .inc-page :is(select, input, textarea) {
     font-size: max(1rem, 1em);
   }
 
-  .inc-page .ui-field-control {
-    min-height: 44px;
+  .inc-page
+    :is(select, input:not([type="checkbox"], [type="radio"]), textarea) {
+    min-height: var(--ui-hit);
   }
 }

@@ -656,12 +656,30 @@ describe("selected lane contracts", () => {
       steps.find((s) => s.key === "tofu-validate")?.commands.join("\n"),
     ).toContain('"$stack" validate');
   });
+});
 
+describe("browser workflow selection", () => {
   test("playwright can start alongside verify and uses the browser image", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     const playwright = steps.find((s) => s.key === "playwright-e2e");
+    const media = steps.find((s) => s.key === "playwright-media-e2e");
+    if (playwright === undefined || media === undefined)
+      throw new Error("Both browser workflows are required");
     expect(playwright?.dependsOn).toBeUndefined();
     expect(playwright?.image).toBe(IMAGES.playwright);
+    expect(media.dependsOn).toBeUndefined();
+    expect(media.image).toBe(IMAGES.playwright);
+    expect(media.timeoutMinutes).toBe(playwright.timeoutMinutes);
+    expect(media.commands.join("\n")).toContain("--partition media");
+    expect(playwright.commands.join("\n")).toContain("--partition primary");
+    for (const archive of ["sjer-red-dist", "wiki-dist"]) {
+      expect(playwright.commands.join("\n")).toContain(
+        `ci-artifact.ts put ${archive}`,
+      );
+      expect(media.commands.join("\n")).not.toContain(
+        `ci-artifact.ts put ${archive}`,
+      );
+    }
     expect(playwright?.environment?.["CI_PLAYWRIGHT_IMAGE"]).toBe(
       IMAGES.playwright,
     );
@@ -671,14 +689,32 @@ describe("selected lane contracts", () => {
     const pr = keysFor(["packages/sjer.red/src/pages/index.astro"]);
     expect(pr).toContain("verify");
     expect(pr).not.toContain("playwright-e2e");
+    expect(pr).not.toContain("playwright-media-e2e");
     const main = keysFor(["packages/sjer.red/src/pages/index.astro"], "main");
     expect(main).toEqual(
-      expect.arrayContaining(["verify", "playwright-e2e", "sites"]),
+      expect.arrayContaining([
+        "verify",
+        "playwright-e2e",
+        "playwright-media-e2e",
+        "sites",
+      ]),
     );
     // sites ships the bundles playwright-e2e publishes.
-    expect(steps.find((s) => s.key === "sites")?.dependsOn).toContain(
-      "playwright-e2e",
+    expect(steps.find((s) => s.key === "sites")?.dependsOn).toEqual(
+      expect.arrayContaining(["playwright-e2e", "playwright-media-e2e"]),
     );
+    for (const files of [
+      ["packages/media/playwright.config.ts"],
+      ["bun.lock"],
+      [],
+    ])
+      expect(keysFor(files, "main")).toEqual(
+        expect.arrayContaining([
+          "playwright-e2e",
+          "playwright-media-e2e",
+          "sites",
+        ]),
+      );
   });
 
   test("a ci-playwright promotion PR still runs the browser lane before it auto-merges", () => {
@@ -693,6 +729,7 @@ describe("selected lane contracts", () => {
       "bun.lock",
     ];
     expect(keysFor(promotion)).toContain("playwright-e2e");
+    expect(keysFor(promotion)).not.toContain("playwright-media-e2e");
     // The digest and state files alone are enough: every promotion rewrites them.
     expect(keysFor(["ci/ci-playwright/DIGEST"])).toContain("playwright-e2e");
     // Main selects it as before.
@@ -711,7 +748,9 @@ describe("selected lane contracts", () => {
     // the exception.
     expect(keysFor([])).not.toContain("playwright-e2e");
   });
+});
 
+describe("independent lane contracts", () => {
   test("tofu validate lanes carry no provider credentials", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     const envs = (
