@@ -35,6 +35,33 @@ test("rejects unknown replay and client identities", () => {
 const localClient = process.env.SCOUT_RESEARCH_OPCODE944_MAC_CLIENT;
 const currentClient = process.env.SCOUT_RESEARCH_OPCODE944_CURRENT_MAC_CLIENT;
 const referenceBody = process.env.SCOUT_RESEARCH_OPCODE944_BODY;
+test(
+  "matches native one-byte IDs across admitted position forms",
+  { skip: !currentClient },
+  async () => {
+    const read = createPosition944Reader(
+      await readFile(currentClient),
+      currentReplay,
+      currentOptions,
+    );
+    for (const [hex, x, z] of [
+      ["b15468c0b79ed0c0c21d27", 1142.53564453125, 1172.028076171875],
+      ["b048eaae33ba68d52a9736d50d8d1e", 6153.3330078125, 5565.37548828125],
+      ["b350eaae33ba00d5967030d5cc9424", 5914.31201171875, 5661.99755859375],
+      ["b44ceaae33ba10d5e9db1fd513db9a", 5735.23876953125, 6055.1494140625],
+      ["b650eaae33ba30d52b4573d54e7a73", 7177, 6243],
+    ]) {
+      const body = Buffer.from(hex, "hex");
+      assert.deepEqual(read(body), { x, z });
+      assert.throws(() => read(body.subarray(0, -1)), /body length/);
+      assert.throws(
+        () => read(Buffer.concat([body, Buffer.of(0)])),
+        /continuation/,
+      );
+    }
+    assert.equal(read(Buffer.from("f15468", "hex")), null);
+  },
+);
 test("rejects unpinned prepared input through both loaders", async () => {
   const sameSize = new Uint8Array(1024);
   assert.throws(() => createExactTerrainByteCodecs(sameSize, replay), /digest/);

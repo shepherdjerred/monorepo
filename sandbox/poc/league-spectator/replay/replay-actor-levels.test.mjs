@@ -112,6 +112,26 @@ test("admits recorded level 19 only after an exact actor cap override", () => {
   );
 });
 
+test("preserves the current three-byte ordinary transition to level six", () => {
+  const progression = [
+    level(500, 30, 200, [0x85]),
+    ...[0x72, 0xc5, 0x51].map((code, index) =>
+      level(500, 90 + index, 300 + index, [0x8d, code]),
+    ),
+  ];
+  const read = (payload, maximumLevel) =>
+    decodeActorLevelEnvelopes(
+      [...progression, level(500, 178.553, 450, payload)],
+      binding,
+      [1, 1, 6, 1, 1, 1, 1, 1, 1, 1],
+      maximumLevel,
+    );
+  expect(read([0x89, 0x16, 0x5e], 20).events.at(-1)?.level).toBe(6);
+  expect(() => read([0x89, 0x16, 0x5e], 19)).toThrow("nonconsecutive");
+  expect(() => read([0x88, 0x16, 0x5e], 20)).toThrow("nonconsecutive");
+  expect(() => read([0x89, 0x16, 0x9d], 20)).toThrow("nonconsecutive");
+});
+
 test("the current-build profile requires a two-byte level-20 transition and cap", () => {
   const progression = [
     level(500, 10, 10, [0x85]),

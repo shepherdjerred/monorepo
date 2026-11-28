@@ -73,8 +73,18 @@ function nextLevel(actor, packet, maximumLevel) {
       actor.bootstrapClock = null;
       return 3;
     }
-  } else if (payload.length === 2) {
-    const level = levelByCode.get(payload[1]);
+  } else if (
+    payload.length === 2 ||
+    // The current opcode 1011 reader consumes both slots for selectors
+    // A=1, B=1. This recorded six transition is distinct from opening
+    // bootstrap and the separately verified two-byte level-20 transition.
+    (maximumLevel === 20 &&
+      payload.length === 3 &&
+      (payload[0] & 0x3f) === 0x09 &&
+      payload[1] === 0x16 &&
+      payload[2] === 0x5e)
+  ) {
+    const level = levelByCode.get(payload.at(-1));
     if (
       level === actor.level + 1 &&
       level <= actor.levelCap &&

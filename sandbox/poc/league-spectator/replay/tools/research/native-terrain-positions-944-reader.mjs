@@ -27,7 +27,9 @@ function readPosition(payload, decodeByte) {
   const vectorPresent = (first & 0x40) === 0;
   const vectorOffset = payload.length - (vectorPresent ? 8 : 0);
   const idLength = vectorOffset - start;
-  if (idLength < 2 || idLength > (form === 0xb1 ? 2 : 3))
+  // All admitted ID selectors read at least one byte and stop when its
+  // transformed continuation bit is clear, regardless of the first form.
+  if (idLength < 1 || idLength > (form === 0xb1 ? 2 : 3))
     throw Error("Unexpected opcode 944 position body length");
   for (let offset = start; offset < vectorOffset; offset++) {
     if (hasContinuation(payload[offset]) !== offset < vectorOffset - 1)
