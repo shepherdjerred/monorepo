@@ -1,8 +1,5 @@
-import {
-  AppSwitcher,
-  ThemeToggle,
-  type AppSwitcherEntry,
-} from "@shepherdjerred/console-ui";
+import { AppSwitcher, type AppSwitcherEntry } from "@shepherdjerred/console-ui";
+import { ThemeButton } from "@shepherdjerred/console-ui/components/shell/phone-nav.tsx";
 import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { KeyboardIcon } from "lucide-react";
 import { useState } from "react";
@@ -78,7 +75,7 @@ export function App(): React.JSX.Element {
         >
           <KeyboardIcon aria-hidden="true" />
         </button>
-        <ThemeToggle store={themeStore} />
+        <ThemeButton store={themeStore} />
       </header>
       <Routes>
         <Route path="/" element={<InboxPage />} />

@@ -1,4 +1,4 @@
-import { Segmented } from "@shepherdjerred/console-ui";
+import { Tabs } from "@shepherdjerred/console-ui";
 import { ExternalLinkIcon, MessageSquarePlusIcon } from "lucide-react";
 import { Link } from "react-router";
 import type {
@@ -81,7 +81,7 @@ export function FocusedHeader({
           </select>
         </label>
         {framed ? (
-          <Segmented
+          <Tabs
             label="Viewport width"
             value={preset}
             onChange={onPreset}
