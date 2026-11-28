@@ -18,6 +18,33 @@ export type MetricsDatabase = Pick<
   "deployment" | "build" | "workerVersion" | "environment" | "$queryRaw"
 >;
 
+export const RETAINABLE_QUALIFICATION_OUTCOMES = [
+  "pending",
+  "verified",
+  "failed",
+] as const;
+export type RetainableQualificationOutcome =
+  (typeof RETAINABLE_QUALIFICATION_OUTCOMES)[number];
+export type RetainableQualificationCounts = Readonly<
+  Record<RetainableQualificationOutcome, number>
+>;
+
+export function createRetainableQualificationCounters() {
+  const counts: Record<RetainableQualificationOutcome, number> = {
+    pending: 0,
+    verified: 0,
+    failed: 0,
+  };
+  return {
+    record(outcome: RetainableQualificationOutcome) {
+      counts[outcome] += 1;
+    },
+    snapshot(): RetainableQualificationCounts {
+      return { ...counts };
+    },
+  };
+}
+
 const Value = z.number().nonnegative();
 const StateSchema = z.object({
   outboxPending: Value,
@@ -178,6 +205,9 @@ function staleOwnershipReleased(database: MetricsDatabase) {
 /** Database gauges survive restarts; labels are closed enums, never request IDs. */
 export async function deliveryMetrics(
   database: MetricsDatabase,
+  runtime?: {
+    retainablePendingQualifications?: RetainableQualificationCounts;
+  },
 ): Promise<string> {
   const [
     deployments,
@@ -365,6 +395,16 @@ export async function deliveryMetrics(
     OWNERSHIP_KINDS.map((kind) => ({
       labels: { kind },
       value: released.find((row) => row.kind === kind)?.value ?? 0,
+    })),
+    "counter",
+  );
+  const retainableQualifications = runtime?.retainablePendingQualifications;
+  metric(
+    "delivery_retainable_pending_qualifications_total",
+    "On-read CI qualifications of pending builds during latest-retainable lookups, by outcome.",
+    RETAINABLE_QUALIFICATION_OUTCOMES.map((outcome) => ({
+      labels: { outcome },
+      value: retainableQualifications?.[outcome] ?? 0,
     })),
     "counter",
   );

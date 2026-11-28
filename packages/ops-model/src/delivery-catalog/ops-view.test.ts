@@ -8,11 +8,29 @@ import { serviceCatalogView } from "./ops-view.ts";
 
 /** First-party Docker Hub repositories (`@shepherdjerred/version-catalog`). */
 const imageRegistry = z
-  .object({ images: z.array(z.object({ name: z.string() })) })
+  .object({
+    images: z.array(
+      z.object({ name: z.string(), visibility: z.string().optional() }),
+    ),
+  })
   .parse(
     await Bun.file(
       new URL(
         "../../../version-catalog/src/image-registry.json",
+        import.meta.url,
+      ),
+    ).json(),
+  );
+
+const pendingImageNames = z
+  .object({ pendingPrivateImages: z.record(z.string(), z.string()) })
+  .transform(
+    ({ pendingPrivateImages }) => new Set(Object.keys(pendingPrivateImages)),
+  )
+  .parse(
+    await Bun.file(
+      new URL(
+        "../../../../scripts/checks/service-registration-exemptions.json",
         import.meta.url,
       ),
     ).json(),
@@ -51,9 +69,18 @@ describe("catalog core", () => {
     ).toEqual(["scout-for-lol/prod", "starlight-karma-bot/prod"]);
   });
 
-  test("every first-party image has exactly one producing service", () => {
-    for (const image of imageRegistry.images)
-      expect(firstPartyOwner(`image:${image.name}`), image.name).toBeDefined();
+  test("registered images have a producing service unless held privately pending registration", () => {
+    for (const name of pendingImageNames) {
+      expect(
+        imageRegistry.images.find((image) => image.name === name)?.visibility,
+        name,
+      ).toBe("private");
+    }
+    for (const { name } of imageRegistry.images) {
+      const owner = firstPartyOwner(`image:${name}`);
+      if (pendingImageNames.has(name)) expect(owner, name).toBeUndefined();
+      else expect(owner, name).toBeDefined();
+    }
   });
 
   test("ci holds only the runtime images CI and stage runners select; the public cross-compilers are their own services", () => {

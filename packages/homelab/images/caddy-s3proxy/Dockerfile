@@ -13,7 +13,7 @@
 # for large downloads. The build tests full and partial HTTP response framing.
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.9-builder-alpine@sha256:646fee578e680989ca5c7fd1ce6f1de574d19fd71ef2221810cc0510a9f40c86 AS builder
+FROM caddy:2.11.9-builder-alpine@sha256:86e132d1d6db8850352b2dbc15f82a4cb25363ac305ee41e11405873e5931f37 AS builder
 
 # xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
 # import path and adds HEAD support, the 304-on-index fix, and 206/Accept-Ranges

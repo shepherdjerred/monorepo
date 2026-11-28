@@ -22,7 +22,7 @@ test("diagnostic wrapper preserves shell arguments after toolchain bootstrap", a
 });
 
 test("only credentialed verification and browser lanes publish task diagnostics", () => {
-  for (const key of ["verify", "playwright-e2e"]) {
+  for (const key of ["verify", "playwright-e2e", "playwright-media-e2e"]) {
     const step = testPipelineSteps().find((candidate) => candidate.key === key);
     expect(step?.commands.join("\n")).toContain(
       `run-with-diagnostics.ts ${key} --`,

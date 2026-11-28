@@ -162,7 +162,7 @@ RUN set -e; \
 # installed at the config-default path /usr/local/bin/yt-dlp. Per-arch asset,
 # pinned checksum, retries. Independent of the app layers below.
 # renovate: datasource=github-releases depName=yt-dlp/yt-dlp
-ARG YT_DLP_VERSION=2026.10.26
+ARG YT_DLP_VERSION=2026.11.23
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
     if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux; \

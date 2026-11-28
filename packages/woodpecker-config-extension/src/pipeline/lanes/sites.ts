@@ -1,4 +1,5 @@
 import type { CiImages } from "#src/images.ts";
+import { MEDIA_BROWSER_WORKFLOW } from "#src/pipeline/lanes/playwright.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import {
@@ -233,6 +234,7 @@ export function siteSteps(images: CiImages, catalogV2 = false): CiStep[] {
       dependsOn: [
         "verify",
         "playwright-e2e",
+        MEDIA_BROWSER_WORKFLOW,
         "resume-build",
         "scout-site-archives",
       ],

@@ -449,6 +449,7 @@ export function normalizePath(pathname: string): string {
       "/players/:playerId/matches/:matchId",
     )
     .replace(/^\/champions\/[^/]+/, "/champions/:championId")
+    .replace(/^\/live\/[^/]+/, "/live/:riotMatchId")
     .replace(/^\/halls\/[^/]+/, "/halls/:guildId")
     .replace(/^\/challenge-runs\/[^/]+/, "/challenge-runs/:runId")
     .replace(/^\/challenges\/drafts\/[^/]+/, "/challenges/drafts/:draftId")
@@ -486,7 +487,7 @@ export function normalizePath(pathname: string): string {
       "/explore/:conversationId",
     );
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken|matches\/:matchId))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/clash|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/dares(?:\/(?:settings|:dareId))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken|matches\/:matchId))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/live(?:\/:riotMatchId)?|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/clash|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/dares(?:\/(?:settings|:dareId))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 

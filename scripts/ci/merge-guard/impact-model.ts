@@ -105,12 +105,18 @@ function parsePrNumberFromRef(ref: string | undefined): number | null {
   return match?.[1] === undefined ? null : Number.parseInt(match[1], 10);
 }
 
+const verificationWorkflows = new Set([
+  "verify",
+  "playwright-e2e",
+  "playwright-media-e2e",
+]);
+
 function isVerifyFailure(pipeline: WoodpeckerPipelineItem): boolean {
   return pipeline.workflows.length === 0
     ? pipeline.status === "failure" || pipeline.status === "error"
     : pipeline.workflows.some(
         (wf) =>
-          (wf.name === "verify" || wf.name === "playwright-e2e") &&
+          verificationWorkflows.has(wf.name) &&
           ["failure", "error", "killed", "declined"].includes(
             wf.state.toLowerCase(),
           ),
@@ -124,8 +130,8 @@ function isVerifySuccess(pipeline: WoodpeckerPipelineItem): boolean {
   if (pipeline.workflows.length === 0) {
     return pipeline.status.toLowerCase() === "success";
   }
-  const verifyWorkflows = pipeline.workflows.filter(
-    (wf) => wf.name === "verify" || wf.name === "playwright-e2e",
+  const verifyWorkflows = pipeline.workflows.filter((wf) =>
+    verificationWorkflows.has(wf.name),
   );
   return verifyWorkflows.length === 0
     ? pipeline.status.toLowerCase() === "success"

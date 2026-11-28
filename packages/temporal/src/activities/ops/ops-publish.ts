@@ -20,6 +20,7 @@ import {
   type SourceInputId,
   OpsIngestSchema,
   SOURCE_IDS,
+  canOmitSource,
   type ChangeEventInput,
   type OpsIngest,
   type SignalInput,
@@ -116,7 +117,7 @@ export function dedupeChanges(
 export const SOURCE_NOT_COLLECTED = "not collected by this workflow build";
 
 /**
- * Every declared source this workflow build did not report, as failures.
+ * Required sources this workflow build did not report, as failures.
  *
  * Activities deploy with every release, but the workflow code is pinned to
  * the current Worker Deployment version. A newly declared source is
@@ -128,11 +129,9 @@ function uncollectedSources(
   outcomes: readonly OpsCollectorOutcome[],
 ): OpsCollectorOutcome[] {
   const reported = new Set(outcomes.map((outcome) => outcome.source));
-  return SOURCE_IDS.filter((source) => !reported.has(source)).map((source) => ({
-    source,
-    ok: false,
-    error: SOURCE_NOT_COLLECTED,
-  }));
+  return SOURCE_IDS.filter(
+    (source) => !reported.has(source) && !canOmitSource(source),
+  ).map((source) => ({ source, ok: false, error: SOURCE_NOT_COLLECTED }));
 }
 
 /** Merge partial facet objects without clobbering sibling keys with `undefined`. */

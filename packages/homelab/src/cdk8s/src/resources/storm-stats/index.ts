@@ -29,7 +29,8 @@ export const STORM_STATS_ACTIVE = true;
 
 const STORM_STATS_PUBLIC_PORT = 7420;
 const STORM_STATS_ADMIN_PORT = 7421;
-const STORM_STATS_INGEST_PORT = 7422;
+/** The Storm game server posts its stats outbox here. */
+export const STORM_STATS_INGEST_PORT = 7422;
 
 export function createStormStatsDeployment(chart: Chart) {
   const webService = new FirstPartyWebService(

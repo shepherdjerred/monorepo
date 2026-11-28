@@ -1,8 +1,15 @@
 import { describe, expect, test } from "vitest";
 import {
   classifySubtitleCodec,
+  embeddedTrackExtractArgs,
+  isAssSubtitleCodec,
+  parseFontAttachments,
+  subtitleFormatLabel,
+} from "@shepherdjerred/streambot/sources/subtitle-formats.ts";
+import {
   effectiveSubtitleConfig,
   embeddedSubtitleModifier,
+  isAutoBurnLanguage,
   listYtdlpSubtitleCandidates,
   parseFfprobeSubtitles,
   parseLangPref,
@@ -42,7 +49,7 @@ describe("classifySubtitleCodec", () => {
       expect(classifySubtitleCodec(c)).toBe("text");
     }
   });
-  test("image codecs (cannot be burned via subtitles filter)", () => {
+  test("image codecs (burned with overlay, not the subtitles filter)", () => {
     for (const c of ["hdmv_pgs_subtitle", "dvd_subtitle", "dvb_subtitle"]) {
       expect(classifySubtitleCodec(c)).toBe("image");
     }
@@ -199,7 +206,7 @@ describe("rankSubtitleCandidates (cross-source)", () => {
   const endgame = [forcedSidecar, ...toEmbeddedCandidates(endgameStreams)];
   const LANGS = ["en", "eng", "en-US"];
 
-  test("full embedded track beats a forced-only sidecar (PGS never competes)", () => {
+  test("full embedded track beats a forced-only sidecar; PGS ranks after text of equal quality", () => {
     const ranked = rankSubtitleCandidates(endgame, LANGS);
     expect(ranked[0]).toEqual({
       kind: "embedded",
@@ -208,10 +215,37 @@ describe("rankSubtitleCandidates (cross-source)", () => {
       lang: "eng",
       modifier: null,
     });
-    // SDH (quality 1) still beats the forced sidecar (quality 2).
-    expect(ranked[1]?.kind).toBe("embedded");
-    expect(ranked[2]).toBe(forcedSidecar);
-    expect(ranked).toHaveLength(3); // both PGS tracks were excluded up front
+    expect(
+      ranked.map((c) =>
+        c.kind === "embedded"
+          ? `${c.codec}#${String(c.subtitleIndex)}`
+          : c.kind,
+      ),
+    ).toEqual([
+      "subrip#0",
+      // A full English PGS track is still better than SDH or forced text.
+      "hdmv_pgs_subtitle#2",
+      "subrip#1",
+      // SDH (quality 1) still beats the forced sidecar (quality 2).
+      "sidecar",
+      // Foreign last.
+      "hdmv_pgs_subtitle#3",
+    ]);
+    expect(ranked[3]).toBe(forcedSidecar);
+  });
+
+  test("an embedded text track beats an embedded image track of the same language and quality", () => {
+    const ranked = rankSubtitleCandidates(
+      toEmbeddedCandidates([
+        { codec_name: "hdmv_pgs_subtitle", tags: { language: "eng" } },
+        { codec_name: "subrip", tags: { language: "eng" } },
+      ]),
+      LANGS,
+    );
+    expect(ranked.map((c) => c.kind === "embedded" && c.codec)).toEqual([
+      "subrip",
+      "hdmv_pgs_subtitle",
+    ]);
   });
 
   test("pinned forced modifier flips the ranking (sublang:en.forced)", () => {
@@ -461,15 +495,17 @@ describe("pickEmbeddedSubtitle (real Dune ffprobe shape)", () => {
       disposition: { forced: 1 },
     },
   ];
-  test("skips PGS image subs and picks the only burnable text track", () => {
-    // English exists only as PGS (un-burnable); the subrip (ita) is the lone text stream → index 2.
+  test("picks the English PGS track over a foreign text track (image subs are burnable)", () => {
+    // English exists only as PGS; it used to be skipped and the Italian forced subrip burned.
     expect(pickEmbeddedSubtitle(dune, ["en", "eng", "en-US"])).toEqual({
-      subtitleIndex: 2,
-      codec: "subrip",
+      subtitleIndex: 0,
+      codec: "hdmv_pgs_subtitle",
     });
   });
-  test("returns null when every embedded track is image-based", () => {
-    expect(pickEmbeddedSubtitle(dune.slice(0, 2), ["en"])).toBeNull();
+  test("returns null when no embedded track has a known burnable codec", () => {
+    expect(
+      pickEmbeddedSubtitle([{ codec_name: "eia_608" }, {}], ["en"]),
+    ).toBeNull();
   });
   test("prefers the preferred-language text track", () => {
     const streams: FfprobeSubtitleStream[] = [
@@ -519,5 +555,147 @@ describe("parseFfprobeSubtitles", () => {
   });
   test("tolerates missing streams key", () => {
     expect(parseFfprobeSubtitles("{}")).toEqual([]);
+  });
+});
+
+describe("isAutoBurnLanguage", () => {
+  const LANGS = ["en", "eng", "en-US"];
+  test("preferred languages are auto-burned in any alias form", () => {
+    expect(isAutoBurnLanguage("eng", LANGS)).toBe(true);
+    expect(isAutoBurnLanguage("en-GB", LANGS)).toBe(true);
+  });
+  test("a known foreign language is never auto-burned", () => {
+    expect(isAutoBurnLanguage("fre", LANGS)).toBe(false);
+    expect(isAutoBurnLanguage("ita", LANGS)).toBe(false);
+  });
+  test("untagged and undetermined tracks stay eligible", () => {
+    expect(isAutoBurnLanguage(null, LANGS)).toBe(true);
+    expect(isAutoBurnLanguage("und", LANGS)).toBe(true);
+  });
+  test("a sublang pin narrows eligibility to that language", () => {
+    expect(isAutoBurnLanguage("fre", ["fr"])).toBe(true);
+    expect(isAutoBurnLanguage("eng", ["fr"])).toBe(false);
+  });
+});
+
+describe("subtitle format helpers", () => {
+  test("ASS and SSA keep their styling; other text formats do not", () => {
+    expect(isAssSubtitleCodec("ass")).toBe(true);
+    expect(isAssSubtitleCodec("SSA")).toBe(true);
+    expect(isAssSubtitleCodec("subrip")).toBe(false);
+    expect(isAssSubtitleCodec("webvtt")).toBe(false);
+  });
+  test("format labels name the common codecs and pass unknown ones through", () => {
+    expect(subtitleFormatLabel("hdmv_pgs_subtitle")).toBe("PGS");
+    expect(subtitleFormatLabel("dvd_subtitle")).toBe("VobSub");
+    expect(subtitleFormatLabel("subrip")).toBe("SRT");
+    expect(subtitleFormatLabel("ass")).toBe("ASS");
+    expect(subtitleFormatLabel("eia_608")).toBe("eia_608");
+  });
+});
+
+describe("parseFontAttachments", () => {
+  test("keeps font attachments by codec, MIME type or extension, with controlled file names", () => {
+    const json = JSON.stringify({
+      streams: [
+        {
+          codec_name: "ttf",
+          tags: {
+            filename: "../../evil.ttf",
+            mimetype: "application/x-truetype-font",
+          },
+        },
+        {
+          codec_name: "none",
+          tags: { filename: "notes.txt", mimetype: "text/plain" },
+        },
+        { tags: { filename: "Sign.OTF" } },
+        {
+          codec_name: "otf",
+          tags: { mimetype: "application/vnd.ms-opentype" },
+        },
+        { tags: { filename: "Collection.ttc", mimetype: "font/collection" } },
+      ],
+    });
+    expect(parseFontAttachments(json)).toEqual([
+      { attachmentIndex: 0, fileName: "font-0.ttf" },
+      { attachmentIndex: 2, fileName: "font-2.otf" },
+      { attachmentIndex: 3, fileName: "font-3.otf" },
+      { attachmentIndex: 4, fileName: "font-4.ttc" },
+    ]);
+  });
+  test("no attachments → none", () => {
+    expect(parseFontAttachments("{}")).toEqual([]);
+  });
+});
+
+describe("embeddedTrackExtractArgs", () => {
+  const fonts = [
+    { attachmentIndex: 0, path: "/s/x/fonts/font-0.ttf" },
+    { attachmentIndex: 2, path: "/s/x/fonts/font-2.otf" },
+  ];
+  test("ASS is stream-copied into the ass muxer with every font dumped in the same pass", () => {
+    expect(
+      embeddedTrackExtractArgs({
+        filePath: "/media/Anime.mkv",
+        subtitleIndex: 1,
+        codec: "ass",
+        dest: "/s/x/track.ass",
+        fonts,
+      }),
+    ).toEqual([
+      "-y",
+      "-dump_attachment:t:0",
+      "/s/x/fonts/font-0.ttf",
+      "-dump_attachment:t:2",
+      "/s/x/fonts/font-2.otf",
+      "-i",
+      "/media/Anime.mkv",
+      "-map",
+      "0:s:1",
+      "-c:s",
+      "copy",
+      "-f",
+      "ass",
+      "/s/x/track.ass",
+    ]);
+  });
+  test("SSA goes through the ASS encoder (the ass muxer takes ASS)", () => {
+    const args = embeddedTrackExtractArgs({
+      filePath: "/media/Old.mkv",
+      subtitleIndex: 0,
+      codec: "ssa",
+      dest: "/s/x/track.ass",
+      fonts: [],
+    });
+    expect(args.slice(args.indexOf("-c:s"))).toEqual([
+      "-c:s",
+      "ass",
+      "-f",
+      "ass",
+      "/s/x/track.ass",
+    ]);
+  });
+  test("other text formats convert to SRT and never dump attachments", () => {
+    expect(
+      embeddedTrackExtractArgs({
+        filePath: "/media/Movie.mkv",
+        subtitleIndex: 3,
+        codec: "subrip",
+        dest: "/s/x/track.srt",
+        fonts,
+      }),
+    ).toEqual([
+      "-y",
+      "-i",
+      "/media/Movie.mkv",
+      "-map",
+      "0:s:3",
+      "-c:s",
+      "srt",
+      "-f",
+      "srt",
+      "/s/x/track.srt",
+    ]);
   });
 });

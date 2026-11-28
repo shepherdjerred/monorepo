@@ -6,9 +6,15 @@ import { Size } from "cdk8s";
 import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  onePasswordSecret,
+  vaultItemPath,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { MAIL_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import {
+  EXPERIMENTS_INTERNAL_ENDPOINT,
+  MAIL_API_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import {
   flagsEnv,
@@ -33,9 +39,45 @@ import {
   prometheusIngressRule,
   seaweedfsEgress,
   dnsEgressRule,
+  kubernetesApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { createTailscaleIngressObserver } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale-ingress-observer.ts";
+import {
+  experimentsHubConfig,
+  EXPERIMENTS_OPERATOR_LOGIN,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/experiments/index.ts";
 
 const IMAGE = firstPartyImageRecipe("alert-dashboard");
+const EXPERIMENTS_INGRESS_IDENTITY_DIR = "/var/run/hub-experiments-ingress";
+
+function experimentsEnv(chart: Chart): Record<string, EnvValue> {
+  if (!experimentsHubConfig.active) return {};
+  const item = onePasswordSecret(
+    chart,
+    "hub-experiments-auth",
+    experimentsHubConfig.authItem,
+  );
+  const secret = Secret.fromSecretName(
+    chart,
+    "hub-experiments-auth-secret",
+    item.name,
+  );
+  return {
+    EXPERIMENTS_INTERNAL_URL: EnvValue.fromValue(
+      EXPERIMENTS_INTERNAL_ENDPOINT.url,
+    ),
+    EXPERIMENTS_HUB_TOKEN: EnvValue.fromSecretValue({
+      secret,
+      key: "EXPERIMENTS_HUB_TOKEN",
+    }),
+    HUB_EXPERIMENTS_INGRESS_IDENTITY_DIR: EnvValue.fromValue(
+      EXPERIMENTS_INGRESS_IDENTITY_DIR,
+    ),
+    HUB_EXPERIMENTS_OPERATOR_LOGINS: EnvValue.fromValue(
+      EXPERIMENTS_OPERATOR_LOGIN,
+    ),
+  };
+}
 
 /**
  * The Incidents module's database environment. Hub's own `DATABASE_URL` is
@@ -78,7 +120,7 @@ export function createAlertDashboardDeployment(
   incidentsDatabase: SingleAppDatabase,
 ) {
   const incidentsEnv = incidentsDatabaseEnv(incidentsDatabase);
-  return new FirstPartyWebService(chart, "alert-dashboard-web-service", {
+  const web = new FirstPartyWebService(chart, "alert-dashboard-web-service", {
     name: "alert-dashboard",
     port: 7341,
     probes: {
@@ -218,6 +260,7 @@ export function createAlertDashboardDeployment(
             ),
             OTEL_SERVICE_NAME: EnvValue.fromValue("alert-dashboard"),
             TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+            ...experimentsEnv(chart),
           },
         },
       };
@@ -277,8 +320,30 @@ export function createAlertDashboardDeployment(
             ports: [tcp(3200)],
           },
           otlpEgress(),
+          ...(experimentsHubConfig.active
+            ? [
+                kubernetesApiEgressRule(),
+                {
+                  to: [EXPERIMENTS_INTERNAL_ENDPOINT.peer()],
+                  ports: [EXPERIMENTS_INTERNAL_ENDPOINT.tcp()],
+                },
+              ]
+            : []),
         ],
       },
     ],
   });
+  if (experimentsHubConfig.active) {
+    createTailscaleIngressObserver(web.deployment, {
+      accountConstructId: "hub-experiments-ingress-observer-account",
+      accountName: "hub-experiments-ingress-observer",
+      roleName: "hub-experiments-ingress-observer",
+      constructSuffix: "hub-experiments-ingress-observer",
+      ingressNamespace: "alert-dashboard",
+      ingressName: "alert-dashboard-alert-dashboard-hub-ingress-ingress",
+      proxyNamespace: "tailscale",
+      mountPath: EXPERIMENTS_INGRESS_IDENTITY_DIR,
+    });
+  }
+  return web;
 }

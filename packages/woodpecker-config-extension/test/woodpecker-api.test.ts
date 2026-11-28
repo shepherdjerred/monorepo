@@ -90,12 +90,18 @@ describe("changed base injection", () => {
 function server(
   pipelines: { number: number; commit: string; status?: string }[],
   workflows: Record<number, { name: string; state: string }[]>,
+  observedUrls?: URL[],
 ) {
   return async (input: string | URL | Request) => {
     const url = new URL(input instanceof Request ? input.url : input);
+    observedUrls?.push(url);
     const match = /\/pipelines\/(?<number>\d+)$/u.exec(url.pathname);
     const number = match?.groups?.["number"];
-    if (number === undefined) return jsonResponse(pipelines);
+    if (number === undefined) {
+      return jsonResponse(
+        pipelines.map((entry) => ({ status: "success", ...entry })),
+      );
+    }
     const parsed = Number(number);
     return jsonResponse({
       commit: pipelines.find((p) => p.number === parsed)?.commit ?? "unknown",
@@ -226,5 +232,74 @@ describe("last commit with successful workflows", () => {
       { ...options, fetchImpl: server([], {}) },
     );
     expect(commit).toBeUndefined();
+  });
+
+  test("filters status=success with perPage=5 when requirePipelineSuccess is true", async () => {
+    const observed: URL[] = [];
+    const result = await lastPipelineWithSuccessfulWorkflows(
+      7,
+      "main",
+      ["images", "helm-push"],
+      {
+        ...options,
+        requirePipelineSuccess: true,
+        fetchImpl: server(
+          [
+            { number: 202, commit: "canceled-run", status: "canceled" },
+            { number: 201, commit: "green-release", status: "success" },
+          ],
+          {
+            201: [
+              { name: "images", state: "success" },
+              { name: "helm-push", state: "success" },
+            ],
+          },
+          observed,
+        ),
+      },
+    );
+    expect(result).toEqual({ commit: "green-release", pipelineNumber: 201 });
+    expect(observed[0]?.searchParams.get("status")).toBe("success");
+    expect(observed[0]?.searchParams.get("perPage")).toBe("5");
+    expect(observed.map((url) => url.pathname)).toEqual([
+      "/api/repos/7/pipelines",
+      "/api/repos/7/pipelines/201",
+    ]);
+  });
+
+  test("scans past >20 consecutive canceled/killed runs without N+1 detail fetches", async () => {
+    const observed: URL[] = [];
+    const canceled = Array.from({ length: 30 }, (_, index) => ({
+      number: 500 - index,
+      commit: `canceled-${String(index)}`,
+      status: index % 2 === 0 ? "canceled" : "killed",
+    }));
+    const commit = await lastCommitWithSuccessfulWorkflows(
+      7,
+      "main",
+      ["verify"],
+      {
+        ...options,
+        fetchImpl: server(
+          [
+            ...canceled,
+            { number: 470, commit: "skipped-run", status: "skipped" },
+            { number: 469, commit: "declined-run", status: "declined" },
+            { number: 468, commit: "verified-base", status: "failure" },
+          ],
+          {
+            468: [{ name: "verify", state: "success" }],
+          },
+          observed,
+        ),
+      },
+    );
+    expect(commit).toBe("verified-base");
+    expect(observed[0]?.searchParams.get("perPage")).toBe("50");
+    expect(observed[0]?.searchParams.get("status")).toBeNull();
+    expect(observed.map((url) => url.pathname)).toEqual([
+      "/api/repos/7/pipelines",
+      "/api/repos/7/pipelines/468",
+    ]);
   });
 });

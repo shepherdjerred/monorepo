@@ -528,7 +528,7 @@
         "package": "@shepherdjerred/temporal",
         "file": "packages/temporal/src/config/ci-maintenance.ts",
         "kind": "call-argument",
-        "count": 1
+        "count": 2
       }
     ],
     "ci-workspace-golden-refresh-enabled": [
@@ -536,7 +536,7 @@
         "package": "@shepherdjerred/temporal",
         "file": "packages/temporal/src/config/ci-maintenance.ts",
         "kind": "call-argument",
-        "count": 1
+        "count": 2
       }
     ],
     "ci-workspace-seed-refresh-enabled": [

@@ -72,9 +72,7 @@ export const UPSTREAM_NAMESPACES_WITHOUT_INGRESS_POLICY: ReadonlySet<string> =
     "velero",
   ]);
 
-/**
- * As above, for Egress. `minecraft-tsmc` has an Ingress policy only.
- */
+/** As above, for Egress. */
 export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
   new Set([
     "1password",
@@ -89,8 +87,6 @@ export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
     "loki",
     "mc-router",
     "mc-sandbox",
-    // CoreProtect reaches its server over plain HTTP.
-    "minecraft-tsmc",
     "node-feature-discovery",
     "openebs",
     "postgres-operator",

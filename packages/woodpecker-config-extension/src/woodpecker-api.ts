@@ -25,15 +25,22 @@ const PipelineListSchema = z.array(PipelineSummarySchema);
  * here rather than from the pipeline's overall status.
  */
 /**
- * Just enough of the list to address each pipeline's detail view.
- *
- * Deliberately narrower than PipelineSummarySchema: this path decides from
- * per-workflow outcomes, so requiring an overall `status` it never reads would
- * reject a perfectly valid response.
+ * List entries used to locate candidate detail views while skipping aborted or
+ * non-qualifying runs before making N+1 `/pipelines/:number` requests.
  */
 const PipelineReferenceListSchema = z.array(
-  z.looseObject({ number: z.number().int().positive() }),
+  z.looseObject({
+    number: z.number().int().positive(),
+    status: z.string(),
+  }),
 );
+
+const SKIPPED_SUMMARY_STATUSES = new Set([
+  "canceled",
+  "killed",
+  "skipped",
+  "declined",
+]);
 
 const PipelineDetailSchema = z.looseObject({
   commit: z.string(),
@@ -94,6 +101,32 @@ function pipelinesUrl(repoId: number, options: WoodpeckerApiOptions): URL {
  * Returns undefined when no recent pipeline qualifies, which callers must read
  * as "no base" -- building everything -- rather than as an error.
  */
+function isCandidateSummary(
+  status: string,
+  requirePipelineSuccess: boolean | undefined,
+): boolean {
+  return (
+    !SKIPPED_SUMMARY_STATUSES.has(status) &&
+    (requirePipelineSuccess !== true || status === "success")
+  );
+}
+
+function detailMatchesWorkflows(
+  detail: z.infer<typeof PipelineDetailSchema>,
+  workflowNames: readonly string[],
+  requirePipelineSuccess: boolean | undefined,
+): boolean {
+  if (requirePipelineSuccess === true && detail.status !== "success") {
+    return false;
+  }
+  const succeeded = new Set(
+    detail.workflows
+      .filter((workflow) => workflow.state === "success")
+      .map((workflow) => workflow.name),
+  );
+  return workflowNames.every((name) => succeeded.has(name));
+}
+
 export async function lastPipelineWithSuccessfulWorkflows(
   repoId: number,
   branch: string,
@@ -103,12 +136,16 @@ export async function lastPipelineWithSuccessfulWorkflows(
     readonly requirePipelineSuccess?: boolean;
   },
 ): Promise<SuccessfulWorkflowPipeline | undefined> {
-  const scanLimit = options.scanLimit ?? 20;
+  const defaultLimit = options.requirePipelineSuccess === true ? 5 : 50;
+  const scanLimit = options.scanLimit ?? defaultLimit;
   const listUrl = pipelinesUrl(repoId, options);
   listUrl.searchParams.set("branch", branch);
   // Verification may reuse successful workflows from a partially failed run.
   // Artifact inputs additionally require the complete producer to succeed.
   listUrl.searchParams.set("event", "push,manual");
+  if (options.requirePipelineSuccess === true) {
+    listUrl.searchParams.set("status", "success");
+  }
   listUrl.searchParams.set("perPage", scanLimit.toString());
 
   const listed = PipelineReferenceListSchema.safeParse(
@@ -119,6 +156,8 @@ export async function lastPipelineWithSuccessfulWorkflows(
   }
 
   for (const summary of listed.data) {
+    if (!isCandidateSummary(summary.status, options.requirePipelineSuccess))
+      continue;
     const detailUrl = new URL(
       `/api/repos/${repoId.toString()}/pipelines/${summary.number.toString()}`,
       options.baseUrl,
@@ -126,18 +165,14 @@ export async function lastPipelineWithSuccessfulWorkflows(
     const detail = PipelineDetailSchema.safeParse(
       await getJson(detailUrl, options),
     );
-    if (!detail.success) continue;
     if (
-      options.requirePipelineSuccess === true &&
-      detail.data.status !== "success"
-    )
-      continue;
-    const succeeded = new Set(
-      detail.data.workflows
-        .filter((workflow) => workflow.state === "success")
-        .map((workflow) => workflow.name),
-    );
-    if (workflowNames.every((name) => succeeded.has(name))) {
+      detail.success &&
+      detailMatchesWorkflows(
+        detail.data,
+        workflowNames,
+        options.requirePipelineSuccess,
+      )
+    ) {
       return { commit: detail.data.commit, pipelineNumber: summary.number };
     }
   }

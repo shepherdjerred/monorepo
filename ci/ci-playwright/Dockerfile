@@ -21,7 +21,7 @@ RUN --mount=type=bind,source=ci/scripts/apt-https.sh,target=/tmp/apt-https.sh \
 # Same signed mise bootstrap as ci-base. Only the postgres scope is installed:
 # browser jobs do not need Rust, Java, .NET or their download caches.
 # renovate: datasource=github-releases depName=jdx/mise
-ARG MISE_VERSION=v2026.11.11
+ARG MISE_VERSION=v2026.11.14
 ARG MISE_MINISIGN_PUBLIC_KEY=RWTC3g8W3z4RZK3V3qv7fa1QY4JEWyBtqIHW+85QlJpZc5yG+uNYNBSZ
 ARG TARGETARCH
 ENV MISE_DATA_DIR=/opt/mise \

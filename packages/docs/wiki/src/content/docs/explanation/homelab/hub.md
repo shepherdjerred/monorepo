@@ -70,6 +70,13 @@ shell. The Storm's promotion report is one: Hub lists it in the sidebar, and a
 [standalone entry](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/src/client/promotion/main.tsx)
 serves the same content from a laptop without the shell.
 
+Experiments serves its browser pages in Hub under `/experiments`. The standalone
+Experiments service owns plans, evidence, decisions, and their audit history.
+Hub's adapter verifies the operator through its Tailscale ingress and forwards
+experiment requests over the private cluster network. Toolkit talks directly to
+the service. The Ops Snapshot contributes a review count that links to the Hub
+queue.
+
 The operations overview and the alert ledger form the built-in `core` module.
 It is the only module served at the root, so every existing URL and bookmark
 still works. Other modules sit under their own path prefix.
@@ -100,7 +107,8 @@ choices contain that risk.
   workspace package and plugs into Hub through an adapter. Incidents is the
   first: its
   [adapter](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/src/modules/incidents/server.ts)
-  only checks the package's object against the server contract.
+  only checks the package's object against the server contract. The standalone
+  Experiments service validates forwarded requests and owns its database connection.
 
 The process already had memory trouble before modules existed. The
 [deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/alert-dashboard/index.ts)

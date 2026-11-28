@@ -11,6 +11,7 @@ hold only scoped invariants that agents must keep in context.
 | [arcade](arcade/)                                               | Multi-game Discord arcade with dedicated streaming accounts, browser controllers, and per-game statistics |
 | [artifacts](artifacts/)                                         | Agent artifact review service: two-host isolated content, boards, threaded feedback, and `wait` delivery  |
 | [tracker](tracker/)                                             | Issue tracker — teams, projects, board, session actors, votes, attachments and audit history              |
+| [experiments](experiments/)                                     | Experiment plans, evidence, and review decisions with a native Hub module                                 |
 | [delivery](delivery/)                                           | Deployment catalog, immutable version sets, approvals, and durable release execution                      |
 | [golink](golink/)                                               | Tailnet shortlink service with live cluster/platform dynamic aliases and manual overrides                 |
 | [feeds](feeds/)                                                 | Tailnet feed listing console and isolated NetNewsWire Reader API over SQLite + FTS5                       |

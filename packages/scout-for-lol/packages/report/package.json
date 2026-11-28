@@ -34,7 +34,6 @@
     "remeda": "^2.21.2",
     "satori": "^0.63.2",
     "ts-pattern": "^5.7.0",
-    "yoga-wasm-web": "^0.3.3",
     "zod": "^4.4.3",
     "@shepherdjerred/text": "workspace:*"
   },
@@ -46,8 +45,8 @@
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   },
   "description": "Generate report images for League of Legends",
   "keywords": [

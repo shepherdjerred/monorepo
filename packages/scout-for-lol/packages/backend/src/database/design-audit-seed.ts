@@ -18,6 +18,7 @@ import {
 } from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
 import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
+import { seedDesignAuditLiveGame } from "#src/testing/design-audit/live-roster.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import {
   designAuditMatchFixtures,
@@ -468,6 +469,17 @@ export async function seedDesignAuditDatabase(
           gameCreationAt: new Date("2025-12-28T21:00:00.000Z"),
         },
       ],
+    });
+
+    // A game in progress for the Live game pages, dated from this run.
+    const liveFriend = friends.find((friend) => friend.alias === "Quillon");
+    if (liveFriend === undefined) {
+      throw new Error("The live-game fixture needs the Quillon audit friend");
+    }
+    await seedDesignAuditLiveGame({
+      prisma,
+      friendPuuid: liveFriend.puuid,
+      now: new Date(),
     });
   } finally {
     await prisma.$disconnect();

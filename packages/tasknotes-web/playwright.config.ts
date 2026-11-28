@@ -39,7 +39,12 @@ export default defineConfig({
         ],
       ]
     : "list",
-  use: { baseURL, trace: "retain-on-failure", actionTimeout: 8000 },
+  // CI only needs a trace for the retry of a failed test; passing runs write none.
+  use: {
+    baseURL,
+    trace: ci ? "on-first-retry" : "retain-on-failure",
+    actionTimeout: 8000,
+  },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },

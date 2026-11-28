@@ -19,8 +19,8 @@
     "@duckdb/node-api": "1.5.4-r.1",
     "@shepherdjerred/llm-models": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
-    "ai": "7.0.179",
-    "pdfjs-dist": "^6.4.299",
+    "ai": "7.0.183",
+    "pdfjs-dist": "^6.5.438",
     "playwright": "1.64.0",
     "zod": "^4.4.3"
   },
@@ -32,8 +32,8 @@
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",

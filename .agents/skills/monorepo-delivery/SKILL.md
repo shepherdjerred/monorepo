@@ -16,40 +16,30 @@ register submitted stacks with GitHub's native stack feature itself).
 
 1. Inspect the current branch, worktree, and complete base diff. Preserve
    unrelated edits.
-2. Run focused package tasks with Turbo (and `bun run jscpd` for new clones).
+2. Run focused package tasks with Turbo while iterating, then for the whole
+   diff: `bunx turbo run build typecheck test lint --filter='...[origin/main...HEAD]'`
+   plus the root ratchets it skips (duplication, quality, unused code; about
+   25 s): `bunx turbo run jscpd quality-ratchet knip --filter=//`.
 3. Run the extended test tier for affected workspaces; Woodpecker does not run
    it on pull requests:
    `bun run verify:extended -- --filter='...[origin/main...HEAD]'` (or
    `bunx turbo run test:extended --filter='...[origin/main...HEAD]' --continue`).
+   Pull requests also skip the Playwright lane (unless they change
+   `ci/ci-playwright/**`): run `bun run e2e:affected` for the browser projects
+   the committed diff touches (commit first; `-- --base <ref>` or `-- --all`;
+   needs `bunx playwright install`), adding `-- --linux` for visual-snapshot
+   projects (sjer.red). The Paper smoke runs only nightly; for a The Storm diff
+   run `bun run --cwd packages/the-storm test:smoke`.
 4. Capture `Demo` material so a reviewer skimming the PR immediately sees what
-   changed and that it works (when a prior state exists, capture `before` from
-   `main` first — before editing, from a `main` worktree, or `git stash` — with
-   the same route, viewport, and input as `after`):
-   - **Existing UI / page / layout:** `| Before | After |` table of screenshots
-     (`toolkit screenshot <package> [route]` or isolated `PINCHTAB_SESSION`
-     `pinchtab screenshot -o <file>`, closing tabs when done), plus a short
-     `.mp4`/`.webm` (`pinchtab record`) when an interaction, sheet, form, or
-     transition changed.
-   - **New UI / responsive / static site / report:** key states (populated,
-     empty, error/edge; desktop + mobile when layout matters) or a
-     self-contained `.html` file / static directory (`index.html` at root).
-   - **CLI / TUI / script:** asciinema `.cast`
-     (`asciinema rec --headless --window-size 120x32 --idle-time-limit 2 --return --command '<cmd>' demo.cast`)
-     or concise before/after terminal output.
-   - **Backend / API / data / Temporal / homelab:** concrete observable output —
-     before/after payload/event diff, `duckdb -markdown` query table, `uplot`
-     chart, GitHub `mermaid` / `mmdc` diagram of changed flow/state/topology,
-     `cdk8s`/`tofu`/SQL plan diff excerpt, or a short `.cast`. Never skip `Demo`
-     because no frontend file changed; only purely mechanical chores write
-     `None — <reason>`.
-   - **Other surfaces:** matching rendered asset or Discord acceptance message.
+   changed and that it works, `before` from `main` first when a prior state
+   exists. `references/demo-evidence.md` lists the capture for each surface;
+   only purely mechanical chores write `None — <reason>`.
 5. Stage exact paths and run `bunx lefthook run pre-commit` (enforces `jscpd`).
-6. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
-   and `Verification`.
+6. Commit as `type(scope): outcome`; body: `Why`, `What`, `Verification`.
 7. Inspect the complete branch diff before submission.
 
 Create the draft PR, upload `Demo` media, embed it in `## Demo`, then mark
-ready (`Why`, `What`, `Demo`, and `Verification` in the PR body):
+ready once (`Why`, `What`, `Demo`, and `Verification` in the PR body):
 
 ```bash
 SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/pr-XXXXXX")"
@@ -69,6 +59,23 @@ preflight; `toolkit git-spice stack submit --update-only --no-prompt` updates an
 existing stack. A green draft preflight is not merge evidence: wait for full
 verification of the current head after marking it ready, and keep PR metadata
 based on the whole branch, not the latest commit.
+
+## Submit once
+
+Each ready transition and push to a ready PR starts a full pipeline.
+
+- Stay in draft until the checks in "Work locally" pass. Mark ready once, and
+  batch review fixes into a single push.
+- Land hub-registry edits (`packages/feature-flags/src/managed-flag-inventory.json`,
+  `packages/ops-model/catalog-document.json` and `services.json`,
+  `packages/version-catalog/src/catalog.json`) as their own small PRs so a
+  feature PR does not re-run every dependent.
+- A failure CI reports as inherited from main (check `toolkit ci explain <PR>`
+  and the open incident the wait report names) is not yours to fix in the PR.
+  Wait for main to recover (`toolkit ci wait --main --follow`), then restack
+  onto the fixed main with `toolkit git-spice` and wait on the PR again. PR CI
+  builds the PR head, so a re-run without a restack repeats main's old failure;
+  only a failure main shows as environmental passes on a plain re-run.
 
 ## Prove readiness
 
@@ -95,13 +102,10 @@ based on the whole branch, not the latest commit.
 - Wait exits distinguish CI failure (1), errors (2), human intervention (3),
   head changes (4), PR ready but main red (5), timeout (6), and closed/merged
   PRs (7). `pr land` adds 0 for merged and 8 for a failed merge. A red main
-  never ends a wait early. If `main` or Delivery is red, inspect failure
-  evidence and active threads with `toolkit forum list --json`. Follow an
-  existing owner (`toolkit forum watch <FM-N> --until-resolved`) rather than
-  duplicating recovery. You must repair failures your changes caused, and may
-  pick up an unowned failure you did not cause when it blocks your PR or
-  release, no better active owner is handling it, and nobody else is working on
-  it — claim or post a `notice` (`--owner me`) first, then resolve it with
+  never ends a wait early. If `main` or Delivery is red, the wait report names
+  the open incident; follow `incident-response`: `toolkit incident take` when
+  you caused it (mandatory), otherwise hold `toolkit incident wait` rather than
+  duplicating recovery, and declare it when nothing is open. Resolve with
   authoritative CI or Delivery evidence (`delivery-recovery` for Delivery).
   Otherwise continue your assigned work. A timeout is not CI failure.
   A changed head requires an explicit new wait.
@@ -109,13 +113,11 @@ based on the whole branch, not the latest commit.
   Full command and credential details live in `packages/toolkit/README.md`.
 - Use `toolkit pr review list <PR> --json` for authors, priority, full feedback,
   and raw GitHub API commands. Do not infer CI status from GitHub Actions.
-- Verify the exact PR head. A prior build or a green sibling branch is not
-  evidence for the current commit.
+- Verify the exact PR head; a prior build or green sibling branch is no evidence.
 - Source, CI, artifact publication, ArgoCD deployment, and live behavior are
   separate claims. Report each independently.
 - Verification names the extended-tier run (command and result) or states that
-  no affected workspace has extended steps. The nightly `ci-extended-verify`
-  run on main is a safety net, not evidence for the PR.
+  no affected workspace has extended steps; the nightly run is no substitute.
 - Before pushing a review fix, list the finding and resolve or dismiss its
   thread with a specific audited reason when justified.
 - Never change a real gate, skip a test, or suppress an error merely to make a

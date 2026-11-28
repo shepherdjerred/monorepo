@@ -78,45 +78,45 @@ url = "https://github.com/temporalio/cli/releases/download/v1.10.1/temporal_cli_
 url_api = "https://api.github.com/repos/temporalio/cli/releases/assets/744972370"
 
 [[tools."aqua:yonaskolb/XcodeGen"]]
-version = "2.48.0"
+version = "2.49.0"
 backend = "aqua:yonaskolb/XcodeGen"
-specifiers = ["2.48.0"]
+specifiers = ["2.49.0"]
 
 [tools."aqua:yonaskolb/XcodeGen"."platforms.macos-arm64"]
-checksum = "sha256:620c9f0dc10849f94728ab5df52d225ebab8187439dd6fee1925e59e80dff892"
+checksum = "sha256:ae5598b33a19ad1e23e775d6648f97375c3529c970905f489358a21055b65e53"
 checksum_source = "mise-versions"
-url = "https://github.com/yonaskolb/XcodeGen/releases/download/2.48.0/xcodegen.zip"
-url_api = "https://api.github.com/repos/yonaskolb/XcodeGen/releases/assets/767651385"
+url = "https://github.com/yonaskolb/XcodeGen/releases/download/2.49.0/xcodegen.zip"
+url_api = "https://api.github.com/repos/yonaskolb/XcodeGen/releases/assets/793459189"
 
 [[tools.argocd]]
-version = "3.6.2"
+version = "3.6.3"
 backend = "aqua:argoproj/argo-cd"
-specifiers = ["3.6.2"]
+specifiers = ["3.6.3"]
 
 [tools.argocd."platforms.linux-x64"]
-checksum = "sha256:80cc51ce8eb39d5601d54fd14225ed15a04ccf4baa3427f5c1e72a4e342aa0b2"
+checksum = "sha256:3750cd7ed2a2ef05c640344b86f29aa99c9783e847c8f326c81e3900ad39412b"
 checksum_source = "mise-versions"
-url = "https://github.com/argoproj/argo-cd/releases/download/v3.6.2/argocd-linux-amd64"
-url_api = "https://api.github.com/repos/argoproj/argo-cd/releases/assets/764781273"
+url = "https://github.com/argoproj/argo-cd/releases/download/v3.6.3/argocd-linux-amd64"
+url_api = "https://api.github.com/repos/argoproj/argo-cd/releases/assets/788029476"
 
 [tools.argocd."platforms.macos-arm64"]
-checksum = "sha256:188d11670ba0160214d37e6df8a507f9dafd96234bf040d6e82ae1b733660a5a"
+checksum = "sha256:1b45f9805b54375d7b0d18fb646b64dca153b98527443716e07b0aced45ce623"
 checksum_source = "mise-versions"
-url = "https://github.com/argoproj/argo-cd/releases/download/v3.6.2/argocd-darwin-arm64"
-url_api = "https://api.github.com/repos/argoproj/argo-cd/releases/assets/764781299"
+url = "https://github.com/argoproj/argo-cd/releases/download/v3.6.3/argocd-darwin-arm64"
+url_api = "https://api.github.com/repos/argoproj/argo-cd/releases/assets/788029477"
 
 [[tools.awscli]]
-version = "2.41.2"
+version = "2.42.4"
 backend = "aqua:aws/aws-cli"
-specifiers = ["2.41.2"]
+specifiers = ["2.42.4"]
 
 [tools.awscli."platforms.linux-x64"]
-checksum = "sha256:2db6f80635cf554a506f3b3c1d070937b87526193fb37e0ac80c8705398219da"
-url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.41.2.zip"
+checksum = "sha256:8998885d7fc32370c50efc2e44746c34b222a03d70015113a5554f98be79165c"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.42.4.zip"
 
 [tools.awscli."platforms.macos-arm64"]
-checksum = "sha256:be48f98304bd7b043921a561ce2c323c81997381ccacfca3969a6dcf86a70e03"
-url = "https://awscli.amazonaws.com/AWSCLIV2-2.41.2.pkg"
+checksum = "sha256:6f5a5d523f128bfa736841523fabe936a9a4c9da7fce7273c535043a53016ea5"
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.42.4.pkg"
 
 [[tools.bun]]
 version = "1.4.5"
@@ -154,20 +154,20 @@ backend = "core:dotnet"
 specifiers = ["10.0.404"]
 
 [[tools.gh]]
-version = "2.105.0"
+version = "2.106.0"
 backend = "aqua:cli/cli"
-specifiers = ["2.105.0"]
+specifiers = ["2.106.0"]
 
 [tools.gh."platforms.linux-x64"]
-checksum = "sha256:79e7ab5db738c48777b696e374f8b428f0647debfb424f44d2f426370407fe2f"
-url = "https://github.com/cli/cli/releases/download/v2.105.0/gh_2.105.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/cli/cli/releases/assets/761188566"
+checksum = "sha256:a476449fa9625413c54a3734eded62e9e480e49f421ff08e7f3b3879c059a033"
+url = "https://github.com/cli/cli/releases/download/v2.106.0/gh_2.106.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/cli/cli/releases/assets/793444853"
 provenance = "github-attestations"
 
 [tools.gh."platforms.macos-arm64"]
-checksum = "sha256:2a5d03103ae444927383b93d9ffd65579a26e2eb900ce1cf11f55258d5319ded"
-url = "https://github.com/cli/cli/releases/download/v2.105.0/gh_2.105.0_macOS_arm64.zip"
-url_api = "https://api.github.com/repos/cli/cli/releases/assets/761188673"
+checksum = "sha256:22b2b723dfbc69b6022b1b08604ff51c0db5aa8b6774b4ced1a47b8413a995d6"
+url = "https://github.com/cli/cli/releases/download/v2.106.0/gh_2.106.0_macOS_arm64.zip"
+url_api = "https://api.github.com/repos/cli/cli/releases/assets/793444946"
 provenance = "github-attestations"
 
 [[tools."github:theseus-rs/postgresql-binaries"]]
@@ -353,21 +353,21 @@ checksum = "sha256:ff6e17d4874b76d272212b908cc020d6e815fba5a6c7eaaa06add72584030
 url = "https://nodejs.org/dist/v24.22.3/node-v24.22.3-darwin-arm64.tar.gz"
 
 [[tools.opentofu]]
-version = "1.13.9"
+version = "1.13.10"
 backend = "aqua:opentofu/opentofu"
-specifiers = ["1.13.9"]
+specifiers = ["1.13.10"]
 
 [tools.opentofu."platforms.linux-x64"]
-checksum = "sha256:b34b327cc1ef07178207b6f2cd1f5276537d3e5b7be316500f6dac50d4c0a857"
+checksum = "sha256:f606b6117ee03177374806d56d580bde7b512aff69f86d2b9f3148dced4ca375"
 checksum_source = "mise-versions"
-url = "https://github.com/opentofu/opentofu/releases/download/v1.13.9/tofu_1.13.9_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/opentofu/opentofu/releases/assets/714326349"
+url = "https://github.com/opentofu/opentofu/releases/download/v1.13.10/tofu_1.13.10_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/opentofu/opentofu/releases/assets/784195222"
 
 [tools.opentofu."platforms.macos-arm64"]
-checksum = "sha256:496f4c3064b5c3bff79174b3dae4faaf65a66774eb8e2bf074f895412c5f124f"
+checksum = "sha256:72d39c8492f04bb0fb1642615ad29fdfe35e6a344bd2ad425c5bc8559e7e2b61"
 checksum_source = "mise-versions"
-url = "https://github.com/opentofu/opentofu/releases/download/v1.13.9/tofu_1.13.9_darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/opentofu/opentofu/releases/assets/714325678"
+url = "https://github.com/opentofu/opentofu/releases/download/v1.13.10/tofu_1.13.10_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/opentofu/opentofu/releases/assets/784193904"
 
 [[tools.python]]
 version = "3.15.2"
@@ -394,12 +394,6 @@ version = "0.19.0"
 backend = "aqua:mozilla/sccache"
 specifiers = ["0.19.0"]
 
-[tools.sccache."platforms.linux-x64"]
-checksum = "sha256:aa73c7270c997894038c0d8f0d297865f57569e1687883322bc431713d4bb9dd"
-checksum_source = "mise-versions"
-url = "https://github.com/mozilla/sccache/releases/download/v0.19.0/sccache-v0.19.0-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/mozilla/sccache/releases/assets/671951070"
-
 [tools.sccache."platforms.linux-x64-baseline"]
 checksum = "sha256:aa73c7270c997894038c0d8f0d297865f57569e1687883322bc431713d4bb9dd"
 checksum_source = "mise-versions"
@@ -418,11 +412,22 @@ checksum_source = "mise-versions"
 url = "https://github.com/mozilla/sccache/releases/download/v0.19.0/sccache-v0.19.0-x86_64-unknown-linux-musl.tar.gz"
 url_api = "https://api.github.com/repos/mozilla/sccache/releases/assets/671951070"
 
-[tools.sccache."platforms.macos-arm64"]
-checksum = "sha256:a35a0b7d622618774bc1bb8102d72562dfb21e619f88b153b370d7f89bc286af"
+[[tools.sccache]]
+version = "0.20.1"
+backend = "aqua:mozilla/sccache"
+specifiers = ["0.20.1"]
+
+[tools.sccache."platforms.linux-x64"]
+checksum = "sha256:c9f6c5a3ae84d9da0956b28c357a365827bda33f3383647fc0b67484c74a5ea9"
 checksum_source = "mise-versions"
-url = "https://github.com/mozilla/sccache/releases/download/v0.19.0/sccache-v0.19.0-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/mozilla/sccache/releases/assets/671950630"
+url = "https://github.com/mozilla/sccache/releases/download/v0.20.1/sccache-v0.20.1-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/mozilla/sccache/releases/assets/788078671"
+
+[tools.sccache."platforms.macos-arm64"]
+checksum = "sha256:d2658c9a24bab25a24fdc1917cb5b614b7c20a4ce8f363e5303d37b7e699d5ec"
+checksum_source = "mise-versions"
+url = "https://github.com/mozilla/sccache/releases/download/v0.20.1/sccache-v0.20.1-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/mozilla/sccache/releases/assets/788075078"
 
 [[tools.shellcheck]]
 version = "0.11.0"

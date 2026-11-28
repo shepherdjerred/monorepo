@@ -37,6 +37,7 @@ import type { ArtifactVersion } from "../../../packages/delivery/src/shared/cont
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import {
   ensureDockerHubAccess,
+  ensurePrivateDockerHubRepositories,
   type RegistryAccessVerifier,
 } from "./dockerhub-access.ts";
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
@@ -278,6 +279,9 @@ export async function pushImages(
     /** The registry that owns each image; v1 until the window's catalog flip. */
     readonly owners?: PublicationOwners;
     readonly getManifestDigest?: (image: string) => Promise<string>;
+    readonly verifyPrivateRepositories?: (
+      names: readonly string[],
+    ) => Promise<void>;
     readonly verifyRegistryAccess?: RegistryAccessVerifier;
     readonly verifySourceLabel?: (image: string) => Promise<void>;
     readonly getRuntimeFingerprint?: (
@@ -331,6 +335,10 @@ export async function pushImages(
     imageIdentity(name, dependencies.owners);
     return { name, original: originals.get(name) };
   });
+  const verifyPrivateRepositories =
+    dependencies.verifyPrivateRepositories ??
+    ((names) => ensurePrivateDockerHubRepositories(names, environment));
+  await verifyPrivateRepositories(targets);
   const caddyfileArguments = caddyfileEntitlementArguments(
     targets,
     environment["CADDYFILE_SMOKE_PATH"],

@@ -7,12 +7,14 @@ import {
 import type {
   AudioProcessing,
   PrepareStreamOptions,
+  SubtitleBurn,
 } from "@shepherdjerred/discord-video-stream";
 import type { AudioProcessingFlags } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   PipelineMode,
   ResolvedSource,
+  ResolvedSubtitle,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { httpHeaderInputOptions } from "@shepherdjerred/streambot/sources/format-select.ts";
 
@@ -261,9 +263,9 @@ export function buildVideoPrepareOptions(
     ...(resolved.discontinuousLive === true
       ? { normalizeTimestamps: true }
       : startTimeOption(input.startSeconds)),
-    ...(resolved.subtitle
-      ? { subtitleBurn: { path: resolved.subtitle.path } }
-      : {}),
+    ...(resolved.subtitle === undefined
+      ? {}
+      : { subtitleBurn: subtitleBurnFor(resolved.subtitle) }),
     // HDR sources get tonemapped to BT.709 SDR by the pipeline (tonemap_vaapi on the GPU path,
     // a zimg chain on the software path) — without it, PQ/HLG content looks washed out.
     inputColor: tracks.hdr === true ? ("hdr" as const) : ("sdr" as const),
@@ -308,6 +310,21 @@ export function buildVideoPrepareOptions(
       resolved.discontinuousLive === true,
     ),
   };
+}
+
+/**
+ * A staged text track burns through libass (with the source's attached fonts for ASS); an image
+ * track overlays the playback input's own subtitle stream.
+ */
+function subtitleBurnFor(subtitle: ResolvedSubtitle): SubtitleBurn {
+  return subtitle.kind === "image"
+    ? { kind: "image", subtitleStreamIndex: subtitle.subtitleIndex }
+    : {
+        path: subtitle.path,
+        ...(subtitle.fontsDir === undefined
+          ? {}
+          : { fontsDir: subtitle.fontsDir }),
+      };
 }
 
 /**

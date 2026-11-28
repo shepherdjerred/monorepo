@@ -110,6 +110,7 @@ group "app" {
     "ci-cache",
     "errors",
     "artifacts",
+    "experiments",
   ]
 }
 
@@ -349,6 +350,14 @@ target "artifacts" {
   tags       = imagetags("artifacts")
   cache-from = cachefrom("artifacts")
   cache-to   = cacheto("artifacts")
+}
+
+target "experiments" {
+  inherits   = ["_app"]
+  dockerfile = "packages/experiments/Dockerfile"
+  tags       = imagetags("experiments")
+  cache-from = cachefrom("experiments")
+  cache-to   = cacheto("experiments")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────

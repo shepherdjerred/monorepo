@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@shepherdjerred/bugsink-config": "workspace:*",
-    "@sentry/bun": "^11.16.0",
+    "@sentry/bun": "^11.18.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",
@@ -38,7 +38,7 @@
     "liquidjs": "^10.29.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.5",
-    "@vitest/coverage-istanbul": "5.0.5"
+    "vitest": "5.1.2",
+    "@vitest/coverage-istanbul": "5.1.2"
   }
 }

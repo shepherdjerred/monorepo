@@ -593,6 +593,36 @@
       "enum": ["observe", "enforce"]
     }
   },
+  "seaweedfs-lifecycle-enforcer-buckets": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "anyOf": [
+        { "type": "string", "const": "*" },
+        {
+          "type": "string",
+          "pattern": "^(?:[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])(?:,\\s*(?:[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]))*$"
+        }
+      ]
+    }
+  },
+  "seaweedfs-lifecycle-enforcer-max-deletes": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    }
+  },
+  "seaweedfs-lifecycle-enforcer-mode": {
+    "encoding": "string",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "enum": ["report", "delete"]
+    }
+  },
   "storm-brain-conversation-model": {
     "encoding": "string",
     "schema": {

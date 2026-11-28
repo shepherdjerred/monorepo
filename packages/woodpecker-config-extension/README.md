@@ -40,6 +40,18 @@ guarantee a dependency-closed set, which the emitter then relies on.
   by the image lane, so baking them into this service would pin every build to
   whatever was current at deploy time.
 
+## Browser verification
+
+On main, `playwright-e2e` runs the selected browser projects outside Media and
+produces the tested site bundles. `playwright-media-e2e` runs Media when the
+same changed-file selector includes it. Both workflows have independent
+30-minute limits and must succeed before Sites can publish and Delivery can
+register the release. Each has its own diagnostic artifact.
+
+Playwright image-promotion pull requests and manual browser benchmarks keep a
+single workflow that runs the full selection. Historical main revisions that
+predate the partition also run the full selection in `playwright-e2e`.
+
 ## Dependency caches
 
 When the typed `woodpecker-ram-scratch-enabled` flag is on, the ordinary
@@ -149,6 +161,17 @@ gives verify `woodpecker-format-main` on the default branch,
 `woodpecker-format-pr` in the pull-request domain, and no formatter volume for
 a trusted proposal: `ci-pod-guard` admits the main volume only for
 default-branch verify, and the PR volume is written by Renovate's code.
+
+The same environment cuts the bytes verify writes into Rust `target/`
+directories. `CARGO_PROFILE_DEV_DEBUG` and `CARGO_PROFILE_TEST_DEBUG` set
+workspace crates to `limited` debuginfo (function names and line tables), and
+`CI_CARGO_DEPENDENCY_DEBUG=none` makes `ci/scripts/toolchain.sh` write
+`[profile.dev.package."*"] debug = "none"` into `$CARGO_HOME/config.toml`,
+because Cargo has no environment form for a per-package override. Each Rust
+package's `turbo.json` passes the two profile variables through on its cargo
+tasks (never the root `turbo.json`, a global input). Release profiles,
+`Cargo.toml` and local builds keep their own settings, and the config file is
+identical on main and in pull requests, so `sccache` keys still match.
 
 ### Experimental workspace reuse
 
