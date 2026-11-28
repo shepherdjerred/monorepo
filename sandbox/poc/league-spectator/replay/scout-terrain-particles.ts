@@ -181,8 +181,28 @@ const mayhemImpactComparisonTrack = familyTrack.extend({
   schema: z.literal(8),
   status: z.literal("controlled-mayhem-impact-comparison"),
   scope: z.literal("native-sampled-supplied-random"),
-  effects: z.tuple([]),
-  families: z.tuple([]),
+  effects: z.array(
+    particleEffect.extend({ family: z.literal("heimerdinger-w-impact") }),
+  ),
+  families: z
+    .array(
+      family.extend({
+        id: z.literal("heimerdinger-w-impact"),
+        components: z.tuple([
+          depthComponent.extend({
+            lifetime: z.literal(Math.fround(0.2)),
+            alphaTest: z.literal(true),
+            depthTest: z.literal(true),
+          }),
+          depthComponent.extend({
+            lifetime: z.literal(Math.fround(0.3)),
+            alphaTest: z.literal(true),
+            depthTest: z.literal(true),
+          }),
+        ]),
+      }),
+    )
+    .max(1),
   worldImpact: worldQuadTrack.extend({
     paths: worldQuadTrack.shape.paths.length(2),
   }),
@@ -568,8 +588,6 @@ export async function loadRecordedTerrainParticles(
   );
   const maximumDuration = Math.max(...lifetimes.values());
   function sampleAt(timeSeconds: number) {
-    if (impactsAt.length > 0)
-      return impactsAt.flatMap((read) => read(timeSeconds));
     const legacyParticles = [];
     let first = 0;
     let end = track.effects.length;
@@ -596,6 +614,11 @@ export async function loadRecordedTerrainParticles(
           });
       }
     }
+    if (impactsAt.length > 0)
+      return [
+        ...impactsAt.flatMap((read) => read(timeSeconds)),
+        ...legacyParticles,
+      ];
     const particles =
       worldRibbonAt === undefined
         ? legacyParticles

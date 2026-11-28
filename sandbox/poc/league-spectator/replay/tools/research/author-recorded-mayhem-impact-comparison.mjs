@@ -40,6 +40,13 @@ const vertexSha256 =
   "c9d94bb152fac1036a46871248ae3d310b6b47e178f4cb70cac44d55569dce97";
 const fragmentSha256 =
   "11948a488fc18ecf633c1a672ba92c1bac38431ab7f295ac4f0ef5ca223cd3fc";
+const heimerImpact = {
+  family: "heimerdinger-w-impact",
+  trackSha256:
+    "9a781464e964e89f154c285133a45c4236aa1ed7dc8751979308fd923fae3827",
+  stopSha256:
+    "bb81d1e253d06442f10a2e8fe99337306df5a9fb74fb3950a42560623b810b6c",
+};
 const hash = (bytes) => Bun.CryptoHasher.hash("sha256", bytes, "hex");
 const leaf = (sha256, extension) => `recorded-particles/${sha256}.${extension}`;
 
@@ -51,6 +58,51 @@ async function pinned(path, sha256) {
     `Original comparison input differs: ${path}`,
   );
   return bytes;
+}
+
+async function prepareHeimerImpact(inputs, replaySha256, files) {
+  const [track, stops] = await Promise.all([
+    pinned(inputs.track, heimerImpact.trackSha256).then(JSON.parse),
+    pinned(inputs.stops, heimerImpact.stopSha256).then(JSON.parse),
+  ]);
+  assert.equal(track.schema, 1);
+  assert.equal(track.replaySha256, replaySha256);
+  assert.equal(stops.replaySha256, replaySha256);
+  assert.deepEqual(stops.matching, []);
+  assert.deepEqual(
+    stops.targetHandles,
+    track.effects.map(({ handle }) => handle).sort((a, b) => a - b),
+  );
+  assert.ok(stops.first <= track.effects[0].start);
+  assert.ok(stops.last >= track.effects.at(-1).start + Math.fround(0.3));
+  assert.deepEqual(track.shaders, {
+    vertex: leaf(vertexSha256, "glsl"),
+    fragment: leaf(fragmentSha256, "glsl"),
+  });
+  for (const path of track.textures.files) {
+    const digest = /^recorded-particles\/([a-f0-9]{64})\.png$/u.exec(path)?.[1];
+    assert.ok(digest);
+    files.set(path, await pinned(join(dirname(inputs.track), path), digest));
+  }
+  return {
+    effects: track.effects.map((effect) => ({
+      ...effect,
+      family: heimerImpact.family,
+    })),
+    families: [
+      {
+        id: heimerImpact.family,
+        components: track.components.map((component) => ({
+          ...component,
+          palette: track.textures.palette,
+          blend: "one-one",
+          centerY: 100,
+          alphaTest: true,
+          depthTest: true,
+        })),
+      },
+    ],
+  };
 }
 
 const [inputPath, ...extra] = process.argv.slice(2);
@@ -229,6 +281,14 @@ if (inputs.repeatOpeningFlash)
     ),
   });
 if (secondary !== undefined) additionalWorldImpacts.push(secondary.worldImpact);
+const heimer =
+  inputs.heimerImpact === undefined
+    ? { effects: [], families: [] }
+    : await prepareHeimerImpact(
+        inputs.heimerImpact,
+        primary.source.replaySha256,
+        files,
+      );
 const track = {
   schema: 8,
   kind: "recorded-native-terrain-particles",
@@ -240,8 +300,7 @@ const track = {
     vertex: leaf(vertexSha256, "glsl"),
     fragment: leaf(fragmentSha256, "glsl"),
   },
-  effects: [],
-  families: [],
+  ...heimer,
   worldImpact,
   ...(additionalWorldImpacts.length === 0 ? {} : { additionalWorldImpacts }),
   textures: {

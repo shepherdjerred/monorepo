@@ -43,6 +43,8 @@ async function verifyMayhemImpacts(
     .object({
       worldImpact,
       additionalWorldImpacts: z.array(worldImpact).optional(),
+      families: z.array(z.object({ id: z.string() })),
+      effects: z.array(z.object({ family: z.string() })),
     })
     .parse(
       await Bun.file(path.join(fixture.root, "recorded-particles.json")).json(),
@@ -77,7 +79,15 @@ async function verifyMayhemImpacts(
         [82.4, 0],
       ] as const)
     : [];
-  for (const [time, draws] of [...flash, ...maokai]) {
+  const heimer = track.families.some(({ id }) => id === "heimerdinger-w-impact")
+    ? ([
+        [75.2, 0],
+        [75.4, 10],
+        [75.7, 0],
+      ] as const)
+    : [];
+  expect(track.effects).toHaveLength(heimer.length === 0 ? 0 : 210);
+  for (const [time, draws] of [...flash, ...maokai, ...heimer]) {
     await seek(page, time);
     const frame = await readRecordedDraw(page);
     expect(frame.recordedParticleDraws).toBe(draws);
@@ -125,11 +135,11 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
   await expect(score).toContainText(/Red team\s*0\s*kills/);
   const opening = await readRecordedDraw(page);
   expect(opening.texturedIndices).toBeGreaterThan(0);
-  // The four authored canopy materials cover 150 terrain submeshes.
-  expect(opening.terrainBlendDraws).toHaveLength(150);
+  // The seven authored foliage materials cover 160 terrain submeshes.
+  expect(opening.terrainBlendDraws).toHaveLength(160);
   expect(
     opening.terrainBlendDraws.reduce((sum, draw) => sum + draw.indexCount, 0),
-  ).toBe(83_592);
+  ).toBe(84_981);
   for (const draw of opening.terrainBlendDraws) {
     expect(draw).toMatchObject({
       depthWrites: false,

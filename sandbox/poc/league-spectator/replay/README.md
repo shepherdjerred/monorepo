@@ -1455,8 +1455,9 @@ worker supplies the recorded player names, scoreboard, and elimination jumps.
 The end-of-match check compares all ten player rows and the winner against the
 original ROFL footer. Include the pinned `data/maps/shipping/map12/map12.bin`
 as `experienceMap` to show total XP and progress from the original KIWI curve.
-The Bloom package uses the authored source-alpha blending on four canopy
-materials. The browser check verifies their 150 draws and disabled depth writes.
+The Bloom package uses the authored source-alpha blending on seven canopy,
+bush, and ivy materials. The browser check verifies their 160 draws and disabled
+depth writes.
 
 For the controlled Bloom river comparison, prepare the original FlowMapRiver
 geometry and materials in a fresh private cache directory using the same build's
@@ -1503,6 +1504,12 @@ as `--repeat-flash-inventory` and `--repeat-flash-stop-window` with `--geometry`
 Set `repeatOpeningFlash` to `true` in the author inputs while retaining the
 original two-placement source receipt. The author requires the native inventory
 and geometry pins for all 28 placements.
+
+The same package can include Heimerdinger's recorded W impacts. Set
+`heimerImpact.track` to the pinned Skin 2 impact track and
+`heimerImpact.stops` to the pinned full stop scan for its handles.
+The author verifies all 210 placements against the same Bloom ROFL. The
+browser check samples before, during, and after their first cluster.
 
 To include recorded champion animation, prepare clips using the exact replay
 and the archived executable. Use the source and ordinal model manifests bound

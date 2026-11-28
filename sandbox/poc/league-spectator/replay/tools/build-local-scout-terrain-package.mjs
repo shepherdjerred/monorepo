@@ -128,8 +128,15 @@ export async function readLocalRecordedParticleResources(
     expectedTextures.add(palette);
   }
   if (impactComparison) {
-    assert.deepEqual(track.families, []);
-    assert.deepEqual(track.effects, []);
+    const [family] = track.families;
+    assert.ok(track.families.length <= 1);
+    if (family === undefined) assert.deepEqual(track.effects, []);
+    else {
+      assert.equal(family.id, "heimerdinger-w-impact");
+      assert.equal(family.components.length, 2);
+      assert.equal(track.effects.length, 210);
+      assert.ok(track.effects.every((effect) => effect.family === family.id));
+    }
     for (const { texture, palette } of [
       track.worldImpact,
       ...(track.additionalWorldImpacts ?? []),

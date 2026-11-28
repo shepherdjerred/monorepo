@@ -26,14 +26,23 @@ const bloomMaterialPath =
   "Maps/KitPieces/Howling_Abyss/Bloom/Materials/Default/";
 const twilightCanopyTexture =
   "d2790f312b3727d7b810bd79c338f45f98f6593d095d159a2c2b95707c64a5c3";
-// These four materials use the authored normal-pass foliage shader
+// These materials use the authored normal-pass foliage shader
 // {8b183f26}, with source alpha / one minus source alpha and no alpha test.
-const blendedCanopyTextures = {
-  Bloom_Foliage_Kinkou_Canopy_MAT_Shader:
+const blendedFoliageTextures = {
+  [bloomMaterialPath + "Bloom_Foliage_Kinkou_Canopy_MAT_Shader"]:
     "4445406cbe0ed90257663fa394e737ab41708d674d03d21eec9b8c069be9d0ef",
-  Bloom_Foliage_Twilight_Canopy_MAT_Shader: twilightCanopyTexture,
-  Bloom_Foliage_Twilight_Canopy_FloatingB_MAT_Shader: twilightCanopyTexture,
-  Bloom_Foliage_Twilight_Canopy_FloatingD_MAT_Shader: twilightCanopyTexture,
+  [bloomMaterialPath + "Bloom_Foliage_Twilight_Canopy_MAT_Shader"]:
+    twilightCanopyTexture,
+  [bloomMaterialPath + "Bloom_Foliage_Twilight_Canopy_FloatingB_MAT_Shader"]:
+    twilightCanopyTexture,
+  [bloomMaterialPath + "Bloom_Foliage_Twilight_Canopy_FloatingD_MAT_Shader"]:
+    twilightCanopyTexture,
+  [bloomMaterialPath + "Bloom_Foliage_Kinkou_Bush_MAT_Shader"]:
+    "70e3109bb18af30108e9e8bac0660f1e9bad2b6bb43e35ace269a211157c84d2",
+  [bloomMaterialPath + "Bloom_Foliage_Twilight_Bushes_MAT"]:
+    "c744bcf78c8ed116f13eea8a7f5c6ae651cb8e82fb51f3d7ccc235f00e2b8d21",
+  "Maps/KitPieces/Brawl/Base/Materials/Default/Foliage_Ivy_A_MAT":
+    "21cf6a8bd739f0cdb29ea83c4314dcfc221b27917ce7b4d7a4bd15f9bf2f158c",
 };
 
 async function readPinned({ path, sha256: expected }) {
@@ -158,13 +167,7 @@ async function buildPackage(inputs) {
   );
   assert.deepEqual(materials.coverage, terrain.coverage);
   assert.equal(materials.source.materialsSha256, mayhemLaneMaterialsSha256);
-  const blendedCanopies = new Map(
-    Object.entries(blendedCanopyTextures).map(([name, texture]) => [
-      bloomMaterialPath + name,
-      texture,
-    ]),
-  );
-  for (const [name, texture] of blendedCanopies) {
+  for (const [name, texture] of Object.entries(blendedFoliageTextures)) {
     const binding = materials.bindings[name];
     assert.equal(binding?.sha256, texture, `Wrong diffuse texture for ${name}`);
     assert.equal(binding.alphaTest, 0, `Unexpected alpha cutoff for ${name}`);
@@ -184,7 +187,9 @@ async function buildPackage(inputs) {
       alphaTest,
       width,
       height,
-      ...(blendedCanopies.has(material) ? { sourceAlphaBlend: true } : {}),
+      ...(Object.hasOwn(blendedFoliageTextures, material)
+        ? { sourceAlphaBlend: true }
+        : {}),
     });
   }
 
