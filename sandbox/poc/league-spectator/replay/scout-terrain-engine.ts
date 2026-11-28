@@ -25,6 +25,11 @@ import {
   currentInhibitorRegistrationSha256,
 } from "./tools/research/native-terrain-inhibitor-assets.mjs";
 import {
+  currentNexusArchiveModels,
+  currentNexusPlaceablesSha256,
+  currentNexusRegistrationSha256,
+} from "./tools/research/native-terrain-nexus-assets.mjs";
+import {
   currentTurretArchiveModels,
   currentTurretPlaceablesSha256,
   currentTurretPlacementJsonSha256,
@@ -44,6 +49,31 @@ async function sha256Hex(bytes: BufferSource) {
 
 function jsonSha256(value: unknown) {
   return sha256Hex(new TextEncoder().encode(JSON.stringify(value)));
+}
+
+function matchesReviewedModel(
+  file: { sha256: string; bytes: number } | undefined,
+  binding:
+    | { url: string; skinScale: number; hiddenRanges: readonly string[] }
+    | undefined,
+  path: string,
+  model: {
+    sha256: string;
+    bytes: number;
+    skinScale: number;
+    hiddenRanges: readonly string[];
+  },
+) {
+  return (
+    file?.sha256 === model.sha256 &&
+    file.bytes === model.bytes &&
+    binding?.url === `/${path}` &&
+    binding.skinScale === model.skinScale &&
+    binding.hiddenRanges.length === model.hiddenRanges.length &&
+    binding.hiddenRanges.every(
+      (range, index) => range === model.hiddenRanges[index],
+    )
+  );
 }
 
 function recordedTimeline(
@@ -195,6 +225,35 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const modelCatalog = scene.workerMotion?.championModelCatalog;
   const animationCatalog = scene.workerMotion?.championAnimationModelCatalog;
   const files = new Map(localManifest.files.map((file) => [file.path, file]));
+  const nexusCatalog = scene.workerMotion?.nexusCatalog;
+  if (nexusCatalog !== undefined) {
+    const [registration, placeables, receipt] = await Promise.all([
+      jsonSha256(nexusCatalog.registration),
+      jsonSha256(nexusCatalog.placeables),
+      jsonSha256(nexusCatalog.placementReceipt),
+    ]);
+    if (
+      registration !== currentNexusRegistrationSha256 ||
+      placeables !== currentNexusPlaceablesSha256 ||
+      receipt !== currentTurretPlacementJsonSha256
+    )
+      throw new ReplayCapabilityError(
+        "invalid-package",
+        "The Nexus placements disagree with the reviewed build.",
+      );
+    for (const [selector, id] of nexusCatalog.models) {
+      const model = currentNexusArchiveModels[selector];
+      const path = `nexus-models/${model.sha256}.glb`;
+      const binding = scene.nexusModelBindings?.find(
+        ({ participantId }) => participantId === id,
+      );
+      if (!matchesReviewedModel(files.get(path), binding, path, model))
+        throw new ReplayCapabilityError(
+          "invalid-package",
+          "A Nexus model disagrees with its reviewed archive binding.",
+        );
+    }
+  }
   const turretCatalog = scene.workerMotion?.turretCatalog;
   if (turretCatalog !== undefined) {
     const [placeables, receipt] = await Promise.all([
@@ -216,14 +275,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       const binding = scene.structureModelBindings?.find(
         ({ participantId }) => participantId === id,
       );
-      if (
-        file?.sha256 !== model.sha256 ||
-        file.bytes !== model.bytes ||
-        binding?.url !== `/${path}` ||
-        binding.skinScale !== model.skinScale ||
-        binding.hiddenRanges.length !== model.hiddenRanges.length ||
-        binding.hiddenRanges.some((range, i) => range !== model.hiddenRanges[i])
-      )
+      if (!matchesReviewedModel(file, binding, path, model))
         throw new ReplayCapabilityError(
           "invalid-package",
           "A turret model disagrees with its reviewed archive binding.",

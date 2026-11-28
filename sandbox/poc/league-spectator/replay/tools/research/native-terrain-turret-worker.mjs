@@ -56,6 +56,7 @@ export function createCurrentReplayTurretCollector(prepared, input) {
     .map(([context]) => context);
 
   return {
+    opening: turretOpening,
     candidateContexts,
     observe: snapshotCollector.observe,
     finish() {

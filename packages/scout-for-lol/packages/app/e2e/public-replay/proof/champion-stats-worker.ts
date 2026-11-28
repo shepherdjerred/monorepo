@@ -11,6 +11,7 @@ import { readDirectWorkerReply } from "./motion-worker-capture.ts";
 import { verifyDirectLaneWorker } from "./lane-worker-oracle.ts";
 import { verifyDirectNeutralWorker } from "./neutral-worker-oracle.ts";
 import { verifyDirectTurretWorker } from "./turret-worker-oracle.ts";
+import { verifyDirectNexusWorker } from "./nexus-worker-oracle.ts";
 
 const schemaTrack = z.number().int().positive();
 const statPoint = z.tuple([z.number(), z.number(), z.number()]);
@@ -100,6 +101,7 @@ const reply = z.object({
   recordedPlayerState: z.unknown().optional(),
   structureModels: z.unknown().optional(),
   turretLosses: z.unknown().optional(),
+  nexusModels: z.unknown().optional(),
   announcerCues: z
     .array(
       z
@@ -183,6 +185,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionModels: boolean;
     directInhibitors: boolean;
     directTurrets: boolean;
+    directNexus: boolean;
     directReplayObservations: boolean;
     championAnimationCueCount: number;
     announcerEvents?: unknown;
@@ -229,6 +232,7 @@ export async function verifyDirectChampionStatsWorker(
     championModelCatalog: fixture.directChampionModels,
     inhibitorCatalog: fixture.directInhibitors,
     turretCatalog: fixture.directTurrets,
+    nexusCatalog: fixture.directNexus,
     decodeChampionExperience: directChampionExperience,
     decodeChampionInventory: directChampionInventory,
     decodeChampionStats: directChampionStats,
@@ -254,6 +258,7 @@ export async function verifyDirectChampionStatsWorker(
     ].sort(),
   );
   await verifyDirectTurretWorker(oracleRoot, fixture, actual);
+  await verifyDirectNexusWorker(oracleRoot, fixture, actual.nexusModels);
   expect(actual.neutralCampSkins).toEqual(fixture.directNeutralCampSkins);
   await verifyDirectPlayerState(
     actual.recordedPlayerState,

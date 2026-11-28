@@ -456,8 +456,9 @@ inactive interval. It switches to the standing mesh at the recorded return
 time and uses the same visibility filter when seeking or playing forward.
 Use `--authored-nexus-catalog` and `--authored-nexus-catalog-sha256` with the
 same placement receipt to bind both Nexus models and verify the terminal loss.
-The terminal loss supplies the Nexus cutoff. The transition animation remains
-unverified.
+Add `--nexus-from-replay` to verify both actors in each indexed snapshot and
+corroborate the terminal loss during the browser's existing motion scan. The
+recorded loss supplies the Nexus cutoff. The transition animation remains unverified.
 
 Create the turret catalog from the pinned build's WAD and placement
 receipt with the existing ordinal exporter. Use a fresh private output path.
@@ -550,6 +551,11 @@ the prepared `.8428` scene with SHA-256
 `e8a01698de229fd4afbe41d2ded68569346cb00da45229de7b51d6f1ad45f585`.
 In the same JSON format, include `replaySha256`,
 `structureModels: { instances, omittedContexts }`, and `turretLosses` in that order.
+For `--nexus-from-replay`, include `scout-8428-v43-nexus-oracle.json` from
+the prepared `.8428` scene with SHA-256
+`fc4ac9c2db50c721cb47edec1a402f7c098595d52d0effd76be1abc800cc01e6`.
+Use that format with `replaySha256` and `nexusModels: { instances, terminalLoss }`.
+The browser proof also checks the SHA-256 of the original terminal packet.
 The harness also tests announcer playback when the package declares the
 announcer preview. It releases the local backend after the browser test and
 prints the evidence directory under `.cache`.

@@ -93,6 +93,7 @@ const { positionals, values } = parseArgs({
     "nexus-models": { type: "string" },
     "authored-nexus-catalog": { type: "string" },
     "authored-nexus-catalog-sha256": { type: "string" },
+    "nexus-from-replay": { type: "boolean" },
     "inhibitor-models": { type: "string" },
     "inhibitor-models-sha256": { type: "string" },
     "authored-inhibitor-catalog": { type: "string" },
@@ -242,6 +243,7 @@ const inhibitorCatalogDigest = values["authored-inhibitor-catalog-sha256"];
 const decodeInhibitors = values["inhibitors-from-replay"] === true;
 const nexusCatalogPath = values["authored-nexus-catalog"];
 const nexusCatalogDigest = values["authored-nexus-catalog-sha256"];
+const decodeNexus = values["nexus-from-replay"] === true;
 assert.equal(
   nexusCatalogPath === undefined,
   nexusCatalogDigest === undefined,
@@ -253,6 +255,14 @@ assert.ok(
       values["turret-placements"] !== undefined &&
       values["nexus-models"] === undefined),
   "Authored Nexus catalogs require a private package and turret placements without prepared Nexus models",
+);
+assert.ok(
+  !decodeNexus ||
+    (nexusCatalogPath !== undefined &&
+      values["worker-decompressor"] !== undefined &&
+      values["position-decoder"] !== undefined &&
+      values["team-vision"] === undefined),
+  "Replay-derived Nexus requires a pinned authored catalog and motion worker without prepared team vision",
 );
 assert.equal(
   inhibitorCatalogPath === undefined,
@@ -1346,9 +1356,13 @@ async function loadNexusRenderRoutes(
     bindings,
     instances,
     ...(current
-      ? { terminalLoss: { context: cue.context, timeSeconds: cue.timeSeconds } }
+      ? {
+          terminalLoss: { context: cue.context, timeSeconds: cue.timeSeconds },
+          terminalPayloadSha256: cue.payloadSha256,
+        }
       : { cue: { context: cue.context, timeSeconds: cue.timeSeconds } }),
     routes,
+    assetIds,
   };
 }
 const [bytes, receipts, , baseMetadata, baseMesh, projection] =
@@ -1783,6 +1797,8 @@ let verifiedTurretModels;
 let verifiedTurretLosses;
 let placementSha;
 let nexus;
+let nexusCatalog;
+let verifiedNexusModels;
 if (values["turret-placements"] !== undefined) {
   const { prepareNativeTerrainTurrets, turretPlacementReceiptDigests } =
     await import("./research/native-terrain-turrets.mjs");
@@ -1972,6 +1988,15 @@ if (values["turret-placements"] !== undefined) {
       prepared,
       placementSha,
     );
+    if (decodeNexus) {
+      const { projectCurrentNexusCatalog } =
+        await import("./research/native-terrain-nexus-catalog-author.mjs");
+      nexusCatalog = projectCurrentNexusCatalog(
+        catalog,
+        nexus.assetIds,
+        placementReceipt,
+      );
+    }
   }
 }
 let nexusModelRoutes;
@@ -1984,13 +2009,22 @@ if (values["nexus-models"] !== undefined)
     placementSha,
   );
 if (nexus !== undefined) {
-  scene.nexusModels = {
-    bindings: nexus.bindings,
+  const nexusModels = {
     instances: nexus.instances,
     ...(nexus.cue === undefined
       ? { terminalLoss: nexus.terminalLoss }
       : { cue: nexus.cue }),
   };
+  if (decodeNexus) {
+    verifiedNexusModels = {
+      ...nexusModels,
+      terminalLoss: {
+        ...nexus.terminalLoss,
+        payloadSha256: nexus.terminalPayloadSha256,
+      },
+    };
+    scene.nexusModelBindings = nexus.bindings;
+  } else scene.nexusModels = { bindings: nexus.bindings, ...nexusModels };
   nexusModelRoutes = nexus.routes;
 }
 let navgridBytes;
@@ -2042,6 +2076,7 @@ if (decoderBytes !== undefined) {
       ...(championModelCatalog === undefined ? {} : { championModelCatalog }),
       ...(inhibitorCatalog === undefined ? {} : { inhibitorCatalog }),
       ...(turretCatalog === undefined ? {} : { turretCatalog }),
+      ...(nexusCatalog === undefined ? {} : { nexusCatalog }),
     };
   } else {
     const [
@@ -2598,7 +2633,8 @@ if (terrainControllerMaterialsPath !== undefined) {
 if (
   decodeTeamVision ||
   inhibitorCatalog !== undefined ||
-  turretCatalog !== undefined
+  turretCatalog !== undefined ||
+  nexusCatalog !== undefined
 ) {
   assert.ok(currentBuild && scene.workerMotion && replayCodecs);
   let visionScene =
@@ -2607,6 +2643,17 @@ if (
       : { ...scene, worldUnitModels: replayWorldUnits };
   let inhibitorValidator;
   let turretValidator;
+  let nexusValidator;
+  if (nexusCatalog !== undefined) {
+    const { createCurrentReplayNexusCollector } =
+      await import("./research/native-terrain-nexus-worker.mjs");
+    nexusValidator = createCurrentReplayNexusCollector(
+      prepared,
+      nexusCatalog,
+      replayCodecs,
+    );
+    visionScene = { ...visionScene, nexusModels: verifiedNexusModels };
+  }
   if (turretCatalog !== undefined) {
     const { createCurrentReplayTurretCollector } =
       await import("./research/native-terrain-turret-worker.mjs");
@@ -2634,6 +2681,7 @@ if (
     )) {
       inhibitorValidator?.observe(packet);
       turretValidator?.observe(packet);
+      nexusValidator?.observe(packet);
       yield packet;
     }
   }
@@ -2653,6 +2701,12 @@ if (
     }
   }
   inhibitorValidator?.finish();
+  if (nexusValidator !== undefined)
+    assert.deepEqual(
+      (await nexusValidator.finish()).nexusModels,
+      verifiedNexusModels,
+      "Worker Nexus placements and terminal loss differ from independent prepared evidence",
+    );
   if (turretValidator !== undefined) {
     const { structureModels, turretLosses } = turretValidator.finish();
     assert.deepEqual(

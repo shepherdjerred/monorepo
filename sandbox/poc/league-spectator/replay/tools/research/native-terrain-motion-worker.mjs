@@ -17,6 +17,7 @@ import { bindNativeTerrainChampionIdentities } from "./native-terrain-champion-i
 import { prepareCurrentChampionModelBindings } from "./native-terrain-champion-opening.mjs";
 import { prepareNativeTerrainChampionKeyframes } from "./native-terrain-champion-keyframes.mjs";
 import { createCurrentReplayInhibitorCollector } from "./native-terrain-inhibitor-worker.mjs";
+import { createCurrentReplayNexusCollector } from "./native-terrain-nexus-worker.mjs";
 import { createCurrentReplayTurretCollector } from "./native-terrain-turret-worker.mjs";
 import {
   createCurrentMap11ControllerObserver,
@@ -282,6 +283,7 @@ async function prepareMotion({
   neutralCampSkins,
   inhibitorCatalog,
   turretCatalog,
+  nexusCatalog,
   terrainControllerGraph,
 }) {
   if (
@@ -307,6 +309,10 @@ async function prepareMotion({
     );
   if (turretCatalog !== undefined && !options.allowCurrentBuild)
     throw Error("Replay-derived turrets require the reviewed current build.");
+  if (nexusCatalog !== undefined && !options.allowCurrentBuild)
+    throw Error(
+      "Replay-derived Nexus models require the reviewed current build.",
+    );
   if (
     championModelCatalog !== undefined &&
     (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
@@ -519,11 +525,21 @@ async function prepareMotion({
     turretCatalog === undefined
       ? undefined
       : createCurrentReplayTurretCollector(prepared, turretCatalog);
+  const nexus =
+    nexusCatalog === undefined
+      ? undefined
+      : createCurrentReplayNexusCollector(
+          prepared,
+          nexusCatalog,
+          codecs,
+          turrets?.opening,
+        );
   const dynamicActors =
     laneMinionCatalog !== undefined ||
     neutralModelIds !== undefined ||
     inhibitors !== undefined ||
-    turrets !== undefined;
+    turrets !== undefined ||
+    nexus !== undefined;
   const teamVision =
     decodeTeamVision === true
       ? createCurrentRecordedTeamVisionCollector(
@@ -542,6 +558,9 @@ async function prepareMotion({
       teamVision.addCandidate(context, 0);
   if (teamVision !== undefined)
     for (const context of turrets?.candidateContexts ?? [])
+      teamVision.addCandidate(context, 0);
+  if (teamVision !== undefined)
+    for (const { context } of nexus?.instances ?? [])
       teamVision.addCandidate(context, 0);
   const rawWaypoints = createWaypointReaderFromCodecs(codecs);
   const readWaypoints = dynamicActors
@@ -596,6 +615,7 @@ async function prepareMotion({
     neutral,
     inhibitors,
     turrets,
+    nexus,
   ].filter((collector) => collector !== undefined);
   const observe = (packet) => {
     for (const observer of observers) observer.observe(packet);
@@ -666,6 +686,7 @@ async function prepareMotion({
           campSkins,
         });
   const turretResult = turrets?.finish();
+  const nexusResult = await nexus?.finish();
   const visibleDynamicContexts = dynamicActors
     ? new Set([
         ...(laneResult?.laneMinionInstances ?? []).map(
@@ -676,6 +697,9 @@ async function prepareMotion({
         ),
         ...(inhibitors?.instances ?? []).map(({ context }) => context),
         ...(turretResult?.structureModels.instances ?? []).map(
+          ({ context }) => context,
+        ),
+        ...(nexusResult?.nexusModels.instances ?? []).map(
           ({ context }) => context,
         ),
       ])
@@ -704,6 +728,7 @@ async function prepareMotion({
     ...(neutralResult ?? {}),
     ...(inhibitors?.finish() ?? {}),
     ...(turretResult ?? {}),
+    ...(nexusResult ?? {}),
     ...(teamVision === undefined
       ? {}
       : { teamVision: teamVision.finish(visibleDynamicContexts) }),

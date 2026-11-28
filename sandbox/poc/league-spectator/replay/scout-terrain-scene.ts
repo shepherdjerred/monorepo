@@ -195,32 +195,33 @@ const worldTransform = z.tuple([
   transformColumn,
   transformColumn,
 ]);
+const turretPlacementReceipt = z.strictObject({
+  archivedBuild: z.string(),
+  archivedSha256: z.string(),
+  installedCompatibilityVersion: z.string(),
+  installedSha256: z.string(),
+  entryPath: z.string(),
+  attackableType: z.literal(0),
+  uniqueMatches: z.literal(24),
+  records: z
+    .array(
+      z.strictObject({
+        keyHash: z.number().int().nonnegative(),
+        mapNameHash: z.number().int().positive(),
+        explicitTeam: z.number().int().nullable(),
+        translation: position,
+        archivedOffset: z.number().int().nonnegative(),
+        installedOffset: z.number().int().nonnegative(),
+        bytes: z.number().int().positive(),
+        sha256: z.string(),
+      }),
+    )
+    .length(24),
+});
 const turretCatalog = z.strictObject({
   build: z.literal(currentTerrainPositionBuild),
   protocol: z.literal(terrainPositionProtocol),
-  placementReceipt: z.strictObject({
-    archivedBuild: z.string(),
-    archivedSha256: z.string(),
-    installedCompatibilityVersion: z.string(),
-    installedSha256: z.string(),
-    entryPath: z.string(),
-    attackableType: z.literal(0),
-    uniqueMatches: z.literal(24),
-    records: z
-      .array(
-        z.strictObject({
-          keyHash: z.number().int().nonnegative(),
-          mapNameHash: z.number().int().positive(),
-          explicitTeam: z.number().int().nullable(),
-          translation: position,
-          archivedOffset: z.number().int().nonnegative(),
-          installedOffset: z.number().int().nonnegative(),
-          bytes: z.number().int().positive(),
-          sha256: z.string(),
-        }),
-      )
-      .length(24),
-  }),
+  placementReceipt: turretPlacementReceipt,
   placeables: z
     .array(
       z.strictObject({
@@ -234,6 +235,47 @@ const turretCatalog = z.strictObject({
   models: z.tuple([
     z.tuple([z.literal("turret/0"), z.literal(0)]),
     z.tuple([z.literal("turret/3"), z.literal(1)]),
+  ]),
+});
+const authoredPlacementSource = z.strictObject({
+  archivedOffset: z.number().int().nonnegative(),
+  installedOffset: z.number().int().nonnegative(),
+  bytes: z.number().int().positive(),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/),
+});
+const nexusCatalog = z.strictObject({
+  build: z.literal(currentTerrainPositionBuild),
+  protocol: z.literal(terrainPositionProtocol),
+  placementReceipt: turretPlacementReceipt,
+  registration: z
+    .array(
+      z.strictObject({
+        mapNameHash: z.number().int().positive().max(0xffffffff),
+        attackableType: z.union([
+          z.literal(0),
+          z.literal(1),
+          z.literal(2),
+          z.null(),
+        ]),
+        kind: z.enum(["building", "barracks"]),
+        worldPosition: position,
+      }),
+    )
+    .length(38),
+  placeables: z
+    .array(
+      z.strictObject({
+        mapNameHash: z.number().int().positive().max(0xffffffff),
+        assetId: z.enum(["nexus-0", "nexus-3"]),
+        characterRecord: z.string().min(1),
+        transform: z.array(z.number()).length(16),
+        placementSource: authoredPlacementSource,
+      }),
+    )
+    .length(2),
+  models: z.tuple([
+    z.tuple([z.literal("nexus-0"), z.literal(100)]),
+    z.tuple([z.literal("nexus-3"), z.literal(101)]),
   ]),
 });
 const turretLosses = z.array(
@@ -333,12 +375,7 @@ const inhibitorCatalog = z.strictObject({
         asset: z.string().nullable(),
         explicitTeam: teamId.nullable(),
         transform: worldTransform,
-        placementSource: z.strictObject({
-          archivedOffset: z.number().int().nonnegative(),
-          installedOffset: z.number().int().nonnegative(),
-          bytes: z.number().int().positive(),
-          sha256: z.string().regex(/^[a-f0-9]{64}$/),
-        }),
+        placementSource: authoredPlacementSource,
       }),
     )
     .length(38),
@@ -522,6 +559,55 @@ const recordedStructureLoss = z.object({
   context: z.number().int().positive(),
   timeSeconds: z.number().positive(),
 });
+const workerNexusModels = z.strictObject({
+  instances: z.array(worldModelInstance).length(2),
+  terminalLoss: recordedStructureLoss.extend({
+    payloadSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  }),
+});
+
+function validateWorkerNexusModels(
+  catalog: z.infer<typeof nexusCatalog>,
+  { instances, terminalLoss }: z.infer<typeof workerNexusModels>,
+  duration: number,
+) {
+  const models = new Map<string, number>(catalog.models);
+  const contexts = new Set(instances.map(({ context }) => context));
+  if (
+    contexts.size !== 2 ||
+    !contexts.has(terminalLoss.context) ||
+    terminalLoss.timeSeconds > duration
+  )
+    throw Error("Replay motion worker returned an unadmitted Nexus loss.");
+  let firstContext: number | undefined;
+  for (const { assetId, mapNameHash, transform } of catalog.placeables) {
+    const ordinal = catalog.registration.findIndex(
+      (row) => row.mapNameHash === mapNameHash,
+    );
+    const modelId = models.get(assetId);
+    const instance = instances.find(
+      ({ participantId }) => participantId === modelId,
+    );
+    if (instance === undefined || ordinal < 0)
+      throw Error("Replay motion worker returned incomplete Nexus placements.");
+    firstContext ??= instance.context - ordinal;
+    const origin = transform.slice(12, 15);
+    const basis = [
+      ...transform.slice(0, 3),
+      ...transform.slice(4, 7),
+      ...transform.slice(8, 11),
+    ];
+    if (
+      firstContext <= 0 ||
+      instance.context !== firstContext + ordinal ||
+      instance.position.some((axis, index) => axis !== origin[index]) ||
+      instance.basis.some((axis, index) => axis !== basis[index])
+    )
+      throw Error(
+        "Replay motion worker returned an unadmitted Nexus placement.",
+      );
+  }
+}
 const ChampionHealthTracksSchema = createChampionHealthTracksSchema(z);
 const ChampionResourceTracksSchema = createChampionResourceTracksSchema(z);
 const WorkerChampionStatsSchema = z.strictObject({
@@ -686,6 +772,7 @@ const TerrainSceneFields = z.object({
       );
     }, "Expected one loss witness for a rendered Nexus")
     .optional(),
+  nexusModelBindings: z.array(modelBinding).length(2).optional(),
   inhibitorModels: z
     .object({
       bindings: z.array(modelBinding).length(2),
@@ -723,6 +810,7 @@ const TerrainSceneFields = z.object({
       championModelCatalog: ChampionModelCatalogSchema.optional(),
       inhibitorCatalog: inhibitorCatalog.optional(),
       turretCatalog: turretCatalog.optional(),
+      nexusCatalog: nexusCatalog.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
       laneMinionCatalog: LaneMinionCatalogSchema.optional(),
@@ -768,6 +856,31 @@ export const SceneSchema = TerrainSceneFields.refine(
       "Recorded inhibitor inactive ranges must be ordered and within the replay.",
   },
 )
+  .refine(
+    (scene) => {
+      const catalog = scene.workerMotion?.nexusCatalog;
+      const bindings = scene.nexusModelBindings;
+      if (catalog === undefined) return bindings === undefined;
+      const ids = new Set<number>(catalog.models.map(([, id]) => id));
+      return (
+        scene.identity.build === catalog.build &&
+        scene.identity.protocol === catalog.protocol &&
+        scene.workerMotion?.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.nexusModels === undefined &&
+        bindings !== undefined &&
+        bindings.every(
+          ({ participantId, url }) =>
+            ids.delete(participantId) && url.startsWith("/nexus-models/"),
+        )
+      );
+    },
+    {
+      path: ["workerMotion", "nexusCatalog"],
+      message:
+        "Replay-derived Nexus models require an exact archive catalog and no prepared loss.",
+    },
+  )
   .refine(
     (scene) => {
       const catalog = scene.workerMotion?.turretCatalog;
@@ -1210,6 +1323,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
       )
       .optional(),
     turretLosses: turretLosses.optional(),
+    nexusModels: workerNexusModels.optional(),
     recordedPlayerState: z
       .strictObject({
         playerState: PlayerStateSchema,
@@ -1379,6 +1493,15 @@ async function loadWorkerMotion(
         identity.durationMilliseconds / 1000,
       );
     const turrets = workerMotion.turretCatalog;
+    const nexus = workerMotion.nexusCatalog;
+    if ((result.nexusModels !== undefined) !== (nexus !== undefined))
+      throw Error("Replay motion worker returned unexpected Nexus coverage.");
+    if (nexus !== undefined && result.nexusModels !== undefined)
+      validateWorkerNexusModels(
+        nexus,
+        result.nexusModels,
+        identity.durationMilliseconds / 1000,
+      );
     if (
       (result.structureModels !== undefined) !== (turrets !== undefined) ||
       (result.turretLosses !== undefined) !== (turrets !== undefined)
@@ -1424,6 +1547,7 @@ async function loadWorkerMotion(
         ...(result.neutralObjectiveInstances ?? []),
         ...(result.inhibitorModels?.instances ?? []),
         ...(result.structureModels?.instances ?? []),
+        ...(result.nexusModels?.instances ?? []),
       ].map(({ context }) => context);
       const contexts = new Set([
         ...teamVisionActors.contexts,
@@ -1906,6 +2030,17 @@ export async function loadSceneMotion(
       motion: decoded.motion,
       decodedPositionFrames,
       ...neutrals,
+      ...(decoded.nexusModels === undefined ||
+      scene.nexusModelBindings === undefined
+        ? {}
+        : {
+            nexusModels: {
+              bindings: scene.nexusModelBindings,
+              ...decoded.nexusModels,
+            },
+            nexusModelBindings: undefined,
+            workerMotion: undefined,
+          }),
       ...(decoded.structureModels === undefined ||
       scene.structureModelBindings === undefined
         ? {}
