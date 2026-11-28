@@ -50,7 +50,6 @@ export const VersionMapSchema = z
     "AlexxIT/SonoffLAN": z.string(),
     "elax46/custom-brand-icons": z.string(),
     "linuxserver/syncthing": z.string(),
-    "dotdc/grafana-dashboards-kubernetes": z.string(),
     minecraft: z.string(),
     "mc-router": z.string(),
     "itzg/mc-router": z.string(),

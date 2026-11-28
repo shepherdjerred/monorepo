@@ -65,7 +65,7 @@ const DIRECT_DEPENDENCY_PATTERN =
   /\{\{ required `Delivery requires image:([a-z0-9-]+)` \(get \(get \(\.Values\.delivery \| default dict\) "dependencies" \| default dict\) "\1"\) \}\}/gu;
 
 // Git repos (not Helm chart repos) — skip
-const GIT_REPOS = ["github.com/dotdc/", "github.com/adyanth/"];
+const GIT_REPOS = ["github.com/adyanth/"];
 
 // OCI registries that need oci:// prefix for helm commands
 const OCI_REGISTRIES = ["registry.k8s.io", "ghcr.io"];

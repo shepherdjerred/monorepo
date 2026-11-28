@@ -377,7 +377,7 @@ export type KubeprometheusstackHelmValuesDefaultRules = {
    */
   kubeletClientCertificateExpiration?: KubeprometheusstackHelmValuesDefaultRulesKubeletClientCertificateExpiration;
   /**
-   * @default {"fsSelector":"fstype!=\"\""}
+   * @default {"fsSelector":"fstype!=\"\"","diskDeviceSelector":"device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\""}
    */
   node?: KubeprometheusstackHelmValuesDefaultRulesNode;
   /**
@@ -1054,6 +1054,10 @@ export type KubeprometheusstackHelmValuesDefaultRulesNode = {
    * @default "fstype!="""
    */
   fsSelector?: string;
+  /**
+   * @default "device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|..."
+   */
+  diskDeviceSelector?: string;
 };
 
 export type KubeprometheusstackHelmValuesDefaultRulesDisabled = object;
@@ -1305,7 +1309,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
   /**
    * Configuration for Alertmanager service
    *
-   * @default {...} (16 keys)
+   * @default {...} (17 keys)
    */
   service?: KubeprometheusstackHelmValuesAlertmanagerService;
   /**
@@ -2021,6 +2025,14 @@ export type KubeprometheusstackHelmValuesAlertmanagerService = {
    */
   sessionAffinityConfig?: KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfig;
   /**
+   * Preference for routing traffic to the Service's endpoints, e.g. PreferClose to keep traffic in the client's zone
+   * Requires Kubernetes >= 1.31; newer versions also accept PreferSameZone and PreferSameNode. Not rendered when empty
+   * Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+   *
+   * @default ""
+   */
+  trafficDistribution?: string;
+  /**
    * Service type
    *
    * @default "ClusterIP"
@@ -2572,7 +2584,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.35.0"
+   * @default "v0.35.1"
    */
   tag?: string;
   /**
@@ -7125,7 +7137,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * Thanos sidecar on prometheus nodes
    * (Please remember to change ${kube-prometheus-stack.fullname} and ${namespace}. Not just copy and paste!)
    *
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   thanosService?: KubeprometheusstackHelmValuesPrometheusThanosService;
   /**
@@ -7139,13 +7151,13 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * Service for external access to sidecar
    * Enabling this creates a service to expose thanos-sidecar outside the cluster.
    *
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   thanosServiceExternal?: KubeprometheusstackHelmValuesPrometheusThanosServiceExternal;
   /**
    * Configuration for Prometheus service
    *
-   * @default {...} (19 keys)
+   * @default {...} (20 keys)
    */
   service?: KubeprometheusstackHelmValuesPrometheusService;
   /**
@@ -7344,6 +7356,14 @@ export type KubeprometheusstackHelmValuesPrometheusThanosService = {
    */
   externalTrafficPolicy?: string;
   /**
+   * Preference for routing traffic to the Service's endpoints, e.g. PreferClose to keep traffic in the client's zone
+   * Requires Kubernetes >= 1.31; newer versions also accept PreferSameZone and PreferSameNode. Not rendered when empty
+   * Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+   *
+   * @default ""
+   */
+  trafficDistribution?: string;
+  /**
    * Service type
    *
    * @default "ClusterIP"
@@ -7519,6 +7539,14 @@ export type KubeprometheusstackHelmValuesPrometheusThanosServiceExternal = {
    */
   externalTrafficPolicy?: string;
   /**
+   * Preference for routing traffic to the Service's endpoints, e.g. PreferClose to keep traffic in the client's zone
+   * Requires Kubernetes >= 1.31; newer versions also accept PreferSameZone and PreferSameNode. Not rendered when empty
+   * Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+   *
+   * @default ""
+   */
+  trafficDistribution?: string;
+  /**
    * Service type
    *
    * @default "LoadBalancer"
@@ -7641,6 +7669,14 @@ export type KubeprometheusstackHelmValuesPrometheusService = {
    * @default {"clientIP":{"timeoutSeconds":10800}}
    */
   sessionAffinityConfig?: KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfig;
+  /**
+   * Preference for routing traffic to the Service's endpoints, e.g. PreferClose to keep traffic in the client's zone
+   * Requires Kubernetes >= 1.31; newer versions also accept PreferSameZone and PreferSameNode. Not rendered when empty
+   * Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+   *
+   * @default ""
+   */
+  trafficDistribution?: string;
 };
 
 export type KubeprometheusstackHelmValuesPrometheusServiceAnnotations = {
@@ -10649,6 +10685,7 @@ export type KubeprometheusstackHelmParameters = {
   "defaultRules.kubeletClientCertificateExpiration.warning"?: string;
   "defaultRules.kubeletClientCertificateExpiration.critical"?: string;
   "defaultRules.node.fsSelector"?: string;
+  "defaultRules.node.diskDeviceSelector"?: string;
   "global.rbac.create"?: string;
   "global.rbac.createAggregateClusterRoles"?: string;
   "global.imageRegistry"?: string;
@@ -10746,6 +10783,7 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.service.externalTrafficPolicy"?: string;
   "alertmanager.service.sessionAffinity"?: string;
   "alertmanager.service.sessionAffinityConfig.clientIP.timeoutSeconds"?: string;
+  "alertmanager.service.trafficDistribution"?: string;
   "alertmanager.service.type"?: string;
   "alertmanager.servicePerReplica.enabled"?: string;
   "alertmanager.servicePerReplica.port"?: string;
@@ -11375,6 +11413,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.controlPlaneScrapeClass.authorization.credentialsFile"?: string;
   "prometheus.thanosService.enabled"?: string;
   "prometheus.thanosService.externalTrafficPolicy"?: string;
+  "prometheus.thanosService.trafficDistribution"?: string;
   "prometheus.thanosService.type"?: string;
   "prometheus.thanosService.ipDualStack.enabled"?: string;
   "prometheus.thanosService.ipDualStack.ipFamilies"?: string;
@@ -11404,6 +11443,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.thanosServiceExternal.httpPort"?: string;
   "prometheus.thanosServiceExternal.targetHttpPort"?: string;
   "prometheus.thanosServiceExternal.externalTrafficPolicy"?: string;
+  "prometheus.thanosServiceExternal.trafficDistribution"?: string;
   "prometheus.thanosServiceExternal.type"?: string;
   "prometheus.thanosServiceExternal.nodePort"?: string;
   "prometheus.thanosServiceExternal.httpNodePort"?: string;
@@ -11426,6 +11466,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.service.publishNotReadyAddresses"?: string;
   "prometheus.service.sessionAffinity"?: string;
   "prometheus.service.sessionAffinityConfig.clientIP.timeoutSeconds"?: string;
+  "prometheus.service.trafficDistribution"?: string;
   "prometheus.servicePerReplica.enabled"?: string;
   "prometheus.servicePerReplica.port"?: string;
   "prometheus.servicePerReplica.targetPort"?: string;

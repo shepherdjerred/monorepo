@@ -3,7 +3,7 @@ import { z } from "zod";
 // Every external input to a disposable server is pinned by digest or hash so
 // a run is reproducible and a supply-chain swap fails loudly.
 export const serverImage =
-  "itzg/minecraft-server:2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd";
+  "itzg/minecraft-server:2026.11.1-java25@sha256:0634ff76eee896c7e9760a35117d24fad394857d10bc8c1d9bc7f7ff7deef3c2";
 
 export const paper = {
   version: "26.3",

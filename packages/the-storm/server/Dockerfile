@@ -35,7 +35,7 @@ RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
 ########################
 # Keep this digest equal to the version catalog's itzg/minecraft-server pin
 # (minecraft-tsmc.test.ts enforces it; renovate.json groups both into one PR).
-FROM itzg/minecraft-server:2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd AS fetch
+FROM itzg/minecraft-server:2026.11.1-java25@sha256:0634ff76eee896c7e9760a35117d24fad394857d10bc8c1d9bc7f7ff7deef3c2 AS fetch
 COPY server/plugins.json server/fetch.sh /build/
 RUN bash /build/fetch.sh plugins /build/plugins.json /out
 COPY server/build-livemap.sh /build/
@@ -60,7 +60,7 @@ RUN bash /build/fetch.sh nav /build/nav-manifest.json /out/nav \
 ########################
 ## release image
 ########################
-FROM itzg/minecraft-server:2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd AS release
+FROM itzg/minecraft-server:2026.11.1-java25@sha256:0634ff76eee896c7e9760a35117d24fad394857d10bc8c1d9bc7f7ff7deef3c2 AS release
 COPY --from=fetch /out/paper/ /opt/paper/
 COPY --from=fetch /out/paper-defaults/ /opt/paper-defaults/
 COPY --from=fetch /out/plugins/ /plugins/

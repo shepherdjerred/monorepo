@@ -13,7 +13,7 @@ operational parameter overrides with the declared list; recording credentials
 remain supplied by the chart's `extraEnv` secret references.
 
 The Storm uses mc-router's default backend for `ts-mc.net`, `mc.ts-mc.net`,
-and status checks that send a resolved IP. The pinned mc-router 1.56.5 ignores
+and status checks that send a resolved IP. The pinned mc-router (1.56.5 through 1.57.1) ignores
 `defaultServer` when `externalServerName` is also present, so the Service must
 declare only the default annotation. Other servers retain their explicit
 hostname routes and take precedence. This keeps the default attached to the

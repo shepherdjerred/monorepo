@@ -16,7 +16,7 @@ export type SeaweedfsHelmValuesGlobal = {
    * All app-specific global values are namespaced under global.seaweedfs
    * to avoid polluting the shared global namespace when used as a subchart.
    *
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   seaweedfs?: SeaweedfsHelmValuesGlobalSeaweedfs;
 };
@@ -68,6 +68,21 @@ export type SeaweedfsHelmValuesGlobalSeaweedfs = {
    * @default {"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}}
    */
   securityConfig?: SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfig;
+  /**
+   * Serve the volume servers' HTTP port over TLS with the chart's volume
+   * certificate, and make every chart component reach them over HTTPS
+   * ([https.volume] and [https.client] in security.toml). Requires
+   * enableSecurity and is not supported with allInOne. Clients outside the
+   * chart (weed mount, the CSI driver) need their own [https.client].
+   * The volume servers do not ask for client certificates, because kubelet
+   * probes cannot present one; JWT signing keeps authorizing volume access.
+   * [https.client] also sends the admin UI's HTTP lookups on masters and
+   * S3 over HTTPS, which their plain listeners refuse, so the UI can miss
+   * volume public URLs and refuse SSE-S3 vector buckets.
+   *
+   * @default {"enabled":false}
+   */
+  volumeHttps?: SeaweedfsHelmValuesGlobalSeaweedfsVolumeHttps;
   /**
    * we will use this serviceAccountName for all ClusterRoles/ClusterRoleBindings
    *
@@ -200,6 +215,13 @@ export type SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfigJwtSigningExpiresAft
      */
     filerRead?: number;
   };
+
+export type SeaweedfsHelmValuesGlobalSeaweedfsVolumeHttps = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+};
 
 export type SeaweedfsHelmValuesGlobalSeaweedfsServiceAccountAnnotations =
   object;
@@ -1601,7 +1623,7 @@ export type SeaweedfsHelmValuesFiler = {
    */
   secretExtraEnvironmentVars?: SeaweedfsHelmValuesFilerSecretExtraEnvironmentVars;
   /**
-   * @default {...} (8 keys)
+   * @default {...} (9 keys)
    */
   s3?: SeaweedfsHelmValuesFilerS3;
 };
@@ -2007,6 +2029,14 @@ export type SeaweedfsHelmValuesFilerS3 = {
    */
   domainName?: string;
   /**
+   * Seconds the gateway keeps serving after SIGTERM while its health checks
+   * return 503 (see s3.preStopSeconds). Added to the filer pod's 60s
+   * termination grace period.
+   *
+   * @default 0
+   */
+  preStopSeconds?: number;
+  /**
    * enable user & permission to s3 (need to inject to all services)
    *
    * @default false
@@ -2076,11 +2106,24 @@ export type SeaweedfsHelmValuesS3 = {
    */
   updateStrategy?: SeaweedfsHelmValuesS3UpdateStrategy;
   /**
-   * Time the s3 pod is given to shut down, including any preStop hook
+   * Time the s3 pod is given to shut down, including any preStop hook.
+   * With preStopSeconds set, it must be at least preStopSeconds + 15 (the
+   * in-flight request drain), or the chart refuses to render. A lifecycle
+   * preStop hook runs before SIGTERM, so add its duration on top; the chart
+   * cannot tell how long an exec hook takes. preStopSeconds replaces a
+   * preStop sleep hook.
    *
    * @default 10
    */
   terminationGracePeriodSeconds?: number;
+  /**
+   * Seconds the gateway keeps serving after SIGTERM while its health checks
+   * return 503, so the pod leaves the Service endpoints before it stops
+   * listening. 0 stops at once.
+   *
+   * @default 0
+   */
+  preStopSeconds?: number;
   /**
    * @default "0.0.0.0"
    */
@@ -2269,7 +2312,8 @@ export type SeaweedfsHelmValuesS3 = {
   /**
    * Lifecycle hooks for the s3 container. A preStop sleep lets the pod leave
    * the Service endpoints before it receives SIGTERM; keep it shorter than
-   * terminationGracePeriodSeconds.
+   * terminationGracePeriodSeconds. s3.preStopSeconds does the same from
+   * inside the gateway and also fails its health checks.
    * ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
    * Example:
    * lifecycle:
@@ -4245,7 +4289,7 @@ export type SeaweedfsHelmValuesAllInOne = {
    * Note: Most parameters below default to null, which means they inherit from
    * the global s3.* settings. Set explicit values here to override for allInOne only.
    *
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   s3?: SeaweedfsHelmValuesAllInOneS3;
   /**
@@ -4456,6 +4500,7 @@ export type SeaweedfsHelmValuesAllInOneS3 = {
   enableAuth?: boolean;
   existingConfigSecret?: unknown;
   auditLogConfig?: unknown;
+  preStopSeconds?: unknown;
   trafficDistribution?: unknown;
   /**
    * @default {...} (4 keys)
@@ -5034,7 +5079,7 @@ export type SeaweedfsHelmValuesNetworkPolicyComponents = object;
 
 export type SeaweedfsHelmValues = {
   /**
-   * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"license":{"existingSecret":"","secretKey":"seaweed-license.json","mountPath":"/etc/seaweedfs/license"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"tmpDir":{"sizeLimit":""},"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
+   * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"license":{"existingSecret":"","secretKey":"seaweed-license.json","mountPath":"/etc/seaweedfs/license"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"tmpDir":{"sizeLimit":""},"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}},"volumeHttps":{"enabled":false},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
    */
   global?: SeaweedfsHelmValuesGlobal;
   /**
@@ -5078,7 +5123,7 @@ export type SeaweedfsHelmValues = {
    */
   filer?: SeaweedfsHelmValuesFiler;
   /**
-   * @default {...} (45 keys)
+   * @default {...} (46 keys)
    */
   s3?: SeaweedfsHelmValuesS3;
   /**
@@ -5166,6 +5211,7 @@ export type SeaweedfsHelmParameters = {
   "global.seaweedfs.securityConfig.jwtSigning.expiresAfterSeconds.volumeRead"?: string;
   "global.seaweedfs.securityConfig.jwtSigning.expiresAfterSeconds.filerWrite"?: string;
   "global.seaweedfs.securityConfig.jwtSigning.expiresAfterSeconds.filerRead"?: string;
+  "global.seaweedfs.volumeHttps.enabled"?: string;
   "global.seaweedfs.serviceAccountName"?: string;
   "global.seaweedfs.automountServiceAccountToken"?: string;
   "global.seaweedfs.certificates.duration"?: string;
@@ -5424,6 +5470,7 @@ export type SeaweedfsHelmParameters = {
   "filer.s3.port"?: string;
   "filer.s3.httpsPort"?: string;
   "filer.s3.domainName"?: string;
+  "filer.s3.preStopSeconds"?: string;
   "filer.s3.enableAuth"?: string;
   "filer.s3.existingConfigSecret"?: string;
   "filer.s3.createBucketsHook.resources"?: string;
@@ -5435,6 +5482,7 @@ export type SeaweedfsHelmParameters = {
   "s3.restartPolicy"?: string;
   "s3.replicas"?: string;
   "s3.terminationGracePeriodSeconds"?: string;
+  "s3.preStopSeconds"?: string;
   "s3.bindAddress"?: string;
   "s3.port"?: string;
   "s3.httpsPort"?: string;
@@ -5741,6 +5789,7 @@ export type SeaweedfsHelmParameters = {
   "allInOne.s3.enableAuth"?: string;
   "allInOne.s3.existingConfigSecret"?: string;
   "allInOne.s3.auditLogConfig"?: string;
+  "allInOne.s3.preStopSeconds"?: string;
   "allInOne.s3.trafficDistribution"?: string;
   "allInOne.s3.createBucketsHook.resources"?: string;
   "allInOne.s3.createBucketsHook.nodeSelector"?: string;
