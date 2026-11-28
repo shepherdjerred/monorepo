@@ -8,6 +8,7 @@
     { "name": "alert-dashboard", "visibility": "private" },
     { "name": "artifacts", "visibility": "private" },
     { "name": "birmel", "visibility": "private" },
+    { "name": "buildkitd", "visibility": "private" },
     { "name": "caddy-s3proxy", "visibility": "private" },
     { "name": "charts", "visibility": "private" },
     { "name": "ci-base", "visibility": "private" },
