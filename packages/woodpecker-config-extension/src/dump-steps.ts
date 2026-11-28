@@ -120,6 +120,7 @@ if (Bun.argv.includes("--include-canaries")) {
           source: "0".repeat(40),
           feature: "scratch",
           main: false,
+          trustDomain: "trusted",
         },
         { ...DISABLED_PERFORMANCE, scratch: true },
         gateImage,
@@ -138,7 +139,7 @@ if (Bun.argv.includes("--include-canaries")) {
       performanceSteps(
         steps.filter((step) => ramScratchProfile(step.key) !== undefined),
         { ...DISABLED_PERFORMANCE, scratch: true },
-        false,
+        "pr",
         false,
       ),
       {
@@ -154,7 +155,7 @@ if (Bun.argv.includes("--include-canaries")) {
       performanceSteps(
         extendedSteps(PLACEHOLDER_IMAGES, EXTENDED_REQUEST),
         { ...DISABLED_PERFORMANCE, scratch: true },
-        true,
+        "main",
         false,
       ),
       extendedContext,
