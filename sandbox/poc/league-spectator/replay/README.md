@@ -939,6 +939,17 @@ bun sandbox/poc/league-spectator/replay/tools/research/prepare-rift-navmesh-filt
 uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-navmesh-filter.py $macGameExecutable $newPrivateMaskFilterReceipt
 ```
 
+The obstacle control scans physical envelopes for the identified persistent
+shape opcodes in the reviewed Rift replay. It passes the keyframe bodies to the
+original packet reader and checks the clear-only dispatch using a controlled
+active-grid state. This separates persisted shapes from short-lived local queries
+and map overlays, which have different mutation paths.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/extract-rift-navmesh-obstacles.mjs $replayPath $newPrivateObstacleCensus
+uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-navmesh-obstacles.py $macGameExecutable $newPrivateObstacleCensus $newPrivateObstacleReceipt
+```
+
 Capture continuous 1× playback of the reviewed fight from a signed-out
 loopback Scout preview. The video and timeline cover 28:32–28:41. The timeline
 records the package digest, follow camera, actor draws, and particle draws at
