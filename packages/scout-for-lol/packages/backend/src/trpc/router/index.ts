@@ -15,6 +15,7 @@ import { consumerGuildRouter } from "#src/trpc/router/consumer/consumer-guild.ro
 import { consumerLiveRouter } from "#src/trpc/router/consumer/consumer-live.router.ts";
 import { consumerMatchRouter } from "#src/trpc/router/consumer/consumer-match.router.ts";
 import { consumerPlayerRouter } from "#src/trpc/router/consumer/consumer-player.router.ts";
+import { consumerTooltipRouter } from "#src/trpc/router/consumer/consumer-tooltip.router.ts";
 import { customsHistoryRouter } from "#src/trpc/router/customs-history.router.ts";
 import { daresRouter } from "#src/trpc/router/dares/dares.router.ts";
 import { discordRouter } from "#src/trpc/router/discord.router.ts";
@@ -56,6 +57,7 @@ export const appRouter = router({
   consumerMatch: consumerMatchRouter,
   consumerGuild: consumerGuildRouter,
   consumerLive: consumerLiveRouter,
+  consumerTooltip: consumerTooltipRouter,
   exploreMatch: exploreMatchRouter,
   dares: daresRouter,
   customsHistory: customsHistoryRouter,
