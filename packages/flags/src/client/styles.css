@@ -832,6 +832,77 @@ p.fl-detail {
   font-size: 12px;
 }
 
+/* Usage: read sites and consumer liveness */
+.fl-usage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ui-line);
+}
+
+.fl-usage-packages,
+.fl-usage-files {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fl-usage-package {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fl-usage-files {
+  gap: 4px;
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ui-line-soft);
+}
+
+.fl-usage-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
+}
+
+.fl-usage-file a {
+  overflow-wrap: anywhere;
+}
+
+.fl-usage-file a:hover {
+  text-decoration: underline;
+}
+
+.fl-usage-kind {
+  font-size: 11px;
+}
+
+.fl-usage-none,
+.fl-usage-eval {
+  font-size: 12.5px;
+}
+
+.fl-liveness {
+  font-size: 0.85rem;
+}
+
+.fl-card-row:has(.fl-card-live) {
+  row-gap: 0;
+  padding-block: 6px;
+}
+
+.fl-card-live {
+  grid-column: 1 / -1;
+  padding-left: 23px;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+}
+
 /* Archive */
 .fl-archive-key {
   font-size: 12.5px;

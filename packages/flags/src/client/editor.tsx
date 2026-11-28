@@ -28,6 +28,7 @@ import {
 } from "./model.ts";
 import { FlagMeta } from "./views/flag-meta.tsx";
 import { HistoryPanel } from "./views/history-panel.tsx";
+import { UsagePanel } from "./views/usage-panel.tsx";
 
 const MODES = [
   { value: "form", label: "Form" },
@@ -323,6 +324,7 @@ export function Editor({
           </Button>
         </div>
       </form>
+      <UsagePanel catalog={catalog} stage={stage} flagKey={flagKey} />
       <HistoryPanel
         catalog={catalog}
         stage={stage}

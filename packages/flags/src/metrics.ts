@@ -20,6 +20,7 @@ export type FlagsRouteLabel =
   | "history"
   | "metadata"
   | "archive"
+  | "usage"
   | "assets"
   | "client"
   | "other";
@@ -49,6 +50,7 @@ const EXACT_MANAGEMENT_ROUTES: Readonly<Record<string, FlagsRouteLabel>> = {
   "/v1/deployments": "deployments",
   "/v1/diff": "diff",
   "/v1/archive": "archive",
+  "/v1/usage": "usage",
 };
 
 const PATTERN_MANAGEMENT_ROUTES: readonly (readonly [

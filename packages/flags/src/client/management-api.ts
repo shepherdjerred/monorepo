@@ -8,20 +8,26 @@ import {
   FlagsArchiveResponseSchema,
   FlagsHistoryResponseSchema,
   FlagsMetadataResponseSchema,
+  FlagsUsageResponseSchema,
   type FlagsHistoryResponse,
   type FlagsMetadataResponse,
+  type FlagsUsageResponse,
 } from "@shepherdjerred/feature-flags/flags-wire.ts";
 import { readEndpoint } from "@shepherdjerred/flags/client/api.ts";
 
 /*
- * The management-only audit views (`README.md`, Audit): a flag's history, a
- * deployment's inventory metadata and the archive of retired flags. Their
- * query keys start with `flags-` so they never match `["document", …]`,
+ * The management-only views (`README.md`, Audit and Usage): a flag's history,
+ * a deployment's inventory metadata, the archive of retired flags and where
+ * flags are read. Their query keys start with `flags-` so they never match `["document", …]`,
  * which `useSummaryRefresh` watches.
  */
 
 export type HistoryEntry = FlagsHistoryResponse["entries"][number];
 export type FlagMetadata = FlagsMetadataResponse["flags"][number];
+export type ReadSite = FlagsUsageResponse["static"]["flags"][string][number];
+
+/** How often an open page re-reads consumer liveness. */
+export const USAGE_REFRESH_MS = 60_000;
 
 /** Entries per history page; "Load older" fetches the next page. */
 export const HISTORY_PAGE_SIZE = 20;
@@ -69,6 +75,18 @@ export function useFlagHistory(catalog: string, stage: string, key: string) {
       );
     },
     getNextPageParam: (last) => last.nextBefore ?? undefined,
+  });
+}
+
+/**
+ * `GET /v1/usage`: where each key is read (the static index) and when
+ * consumers last fetched each deployment since the server started.
+ */
+export function useUsage() {
+  return useQuery({
+    queryKey: ["flags-usage"],
+    queryFn: () => readEndpoint("/v1/usage", FlagsUsageResponseSchema),
+    refetchInterval: USAGE_REFRESH_MS,
   });
 }
 

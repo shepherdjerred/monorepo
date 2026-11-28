@@ -26,6 +26,11 @@ import {
 } from "./metrics.ts";
 import type { FlagStore } from "./store.ts";
 import {
+  createFlagsUsageTracker,
+  usageView,
+  type FlagsUsageTracker,
+} from "./usage.ts";
+import {
   actorFor,
   registerAuditRoutes,
   type FlagsManagementEnv,
@@ -39,6 +44,8 @@ const CREDENTIALLESS_REJECTION = {
 export type FlagsEvaluationAppDependencies = {
   readonly store: FlagStore;
   readonly metrics?: FlagsMetrics;
+  /** Records consumer snapshot fetches and evaluations; shared with management. */
+  readonly usage?: FlagsUsageTracker;
 };
 
 export type FlagsAppDependencies = {
@@ -48,6 +55,8 @@ export type FlagsAppDependencies = {
   /** Built operator client. Absent in tests and before `vite build`. */
   readonly clientRoot?: string;
   readonly metrics?: FlagsMetrics;
+  /** Serves `GET /v1/usage`; the evaluation app records into the same one. */
+  readonly usage?: FlagsUsageTracker;
 };
 
 function deploymentId(catalog: string, stage: string): string {
@@ -86,9 +95,16 @@ function attachErrorHandler<E extends Env>(app: Hono<E>): void {
   });
 }
 
+/**
+ * Snapshot and evaluate routes. `usage` is passed only by the evaluation app:
+ * its reads are consumers', while management-port reads come from tooling.
+ * Only stored deployments and live keys are recorded, so unauthenticated
+ * requests cannot grow the tracker.
+ */
 function registerEvaluationRoutes<E extends Env>(
   app: Hono<E>,
   store: FlagStore,
+  usage?: FlagsUsageTracker,
 ): void {
   app.get("/v1/deployments/:catalog/:stage/snapshot", (c) => {
     const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
@@ -97,7 +113,11 @@ function registerEvaluationRoutes<E extends Env>(
       return c.json({ error: "unknown deployment" }, 404);
     const tag = etag(document.revision);
     c.header("ETag", tag);
-    if (c.req.header("if-none-match") === tag) return c.body(null, 304);
+    if (c.req.header("if-none-match") === tag) {
+      usage?.recordFetch(id, 304);
+      return c.body(null, 304);
+    }
+    usage?.recordFetch(id, 200);
     return c.json({
       deployment: document.id,
       revision: document.revision,
@@ -118,6 +138,7 @@ function registerEvaluationRoutes<E extends Env>(
     if (evaluated.kind === "missing") {
       return c.json({ error: "FLAG_NOT_FOUND" }, 404);
     }
+    usage?.recordEvaluation(body.deployment, body.key);
     return evaluated.kind === "type-mismatch" || evaluated.kind === "invalid"
       ? c.json({ error: evaluated.message }, 400)
       : c.json({ enabled: evaluated.value });
@@ -150,6 +171,7 @@ function attachRequestMetrics<E extends Env>(
 export function createFlagsEvaluationApp({
   store,
   metrics = createFlagsMetrics(),
+  usage = createFlagsUsageTracker(),
 }: FlagsEvaluationAppDependencies) {
   const app = new Hono();
   attachErrorHandler(app);
@@ -160,7 +182,7 @@ export function createFlagsEvaluationApp({
       ? next()
       : c.json(CREDENTIALLESS_REJECTION, 401),
   );
-  registerEvaluationRoutes(app, store);
+  registerEvaluationRoutes(app, store, usage);
   return app;
 }
 
@@ -170,6 +192,7 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
   }
   const { store } = dependencies;
   const metrics = dependencies.metrics ?? createFlagsMetrics();
+  const usage = dependencies.usage ?? createFlagsUsageTracker();
   const clientRoot = dependencies.clientRoot;
   const app = new Hono<FlagsManagementEnv>();
 
@@ -207,6 +230,8 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
   });
 
   app.get("/v1/deployments", (c) => c.json({ deployments: store.list() }));
+
+  app.get("/v1/usage", (c) => c.json(usageView(usage, store)));
 
   app.get("/v1/diff", (c) => {
     const deployments = flagDeployments.map((deployment) => {

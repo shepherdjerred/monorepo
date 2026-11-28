@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { act } from "react";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeAll, expect, test, vi } from "vitest";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
@@ -9,10 +8,12 @@ import type {
   FlagsMetadataResponse,
 } from "@shepherdjerred/feature-flags/flags-wire.ts";
 import {
+  deploymentList,
   mountApp,
   press,
   testTheme,
   typeText,
+  unmountAll,
 } from "@shepherdjerred/flags/client/app-harness.test-support.tsx";
 import type { DiffViewProps } from "@shepherdjerred/flags/client/code.tsx";
 import type { HistoryEntry } from "@shepherdjerred/flags/client/management-api.ts";
@@ -279,14 +280,7 @@ const archive: FlagsArchiveResponse = {
 };
 
 function serve(path: string): Response {
-  if (path === "/v1/deployments")
-    return Response.json({
-      deployments: Object.values(documents).map((stored) => ({
-        id: stored.id,
-        revision: stored.revision,
-        flagCount: stored.flags.length,
-      })),
-    });
+  if (path === "/v1/deployments") return deploymentList(documents);
   if (path === "/v1/diff") return Response.json({ deployments: [] });
   if (path === "/v1/archive") return Response.json(archive);
   if (path.includes("/history?")) return Response.json(historyPage(path));
@@ -302,12 +296,7 @@ function serve(path: string): Response {
 const roots: Root[] = [];
 
 afterEach(() => {
-  for (const root of roots.splice(0))
-    act(() => {
-      root.unmount();
-    });
-  vi.unstubAllGlobals();
-  document.body.replaceChildren();
+  unmountAll(roots);
 });
 
 /** Serves the fixtures; records every path and each apply body. */

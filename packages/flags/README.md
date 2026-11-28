@@ -113,6 +113,53 @@ retiredBy, final, revision, basis }] }] }`. `recorded` entries are keys whose
   row: they were deleted before the audit trail, so `retiredAt`, `retiredBy`,
   `final` and `revision` are `null`.
 
+`GET /v1/usage` is a management route (same auth, not on the evaluation
+listener) that says where each flag is read and whether consumers are reading
+their deployments. Its schema is `FlagsUsageResponseSchema` in
+`@shepherdjerred/feature-flags/flags-wire.ts`:
+
+```json
+{
+  "since": "2026-11-26T10:00:00.000Z",
+  "deployments": [
+    {
+      "id": "delivery/prod",
+      "lastFetchedAt": "2026-11-26T11:55:00.000Z",
+      "fetches200": 2,
+      "fetches304": 40
+    }
+  ],
+  "evaluations": [
+    {
+      "deployment": "minecraft/tsmc",
+      "key": "the-storm-crier-enabled",
+      "lastEvaluatedAt": "2026-11-26T11:00:00.000Z",
+      "count": 3
+    }
+  ],
+  "static": { "version": 1, "flags": { "…": [] }, "unreferenced": [] }
+}
+```
+
+- `deployments` lists every stored deployment. `lastFetchedAt` is the latest
+  snapshot read on the evaluation listener, counted as `fetches200` (a full
+  body) or `fetches304` (`If-None-Match` matched; most polls). `null` means no
+  consumer fetched it since `since`. Snapshot reads on the primary port are
+  tooling (`check-flag-inventory`, operators), so they are not counted.
+- `evaluations` has one entry per deployment and key answered by
+  `POST /v1/evaluate` on the evaluation listener (the Java Storm client). Only a
+  stored deployment's live key is recorded, and the tracker is capped, so
+  unauthenticated requests cannot grow it.
+- Liveness is in memory: `since` is when the process started, and every
+  Recreate release or restart resets the counters. "No consumer fetch since"
+  after a fresh start means only that none has fetched yet.
+- `static` is `src/flag-usage.generated.json`, the committed syntactic index of
+  read sites per key (`{ package, file, kind, count }`, with `kind` one of
+  `config-flag-name`, `config-derived`, `call-argument`, `array-element`,
+  `constant` or `java`) and the keys with none. Refresh it with
+  `bun run generate-flag-usage`; CI fails on a stale index through
+  `bun run check-flag-usage`. The server parses it strictly at startup.
+
 Startup seeds missing deployments from the managed inventory once. Any document
 already stored in SQLite is left alone across restarts. Namespace and
 environment pairs that no deployment reads, including unused beta copies, are
@@ -191,8 +238,9 @@ the same views and deployments.
 
 Every page is built from the console-ui page kit, the way Hub's and Go link's
 pages are: a `PageBody` with a `PageHeading`, then `SummaryGrid` and `Card`s. A
-deployment's heading names the catalog and stage and shows its revision, a drift
-badge linking to its section of the drift page, and "Compare with Beta/Prod"
+deployment's heading names the catalog and stage, says when a consumer last
+fetched it (see [Where a flag is read](#where-a-flag-is-read)), and shows its
+revision, a drift badge linking to its section of the drift page, and "Compare with Beta/Prod"
 when the catalog has both stages. The flag table lists each flag's key with its
 inventory description as a muted, truncated second line, its state (an On, Off
 or Targeted `SeverityBadge`, or the variant string) and its type. The search
@@ -209,7 +257,7 @@ the open flag and deployment, e.g. `dares_enabled · scout/prod · Flags`.
 The views:
 
 - **Overview** (`/`): totals and one card per catalog with each stage's flag
-  count, revision and drift.
+  count, revision, drift and when a consumer last fetched it.
 - **Compare** (`/compare?left=<catalog/stage>&right=<catalog/stage>`): two
   deployments' documents, every key classified as differs, only-left,
   only-right or identical (`sameFlag`). The Show toggle adds identical rows
@@ -324,5 +372,26 @@ concurrent write still conflicts and a value the server refuses still shows
 its issues. Restore is disabled, with the reason beside it, when the body does
 not parse as a flag today, has another key or type than the stored flag, fails
 the value registry, or equals the stored value. A retire has no restore.
+
+### Where a flag is read
+
+The editor's Read by section and every liveness line read `GET /v1/usage`
+(parsed with `FlagsUsageResponseSchema`), re-read every minute while a page is
+open.
+
+- **Read by** lists the key's read sites from the static index, grouped by
+  package, each file linked to `main` on GitHub with its kind
+  (`call-argument`, `config-flag-name`, … and `×n` for repeats). A key with no
+  entry reads "No static reference found": the index is syntactic and line-free,
+  so a key read through an accessor or a computed name can be missing from it,
+  and absence is never shown as "unused". After adding or moving a read, run
+  `bun run generate-flag-usage`.
+- A key the Java Storm client reads (`java` kind) also shows "Last evaluated by
+  the Java client ⟨relative time⟩", or "No Java client evaluation since ⟨server
+  start⟩".
+- A deployment heading and its overview row say "Last fetched ⟨relative time⟩"
+  (hover for the time and 200/304 counts) or "No consumer fetch since ⟨server
+  start⟩". Only evaluation-listener snapshot reads count, and the counters reset
+  on every restart, so read "none since" shortly after a release as "not yet".
 
 `toolkit flags` is the command surface. See `packages/toolkit/README.md`.
