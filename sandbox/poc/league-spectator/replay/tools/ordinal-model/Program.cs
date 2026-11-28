@@ -8,7 +8,9 @@ using LeagueToolkit.Core.Memory;
 using LeagueToolkit.IO.SimpleSkinFile;
 using SharpGLTF.Schema2;
 
-if (args.Length != 3) throw new ArgumentException("Expected original prepared actor folder, isolated model.glb, joint-bindings.json");
+const string scoutMasterYiArmorProjection = "--scout-8428-masteryi-9-armor";
+if (args.Length != 3 && (args.Length != 4 || args[3] != scoutMasterYiArmorProjection))
+    throw new ArgumentException("Expected original prepared actor folder, isolated model.glb, joint-bindings.json, and optional reviewed Scout projection");
 string folder = Path.GetFullPath(args[0]), modelFile = Path.GetFullPath(args[1]), bindingFile = Path.GetFullPath(args[2]);
 if (modelFile.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || bindingFile.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Ordinal model output must be isolated from original inputs");
 string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
@@ -87,6 +89,8 @@ try
     var palette = rig.Influences.Select(id => (nodes[byId[id]],rig.Joints[byId[id]].InverseBindTransform)).ToArray();
     meshNode.WithSkinnedMesh(geometry,palette);
     root.DefaultScene=scene;
+    if (args.Length == 4)
+        OmitUnusedMasterYiArmorTangents(geometry, skin, meshBytes);
     Directory.CreateDirectory(Path.GetDirectoryName(modelFile)!);
     root.SaveGLB(modelFile);
     var sidecar = new {schema=1,kind="original-rig-ordinal-model-bindings",rigSha256=Hash(rigBytes),meshSha256=Hash(meshBytes),modelSha256=Hash(File.ReadAllBytes(modelFile)),joints=rig.Joints.Select((joint,index)=>new {poseJointIndex=index,rigId=joint.Id,parentRigId=joint.ParentId,originalName=joint.Name,nodeIndex=nodes[index].LogicalIndex,nodeName=nodes[index].Name}),palette=rig.Influences.Select((id,index)=>new {paletteIndex=index,rigId=id,poseJointIndex=byId[id],nodeIndex=nodes[byId[id]].LogicalIndex}),vertexSkinning=new {sourceVertices=vertexCount,weightedLanes,sourcePaletteIndicesSha256=Hash(indexSnapshot),sourceWeightedJointIdsSha256=Hash(sourceMapping.ToArray()),exportedWeightedJointIdsSha256=Hash(exportedMapping.ToArray()),weightBitDifferences},geometryHelpers=new {assemblySha256=Hash(File.ReadAllBytes(type.Assembly.Location)),materialsMethod=materialsMethod.Name,geometryMethod=geometryMethod.Name},ignoredZeroWeightIndices,scope=new {originalJointOrdinalsPreserved=true,originalPaletteOrderPreserved=true,nativeNameHashLookupUnchanged=true,nativeRendererAdmitted=false}};
@@ -95,3 +99,36 @@ try
     Console.WriteLine(JsonSerializer.Serialize(new {model=modelFile,joints=nodes.Length,palette=rig.Influences.Count,duplicates=rig.Joints.Count-rig.Joints.Select(joint=>joint.Name).Distinct().Count(),ignoredZeroWeightIndices}));
 }
 finally {foreach(var texture in textures)texture.Texture.Dispose();}
+
+void OmitUnusedMasterYiArmorTangents(Mesh geometry, SkinnedMesh skin, byte[] meshBytes)
+{
+    if (Hash(meshBytes) != "3a58c40f9be01bb9de0f9d022a94b35f54eed669ea8100916e526b02b5579b0d" ||
+        skin.VerticesView.VertexCount != 19100 ||
+        skin.Ranges[0].Material != "Armor" || skin.Ranges[0].StartVertex != 0)
+        throw new InvalidDataException("Scout projection requires the reviewed Master Yi Armor mesh");
+
+    var armor = geometry.Primitives[0];
+    if (armor.Material.Name != "Armor" ||
+        !armor.Material.Channels.Where(channel => channel.Texture != null)
+            .Select(channel => channel.Key).SequenceEqual(new[] { "BaseColor" }))
+        throw new InvalidDataException("Scout projection requires the base-color Armor material");
+
+    var source = skin.VerticesView.GetAccessor(ElementName.Tangent).AsVector4Array();
+    var exported = armor.VertexAccessors["TANGENT"].AsVector4Array();
+    int[] expectedZeroVertices = { 1683, 1687, 4599 };
+    var zeroVertices = Enumerable.Range(0, exported.Count)
+        .Where(i => exported[i].X == 0 && exported[i].Y == 0 && exported[i].Z == 0);
+    if (!zeroVertices.SequenceEqual(expectedZeroVertices) ||
+        expectedZeroVertices.Any(i => source[i] != exported[i]) ||
+        exported[1683].W != -1 || exported[1687].W != -1 || exported[4599].W != 1)
+        throw new InvalidDataException("Master Yi Armor tangent projection differs from the reviewed SKN");
+
+    // Scout's native-terrain-actors.mjs reads position, UV, joints, weights and
+    // indices for its base-color shader. The three authored zero directions
+    // cannot be represented as unit glTF tangents. Strict GLB validation stays on.
+    var retained = armor.VertexAccessors.Where(entry => entry.Key != "TANGENT").ToArray();
+    var indices = armor.IndexAccessor;
+    armor.SetVertexAccessor("TANGENT", null);
+    if (!retained.SequenceEqual(armor.VertexAccessors) || armor.IndexAccessor != indices)
+        throw new InvalidDataException("Scout projection changed retained Armor accessors");
+}

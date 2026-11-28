@@ -17,6 +17,13 @@ import {
 } from "./research/native-terrain-champion-model-catalog.mjs";
 
 const expectedProtocol = "8bbfcd5af2bc92db";
+const masterYiArmorProjection = {
+  argument: "--scout-8428-masteryi-9-armor",
+  skinSha256:
+    "768ffc72175c002fc1cf375fd8a2e3c5a278f12944edd52525d9316c94649a7f",
+  meshSha256:
+    "3a58c40f9be01bb9de0f9d022a94b35f54eed669ea8100916e526b02b5579b0d",
+};
 const args = process.argv.slice(2);
 const archiveCatalog = args[0] === "--archive-catalog";
 const sourcePin = archiveCatalog ? args[3] : null;
@@ -462,11 +469,26 @@ for (const actor of inputSkins) {
   );
   const modelPath = `${directory}/model.glb`;
   const bindingsPath = `${directory}/joint-bindings.json`;
+  const projectMasterYiArmor =
+    currentArchive && champion.toLowerCase() === "masteryi" && skinId === 9;
+  if (
+    projectMasterYiArmor &&
+    (inputs.skin.sha256 !== masterYiArmorProjection.skinSha256 ||
+      inputs.simpleSkin.sha256 !== masterYiArmorProjection.meshSha256 ||
+      ranges[0]?.name !== "Armor" ||
+      ranges[0].materialLink !== undefined ||
+      ranges[0].texture.origin !== "skin-texture" ||
+      ranges[0].texture.sha256 !== inputs.texture?.sha256)
+  )
+    throw Error(
+      "Scout Master Yi Armor projection requires the reviewed archived skin and default texture",
+    );
   await tool(
     "OrdinalModelExporter.dll",
     folder,
     join(output, modelPath),
     join(output, bindingsPath),
+    ...(projectMasterYiArmor ? [masterYiArmorProjection.argument] : []),
   );
   const model = await Bun.file(join(output, modelPath)).bytes();
   const joints = await Bun.file(join(output, bindingsPath)).bytes();
@@ -501,6 +523,20 @@ for (const actor of inputSkins) {
   const primitives = gltf.meshes?.[0]?.primitives;
   if (gltf.meshes?.length !== 1 || primitives?.length !== ranges.length)
     throw Error(`GLB primitive count differs from SKN for ${champion}`);
+  if (projectMasterYiArmor) {
+    const { attributes } = primitives[0];
+    if (
+      Object.hasOwn(attributes, "TANGENT") ||
+      ["POSITION", "TEXCOORD_0", "JOINTS_0", "WEIGHTS_0"].some(
+        (name) => !Number.isInteger(attributes[name]),
+      ) ||
+      !Number.isInteger(primitives[0].indices)
+    )
+      throw Error(
+        "GLB does not contain the reviewed Scout Armor vertex inputs",
+      );
+    ranges[0].omittedUnusedVertexAttributes = ["TANGENT"];
+  }
   for (const [index, range] of ranges.entries()) {
     const materialIndex = primitives[index].material;
     const material = gltf.materials[materialIndex];
