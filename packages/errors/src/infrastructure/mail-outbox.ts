@@ -1,3 +1,4 @@
+import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
 import { z } from "zod";
 import type { FetchLike } from "#infrastructure/bugsink-importer.ts";
 import type {
@@ -34,15 +35,6 @@ export type OutboxEmailMessage = {
 export type MailSender = {
   readonly send: (message: OutboxEmailMessage) => Promise<void>;
 };
-
-function escapeHtml(raw: string): string {
-  return raw
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
 
 export function computeOutboxBackoffMs(attempts: number): number {
   const exponent = Math.max(0, Math.min(10, attempts));
@@ -82,20 +74,36 @@ export function renderOutboxAlertEmail(
     preview,
   ].join("\n");
 
-  const htmlMetaItems = metaLines
-    .map((line) => `<li>${escapeHtml(line)}</li>`)
-    .join("");
-  const htmlBody = [
-    '<div style="font-family: ui-sans-serif, system-ui, sans-serif; color: #111827; line-height: 1.5;">',
-    `<h2 style="margin: 0 0 8px;">${escapeHtml(kindLabel)} in ${escapeHtml(item.projectName)}</h2>`,
-    `<p style="margin: 0 0 12px;"><strong>${escapeHtml(item.issueType)}</strong>: ${escapeHtml(item.issueValue)}</p>`,
-    `<ul style="margin: 0 0 16px; padding-left: 20px;">${htmlMetaItems}</ul>`,
-    `<p style="margin: 0 0 16px;"><a href="${escapeHtml(issueUrl)}" style="color: #b91c1c; font-weight: 600;">Open issue in Errors console</a></p>`,
-    preview.length > 0
-      ? `<pre style="background: #f3f4f6; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px;">${escapeHtml(preview)}</pre>`
-      : "",
-    "</div>",
-  ].join("\n");
+  const htmlBody = renderEmailHtml({
+    eyebrow: "Errors",
+    tone: item.kind === "REGRESSION" ? "critical" : "warning",
+    badge: kindLabel,
+    preheader: `${item.issueType}: ${item.issueValue}`,
+    heading: `${kindLabel} in ${item.projectName}`,
+    lead: `${item.issueType}: ${item.issueValue}`,
+    actionsAboveSections: true,
+    primaryAction: { label: "Open issue in Errors console", url: issueUrl },
+    sections:
+      preview.length > 0
+        ? [{ kind: "prose", heading: "Stack trace", code: preview }]
+        : [],
+    details: [
+      {
+        label: "Project",
+        value: `${item.projectName} (${item.projectSlug})`,
+        mono: false,
+      },
+      ...(item.transaction.length > 0
+        ? [{ label: "Transaction", value: item.transaction }]
+        : []),
+      ...(item.release === null
+        ? []
+        : [{ label: "Release", value: item.release }]),
+      ...(item.environment === null
+        ? []
+        : [{ label: "Environment", value: item.environment }]),
+    ],
+  });
 
   return {
     subject,

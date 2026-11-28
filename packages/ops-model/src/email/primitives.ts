@@ -74,6 +74,8 @@ export type EmailSection =
       heading: string;
       paragraphs?: readonly string[];
       bullets?: readonly string[];
+      /** Preformatted block (stack trace, log excerpt) rendered monospace with whitespace kept. */
+      code?: string;
     };
 
 export type EmailCallout = {
