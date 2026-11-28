@@ -221,13 +221,14 @@ function probedProperties(
 ): Partial<
   Pick<
     ConcreteResolvedSource,
-    "probedVideo" | "probedAudio" | "ffmpegVideoStreamIndex"
+    "probedVideo" | "probedAudio" | "ffmpegVideoStreamIndex" | "rankedTracks"
   >
 > {
   if (info === null) return {};
   return {
     ...(info.video === undefined ? {} : { probedVideo: info.video }),
     ...(info.audio === undefined ? {} : { probedAudio: info.audio }),
+    rankedTracks: info.ranked,
     ...(info.video === undefined || info.videoStreamIndex === undefined
       ? {}
       : { ffmpegVideoStreamIndex: info.videoStreamIndex }),

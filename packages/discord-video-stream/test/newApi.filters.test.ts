@@ -8,6 +8,7 @@ import {
   type FfmpegProcessHandle,
   prepareStream,
 } from "../src/media/newApi.ts";
+import { LOUDNESS_NORMALIZER } from "../src/media/audioGraph.ts";
 
 // Graph construction itself (scale/tonemap/subtitle ordering, GPU overlay branches, PTS
 // compensation) is covered exhaustively in videoGraph.test.ts against the pure builders. These
@@ -974,5 +975,97 @@ describe("prepareStream picture corrections", () => {
         convertColorToBt709: true,
       }),
     ).toThrow(/convertColorToBt709 cannot be applied when noTranscoding/);
+  });
+});
+
+describe("prepareStream audioProcessing", () => {
+  function audioArgs(options: Parameters<typeof prepareStream>[1]): string[] {
+    const { command, output, promise } = prepareStream("video.mkv", options);
+    promise.catch(() => {});
+    try {
+      return [...ffmpegArgs(command)];
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  }
+
+  function audioFilter(args: readonly string[]): string | undefined {
+    return args[args.indexOf("-filter:a") + 1];
+  }
+
+  test("every step off is byte-identical to the option being absent", () => {
+    for (const base of [{}, { audioOnly: true }, { audioVolume: 0.5 }]) {
+      const legacy = audioArgs(base);
+      expect(legacy).toContain("-lfe_mix_level");
+      expect(audioArgs({ ...base, audioProcessing: {} })).toEqual(legacy);
+      expect(
+        audioArgs({
+          ...base,
+          audioProcessing: {
+            loudnessNormalization: false,
+            resyncTimestamps: false,
+          },
+        }),
+      ).toEqual(legacy);
+    }
+  });
+
+  test("a dialogue downmix replaces the generic channel downmix and is limited", () => {
+    const args = audioArgs({
+      audioVolume: 0.5,
+      audioProcessing: { dialogDownmix: "5.1(side)" },
+    });
+    expect(args).not.toContain("-ac");
+    expect(args).not.toContain("-lfe_mix_level");
+    expect(args).toContain("0:a:0?");
+    expect(audioFilter(args)).toBe(
+      "pan=stereo|FL=FC+0.707*FL+0.5*SL|FR=FC+0.707*FR+0.5*SR," +
+        "alimiter=limit=0.891:level=disabled,volume@internal_lib=0.5",
+    );
+  });
+
+  test("orders resync, downmix, normaliser, limiter, then the live volume filter", () => {
+    const args = audioArgs({
+      audioOnly: true,
+      audioProcessing: {
+        dialogDownmix: "7.1",
+        loudnessNormalization: true,
+        resyncTimestamps: true,
+      },
+    });
+    expect(audioFilter(args)?.split(",")).toEqual([
+      "aresample=async=1:first_pts=0",
+      "pan=stereo|FL=FC+0.707*FL+0.5*SL+0.5*BL|FR=FC+0.707*FR+0.5*SR+0.5*BR",
+      ...LOUDNESS_NORMALIZER.split(","),
+      "alimiter=limit=0.891:level=disabled",
+      "volume@internal_lib=1.0",
+    ]);
+  });
+
+  test("normalisation or resync alone keeps the legacy channel downmix", () => {
+    const normalized = audioArgs({
+      audioProcessing: { loudnessNormalization: true },
+    });
+    expect(normalized).toContain("-lfe_mix_level");
+    expect(audioFilter(normalized)).toBe(
+      `${LOUDNESS_NORMALIZER},volume@internal_lib=1.0`,
+    );
+    const resynced = audioArgs({ audioProcessing: { resyncTimestamps: true } });
+    expect(resynced).toContain("-lfe_mix_level");
+    expect(audioFilter(resynced)).toBe(
+      "aresample=async=1:first_pts=0,volume@internal_lib=1.0",
+    );
+  });
+
+  test("rejects a layout it has no matrix for instead of guessing one", () => {
+    expect(() =>
+      prepareStream("video.mkv", {
+        audioProcessing: {
+          // @ts-expect-error -- an untyped caller passing a layout with no matrix
+          dialogDownmix: "quad",
+        },
+      }),
+    ).toThrow("no matrix for layout quad");
   });
 });

@@ -3422,6 +3422,54 @@
       ]
     },
     {
+      "key": "streambot-audio-dialog-downmix-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Downmix 5.1/7.1 audio to stereo with a dialogue-first matrix and a peak limiter instead of ffmpeg's generic -ac 2 downmix.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-audio-live-resync-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Resample discontinuous live audio onto its timestamps so audio holes cannot permanently shift lip-sync.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-audio-loudness-normalization-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Apply realtime loudness normalisation before the playback volume on video and music.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-audio-track-ranking-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Play the ranked audio track (default, preferred language, no commentary, most channels) and the best HLS video variant within the output height.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-automatic-channel-routing-enabled",
       "owner": "streambot",
       "namespace": "streambot",

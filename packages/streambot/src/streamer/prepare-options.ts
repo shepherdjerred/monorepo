@@ -2,8 +2,13 @@ import {
   Encoders,
   Utils,
   fitWithin,
+  isDialogDownmixLayout,
 } from "@shepherdjerred/discord-video-stream";
-import type { PrepareStreamOptions } from "@shepherdjerred/discord-video-stream";
+import type {
+  AudioProcessing,
+  PrepareStreamOptions,
+} from "@shepherdjerred/discord-video-stream";
+import type { AudioProcessingFlags } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   PipelineMode,
@@ -36,6 +41,8 @@ export type PrepareOptionsInput = {
   readonly startSeconds: number;
   /** Desired playback volume as a percentage (0-200), as the machine holds it. */
   readonly volumePercent: number;
+  /** This segment's audio flags, evaluated once by the streamer. All false is the legacy stage. */
+  readonly audioProcessing: AudioProcessingFlags;
 };
 
 /** Video-only extras: the encoder ladder position this attempt is on. */
@@ -65,6 +72,86 @@ function headerOptions(headers: ResolvedSource["ffmpegInputHeaders"]): {
 }
 
 /**
+ * The streams one segment maps and the probed facts that describe them. With track ranking off (or
+ * no ranked probe) these are exactly the legacy fields; with it on, each ranked stream replaces its
+ * legacy counterpart together with its own layout, display properties and transfer, so the
+ * downmix, output size and tonemap always describe the stream that is actually mapped.
+ */
+type PlayedTracks = Pick<
+  ResolvedSource,
+  | "ffmpegVideoStreamIndex"
+  | "ffmpegAudioStreamIndex"
+  | "probedVideo"
+  | "probedAudio"
+  | "hdr"
+>;
+
+function playedTracks(
+  resolved: ResolvedSource,
+  trackRanking: boolean,
+): PlayedTracks {
+  const legacy: PlayedTracks = {
+    ...(resolved.ffmpegVideoStreamIndex === undefined
+      ? {}
+      : { ffmpegVideoStreamIndex: resolved.ffmpegVideoStreamIndex }),
+    ...(resolved.ffmpegAudioStreamIndex === undefined
+      ? {}
+      : { ffmpegAudioStreamIndex: resolved.ffmpegAudioStreamIndex }),
+    ...(resolved.probedVideo === undefined
+      ? {}
+      : { probedVideo: resolved.probedVideo }),
+    ...(resolved.probedAudio === undefined
+      ? {}
+      : { probedAudio: resolved.probedAudio }),
+    ...(resolved.hdr === undefined ? {} : { hdr: resolved.hdr }),
+  };
+  const ranked = resolved.rankedTracks;
+  if (!trackRanking || ranked === undefined) return legacy;
+  return {
+    ...legacy,
+    ...(ranked.videoStreamIndex === undefined || ranked.video === undefined
+      ? {}
+      : {
+          ffmpegVideoStreamIndex: ranked.videoStreamIndex,
+          probedVideo: ranked.video,
+          hdr: ranked.hdr === true,
+        }),
+    ...(ranked.audioStreamIndex === undefined
+      ? {}
+      : {
+          ffmpegAudioStreamIndex: ranked.audioStreamIndex,
+          ...(ranked.audio === undefined ? {} : { probedAudio: ranked.audio }),
+        }),
+  };
+}
+
+/**
+ * The fork's opt-in audio steps for this segment. Each flag that is off contributes nothing, and
+ * with nothing contributed the key is absent, so the ffmpeg audio arguments are byte-identical to
+ * the ones that shipped before these flags existed.
+ *
+ * The downmix needs a layout the fork has a matrix for (`5.1`, `5.1(side)`, `7.1`); mono, stereo
+ * and an unknown layout keep `-ac 2`. Resync only means something where the demuxer rewrites
+ * timestamps by counting samples, which is the `normalizeTimestamps` path for discontinuous live.
+ */
+function audioProcessingOption(
+  flags: AudioProcessingFlags,
+  layout: string | undefined,
+  resyncable: boolean,
+): { audioProcessing?: AudioProcessing } {
+  const processing: AudioProcessing = {
+    ...(flags.dialogDownmix && isDialogDownmixLayout(layout)
+      ? { dialogDownmix: layout }
+      : {}),
+    ...(flags.loudnessNormalization ? { loudnessNormalization: true } : {}),
+    ...(resyncable && flags.liveResync ? { resyncTimestamps: true } : {}),
+  };
+  return Object.keys(processing).length === 0
+    ? {}
+    : { audioProcessing: processing };
+}
+
+/**
  * Music: audio only, over the normal voice connection.
  *
  * Everything the video path needs and this one does not is simply absent, not set to a neutral
@@ -80,6 +167,10 @@ function headerOptions(headers: ResolvedSource["ffmpegInputHeaders"]): {
 export function buildMusicPrepareOptions(
   input: PrepareOptionsInput,
 ): Partial<PrepareStreamOptions> {
+  const tracks = playedTracks(
+    input.resolved,
+    input.audioProcessing.trackRanking,
+  );
   return {
     audioOnly: true,
     includeAudio: true,
@@ -106,6 +197,16 @@ export function buildMusicPrepareOptions(
     ...(input.resolved.ffmpegInputOptions === undefined
       ? {}
       : { customInputOptions: [...input.resolved.ffmpegInputOptions] }),
+    // Music has always mapped the first audio stream (`0:a:0`); only a ranked choice changes that.
+    ...(input.audioProcessing.trackRanking &&
+    tracks.ffmpegAudioStreamIndex !== undefined
+      ? { audioStreamIndex: tracks.ffmpegAudioStreamIndex }
+      : {}),
+    ...audioProcessingOption(
+      input.audioProcessing,
+      tracks.probedAudio?.channelLayout,
+      false,
+    ),
   };
 }
 
@@ -122,7 +223,8 @@ export function buildVideoPrepareOptions(
 ): Partial<PrepareStreamOptions> {
   const { stream, resolved } = input;
   const useHardware = input.pipelineMode !== "sw";
-  const size = outputSize(stream, resolved);
+  const tracks = playedTracks(resolved, input.audioProcessing.trackRanking);
+  const size = outputSize(stream, tracks);
   return {
     width: size.width,
     height: size.height,
@@ -164,7 +266,7 @@ export function buildVideoPrepareOptions(
       : {}),
     // HDR sources get tonemapped to BT.709 SDR by the pipeline (tonemap_vaapi on the GPU path,
     // a zimg chain on the software path) — without it, PQ/HLG content looks washed out.
-    inputColor: resolved.hdr === true ? ("hdr" as const) : ("sdr" as const),
+    inputColor: tracks.hdr === true ? ("hdr" as const) : ("sdr" as const),
     ...(useHardware
       ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
       : {}),
@@ -174,20 +276,19 @@ export function buildVideoPrepareOptions(
     // A rotated source (phone video) takes the same route: ffmpeg only autorotates software
     // frames, so decoding straight into VAAPI surfaces would send the picture sideways.
     ...(input.pipelineMode === "hw-upload" ||
-    (useHardware &&
-      (resolved.discontinuousLive === true || isRotated(resolved)))
+    (useHardware && (resolved.discontinuousLive === true || isRotated(tracks)))
       ? { hardwarePipelineMode: "upload" as const }
       : {}),
     ...headerOptions(resolved.ffmpegInputHeaders),
     ...(resolved.ffmpegInputOptions === undefined
       ? {}
       : { customInputOptions: [...resolved.ffmpegInputOptions] }),
-    ...(resolved.ffmpegVideoStreamIndex === undefined
+    ...(tracks.ffmpegVideoStreamIndex === undefined
       ? {}
-      : { videoStreamIndex: resolved.ffmpegVideoStreamIndex }),
-    ...(resolved.ffmpegAudioStreamIndex === undefined
+      : { videoStreamIndex: tracks.ffmpegVideoStreamIndex }),
+    ...(tracks.ffmpegAudioStreamIndex === undefined
       ? {}
-      : { audioStreamIndex: resolved.ffmpegAudioStreamIndex }),
+      : { audioStreamIndex: tracks.ffmpegAudioStreamIndex }),
     ...(resolved.audioInput === undefined
       ? {}
       : {
@@ -201,6 +302,11 @@ export function buildVideoPrepareOptions(
             ],
           },
         }),
+    ...audioProcessingOption(
+      input.audioProcessing,
+      tracks.probedAudio?.channelLayout,
+      resolved.discontinuousLive === true,
+    ),
   };
 }
 

@@ -26,6 +26,7 @@ Competitive LoL uses `streambot-lol-esports-enabled` for official schedules and
 broadcasts, and `streambot-lol-autoplay-enabled` for one-time automatic playback.
 Both are Boolean gates evaluated per server/user and default on in production.
 They also require `streambot-sports-streaming-enabled`.
+| Streambot | `streambot-audio-dialog-downmix-enabled`, `streambot-audio-loudness-normalization-enabled`, `streambot-audio-live-resync-enabled`, `streambot-audio-track-ranking-enabled` | Boolean; per-guild, once per playback segment | `src/config/media-features.ts` |
 Scheduler credentials and the internal listener are bootstrap, outside Flags.
 Streambot and The Storm run one deployed service each and project only their
 active deployments (`streambot/prod`, `minecraft/tsmc`, and `storm/prod`) rather

@@ -239,3 +239,186 @@ describe("parseFfprobeOutput", () => {
     expect(parseFfprobeOutput(null)).toBeNull();
   });
 });
+
+const ENGLISH = { languages: ["en", "eng", "en-US"] };
+
+function audioTrack(
+  channels: number,
+  extra: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    codec_type: "audio",
+    codec_name: "ac3",
+    channels,
+    channel_layout: channels === 6 ? "5.1(side)" : "stereo",
+    ...extra,
+  };
+}
+
+function rankedAudio(
+  streams: Record<string, unknown>[],
+  preferences = ENGLISH,
+) {
+  return parseFfprobeOutput(
+    {
+      streams: [{ codec_type: "video", width: 1920, height: 1080 }, ...streams],
+    },
+    preferences,
+  )?.ranked;
+}
+
+describe("audio track ranking", () => {
+  test("the default disposition wins over a richer later track", () => {
+    expect(
+      rankedAudio([
+        audioTrack(2, { disposition: { default: 1 } }),
+        audioTrack(6, { disposition: { default: 0 } }),
+      ])?.audioStreamIndex,
+    ).toBe(0);
+  });
+
+  test("then the preferred language, canonicalised like subtitles (eng == en)", () => {
+    const ranked = rankedAudio([
+      audioTrack(6, { tags: { language: "jpn" } }),
+      audioTrack(2, { tags: { language: "eng" } }),
+    ]);
+    expect(ranked?.audioStreamIndex).toBe(1);
+    expect(ranked?.audio).toEqual({ channels: 2, channelLayout: "stereo" });
+  });
+
+  test("never a commentary or audio-description track while a main track exists", () => {
+    expect(
+      rankedAudio([
+        audioTrack(6, {
+          tags: { language: "eng", title: "Director's Commentary" },
+        }),
+        audioTrack(2, {
+          tags: { language: "eng", title: "Descriptive Audio" },
+        }),
+        audioTrack(2, { disposition: { visual_impaired: 1 } }),
+        audioTrack(2, { disposition: { comment: 1 } }),
+        audioTrack(2, { tags: { language: "eng", title: "Stereo" } }),
+      ])?.audioStreamIndex,
+    ).toBe(4);
+    // With nothing else to play, a commentary track still beats silence.
+    expect(
+      rankedAudio([audioTrack(2, { tags: { title: "Commentary" } })])
+        ?.audioStreamIndex,
+    ).toBe(0);
+  });
+
+  test("then the most channels, then stream order", () => {
+    const ranked = rankedAudio([
+      audioTrack(2, { tags: { language: "eng" } }),
+      audioTrack(6, { tags: { language: "eng" } }),
+      audioTrack(6, { tags: { language: "eng" } }),
+    ]);
+    expect(ranked?.audioStreamIndex).toBe(1);
+    expect(ranked?.audio).toEqual({ channels: 6, channelLayout: "5.1(side)" });
+  });
+
+  test("skips audio streams that report no channels, like the legacy selection", () => {
+    expect(
+      rankedAudio([{ codec_type: "audio", channels: 0 }, audioTrack(2)])
+        ?.audioStreamIndex,
+    ).toBe(1);
+  });
+
+  test("leaves the legacy selection untouched", () => {
+    const info = parseFfprobeOutput(
+      {
+        streams: [
+          audioTrack(2, { tags: { language: "jpn" } }),
+          audioTrack(6, { tags: { language: "eng" } }),
+        ],
+      },
+      ENGLISH,
+    );
+    expect(info?.audioStreamIndex).toBe(0);
+    expect(info?.audio).toEqual({ channels: 2, channelLayout: "stereo" });
+    expect(info?.ranked.audioStreamIndex).toBe(1);
+  });
+
+  test("a mistyped ranking field reads as absent instead of nulling the probe", () => {
+    const info = parseFfprobeOutput(
+      {
+        streams: [
+          audioTrack(2, {
+            disposition: { default: "yes" },
+            tags: { language: 7, title: ["x"], variant_bitrate: 1 },
+          }),
+          audioTrack(6, { tags: { language: "eng" } }),
+        ],
+      },
+      ENGLISH,
+    );
+    expect(info).not.toBeNull();
+    expect(info?.audioCodec).toBe("ac3");
+    expect(info?.ranked.audioStreamIndex).toBe(1);
+  });
+});
+
+function hlsVariant(height: number, bitrate?: number, extra = {}) {
+  return {
+    codec_type: "video",
+    codec_name: "h264",
+    width: Math.round((height * 16) / 9),
+    height,
+    ...(bitrate === undefined
+      ? {}
+      : { tags: { variant_bitrate: String(bitrate) } }),
+    ...extra,
+  };
+}
+
+describe("video variant ranking", () => {
+  const master = [
+    hlsVariant(360, 800_000),
+    hlsVariant(1080, 4_500_000),
+    hlsVariant(720, 3_000_000),
+    hlsVariant(1080, 6_000_000),
+    hlsVariant(2160, 16_000_000),
+    { codec_type: "audio", channels: 2, channel_layout: "stereo" },
+  ];
+
+  test("the tallest variant that fits the output box, then the highest bitrate", () => {
+    const info = parseFfprobeOutput(
+      { streams: master },
+      { languages: [], maxVideoHeight: 1080 },
+    );
+    expect(info?.videoStreamIndex).toBe(0); // legacy: first with dimensions
+    expect(info?.ranked.videoStreamIndex).toBe(3);
+    expect(info?.ranked.video?.displayAspect).toBeCloseTo(16 / 9, 2);
+    expect(info?.ranked.hdr).toBe(false);
+  });
+
+  test("without a box, the tallest variant", () => {
+    expect(
+      parseFfprobeOutput({ streams: master })?.ranked.videoStreamIndex,
+    ).toBe(4);
+  });
+
+  test("when nothing fits, the shortest variant above the box", () => {
+    expect(
+      parseFfprobeOutput(
+        { streams: [hlsVariant(2160), hlsVariant(1440)] },
+        { languages: [], maxVideoHeight: 1080 },
+      )?.ranked.videoStreamIndex,
+    ).toBe(1);
+  });
+
+  test("counts cover art in the index, never ranks it, and carries the variant's transfer", () => {
+    const ranked = parseFfprobeOutput(
+      {
+        streams: [
+          { ...hlsVariant(1080), disposition: { attached_pic: 1 } },
+          hlsVariant(720),
+          hlsVariant(1080, undefined, { color_transfer: "smpte2084" }),
+        ],
+      },
+      { languages: [], maxVideoHeight: 1080 },
+    )?.ranked;
+    expect(ranked?.videoStreamIndex).toBe(2);
+    expect(ranked?.hdr).toBe(true);
+  });
+});

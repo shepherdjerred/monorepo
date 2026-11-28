@@ -280,6 +280,10 @@ export type BirmelFlagKey = (typeof BIRMEL_FLAG_KEYS)[number];
 export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "player-card-enabled",
   "streambot-assistant-v2-enabled",
+  "streambot-audio-dialog-downmix-enabled",
+  "streambot-audio-live-resync-enabled",
+  "streambot-audio-loudness-normalization-enabled",
+  "streambot-audio-track-ranking-enabled",
   "streambot-automatic-channel-routing-enabled",
   "streambot-history-enabled",
   "streambot-music-over-voice-enabled",
