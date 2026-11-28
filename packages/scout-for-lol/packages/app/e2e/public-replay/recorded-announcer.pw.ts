@@ -21,6 +21,7 @@ const welcomeFrames = 127_490;
 const minionFrames = 96_800;
 const combatFrames = 102_418;
 const combatTime = 1719.9504140625;
+const earlierCombatTime = 993.7932138671875;
 const combatWav =
   "02e373efb53b3f063203c1398b358ff064334e48191ed910673d7e36d73c0300";
 const objectiveCues = [
@@ -111,9 +112,13 @@ function expectedCombatAudio(paths: Iterable<string>) {
 async function verifyCombatAudio(
   page: Page,
   expected: boolean,
+  root: string,
   requested: Iterable<string>,
 ) {
   if (!expected) return;
+  const cueTimes = await readCombatCueTimes(root);
+  const scheduledAt = (time: number) =>
+    cueTimes.filter((cueTime) => cueTime + combatFrames / 44_100 > time).length;
   const play = page.getByRole("button", { name: "Play", exact: true });
   const pause = page.getByRole("button", { name: "Pause", exact: true });
   const speed = page.getByRole("combobox", { name: "Speed" });
@@ -128,12 +133,23 @@ async function verifyCombatAudio(
   };
   await pause.click();
   await speed.selectOption("1");
+  if (cueTimes.length > 1) {
+    await seek(page, 993);
+    const priorCount = await combatCount();
+    await play.click();
+    await expect.poll(combatCount).toBe(priorCount + scheduledAt(993));
+    const earlierStarts = await combatStarts();
+    const earlier = earlierStarts[priorCount];
+    expect(earlier).toMatchObject({ frames: combatFrames, offset: 0, rate: 1 });
+    expect(earlier?.delay).toBeCloseTo(earlierCombatTime - 993, 1);
+    await pause.click();
+  }
   await seek(page, 1719);
   const initialCount = await combatCount();
   await play.click();
-  await expect.poll(combatCount).toBe(initialCount + 1);
+  await expect.poll(combatCount).toBe(initialCount + scheduledAt(1719));
   const firstStarts = await combatStarts();
-  const scheduled = firstStarts.at(-1);
+  const scheduled = firstStarts[initialCount];
   if (scheduled === undefined) throw new Error("Missing scheduled combat cue");
   expect(scheduled).toMatchObject({ frames: combatFrames, offset: 0, rate: 1 });
   expect(scheduled.peak).toBeGreaterThan(0);
@@ -155,20 +171,33 @@ async function verifyCombatAudio(
   await expect
     .poll(async () => Number(await slider.inputValue()))
     .toBeGreaterThan(1720.5);
-  expect(await combatStarts()).toHaveLength(initialCount + 1);
+  expect(await combatStarts()).toHaveLength(firstStarts.length);
   await pause.click();
   await seek(page, 1720.5);
   await vision.selectOption("all");
   await play.click();
-  await expect.poll(combatCount).toBe(initialCount + 2);
+  await expect.poll(combatCount).toBe(firstStarts.length + scheduledAt(1720.5));
   const resumedStarts = await combatStarts();
-  const resumed = resumedStarts.at(-1);
+  const resumed = resumedStarts[firstStarts.length];
   if (resumed === undefined) throw new Error("Missing resumed combat cue");
   expect(resumed.rate).toBe(4);
   expect(resumed.offset).toBeCloseTo(1720.5 - combatTime, 1);
   expect(
     [...requested].filter((url) => url.includes("/combat-audio/")),
   ).toHaveLength(2);
+}
+
+async function readCombatCueTimes(root: string) {
+  const cue = z
+    .union([
+      z.object({ timeSeconds: z.literal(combatTime) }),
+      z.object({ timesSeconds: z.array(z.number().positive()).length(46) }),
+    ])
+    .parse(await Bun.file(path.join(root, "combat-audio/cue.json")).json());
+  if ("timeSeconds" in cue) return [cue.timeSeconds];
+  expect(cue.timesSeconds).toContain(earlierCombatTime);
+  expect(cue.timesSeconds).toContain(combatTime);
+  return cue.timesSeconds;
 }
 
 test.use({
@@ -329,7 +358,12 @@ test("announcer preview stays silent until enabled and follows the replay clock"
     expect(transition.delay).toBeGreaterThan(0);
     expect(transition.delay).toBeCloseTo((cue.time - start) / playbackRate, 1);
   }
-  await verifyCombatAudio(page, combat.expected, traffic.requested);
+  await verifyCombatAudio(
+    page,
+    combat.expected,
+    fixture.root,
+    traffic.requested,
+  );
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   const muted = await readRecordedAudioProbe(page);

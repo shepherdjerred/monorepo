@@ -23,6 +23,14 @@ const repeatedFlash = {
   geometrySha256:
     "921252fda613d6c74045592264ab8d77955ca9726dfe0b145c5c9d2473daf0d7",
 };
+const fullMatchFlash = {
+  ...flash,
+  repeated: true,
+  fullMatch: true,
+  placementCount: 2148,
+  nativeProofContentSha256:
+    "680fddf606faa268790a966f613df7afe0af47fc6583ee1f2ad1b378afcc1bec",
+};
 const maokaiSphere = {
   sourceSha256:
     "2c9bd39530461371932a7c5452cb0c29e46141991b9aa73666b33d7e520d3ee6",
@@ -197,6 +205,10 @@ const inputs = JSON.parse(await readFile(inputPath));
 assert.ok(
   inputs.repeatOpeningFlash === undefined || inputs.repeatOpeningFlash === true,
 );
+assert.ok(
+  inputs.fullMatchFlash === undefined || inputs.fullMatchFlash === true,
+);
+assert.ok(!(inputs.repeatOpeningFlash && inputs.fullMatchFlash));
 const output = resolve(inputs.output);
 const cache = await realpath(".cache");
 const parent = relative(cache, await realpath(dirname(output)));
@@ -206,12 +218,19 @@ async function prepareImpact(inputs, profile) {
   if (profile.geometrySha256 !== undefined)
     assert.equal(inputs.geometry.sha256, profile.geometrySha256);
 
-  const [source, proof, materialBytes, texture] = await Promise.all([
+  const [source, proofBytes, materialBytes, texture] = await Promise.all([
     pinned(inputs.source, profile.sourceSha256).then(JSON.parse),
-    pinned(inputs.geometry.path, inputs.geometry.sha256).then(JSON.parse),
+    pinned(inputs.geometry.path, inputs.geometry.sha256),
     pinned(inputs.material, profile.materialSha256),
     pinned(inputs.texture, profile.textureSha256),
   ]);
+  if (profile.fullMatch)
+    assert.equal(
+      hash(proofBytes.toString("utf8").replace(/\r?\n$/u, "")),
+      profile.nativeProofContentSha256,
+      "Unreviewed full-match Flash native geometry",
+    );
+  const proof = JSON.parse(proofBytes);
   const material = materialBytes
     .toString("utf8")
     .trimEnd()
@@ -244,6 +263,7 @@ async function prepareImpact(inputs, profile) {
   assert.equal(proof.scope.suppliedRandomSamples, true);
   assert.equal(proof.scope.geometryObserved, true);
   assert.equal(proof.scope.browserDrawSubmitted, false);
+  assert.equal(proof.fullMatchFlash === true, profile.fullMatch === true);
   assert.equal(
     proof.repeatedPlacements !== undefined,
     profile.repeated === true,
@@ -257,7 +277,11 @@ async function prepareImpact(inputs, profile) {
     placements.length,
   );
   if (profile.repeated) {
-    assert.equal(new Set(placements.map(({ sequence }) => sequence)).size, 14);
+    if (!profile.fullMatch)
+      assert.equal(
+        new Set(placements.map(({ sequence }) => sequence)).size,
+        14,
+      );
     for (const prior of source.placements) {
       assert.deepEqual(
         placements.find(({ handle }) => handle === prior.handle),
@@ -270,18 +294,52 @@ async function prepareImpact(inputs, profile) {
       );
     }
   }
-  assert.equal(proof.observations.length, profile.placementCount * 8);
+  assert.equal(
+    proof.observations.length,
+    profile.fullMatch
+      ? profile.placementCount + 42
+      : profile.placementCount * 8,
+  );
+  const byHandle = new Map(placements.map(({ handle }) => [handle, []]));
+  for (const observation of proof.observations) {
+    const controls = byHandle.get(observation.handle);
+    assert.ok(
+      controls,
+      "Native geometry observation has no recorded placement",
+    );
+    controls.push(observation);
+  }
 
-  const paths = placements.map(({ handle, timeSeconds }) => {
+  const paths = placements.map(({ handle, timeSeconds }, index) => {
     const time = profile.repeated ? timeSeconds : source.packet.time;
     assert.ok(Number.isFinite(time) && time >= 0);
-    const controls = proof.observations.filter((row) => row.handle === handle);
-    assert.equal(controls.length, 8);
-    for (const cadence of [60, 120]) {
+    const controls = byHandle.get(handle);
+    const hasAdditionalControls =
+      !profile.fullMatch || [0, 250, 674, 1100, 1900, 2147].includes(index);
+    assert.equal(controls.length, hasAdditionalControls ? 8 : 1);
+    for (const cadence of hasAdditionalControls ? [60, 120] : [120]) {
       const sameCadence = controls.filter(
         (control) => control.cadence === cadence,
       );
-      assert.equal(sameCadence.length, 4);
+      assert.equal(sameCadence.length, hasAdditionalControls ? 4 : 1);
+      if (profile.fullMatch) {
+        const expectedControls = hasAdditionalControls
+          ? [
+              [0.125, [5900, 1500, 6200]],
+              [0.125, [6150, 1700, 5950]],
+              [0.875, [5900, 1500, 6200]],
+              [0.875, [6150, 1700, 5950]],
+            ]
+          : [[0.125, [5900, 1500, 6200]]];
+        assert.deepEqual(
+          sameCadence.map(({ suppliedRandomSample, cameraControl }) => [
+            suppliedRandomSample,
+            cameraControl,
+          ]),
+          expectedControls,
+        );
+      }
+      if (!hasAdditionalControls) continue;
       assert.equal(
         new Set(
           sameCadence.map(({ cameraControl }) => JSON.stringify(cameraControl)),
@@ -303,6 +361,15 @@ async function prepareImpact(inputs, profile) {
       assert.equal(observation.geometry.at(-1)[0], observation.lastLiveAge);
     }
     const sample = controls.find(({ cadence }) => cadence === 120);
+    if (profile.fullMatch) {
+      assert.deepEqual(
+        sample.geometry.map(([age]) => age),
+        [
+          ...Array.from({ length: 19 }, (_, index) => (60 + index) / 120),
+          0.5 + Math.fround(0.15),
+        ],
+      );
+    }
     return {
       handle,
       start: time + sample.births[0][0],
@@ -325,8 +392,51 @@ async function prepareImpact(inputs, profile) {
   };
 }
 
+function packWorldImpact({ texture, palette, paths }, files) {
+  const header = Buffer.alloc(4);
+  header.writeUInt32LE(paths.length);
+  const chunks = [header];
+  let previousStart = -Infinity;
+  for (const { handle, start, end, samples } of paths) {
+    assert.ok(
+      start >= previousStart,
+      "Packed Flash placements must follow the replay clock",
+    );
+    previousStart = start;
+    const path = Buffer.alloc(24);
+    path.writeUInt32LE(handle, 0);
+    path.writeDoubleLE(start, 4);
+    path.writeDoubleLE(end, 12);
+    path.writeUInt32LE(samples.length, 20);
+    chunks.push(path);
+    for (const { age, indices, vertices } of samples) {
+      assert.equal(indices, "000001000200000002000300");
+      assert.match(vertices, /^[a-f0-9]{224}$/u);
+      const vertexBytes = Buffer.from(vertices, "hex");
+      const indexBytes = Buffer.from(indices, "hex");
+      const sample = Buffer.alloc(12);
+      sample.writeDoubleLE(age, 0);
+      sample.writeUInt16LE(vertexBytes.length, 8);
+      sample.writeUInt16LE(indexBytes.length, 10);
+      chunks.push(sample, vertexBytes, indexBytes);
+    }
+  }
+  const geometry = Buffer.concat(chunks);
+  assert.ok(geometry.length <= 16 * 1024 * 1024);
+  const path = leaf(hash(geometry), "bin");
+  files.set(path, geometry);
+  return { texture, palette, path, bytes: geometry.length };
+}
+
 const [primary, secondary, palette, vertex, fragment] = await Promise.all([
-  prepareImpact(inputs, inputs.repeatOpeningFlash ? repeatedFlash : flash),
+  prepareImpact(
+    inputs,
+    inputs.fullMatchFlash
+      ? fullMatchFlash
+      : inputs.repeatOpeningFlash
+        ? repeatedFlash
+        : flash,
+  ),
   inputs.maokaiSphere === undefined
     ? undefined
     : prepareImpact(inputs.maokaiSphere, maokaiSphere),
@@ -395,7 +505,9 @@ const track = {
     (a, b) => a.start - b.start || a.handle - b.handle,
   ),
   families: [...heimer.families, ...ammo.families],
-  worldImpact,
+  ...(inputs.fullMatchFlash
+    ? { packedWorldImpacts: [packWorldImpact(primary.worldImpact, files)] }
+    : { worldImpact }),
   ...(additionalWorldImpacts.length === 0 ? {} : { additionalWorldImpacts }),
   textures: {
     files: [...files.keys()].filter((path) => path.endsWith(".png")),

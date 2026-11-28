@@ -58,12 +58,25 @@ type Clock = Pick<
   "timeSeconds" | "durationSeconds" | "rate" | "playing" | "perspective"
 >;
 
-const CombatCueSchema = z.strictObject({
+const combatCueFields = {
   replaySha256: digest,
   scope: z.literal("packet-clock-dry-source"),
-  timeSeconds: z.number().positive(),
   mediaId: z.literal(329446178),
-});
+};
+const combatClock = z.number().positive();
+export const CombatCueSchema = z.union([
+  z.strictObject({ ...combatCueFields, timeSeconds: combatClock }),
+  z.strictObject({
+    ...combatCueFields,
+    timesSeconds: z
+      .array(combatClock)
+      .nonempty()
+      .max(46)
+      .refine((times) =>
+        times.every((time, index) => time > (times[index - 1] ?? 0)),
+      ),
+  }),
+]);
 type Cue = {
   resource: string;
   timeSeconds: number;
@@ -129,30 +142,34 @@ export class ScoutTerrainAnnouncer {
     return timeline.cues;
   }
 
-  async #readCombatCue(): Promise<Cue> {
+  async #readCombatCues(): Promise<Cue[]> {
     const bytes = await this.resources.read("combat-audio/cue.json");
     const cue = CombatCueSchema.parse(
       JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
     );
     if (cue.replaySha256 !== this.replaySha256)
       throw new Error("Combat audio cue belongs to another replay");
-    return {
+    const times = "timesSeconds" in cue ? cue.timesSeconds : [cue.timeSeconds];
+    const duration = this.#clock?.durationSeconds;
+    if (duration !== undefined && times.some((time) => time >= duration))
+      throw new Error("Combat audio cue exceeds the replay clock");
+    return times.map((timeSeconds) => ({
       resource: `combat-audio/${String(cue.mediaId)}.wav`,
-      timeSeconds: cue.timeSeconds,
+      timeSeconds,
       allVisionOnly: true,
-    };
+    }));
   }
 
   async #loadSounds(context: AudioContext) {
     const [announcer, combat] = await Promise.all([
       this.options.announcer ? this.#readAnnouncerCues() : [],
-      this.options.combat ? this.#readCombatCue() : undefined,
+      this.options.combat ? this.#readCombatCues() : [],
     ]);
     const cues: Cue[] = announcer.map(({ mediaId, timeSeconds }) => ({
       resource: `announcer-preview/${String(mediaId)}.wav`,
       timeSeconds,
     }));
-    if (combat !== undefined) cues.push(combat);
+    cues.push(...combat);
     const media = new Map<string, Promise<AudioBuffer>>();
     return Promise.all(
       cues.map(async (cue) => {

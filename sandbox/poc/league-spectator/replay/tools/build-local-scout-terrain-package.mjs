@@ -127,6 +127,18 @@ export async function readLocalRecordedParticleResources(
     expectedTextures.add(texture);
     expectedTextures.add(palette);
   }
+  const packedWorldImpact = track.packedWorldImpacts?.[0];
+  if (track.packedWorldImpacts !== undefined) {
+    assert.equal(track.schema, 8, "Unsupported packed world impact");
+    assert.equal(track.packedWorldImpacts.length, 1);
+    assert.ok(packedWorldImpact && track.worldImpact === undefined);
+    assert.ok(
+      Number.isSafeInteger(packedWorldImpact.bytes) &&
+        packedWorldImpact.bytes >= 4 &&
+        packedWorldImpact.bytes <= 16 * 1024 * 1024,
+      "Packed world impact exceeds the geometry limit",
+    );
+  }
   if (impactComparison) {
     const reviewed = new Map([
       ["heimerdinger-w-impact", { components: 2, effects: 210 }],
@@ -150,7 +162,7 @@ export async function readLocalRecordedParticleResources(
     }
     assert.equal(track.effects.length, effects);
     for (const { texture, palette } of [
-      track.worldImpact,
+      packedWorldImpact ?? track.worldImpact,
       ...(track.additionalWorldImpacts ?? []),
     ]) {
       expectedTextures.add(texture);
@@ -181,6 +193,11 @@ export async function readLocalRecordedParticleResources(
     ...(maskedQuad === undefined
       ? []
       : [[maskedQuad.mask.path, /^recorded-particles\/([a-f0-9]{64})\.r8$/]]),
+    ...(packedWorldImpact === undefined
+      ? []
+      : [
+          [packedWorldImpact.path, /^recorded-particles\/([a-f0-9]{64})\.bin$/],
+        ]),
   ]) {
     const match = pattern.exec(file);
     assert.ok(
@@ -198,6 +215,12 @@ export async function readLocalRecordedParticleResources(
         asset.length,
         maskedQuad.mask.width * maskedQuad.mask.height,
         "Recorded particle mask byte length differs",
+      );
+    if (packedWorldImpact?.path === file)
+      assert.equal(
+        asset.length,
+        packedWorldImpact.bytes,
+        "Packed world impact byte length differs",
       );
     files.set(file, asset);
   }

@@ -432,10 +432,19 @@ opening model against an existing archive-scoped champion catalog.
 The local Rift package can compare Senna's recorded ground-hit cue with
 `--combat-audio-comparison $audioInputs`. The input JSON names the pinned native
 creation receipt in `creationReceipt` and the original decoded Wwise clip in
-`wav`. The comparison places the unprocessed clip at the ROFL event time in
+`wav`. For the 46 matching creations in the reviewed `.8428` Rift replay,
+extract its opcode 938 corpus and prepare the whole-replay receipt from the
+repository root.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $rofl --opcode 938 $creationCorpus
+uv run --offline --no-project --with unicorn==2.1.4 python sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-rift-combat-audio.py $macGameExecutable $creationCorpus $creationReceipt
+```
+
+The comparison places the unprocessed clip at the recorded event times in
 all-vision mode. Native update-frame timing, spatial attenuation, and mix
 settings require separate evidence. Use the **Replay audio comparison** toggle
-to hear the cue. Run the recorded announcer proof with
+to hear the cues. Run the recorded announcer proof with
 `SCOUT_REPLAY_E2E_WITH_ANNOUNCER=1` and `SCOUT_REPLAY_E2E_WITH_COMBAT_AUDIO=1`
 to check the exact clip, pause and speed handling, and team-vision cancellation.
 
@@ -1546,6 +1555,26 @@ as `--repeat-flash-inventory` and `--repeat-flash-stop-window` with `--geometry`
 Set `repeatOpeningFlash` to `true` in the author inputs while retaining the
 original two-placement source receipt. The author requires the native inventory
 and geometry pins for all 28 placements.
+
+To include every recorded placement of the verified Flash component in this
+Bloom replay, extract its complete creation corpus and run the native stop and
+geometry probes from the repository root. Use fresh private output paths under
+`.cache`.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-particle-packets.mjs $rofl --opcode 938 $creationCorpus
+$corpusSha256 = (Get-FileHash $creationCorpus -Algorithm SHA256).Hash.ToLowerInvariant()
+uv run --offline --no-project --with unicorn==2.1.4 python sandbox/poc/league-spectator/replay/tools/research/extract-recorded-heimer-impacts.py $macGameExecutable $creationCorpus $inventory --inventory 0 1166.745 --bloom-terrain-receipt $bloomTerrainReceipt --corpus-sha256 $corpusSha256
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-bloom-flash-stops.mjs $rofl $terrainByteMaps $inventory $stops
+uv run --offline --no-project --with unicorn==2.1.4 python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-mayhem-impact.py $macGameExecutable $sourceReceipt $typedEffect $textureTex --geometry --repeat-flash-inventory $inventory --repeat-flash-stop-window $stops --full-match-flash | Set-Content -Encoding utf8NoBOM $geometry
+```
+
+Set `fullMatchFlash` to `true` in the author inputs, omit `repeatOpeningFlash`,
+and pin the new geometry receipt. The author writes a digest-named binary asset
+with 42,960 native samples for 2,148 verified placements. The browser validates
+the complete asset before playback and selects recorded samples at the replay
+clock. The capture uses supplied update cadence and random inputs. Other
+emitters in the spell require their own source and rendering evidence.
 
 The same package can include Heimerdinger's recorded W impacts. Set
 `heimerImpact.track` to the pinned Skin 2 impact track and

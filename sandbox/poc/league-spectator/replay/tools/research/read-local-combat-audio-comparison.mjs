@@ -3,28 +3,36 @@ import { readFile } from "node:fs/promises";
 
 const creationSha256 =
   "a81ef3bd9669e5f04966c03d50518bd6a184bdbd2892753f7d4508334266c104";
+const wholeReplayCreationSha256 =
+  "d52f4b00406296913173dc8b487efc5c549ac59f60f6189d1bb3db7125e4708d";
 const wavSha256 =
   "02e373efb53b3f063203c1398b358ff064334e48191ed910673d7e36d73c0300";
 const digest = (bytes) => Bun.CryptoHasher.hash("sha256", bytes, "hex");
 
-export async function readLocalCombatAudioComparison(inputPath, identity) {
-  const { creationReceipt, wav } = JSON.parse(
-    await readFile(inputPath, "utf8"),
-  );
-  const [creationBytes, audio] = await Promise.all([
-    readFile(creationReceipt),
-    readFile(wav),
-  ]);
-  assert.equal(
-    digest(creationBytes),
-    creationSha256,
+function readComparisonClock(creationBytes, identity) {
+  const receiptDigest = digest(creationBytes);
+  const wholeReplay = receiptDigest === wholeReplayCreationSha256;
+  assert.ok(
+    wholeReplay || receiptDigest === creationSha256,
     "Wrong original creation receipt",
   );
-  assert.equal(digest(audio), wavSha256, "Wrong verbatim decoded cue");
   const creation = JSON.parse(creationBytes);
   for (const field of ["build", "protocol", "replaySha256"])
     assert.equal(creation[field], identity[field]);
   assert.equal(identity.build, "16.23.841.8428");
+
+  if (wholeReplay) {
+    const times = creation.events.map(({ stamp }) => stamp);
+    assert.ok(
+      times.every(
+        (stamp, index) =>
+          stamp > (times[index - 1] ?? 0) &&
+          stamp < identity.durationMilliseconds / 1000,
+      ),
+      "Combat comparison timeline differs from the replay clock",
+    );
+    return { timesSeconds: times };
+  }
   const matching = creation.events.filter(
     ({ handle, owner, resourceKey, packetSha256, status }) =>
       handle === 1073821562 &&
@@ -35,14 +43,24 @@ export async function readLocalCombatAudioComparison(inputPath, identity) {
       status === "detached-placement-confirmed",
   );
   assert.equal(matching.length, 1);
-  const [event] = matching;
-  assert.ok(
-    event.stamp > 0 && event.stamp < identity.durationMilliseconds / 1000,
+  const [{ stamp }] = matching;
+  assert.ok(stamp > 0 && stamp < identity.durationMilliseconds / 1000);
+  return { timeSeconds: stamp };
+}
+
+export async function readLocalCombatAudioComparison(inputPath, identity) {
+  const { creationReceipt, wav } = JSON.parse(
+    await readFile(inputPath, "utf8"),
   );
+  const [creationBytes, audio] = await Promise.all([
+    readFile(creationReceipt),
+    readFile(wav),
+  ]);
+  assert.equal(digest(audio), wavSha256, "Wrong verbatim decoded cue");
   const timeline = {
     replaySha256: identity.replaySha256,
     scope: "packet-clock-dry-source",
-    timeSeconds: event.stamp,
+    ...readComparisonClock(creationBytes, identity),
     mediaId: 329446178,
   };
   return new Map([

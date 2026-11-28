@@ -42,35 +42,21 @@ async function verifyMayhemImpacts(
   expect(fixture.particlePreview).toBeUndefined();
   const track = z
     .object({
-      worldImpact,
+      worldImpact: worldImpact.optional(),
       additionalWorldImpacts: z.array(worldImpact).optional(),
+      packedWorldImpacts: z
+        .array(
+          z.object({ path: z.string(), bytes: z.number().int().positive() }),
+        )
+        .length(1)
+        .optional(),
       families: z.array(z.object({ id: z.string() })),
       effects: z.array(z.object({ family: z.string() })),
     })
     .parse(
       await Bun.file(path.join(fixture.root, "recorded-particles.json")).json(),
     );
-  const flashPlacements = [
-    track.worldImpact,
-    ...(track.additionalWorldImpacts ?? []),
-  ]
-    .filter(({ texture }) => texture === track.worldImpact.texture)
-    .reduce((count, { paths }) => count + paths.length, 0);
-  expect([2, 28]).toContain(flashPlacements);
-  const flash =
-    flashPlacements === 28
-      ? ([
-          [83.2, 0],
-          [83.4, 2],
-          [84.7, 2],
-          [84.8, 2],
-          [85.1, 0],
-        ] as const)
-      : ([
-          [84.7, 0],
-          [84.8, 2],
-          [85, 0],
-        ] as const);
+  const flash = await recordedFlashChecks(fixture.root, leaves, track);
   const maokai = leaves.has(
     "recorded-particles/ed32f9d687e5b8932f4dd361d4bb8e0966ada34195d2c3cb7846f1867660b1ae.png",
   )
@@ -114,6 +100,57 @@ async function verifyMayhemImpacts(
     expect(frame.recordedParticleDraws).toBe(draws);
     expect(frame.recordedDepthDisabledParticleDraws).toBe(0);
   }
+}
+
+async function recordedFlashChecks(
+  root: string,
+  leaves: ReadonlySet<string>,
+  track: {
+    worldImpact?: z.infer<typeof worldImpact> | undefined;
+    additionalWorldImpacts?: z.infer<typeof worldImpact>[] | undefined;
+    packedWorldImpacts?: { path: string; bytes: number }[] | undefined;
+  },
+) {
+  const opening = [
+    [83.2, 0],
+    [83.4, 2],
+    [84.7, 2],
+    [84.8, 2],
+    [85.1, 0],
+  ] as const;
+  const packed = track.packedWorldImpacts?.[0];
+  if (packed !== undefined) {
+    expect(track.worldImpact).toBeUndefined();
+    expect(leaves.has(packed.path)).toBe(true);
+    const bytes = await Bun.file(path.join(root, packed.path)).arrayBuffer();
+    expect(bytes.byteLength).toBe(packed.bytes);
+    expect(new DataView(bytes).getUint32(0, true)).toBe(2148);
+    // Original replay creation times and the native birth and expiration probe.
+    return [
+      [57.7, 0],
+      [57.8, 2],
+      ...opening,
+      [372.6, 4],
+      [373.3, 0],
+      [1120.6, 2],
+      [1120.7, 0],
+      [372.6, 4],
+    ] as const;
+  }
+  const primary = track.worldImpact;
+  if (primary === undefined)
+    throw new Error("Missing recorded Flash placements");
+  const flashPlacements = (track.additionalWorldImpacts ?? [])
+    .filter(({ texture }) => texture === primary.texture)
+    .reduce((count, { paths }) => count + paths.length, primary.paths.length);
+  expect([2, 28]).toContain(flashPlacements);
+  return flashPlacements === 28
+    ? opening
+    : ([
+        [84.7, 0],
+        [84.8, 2],
+        [85, 0],
+      ] as const);
 }
 
 test("signed-out Bloom replay plays the opening fight at 1× and restores a share", async ({

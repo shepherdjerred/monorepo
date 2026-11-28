@@ -4,6 +4,11 @@ import { evaluateRecordedBillboard } from "./recorded-terrain-billboard.mjs";
 const png = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.png$/);
 const glsl = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.glsl$/);
 const r8 = z.string().regex(/^recorded-particles\/[a-f0-9]{64}\.r8$/);
+const geometryPath = /^recorded-particles\/([a-f0-9]{64})\.bin$/u;
+const maxPackedImpactPaths = 4096;
+const maxWorldSamples = 960;
+const maxWorldVertexBytes = 28672;
+const maxWorldIndexBytes = 6144;
 const quadComponent = z.object({
   texture: png,
   indices: z.literal("000001000200000002000300"),
@@ -100,19 +105,19 @@ const worldFrame = z.strictObject({
   vertices: z
     .string()
     .min(168)
-    .max(57344)
+    .max(maxWorldVertexBytes * 2)
     .regex(/^[a-f0-9]+$/),
   indices: z
     .string()
     .min(12)
-    .max(12288)
+    .max(maxWorldIndexBytes * 2)
     .regex(/^[a-f0-9]+$/),
 });
 const worldPath = z.strictObject({
   handle: particleEffect.shape.handle,
   start: z.number().nonnegative(),
   end: z.number().positive(),
-  samples: z.array(worldFrame).min(1).max(960),
+  samples: z.array(worldFrame).min(1).max(maxWorldSamples),
 });
 const worldTrack = z.strictObject({
   texture: png,
@@ -126,7 +131,7 @@ const worldQuadTrack = worldTrack.extend({
         samples: z
           .array(worldFrame.extend({ age: z.number().nonnegative() }))
           .min(1)
-          .max(960),
+          .max(maxWorldSamples),
       }),
     )
     .min(1)
@@ -207,9 +212,24 @@ const mayhemImpactComparisonTrack = familyTrack.extend({
       ]),
     )
     .max(2),
-  worldImpact: worldQuadTrack.extend({
-    paths: worldQuadTrack.shape.paths.length(2),
-  }),
+  worldImpact: worldQuadTrack
+    .extend({ paths: worldQuadTrack.shape.paths.length(2) })
+    .optional(),
+  packedWorldImpacts: z
+    .array(
+      z.strictObject({
+        texture: png,
+        palette: png,
+        path: z.string().regex(geometryPath),
+        bytes: z
+          .number()
+          .int()
+          .min(1)
+          .max(16 * 1024 * 1024),
+      }),
+    )
+    .length(1)
+    .optional(),
   additionalWorldImpacts: z.array(worldQuadTrack).max(8).optional(),
 });
 const particleTrack = z.discriminatedUnion("schema", [
@@ -251,10 +271,17 @@ function decodeHex(value: string) {
 }
 
 function decodeVertices(value: string, localPlane: boolean) {
-  const bytes = decodeHex(value);
   if (value.length % 56 !== 0)
     throw new Error("A recorded particle vertex layout is misaligned.");
-  const view = new DataView(bytes.buffer);
+  const bytes = decodeHex(value);
+  validateVertices(bytes, localPlane);
+  return bytes;
+}
+
+function validateVertices(bytes: Uint8Array, localPlane: boolean) {
+  if (bytes.length % 28 !== 0)
+    throw new Error("A recorded particle vertex layout is misaligned.");
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   for (let offset = 0; offset < view.byteLength; offset += 28) {
     if (
       [0, 4, 8].some(
@@ -270,7 +297,6 @@ function decodeVertices(value: string, localPlane: boolean) {
         "A recorded particle quad is outside its local XY plane.",
       );
   }
-  return bytes;
 }
 
 function compileWorldPaths<Style extends object>(
@@ -299,21 +325,11 @@ function compileWorldPaths<Style extends object>(
         previous = age;
         const vertices = decodeVertices(packed, false);
         const indices = decodeHex(rawIndices);
-        const count = vertices.length / 28;
-        const quadCount = count / 4;
-        if (
-          ("worldMaskedQuad" in style || "worldUnmaskedQuad" in style) &&
-          (!Number.isInteger(quadCount) || indices.length !== quadCount * 12)
-        )
-          throw new Error(
-            "A recorded world quad needs complete indexed quads.",
-          );
-        const view = new DataView(indices.buffer);
-        for (let offset = 0; offset < indices.length; offset += 2)
-          if (view.getUint16(offset, true) >= count)
-            throw new Error(
-              "A recorded world particle index is outside its vertex data.",
-            );
+        validateWorldIndices(
+          vertices,
+          indices,
+          "worldMaskedQuad" in style || "worldUnmaskedQuad" in style,
+        );
         return { age, vertices, indices };
       },
     );
@@ -325,6 +341,153 @@ function compileWorldPaths<Style extends object>(
       const frame = frames.findLast(({ age }) => age <= time - start);
       return frame === undefined ? [] : [{ ...style, ...frame }];
     });
+}
+
+function validateWorldIndices(
+  vertices: Uint8Array,
+  indices: Uint8Array,
+  quads: boolean,
+) {
+  const count = vertices.length / 28;
+  const quadCount = count / 4;
+  if (
+    quads &&
+    (!Number.isInteger(quadCount) || indices.length !== quadCount * 12)
+  )
+    throw new Error("A recorded world quad needs complete indexed quads.");
+  const view = new DataView(
+    indices.buffer,
+    indices.byteOffset,
+    indices.byteLength,
+  );
+  for (let offset = 0; offset < indices.length; offset += 2)
+    if (view.getUint16(offset, true) >= count)
+      throw new Error(
+        "A recorded world particle index is outside its vertex data.",
+      );
+}
+
+type PackedWorldImpact = NonNullable<
+  z.infer<typeof mayhemImpactComparisonTrack>["packedWorldImpacts"]
+>[number];
+
+function firstMatchingIndex<T>(
+  entries: readonly T[],
+  matches: (entry: T) => boolean,
+) {
+  let first = 0;
+  let end = entries.length;
+  while (first < end) {
+    const middle = first + Math.floor((end - first) / 2);
+    if (matches(entries[middle]!)) end = middle;
+    else first = middle + 1;
+  }
+  return first;
+}
+
+async function compilePackedWorldImpact<Style extends object>(
+  packed: PackedWorldImpact,
+  read: (path: string) => Promise<ArrayBuffer>,
+  duration: number,
+  handles: Set<number>,
+  style: Style,
+  signal: AbortSignal,
+) {
+  const geometry = await read(`/${packed.path}`);
+  signal.throwIfAborted();
+  if (geometry.byteLength !== packed.bytes)
+    throw new Error("Recorded world impact geometry has an unexpected size.");
+  const actual = await sha256Hex(geometry);
+  signal.throwIfAborted();
+  if (actual !== geometryPath.exec(packed.path)![1])
+    throw new Error("Recorded world impact geometry digest differs.");
+
+  const view = new DataView(geometry);
+  let offset = 0;
+  function consume(bytes: number) {
+    const start = offset;
+    if (bytes > view.byteLength - start)
+      throw new Error("Recorded world impact geometry ended early.");
+    offset += bytes;
+    return start;
+  }
+  const paths = view.getUint32(consume(4), true);
+  if (paths === 0 || paths > maxPackedImpactPaths)
+    throw new Error("Recorded world impact has an invalid placement count.");
+  let previousStart = -1;
+  let latestEnd = 0;
+  const compiled = Array.from({ length: paths }, () => {
+    const handle = view.getUint32(consume(4), true);
+    const start = view.getFloat64(consume(8), true);
+    const end = view.getFloat64(consume(8), true);
+    const count = view.getUint32(consume(4), true);
+    if (
+      handle === 0 ||
+      handles.has(handle) ||
+      !(
+        start >= 0 &&
+        start >= previousStart &&
+        end > start &&
+        end <= duration
+      ) ||
+      count === 0 ||
+      count > maxWorldSamples
+    )
+      throw new Error("Recorded world impact has an invalid placement.");
+    handles.add(handle);
+    previousStart = start;
+    latestEnd = Math.max(latestEnd, end);
+    let previousAge = -1;
+    const frames = Array.from({ length: count }, () => {
+      const age = view.getFloat64(consume(8), true);
+      const vertexBytes = view.getUint16(consume(2), true);
+      const indexBytes = view.getUint16(consume(2), true);
+      if (
+        !(age >= 0 && age > previousAge && age < end - start) ||
+        vertexBytes < 112 ||
+        vertexBytes > maxWorldVertexBytes ||
+        indexBytes < 12 ||
+        indexBytes > maxWorldIndexBytes
+      )
+        throw new Error("Recorded world impact has an invalid sample.");
+      previousAge = age;
+      const vertices = new Uint8Array(
+        geometry,
+        consume(vertexBytes),
+        vertexBytes,
+      );
+      const indices = new Uint8Array(geometry, consume(indexBytes), indexBytes);
+      validateVertices(vertices, false);
+      validateWorldIndices(vertices, indices, true);
+      return { age, vertices, indices };
+    });
+    return { start, end, latestEnd, frames };
+  });
+  if (offset !== view.byteLength)
+    throw new Error("Recorded world impact geometry has trailing bytes.");
+
+  return (time: number) => {
+    const active = [];
+    const first = firstMatchingIndex(compiled, (path) => path.latestEnd > time);
+    for (let index = first; index < compiled.length; index++) {
+      const { start, end, frames } = compiled[index]!;
+      if (time < start) break;
+      if (time >= end) continue;
+      const frame =
+        frames[
+          firstMatchingIndex(frames, (sample) => sample.age > time - start) - 1
+        ];
+      if (frame !== undefined) active.push({ ...style, ...frame });
+    }
+    return active;
+  };
+}
+
+async function sha256Hex(bytes: BufferSource) {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
 }
 
 const gzipTrackEnvelope = z.strictObject({
@@ -380,13 +543,8 @@ export async function readRecordedParticleTrackJson(
   }
   if (offset !== decodedSize)
     throw new Error("Recorded particle track has an unexpected decoded size");
-  const digest = new Uint8Array(
-    await crypto.subtle.digest("SHA-256", unpacked),
-  );
+  const actual = await sha256Hex(unpacked);
   signal.throwIfAborted();
-  const actual = Array.from(digest, (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
   if (actual !== sha256)
     throw new Error("Recorded particle track decoded digest differs");
   return JSON.parse(decoder.decode(unpacked));
@@ -499,23 +657,52 @@ export async function loadRecordedTerrainParticles(
     palettePaths.add(unmaskedQuad.palette);
     basePaths.add(unmaskedQuad.texture);
   }
+  const impactStyle = {
+    blend: "src-alpha-one",
+    alphaTest: true,
+    depthTest: true,
+    worldUnmaskedQuad: true,
+    mayhemImpactComparison: true,
+  } as const;
   const impactTracks =
-    track.schema === 8
-      ? [track.worldImpact, ...(track.additionalWorldImpacts ?? [])]
-      : [];
+    track.schema === 8 ? [...(track.additionalWorldImpacts ?? [])] : [];
+  const packedImpact =
+    track.schema === 8 ? track.packedWorldImpacts?.[0] : undefined;
+  if (track.schema === 8) {
+    if ((track.worldImpact === undefined) === (packedImpact === undefined))
+      throw new Error(
+        "The recorded impact comparison needs one primary impact track.",
+      );
+    if (track.worldImpact !== undefined)
+      impactTracks.unshift(track.worldImpact);
+  }
   const impactsAt = impactTracks.map((impact) => {
     palettePaths.add(impact.palette);
     basePaths.add(impact.texture);
     return compileWorldPaths(impact.paths, duration, {
+      ...impactStyle,
       texture: impact.texture,
       palette: impact.palette,
-      blend: "src-alpha-one" as const,
-      alphaTest: true,
-      depthTest: true,
-      worldUnmaskedQuad: true as const,
-      mayhemImpactComparison: true as const,
     });
   });
+  if (packedImpact !== undefined) {
+    const { texture, palette } = packedImpact;
+    palettePaths.add(palette);
+    basePaths.add(texture);
+    const handles = new Set(track.effects.map(({ handle }) => handle));
+    for (const impact of impactTracks)
+      for (const { handle } of impact.paths) handles.add(handle);
+    impactsAt.unshift(
+      await compilePackedWorldImpact(
+        packedImpact,
+        read,
+        duration,
+        handles,
+        { ...impactStyle, texture, palette },
+        signal,
+      ),
+    );
+  }
   const expectedTextures = new Set([...palettePaths, ...basePaths]);
   if (
     (track.schema === 1 && expectedTextures.size !== 3) ||

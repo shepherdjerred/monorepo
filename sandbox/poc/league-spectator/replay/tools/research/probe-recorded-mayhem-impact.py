@@ -6,6 +6,8 @@ import importlib.util
 import json
 from pathlib import Path
 
+FULL_MATCH_CONTROL_ORDINALS = {0, 250, 674, 1100, 1900, 2147}
+
 
 def checked_bytes(path, expected):
     data = path.read_bytes()
@@ -58,12 +60,20 @@ def configure_point_shape(fields, call, put, shape, _scratch):
     put(shape + 8, "3f", *(offset[lane] for lane in "XYZ"))
 
 
-def read_repeated_flash(original, inventory_path, stop_path):
-    inventory_sha256 = "75f6b56c4fd7bfbc7a08b50e004b1ff008264bf6951f1e7695a2931a2956bcf2"
+def read_repeated_flash(original, inventory_path, stop_path, full_match):
+    inventory_sha256, stop_sha256, placement_count = (
+        (
+            "3dd85bb866a6699d3e4b3e1f76ca712a9e468aaf5adfafacc7b0f279f6a4c90f",
+            "3b3f7f7887767980a80183070a9f3b5f94544ef8b101e0c9b38bd7f9d5c70d99",
+            2148,
+        ) if full_match else (
+            "75f6b56c4fd7bfbc7a08b50e004b1ff008264bf6951f1e7695a2931a2956bcf2",
+            "1a5325b1f52a5629d555ffecf13f413549530e1b8f2fd2d2d1723ddcd8dc45e8",
+            28,
+        )
+    )
     inventory = json.loads(checked_bytes(inventory_path, inventory_sha256))
-    stops = json.loads(checked_bytes(
-        stop_path, "1a5325b1f52a5629d555ffecf13f413549530e1b8f2fd2d2d1723ddcd8dc45e8"
-    ))
+    stops = json.loads(checked_bytes(stop_path, stop_sha256))
     for field in ("build", "protocol", "replaySha256"):
         assert inventory[field] == original[field]
     assert stops["replaySha256"] == original["replaySha256"]
@@ -75,9 +85,13 @@ def read_repeated_flash(original, inventory_path, stop_path):
         entry for entry in inventory["events"]
         if entry["owner"] == 1073741897 and entry["resourceKey"] == 2132659164
     ]
-    assert len(entries) == len({entry["handle"] for entry in entries}) == 28
+    assert len(entries) == len({entry["handle"] for entry in entries}) == placement_count
     assert stops["targetHandles"] == sorted(entry["handle"] for entry in entries)
-    assert len({entry["sequence"] for entry in entries}) == 14
+    if full_match:
+        assert stops["requestedStopPackets"] == 94373
+        assert stops["events"] == entries
+    else:
+        assert len({entry["sequence"] for entry in entries}) == 14
     assert stops["first"] == entries[0]["stamp"]
     assert stops["last"] >= entries[-1]["stamp"] + 0.6500000357627869
     placements = []
@@ -114,6 +128,7 @@ def main():
     parser.add_argument("--component", choices=("flash", "maokai-sphere"), default="flash")
     parser.add_argument("--repeat-flash-inventory", type=Path)
     parser.add_argument("--repeat-flash-stop-window", type=Path)
+    parser.add_argument("--full-match-flash", action="store_true")
     args = parser.parse_args()
     if not __debug__:
         raise RuntimeError("Run this probe with Python assertions enabled")
@@ -136,13 +151,15 @@ def main():
         configure_shape = configure_point_shape
     original = json.loads(checked_bytes(args.source_receipt, source_sha))
     repeated = args.repeat_flash_inventory is not None or args.repeat_flash_stop_window is not None
+    if args.full_match_flash and not repeated:
+        parser.error("Full-match Flash requires the full create inventory and stop window")
     if repeated and (
         args.component != "flash" or not args.geometry
         or args.repeat_flash_inventory is None or args.repeat_flash_stop_window is None
     ):
         parser.error("Repeated Flash requires both original controls and Flash geometry")
     placements = (
-        read_repeated_flash(original, args.repeat_flash_inventory, args.repeat_flash_stop_window)
+        read_repeated_flash(original, args.repeat_flash_inventory, args.repeat_flash_stop_window, args.full_match_flash)
         if repeated else original["placements"]
     )
     typed = json.loads(checked_bytes(args.typed_effect, typed_sha))
@@ -157,25 +174,30 @@ def main():
     assert fields["3c6468f4"]["value"] == original["emitter"]["texture"]
 
     observations = []
-    for placement in placements:
+    for ordinal, placement in enumerate(placements):
         assert placement["flags"] == 32 and placement["scaleRate"] == [scale, 1]
         event = {"descriptor": {
             "positions": [placement["position"]],
             "scaleRate": placement["scaleRate"],
         }}
-        for cadence in (60, 120):
-            for supplied_random in (0.125, 0.875):
-                cameras = ((5900, 1500, 6200), (6150, 1700, 5950)) if args.geometry else (None,)
-                for camera in cameras:
-                    observations.append({
-                        "handle": placement["handle"],
-                        "cameraControl": camera,
-                        **harness.run(
-                            image, event, fields, cadence, supplied_random, camera,
-                            observe_delay_only=not args.geometry,
-                            configure_impact_shape=configure_shape if args.geometry else None,
-                        ),
-                    })
+        cameras = ((5900, 1500, 6200), (6150, 1700, 5950)) if args.geometry else (None,)
+        if args.full_match_flash and ordinal not in FULL_MATCH_CONTROL_ORDINALS:
+            controls = [(120, 0.125, cameras[0])]
+        else:
+            controls = [(cadence, sample, camera)
+                        for cadence in (60, 120)
+                        for sample in (0.125, 0.875)
+                        for camera in cameras]
+        for cadence, supplied_random, camera in controls:
+            observations.append({
+                "handle": placement["handle"],
+                "cameraControl": camera,
+                **harness.run(
+                    image, event, fields, cadence, supplied_random, camera,
+                    observe_delay_only=not args.geometry,
+                    configure_impact_shape=configure_shape if args.geometry else None,
+                ),
+            })
 
     print(json.dumps({
         "schema": 1,
@@ -190,6 +212,7 @@ def main():
         "originalBirthHelperRva": 0x1789DF0,
         "observations": observations,
         **({"repeatedPlacements": placements} if repeated else {}),
+        **({"fullMatchFlash": True} if args.full_match_flash else {}),
         "scope": {
             "suppliedUpdateCadence": True,
             "suppliedRandomSamples": True,
