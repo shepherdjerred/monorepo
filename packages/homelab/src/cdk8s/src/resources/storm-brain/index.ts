@@ -16,7 +16,8 @@ import {
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
-const BRAIN_PORT = 3000;
+/** The brain API The Storm game server calls. */
+export const BRAIN_PORT = 3000;
 const BRAIN_METRICS_PORT = 9090;
 
 /** Internal-only: the Storm game server is the brain's one client. */
