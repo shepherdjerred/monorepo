@@ -56,6 +56,7 @@ const admissionPolicies: readonly [
   ["woodpecker-ram-scratch.sjer.red", "Mutating"],
   ["woodpecker-ram-scratch-verify-extended.sjer.red", "Mutating"],
   ["woodpecker-ram-scratch-playwright-e2e.sjer.red", "Mutating"],
+  ["woodpecker-ram-scratch-tofu-validate.sjer.red", "Mutating"],
   ["woodpecker-ram-scratch-guard.sjer.red", "Validating"],
   ["woodpecker-workspace-clone.sjer.red", "Mutating"],
   ["woodpecker-workspace-clone-guard.sjer.red", "Validating"],

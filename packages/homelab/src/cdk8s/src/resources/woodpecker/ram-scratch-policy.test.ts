@@ -6,8 +6,8 @@ import { createRamScratchPolicy } from "./ram-scratch-policy.ts";
 test("RAM scratch policies preserve namespace isolation and fail closed before workloads", () => {
   const manifests = renderAdmissionPolicies(createRamScratchPolicy);
   // One mutation and binding per lane profile (verify, verify-extended,
-  // playwright-e2e), plus the shared guard pair.
-  expect(manifests).toHaveLength(8);
+  // playwright-e2e, tofu-validate), plus the shared guard pair.
+  expect(manifests).toHaveLength(10);
   for (const manifest of manifests) {
     expect(manifest.metadata.namespace).toBeUndefined();
     expect(manifest.metadata.annotations["argocd.argoproj.io/sync-wave"]).toBe(
@@ -35,6 +35,7 @@ test("RAM scratch policies preserve namespace isolation and fail closed before w
     "woodpecker-ram-scratch.sjer.red",
     "woodpecker-ram-scratch-verify-extended.sjer.red",
     "woodpecker-ram-scratch-playwright-e2e.sjer.red",
+    "woodpecker-ram-scratch-tofu-validate.sjer.red",
   ]);
   const validation = JSON.stringify(validator?.spec);
   for (const profile of Object.values(RAM_SCRATCH_PROFILES)) {
@@ -64,6 +65,11 @@ test("RAM scratch policies preserve namespace isolation and fail closed before w
       "woodpecker-ram-scratch-playwright-e2e.sjer.red",
   );
   expect(JSON.stringify(browser?.spec)).not.toContain("ci-ram-gradle");
+  const tofu = mutators.find(
+    (mutator) =>
+      mutator.metadata.name === "woodpecker-ram-scratch-tofu-validate.sjer.red",
+  );
+  expect(JSON.stringify(tofu?.spec)).not.toContain("ci-ram-gradle");
   // The nightly extended verify reuses verify's allowance under its own key:
   // its mutation fires only for a pod carrying the verify-extended-v1 profile
   // on the verify-extended step, never for an ordinary verify pod.
