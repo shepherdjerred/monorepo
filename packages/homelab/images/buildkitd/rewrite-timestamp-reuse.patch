@@ -1,0 +1,683 @@
+diff --git a/cache/manager.go b/cache/manager.go
+index 9bd3ca9..2484ba8 100644
+--- a/cache/manager.go
++++ b/cache/manager.go
+@@ -1312,7 +1312,9 @@ func (cm *cacheManager) pruneOnce(ctx context.Context, ch chan client.UsageInfo,
+ 	}
+ 
+ 	// calculate sizes here so that lock does not need to be held for slow process
++	rewritten := make(map[string]int64, len(toDelete))
+ 	for _, cr := range toDelete {
++		rewritten[cr.ID()] = cr.rewrittenBlobsSize(ctx)
+ 		size := cr.getSize()
+ 
+ 		if size == sizeUnknown && cr.equalImmutable != nil {
+@@ -1363,6 +1365,9 @@ func (cm *cacheManager) pruneOnce(ctx context.Context, ch chan client.UsageInfo,
+ 		if c.Size == sizeUnknown && cr.equalImmutable != nil {
+ 			c.Size = cr.equalImmutable.getSize() // benefit from DiskUsage calc
+ 		}
++		if c.Size != sizeUnknown {
++			c.Size += rewritten[cr.ID()]
++		}
+ 
+ 		releasedSize += c.Size
+ 
+@@ -1582,6 +1587,17 @@ func (cm *cacheManager) DiskUsage(ctx context.Context, opt client.DiskUsageInfo)
+ 		return du, err
+ 	}
+ 
++	// Retained timestamp-rewritten blobs are not part of a record's cached
++	// size; add them so disk usage and GC policies see the real usage.
++	for _, d := range du {
++		cm.mu.Lock()
++		cr, ok := cm.records[d.ID]
++		cm.mu.Unlock()
++		if ok {
++			d.Size += cr.rewrittenBlobsSize(ctx)
++		}
++	}
++
+ 	return du, nil
+ }
+ 
+diff --git a/cache/manager_test.go b/cache/manager_test.go
+index fefdaae..befc93d 100644
+--- a/cache/manager_test.go
++++ b/cache/manager_test.go
+@@ -4128,3 +4128,44 @@ func (c *chainRefChecker) Exists(_ string, blobs []digest.Digest) bool {
+ 	defer c.mu.Unlock()
+ 	return c.chain != nil && slices.Equal(c.chain, blobs)
+ }
++
++// Timestamp-rewritten blobs retained through a source blob's converter GC
++// reference count toward the record's disk usage, even after the record's own
++// size was computed.
++func TestDiskUsageCountsRetainedRewrittenBlobs(t *testing.T) {
++	t.Parallel()
++	ctx := namespaces.WithNamespace(t.Context(), "buildkit-test")
++	tmpdir := t.TempDir()
++	snapshotter, err := native.NewSnapshotter(filepath.Join(tmpdir, "snapshots"))
++	require.NoError(t, err)
++	t.Cleanup(func() {
++		require.NoError(t, snapshotter.Close())
++	})
++	co, cleanup, err := newCacheManager(ctx, t, cmOpt{tmpdir: tmpdir, snapshotter: snapshotter, snapshotterName: "native"})
++	require.NoError(t, err)
++	t.Cleanup(cleanup)
++	cm := co.manager
++
++	blob, desc, err := mapToBlob(map[string]string{"layer": "data"}, true)
++	require.NoError(t, err)
++	require.NoError(t, content.WriteBlob(ctx, co.cs, "layer", bytes.NewReader(blob), desc))
++	ref, err := cm.GetByBlob(ctx, desc, nil)
++	require.NoError(t, err)
++	require.NoError(t, ref.Release(ctx))
++
++	usage := func() int64 {
++		du, err := cm.DiskUsage(ctx, client.DiskUsageInfo{})
++		require.NoError(t, err)
++		require.Len(t, du, 1)
++		return du[0].Size
++	}
++	require.Equal(t, int64(len(blob)), usage())
++
++	rewritten := []byte("rewritten layer bytes")
++	rdesc := ocispecs.Descriptor{MediaType: ocispecs.MediaTypeImageLayerGzip, Digest: digest.FromBytes(rewritten), Size: int64(len(rewritten))}
++	require.NoError(t, content.WriteBlob(ctx, co.cs, "rewritten", bytes.NewReader(rewritten), rdesc))
++	label := converter.RewrittenBlobGCLabelPrefix + "key"
++	_, err = co.cs.Update(ctx, content.Info{Digest: desc.Digest, Labels: map[string]string{label: rdesc.Digest.String()}}, "labels."+label)
++	require.NoError(t, err)
++	require.Equal(t, int64(len(blob)+len(rewritten)), usage())
++}
+diff --git a/cache/refs.go b/cache/refs.go
+index 7f20320..9e0ef51 100644
+--- a/cache/refs.go
++++ b/cache/refs.go
+@@ -27,6 +27,7 @@ import (
+ 	"github.com/moby/buildkit/solver"
+ 	"github.com/moby/buildkit/util/bklog"
+ 	"github.com/moby/buildkit/util/compression"
++	"github.com/moby/buildkit/util/converter"
+ 	"github.com/moby/buildkit/util/flightcontrol"
+ 	"github.com/moby/buildkit/util/leaseutil"
+ 	"github.com/moby/buildkit/util/overlay"
+@@ -340,6 +341,44 @@ func (cr *cacheRecord) viewSnapshotID() string {
+ 	return cr.getSnapshotID() + "-view"
+ }
+ 
++// rewrittenBlobsSize is the size of the timestamp-rewritten blobs that this
++// record's blob and its compression variants retain through GC references
++// (util/converter). DiskUsage and prune add it to the record's cached size on
++// every call rather than caching it, because a later export can add a
++// rewritten blob to a record whose size was already recorded.
++func (cr *cacheRecord) rewrittenBlobsSize(ctx context.Context) int64 {
++	cr.mu.Lock()
++	dgst := cr.getBlob()
++	cr.mu.Unlock()
++	if dgst == "" {
++		return 0
++	}
++	cs := cr.cm.ContentStore
++	sources := []digest.Digest{dgst}
++	walkBlobVariantsOnly(ctx, cs, dgst, func(desc ocispecs.Descriptor) bool {
++		sources = append(sources, desc.Digest)
++		return true
++	}, nil)
++	counted := make(map[digest.Digest]struct{})
++	var total int64
++	for _, src := range sources {
++		info, err := cs.Info(ctx, src)
++		if err != nil {
++			continue
++		}
++		for _, rewritten := range converter.RewrittenBlobs(info.Labels) {
++			if _, ok := counted[rewritten]; ok {
++				continue
++			}
++			counted[rewritten] = struct{}{}
++			if rinfo, err := cs.Info(ctx, rewritten); err == nil {
++				total += rinfo.Size
++			}
++		}
++	}
++	return total
++}
++
+ func (cr *cacheRecord) size(ctx context.Context) (int64, error) {
+ 	// this expects that usage() is implemented lazily
+ 	return cr.sizeG.Do(ctx, cr.ID(), func(ctx context.Context) (int64, error) {
+diff --git a/util/converter/converter.go b/util/converter/converter.go
+index 0cb0998..b149159 100644
+--- a/util/converter/converter.go
++++ b/util/converter/converter.go
+@@ -89,6 +89,12 @@ func rewriteTimestampInTarHeader(epoch time.Time) tarconverter.HeaderConverter {
+ 
+ func (c *conversion) convert(ctx context.Context, cs content.Store, desc ocispecs.Descriptor) (*ocispecs.Descriptor, error) {
+ 	bklog.G(ctx).WithField("blob", desc).WithField("target", c.target).Debugf("converting blob to the target compression")
++	reuseKey, reusable := c.rewriteReuseKey()
++	if reusable {
++		if reused, ok := c.lookupRewrittenBlob(ctx, cs, desc, reuseKey); ok {
++			return reused, nil
++		}
++	}
+ 	// prepare the source and destination
+ 	labelz := make(map[string]string)
+ 	ref := fmt.Sprintf("convert-from-%s-to-%s-%s", desc.Digest, c.target.Type.String(), identity.NewID())
+@@ -174,6 +180,9 @@ func (c *conversion) convert(ctx context.Context, cs content.Store, desc ocispec
+ 		}
+ 		maps.Copy(newDesc.Annotations, a)
+ 	}
++	if reusable {
++		recordRewrittenBlob(ctx, cs, desc, reuseKey, newDesc)
++	}
+ 	return &newDesc, nil
+ }
+ 
+diff --git a/util/converter/rewrite_reuse.go b/util/converter/rewrite_reuse.go
+new file mode 100644
+index 0000000..192ab6e
+--- /dev/null
++++ b/util/converter/rewrite_reuse.go
+@@ -0,0 +1,199 @@
++package converter
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"runtime"
++	"strconv"
++	"strings"
++
++	"github.com/containerd/containerd/v2/core/content"
++	"github.com/containerd/containerd/v2/pkg/labels"
++	"github.com/moby/buildkit/util/bklog"
++	"github.com/moby/buildkit/util/compression"
++	"github.com/moby/buildkit/version"
++	digest "github.com/opencontainers/go-digest"
++	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
++)
++
++// Reuse of timestamp-rewritten layer blobs.
++//
++// Rewriting a layer to SOURCE_DATE_EPOCH is a pure function of the source
++// blob's bytes and the converter configuration, so a rewritten blob produced
++// once can be reused for every later export of the same source blob instead of
++// decompressing, rewriting and recompressing it again.
++//
++// After a conversion commits, the source blob is labelled with a record of
++// the rewritten blob, keyed by a hash of the normalized converter
++// configuration, and with a containerd GC content reference to it.
++//
++// The GC reference is followed whenever the source blob is reachable through a
++// non-flat lease. Records whose blobs BuildKit produced (setBlob) hold them in
++// the record's non-flat compression-variants lease, so the rewritten blob lives
++// as long as the record does. Records created only by GetByBlob (pulled or
++// imported layers) hold their blob in a flat lease, which GC does not traverse:
++// their rewritten blob is collected on the next GC and the following export
++// converts the layer again. That is a missed reuse, never a wrong one.
++//
++// A record is only reused when the referenced blob is present in the content
++// store with the recorded size, uncompressed digest and epoch. Otherwise the
++// layer is converted as before and the record is replaced.
++const (
++	// rewriteReuseVersion is part of every reuse key. Bump it whenever the
++	// rewrite or compression output for a given configuration may change, so
++	// records written by an older converter are never reused.
++	rewriteReuseVersion = "1"
++
++	labelRewriteReusePrefix = "buildkit.io/rewritten-timestamp-reuse."
++
++	// RewrittenBlobGCLabelPrefix prefixes the GC content references from a
++	// source blob to its retained rewritten blobs. Cache accounting counts the
++	// referenced blobs so that disk usage and GC policies include them.
++	RewrittenBlobGCLabelPrefix = "containerd.io/gc.ref.content.buildkit.rewritten."
++	labelGCRefRewritten        = RewrittenBlobGCLabelPrefix
++)
++
++// RewrittenBlobs returns the rewritten blobs a source blob's labels retain.
++func RewrittenBlobs(labels map[string]string) []digest.Digest {
++	var out []digest.Digest
++	for k, v := range labels {
++		if !strings.HasPrefix(k, RewrittenBlobGCLabelPrefix) {
++			continue
++		}
++		if dgst, err := digest.Parse(v); err == nil {
++			out = append(out, dgst)
++		}
++	}
++	return out
++}
++
++type rewriteReuseRecord struct {
++	Digest digest.Digest `json:"digest"`
++	Size   int64         `json:"size"`
++	DiffID digest.Digest `json:"diffID"`
++}
++
++// rewriteReuseKey returns the key that identifies every converter input other
++// than the source blob, and whether results of this conversion may be reused.
++func (c *conversion) rewriteReuseKey() (string, bool) {
++	if c.rewriteTimestamp == nil {
++		return "", false
++	}
++	// An immutable base-image diffID is compared against the source while it is
++	// being converted; keep that path exact by never reusing for such layers.
++	if len(c.immDiffIDs) > 0 {
++		return "", false
++	}
++	// Only compression types whose descriptor carries no finalizer
++	// annotations; estargz and similar formats record per-blob metadata that a
++	// reuse record does not reproduce.
++	switch c.target.Type {
++	case compression.Gzip, compression.Zstd, compression.Uncompressed:
++	default:
++		return "", false
++	}
++	if c.finalize != nil {
++		return "", false
++	}
++	level := "default"
++	if c.target.Level != nil {
++		level = strconv.Itoa(*c.target.Level)
++	}
++	// The toolchain and BuildKit revision are part of the key: the tar writer
++	// and compressors come from them, so an upgrade never reuses a blob an
++	// older build produced.
++	normalized := strings.Join([]string{
++		"version=" + rewriteReuseVersion,
++		"go=" + runtime.Version(),
++		"buildkit=" + version.Revision,
++		"epoch=" + strconv.FormatInt(c.rewriteTimestamp.UTC().UnixNano(), 10),
++		"type=" + c.target.Type.String(),
++		"mediatype=" + c.target.Type.MediaType(),
++		"force=" + strconv.FormatBool(c.target.Force),
++		"level=" + level,
++	}, "\n")
++	return digest.FromString(normalized).Encoded()[:32], true
++}
++
++// lookupRewrittenBlob returns the descriptor of a previously rewritten blob
++// for desc, or false when no verified record exists.
++func (c *conversion) lookupRewrittenBlob(ctx context.Context, cs content.Store, desc ocispecs.Descriptor, key string) (*ocispecs.Descriptor, bool) {
++	info, err := cs.Info(ctx, desc.Digest)
++	if err != nil {
++		return nil, false
++	}
++	raw, ok := info.Labels[labelRewriteReusePrefix+key]
++	if !ok {
++		return nil, false
++	}
++	var rec rewriteReuseRecord
++	if err := json.Unmarshal([]byte(raw), &rec); err != nil || rec.Digest.Validate() != nil || rec.DiffID.Validate() != nil {
++		return nil, false
++	}
++	if info.Labels[labelGCRefRewritten+key] != rec.Digest.String() {
++		return nil, false
++	}
++	target, err := cs.Info(ctx, rec.Digest)
++	if err != nil {
++		return nil, false
++	}
++	epoch := fmt.Sprintf("%d", c.rewriteTimestamp.UTC().Unix())
++	if target.Size != rec.Size ||
++		target.Labels[labels.LabelUncompressed] != rec.DiffID.String() ||
++		target.Labels[labelRewrittenTimestamp] != epoch {
++		return nil, false
++	}
++	newDesc := desc
++	newDesc.MediaType = c.target.Type.MediaType()
++	newDesc.Digest = rec.Digest
++	newDesc.Size = rec.Size
++	newDesc.Annotations = map[string]string{
++		labels.LabelUncompressed: rec.DiffID.String(),
++		labelRewrittenTimestamp:  epoch,
++	}
++	bklog.G(ctx).WithField("blob", desc.Digest).WithField("rewritten", rec.Digest).Debugf("reusing timestamp-rewritten blob")
++	return &newDesc, true
++}
++
++// recordRewrittenBlob labels desc's blob with a record of newDesc and a GC
++// reference to it. Failing to record only means the next export converts the
++// layer again, so errors are logged rather than returned.
++func recordRewrittenBlob(ctx context.Context, cs content.Store, desc ocispecs.Descriptor, key string, newDesc ocispecs.Descriptor) {
++	if newDesc.Digest == desc.Digest {
++		return
++	}
++	rec, err := json.Marshal(rewriteReuseRecord{
++		Digest: newDesc.Digest,
++		Size:   newDesc.Size,
++		DiffID: digest.Digest(newDesc.Annotations[labels.LabelUncompressed]),
++	})
++	if err != nil {
++		return
++	}
++	// A rewritten blob that already existed (for example, pulled back from a
++	// registry) keeps the labels it was ingested with, because the commit
++	// above returns AlreadyExists without applying new labels. Stamp the
++	// labels this conversion just computed so the record verifies next time.
++	if _, err := cs.Update(ctx, content.Info{
++		Digest: newDesc.Digest,
++		Labels: map[string]string{
++			labels.LabelUncompressed: newDesc.Annotations[labels.LabelUncompressed],
++			labelRewrittenTimestamp:  newDesc.Annotations[labelRewrittenTimestamp],
++		},
++	}, "labels."+labels.LabelUncompressed, "labels."+labelRewrittenTimestamp); err != nil {
++		bklog.G(ctx).WithError(err).WithField("blob", newDesc.Digest).Warnf("failed to label timestamp-rewritten blob for reuse")
++		return
++	}
++	recordKey := labelRewriteReusePrefix + key
++	gcKey := labelGCRefRewritten + key
++	if _, err := cs.Update(ctx, content.Info{
++		Digest: desc.Digest,
++		Labels: map[string]string{
++			recordKey: string(rec),
++			gcKey:     newDesc.Digest.String(),
++		},
++	}, "labels."+recordKey, "labels."+gcKey); err != nil {
++		bklog.G(ctx).WithError(err).WithField("blob", desc.Digest).Warnf("failed to record timestamp-rewritten blob for reuse")
++	}
++}
+diff --git a/util/converter/rewrite_reuse_test.go b/util/converter/rewrite_reuse_test.go
+new file mode 100644
+index 0000000..e4126a5
+--- /dev/null
++++ b/util/converter/rewrite_reuse_test.go
+@@ -0,0 +1,297 @@
++package converter
++
++import (
++	"archive/tar"
++	"bytes"
++	"compress/gzip"
++	"context"
++	"path/filepath"
++	"testing"
++	"time"
++
++	"github.com/containerd/containerd/v2/core/content"
++	"github.com/containerd/containerd/v2/core/leases"
++	"github.com/containerd/containerd/v2/core/metadata"
++	"github.com/containerd/containerd/v2/pkg/namespaces"
++	"github.com/containerd/containerd/v2/plugins/content/local"
++	cerrdefs "github.com/containerd/errdefs"
++	"github.com/moby/buildkit/util/compression"
++	digest "github.com/opencontainers/go-digest"
++	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
++	"github.com/stretchr/testify/require"
++	bolt "go.etcd.io/bbolt"
++)
++
++const labelGCRoot = "containerd.io/gc.root"
++
++type countingStore struct {
++	content.Store
++	writers int
++}
++
++func (s *countingStore) Writer(ctx context.Context, opts ...content.WriterOpt) (content.Writer, error) {
++	s.writers++
++	return s.Store.Writer(ctx, opts...)
++}
++
++func newReuseTestStore(t *testing.T) (context.Context, *countingStore, *metadata.DB) {
++	t.Helper()
++	dir := t.TempDir()
++	store, err := local.NewStore(filepath.Join(dir, "content"))
++	require.NoError(t, err)
++	db, err := bolt.Open(filepath.Join(dir, "meta.db"), 0o644, nil)
++	require.NoError(t, err)
++	t.Cleanup(func() { db.Close() })
++	mdb := metadata.NewDB(db, store, nil)
++	ctx := namespaces.WithNamespace(t.Context(), "buildkit")
++	require.NoError(t, mdb.Init(ctx))
++	return ctx, &countingStore{Store: mdb.ContentStore()}, mdb
++}
++
++// writeSourceLayer stores a gzip layer whose entries carry a timestamp newer
++// than the epoch, so the rewrite changes its bytes.
++func writeSourceLayer(ctx context.Context, t *testing.T, cs content.Store, modTime time.Time) ocispecs.Descriptor {
++	t.Helper()
++	return writeLayer(ctx, t, cs, modTime, map[string]string{labelGCRoot: "source"})
++}
++
++// writeUnrootedSourceLayer stores the same layer without a GC root, so only
++// leases keep it.
++func writeUnrootedSourceLayer(ctx context.Context, t *testing.T, cs content.Store, modTime time.Time) ocispecs.Descriptor {
++	t.Helper()
++	return writeLayer(ctx, t, cs, modTime, nil)
++}
++
++func writeLayer(ctx context.Context, t *testing.T, cs content.Store, modTime time.Time, extra map[string]string) ocispecs.Descriptor {
++	t.Helper()
++	var tarBuf bytes.Buffer
++	tw := tar.NewWriter(&tarBuf)
++	for _, name := range []string{"app/", "app/a.txt", "app/b.txt"} {
++		hdr := &tar.Header{Name: name, ModTime: modTime, Mode: 0o644, Typeflag: tar.TypeReg, Size: int64(len(name))}
++		if name[len(name)-1] == '/' {
++			hdr.Typeflag, hdr.Mode, hdr.Size = tar.TypeDir, 0o755, 0
++		}
++		require.NoError(t, tw.WriteHeader(hdr))
++		if hdr.Size > 0 {
++			_, err := tw.Write([]byte(name))
++			require.NoError(t, err)
++		}
++	}
++	require.NoError(t, tw.Close())
++	var gzBuf bytes.Buffer
++	gw := gzip.NewWriter(&gzBuf)
++	_, err := gw.Write(tarBuf.Bytes())
++	require.NoError(t, err)
++	require.NoError(t, gw.Close())
++	desc := ocispecs.Descriptor{
++		MediaType: ocispecs.MediaTypeImageLayerGzip,
++		Digest:    digest.FromBytes(gzBuf.Bytes()),
++		Size:      int64(gzBuf.Len()),
++	}
++	labelz := map[string]string{"containerd.io/uncompressed": digest.FromBytes(tarBuf.Bytes()).String()}
++	for k, v := range extra {
++		labelz[k] = v
++	}
++	require.NoError(t, content.WriteBlob(ctx, cs, "source", bytes.NewReader(gzBuf.Bytes()), desc, content.WithLabels(labelz)))
++	return desc
++}
++
++func rewrite(ctx context.Context, t *testing.T, cs content.Store, desc ocispecs.Descriptor, comp compression.Config, epoch time.Time) ocispecs.Descriptor {
++	t.Helper()
++	fn, err := NewWithRewriteTimestamp(ctx, cs, desc, comp, &epoch, nil)
++	require.NoError(t, err)
++	require.NotNil(t, fn)
++	out, err := fn(ctx, cs, desc)
++	require.NoError(t, err)
++	require.NotNil(t, out)
++	return *out
++}
++
++func TestRewriteTimestampReusesRecordedBlob(t *testing.T) {
++	ctx, cs, _ := newReuseTestStore(t)
++	epoch := time.Unix(1767225600, 0)
++	src := writeSourceLayer(ctx, t, cs, epoch.Add(24*time.Hour))
++	comp := compression.New(compression.Gzip)
++
++	cs.writers = 0
++	first := rewrite(ctx, t, cs, src, comp, epoch)
++	require.NotEqual(t, src.Digest, first.Digest)
++	require.Equal(t, 1, cs.writers, "the first export converts the layer")
++
++	cs.writers = 0
++	second := rewrite(ctx, t, cs, src, comp, epoch)
++	require.Equal(t, 0, cs.writers, "a recorded, present blob is reused without writing")
++	require.Equal(t, first, second, "the reused descriptor is identical to the converted one")
++}
++
++func TestRewriteTimestampReuseIsKeyedOnConverterConfig(t *testing.T) {
++	ctx, cs, _ := newReuseTestStore(t)
++	epoch := time.Unix(1767225600, 0)
++	src := writeSourceLayer(ctx, t, cs, epoch.Add(24*time.Hour))
++	gz := compression.New(compression.Gzip)
++	rewrite(ctx, t, cs, src, gz, epoch)
++
++	for name, tc := range map[string]struct {
++		comp  compression.Config
++		epoch time.Time
++	}{
++		"level":       {gz.SetLevel(9), epoch},
++		"force":       {gz.SetForce(true), epoch},
++		"compression": {compression.New(compression.Zstd), epoch},
++		"epoch":       {gz, epoch.Add(time.Hour)},
++	} {
++		t.Run(name, func(t *testing.T) {
++			cs.writers = 0
++			rewrite(ctx, t, cs, src, tc.comp, tc.epoch)
++			require.Equal(t, 1, cs.writers, "a different converter input must convert again")
++		})
++	}
++}
++
++func TestRewriteTimestampConvertsWhenRecordDoesNotVerify(t *testing.T) {
++	epoch := time.Unix(1767225600, 0)
++	comp := compression.New(compression.Gzip)
++	key := func(t *testing.T) string {
++		k, ok := (&conversion{target: comp, rewriteTimestamp: &epoch}).rewriteReuseKey()
++		require.True(t, ok)
++		return k
++	}
++
++	t.Run("rewritten blob missing", func(t *testing.T) {
++		ctx, cs, _ := newReuseTestStore(t)
++		src := writeSourceLayer(ctx, t, cs, epoch.Add(time.Hour))
++		first := rewrite(ctx, t, cs, src, comp, epoch)
++		require.NoError(t, cs.Delete(ctx, first.Digest))
++		cs.writers = 0
++		again := rewrite(ctx, t, cs, src, comp, epoch)
++		require.Equal(t, 1, cs.writers)
++		require.Equal(t, first, again, "conversion is deterministic")
++	})
++
++	t.Run("recorded size does not match", func(t *testing.T) {
++		ctx, cs, _ := newReuseTestStore(t)
++		src := writeSourceLayer(ctx, t, cs, epoch.Add(time.Hour))
++		first := rewrite(ctx, t, cs, src, comp, epoch)
++		k := labelRewriteReusePrefix + key(t)
++		_, err := cs.Update(ctx, content.Info{Digest: src.Digest, Labels: map[string]string{
++			k: `{"digest":"` + first.Digest.String() + `","size":1,"diffID":"` + first.Annotations["containerd.io/uncompressed"] + `"}`,
++		}}, "labels."+k)
++		require.NoError(t, err)
++		cs.writers = 0
++		rewrite(ctx, t, cs, src, comp, epoch)
++		require.Equal(t, 1, cs.writers)
++	})
++
++	t.Run("record without its GC reference", func(t *testing.T) {
++		ctx, cs, _ := newReuseTestStore(t)
++		src := writeSourceLayer(ctx, t, cs, epoch.Add(time.Hour))
++		rewrite(ctx, t, cs, src, comp, epoch)
++		gcKey := labelGCRefRewritten + key(t)
++		_, err := cs.Update(ctx, content.Info{Digest: src.Digest, Labels: map[string]string{gcKey: ""}}, "labels."+gcKey)
++		require.NoError(t, err)
++		cs.writers = 0
++		rewrite(ctx, t, cs, src, comp, epoch)
++		require.Equal(t, 1, cs.writers)
++	})
++}
++
++func TestRewriteTimestampNeverReusesForImmutableBaseLayers(t *testing.T) {
++	epoch := time.Unix(1767225600, 0)
++	imm := map[digest.Digest]struct{}{digest.FromString("base"): {}}
++	_, ok := (&conversion{target: compression.New(compression.Gzip), rewriteTimestamp: &epoch, immDiffIDs: imm}).rewriteReuseKey()
++	require.False(t, ok)
++	_, ok = (&conversion{target: compression.New(compression.EStargz), rewriteTimestamp: &epoch}).rewriteReuseKey()
++	require.False(t, ok, "formats with finalizer annotations are not reused")
++	_, ok = (&conversion{target: compression.New(compression.Gzip)}).rewriteReuseKey()
++	require.False(t, ok, "plain recompression is unchanged")
++}
++
++// A rewritten blob that already exists without converter labels, for example
++// after the exact-digest smoke pulled it back, is labelled by the conversion
++// that finds it, so the next export reuses it.
++func TestRewriteTimestampLabelsAnExistingRewrittenBlob(t *testing.T) {
++	epoch := time.Unix(1767225600, 0)
++	modTime := epoch.Add(time.Hour)
++	comp := compression.New(compression.Gzip)
++
++	ctxA, csA, _ := newReuseTestStore(t)
++	produced := rewrite(ctxA, t, csA, writeSourceLayer(ctxA, t, csA, modTime), comp, epoch)
++	bytesA, err := content.ReadBlob(ctxA, csA, produced)
++	require.NoError(t, err)
++
++	ctx, cs, _ := newReuseTestStore(t)
++	src := writeSourceLayer(ctx, t, cs, modTime)
++	require.NoError(t, content.WriteBlob(ctx, cs, "pulled", bytes.NewReader(bytesA),
++		ocispecs.Descriptor{MediaType: produced.MediaType, Digest: produced.Digest, Size: produced.Size}))
++	before, err := cs.Info(ctx, produced.Digest)
++	require.NoError(t, err)
++	require.Empty(t, before.Labels[labelRewrittenTimestamp])
++
++	cs.writers = 0
++	converted := rewrite(ctx, t, cs, src, comp, epoch)
++	require.Equal(t, 1, cs.writers, "the commit finds the blob already present")
++	require.Equal(t, produced, converted)
++	after, err := cs.Info(ctx, produced.Digest)
++	require.NoError(t, err)
++	require.Equal(t, "1767225600", after.Labels[labelRewrittenTimestamp])
++	require.Equal(t, produced.Annotations["containerd.io/uncompressed"], after.Labels["containerd.io/uncompressed"])
++
++	cs.writers = 0
++	require.Equal(t, produced, rewrite(ctx, t, cs, src, comp, epoch))
++	require.Equal(t, 0, cs.writers, "the labelled blob is reused")
++}
++
++// The rewritten blob's lifetime follows BuildKit's cache-record leases. A
++// record's own lease is flat, so GC keeps its blob without following the blob's
++// references; records whose blob BuildKit produced also hold it in the
++// non-flat "-variants" lease (cache/refs.go linkBlob), which GC traverses.
++func TestRewrittenBlobLifetimeFollowsRecordLeases(t *testing.T) {
++	ctx, cs, mdb := newReuseTestStore(t)
++	lm := metadata.NewLeaseManager(mdb)
++	epoch := time.Unix(1767225600, 0)
++	comp := compression.New(compression.Gzip)
++	src := writeUnrootedSourceLayer(ctx, t, cs, epoch.Add(time.Hour))
++	source := leases.Resource{ID: src.Digest.String(), Type: "content"}
++
++	flat, err := lm.Create(ctx, leases.WithID("record"), leases.WithLabels(map[string]string{
++		"containerd.io/gc.flat": time.Now().UTC().Format(time.RFC3339Nano),
++	}))
++	require.NoError(t, err)
++	require.NoError(t, lm.AddResource(ctx, flat, source))
++	rewritten := rewrite(ctx, t, cs, src, comp, epoch)
++
++	// Flat lease only (records created by GetByBlob): the rewritten blob is
++	// collected, and the next export converts the layer again.
++	_, err = mdb.GarbageCollect(ctx)
++	require.NoError(t, err)
++	_, err = cs.Info(ctx, src.Digest)
++	require.NoError(t, err)
++	_, err = cs.Info(ctx, rewritten.Digest)
++	require.True(t, cerrdefs.IsNotFound(err), "a flat lease does not follow the source's GC reference")
++	cs.writers = 0
++	require.Equal(t, rewritten, rewrite(ctx, t, cs, src, comp, epoch))
++	require.Equal(t, 1, cs.writers, "a collected rewritten blob is a missed reuse, not a wrong one")
++
++	// Non-flat variants lease (records whose blob BuildKit produced): the
++	// rewritten blob survives GC and is reused.
++	variants, err := lm.Create(ctx, leases.WithID("record-variants"))
++	require.NoError(t, err)
++	require.NoError(t, lm.AddResource(ctx, variants, source))
++	_, err = mdb.GarbageCollect(ctx)
++	require.NoError(t, err)
++	_, err = cs.Info(ctx, rewritten.Digest)
++	require.NoError(t, err, "the variants lease follows the source's GC reference")
++	cs.writers = 0
++	require.Equal(t, rewritten, rewrite(ctx, t, cs, src, comp, epoch))
++	require.Equal(t, 0, cs.writers)
++
++	// Removing the record's leases makes both blobs collectable.
++	require.NoError(t, lm.Delete(ctx, flat))
++	require.NoError(t, lm.Delete(ctx, variants))
++	_, err = mdb.GarbageCollect(ctx)
++	require.NoError(t, err)
++	_, err = cs.Info(ctx, src.Digest)
++	require.True(t, cerrdefs.IsNotFound(err))
++	_, err = cs.Info(ctx, rewritten.Digest)
++	require.True(t, cerrdefs.IsNotFound(err))
++}

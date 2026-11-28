@@ -25,7 +25,9 @@ import {
   CI_NODE_HOSTNAME,
   ciNodeTaintedNode,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import versions, {
+  firstPartyImageRecipe,
+} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 import { CI_STEP_POD_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/pod-labels.ts";
 import {
@@ -103,7 +105,28 @@ debug = false
   enabled = false
 `;
 
-export function createBuildkitdDeployment(chart: Chart) {
+/**
+ * The daemon image the Deployment runs.
+ *
+ * - `upstream` (default): moby/buildkit from the version catalog.
+ * - `rewrite-reuse`: packages/homelab/images/buildkitd, the same release with
+ *   one patch that reuses timestamp-rewritten layer blobs instead of
+ *   re-gzipping every cached layer on every push. It is a first-party image,
+ *   so it binds through its Delivery recipe like every other first-party
+ *   workload, and renders only once that image is registered.
+ */
+export type BuildkitdImage = "upstream" | "rewrite-reuse";
+
+function buildkitdImage(image: BuildkitdImage): string {
+  return image === "rewrite-reuse"
+    ? firstPartyImageRecipe("buildkitd")
+    : `moby/buildkit:${versions["moby/buildkit"]}`;
+}
+
+export function createBuildkitdDeployment(
+  chart: Chart,
+  { image = "upstream" }: { readonly image?: BuildkitdImage } = {},
+) {
   // Own namespace, separate from `woodpecker-ci`: this is a long-running service,
   // not a CI batch job, and keeping it out of the CI namespace keeps that
   // separation obvious. PSA `privileged` because rootful buildkitd needs it.
@@ -181,7 +204,7 @@ export function createBuildkitdDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "buildkitd",
-      image: `moby/buildkit:${versions["moby/buildkit"]}`,
+      image: buildkitdImage(image),
       args: [
         "--config",
         "/etc/buildkit/buildkitd.toml",
