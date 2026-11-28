@@ -2893,7 +2893,7 @@
         "@opentelemetry/sdk-trace-base": "^2.12.0",
         "@opentelemetry/semantic-conventions": "^1.40.0",
         "@temporalio/activity": "1.27.0",
-        "@temporalio/interceptors-opentelemetry-v2": "1.26.0",
+        "@temporalio/interceptors-opentelemetry-v2": "1.27.0",
         "@temporalio/worker": "1.27.0",
         "@temporalio/workflow": "1.27.0",
         "zod": "^4.4.3",
@@ -5200,11 +5200,11 @@
 
     "@temporalio/core-bridge": ["@temporalio/core-bridge@1.27.0", "", { "dependencies": { "@grpc/grpc-js": "^1.13.6", "@temporalio/common": "1.27.0" }, "peerDependencies": { "long": "^5.3.2", "protobufjs": "^8.7.1" } }, "sha512-a75lnAu12DCpb5CMpMyrfnH/f5FOM2VR/XbbKoqwA9WrSbiVpwqmaO8IVubQeC+aIpsLwP/y/z2Wwq+DZTwZqw=="],
 
-    "@temporalio/interceptors-opentelemetry-v2": ["@temporalio/interceptors-opentelemetry-v2@1.26.0", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/core": "^2.2.0", "@opentelemetry/resources": "^2.2.0", "@opentelemetry/sdk-trace-base": "^2.2.0", "@temporalio/plugin": "1.26.0" }, "peerDependencies": { "@temporalio/common": "1.26.0", "@temporalio/workflow": "1.26.0" }, "optionalPeers": ["@temporalio/workflow"] }, "sha512-t0nSrK+4ufrMPcsx+9nR9Fvin/IN9wAOTvAHtHiIkSSobvC7yR4FKZOs31qKzfZVD8C4wHYTNHQXaGAL3UHk0g=="],
+    "@temporalio/interceptors-opentelemetry-v2": ["@temporalio/interceptors-opentelemetry-v2@1.27.0", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/core": "^2.2.0", "@opentelemetry/resources": "^2.2.0", "@opentelemetry/sdk-trace-base": "^2.2.0", "@temporalio/plugin": "1.27.0" }, "peerDependencies": { "@temporalio/common": "1.27.0", "@temporalio/workflow": "1.27.0" }, "optionalPeers": ["@temporalio/workflow"] }, "sha512-IT35sRcvyrUu9rlO6CuxR1xkdN2lRCt8mZgONo923lCpOdV8ZHSUg3uQuHMGEbUaSY5voUPNb5iE4ZnetI7x1g=="],
 
     "@temporalio/nexus": ["@temporalio/nexus@1.27.0", "", { "dependencies": { "@temporalio/client": "1.27.0", "@temporalio/common": "1.27.0", "@temporalio/proto": "1.27.0", "nexus-rpc": "^0.0.3" }, "peerDependencies": { "long": "^5.3.2", "protobufjs": "^8.7.1" } }, "sha512-hRUgcqkv8odAlgBngIagCxiBDn7b26WrwnYNBMG6tBTBNDSCnWlg0OKx3b2hj4iX+sz78EmtG7uoah4WCel4gQ=="],
 
-    "@temporalio/plugin": ["@temporalio/plugin@1.26.0", "", {}, "sha512-0ZCvTu8WjWsKOrc5N91u55rCNdlpRxaQuAWHrFmYYTjS9rTfRSHRTNIezBlh+iu0/TUB9AQAdqOrXGG1PukzpQ=="],
+    "@temporalio/plugin": ["@temporalio/plugin@1.27.0", "", {}, "sha512-MUkpjYUgVHMwo9sV/+VwozmEndrlMPhhoCqOAqly8EkBgWcDkRtIcjV5H+cxKVvRWjUO62KJmGHvfC1BTg7Mlw=="],
 
     "@temporalio/proto": ["@temporalio/proto@1.27.0", "", { "dependencies": { "long": "^5.3.2", "protobufjs": "^8.7.1" } }, "sha512-bkXsct+Nxjb0aqvl18OZh4e4IXRvwWjsvTsLY8xSVTCu3+9JMXI4HobWEKLcn2ukfgyb3fp5JTKdqGxbgFa9vg=="],
 
@@ -9044,8 +9044,6 @@
 
     "@temporalio/client/uuid": ["uuid@11.1.1", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ=="],
 
-    "@temporalio/interceptors-opentelemetry-v2/@temporalio/common": ["@temporalio/common@1.26.0", "", { "dependencies": { "@temporalio/proto": "1.26.0", "ms": "3.0.0-canary.202508261828", "nexus-rpc": "^0.0.3" }, "peerDependencies": { "long": "^5.3.2", "protobufjs": "^8.7.1" } }, "sha512-mHpfPAm6IThHUreLmH9iE7G0ekURbj6jDqJZuG8kfg2unMVx33fQ1cx05TkRuzG8U6IPjIMheyVDnVrBid/TBg=="],
-
     "@testing-library/dom/@babel/runtime": ["@babel/runtime@7.29.15", "", {}, "sha512-304gsbbGVmQc+cNGHzwHBlqepYdWLKj3VXCQBGt/EGcV7PUPfKI7kAUNW1FZEOCwlQiLvQjg1JEaAlRQ616h+Q=="],
 
     "@testing-library/dom/aria-query": ["aria-query@5.3.0", "", { "dependencies": { "dequal": "^2.0.3" } }, "sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A=="],
@@ -10091,8 +10089,6 @@
     "@shepherdjerred/tracker/@sentry/bun/@sentry/server-runtime-injection": ["@sentry/server-runtime-injection@11.18.0", "", { "dependencies": { "@sentry/core": "11.18.0", "@sentry/server-utils": "11.18.0" } }, "sha512-Lwk0lTNWyPiCFKUXZzdVN/3MDddUM1LvOiny5nLXzU1Xe4nlPZCBcZcM0WTE7/v5w5S/COb7sw8SxB7VhbZvJA=="],
 
     "@shepherdjerred/tracker/@sentry/bun/@sentry/server-utils": ["@sentry/server-utils@11.18.0", "", { "dependencies": { "@opentelemetry/api": "^1.9.1", "@sentry/conventions": "^0.36.0", "@sentry/core": "11.18.0" } }, "sha512-1ny+6qT8Hyt9EWplbAcf28wiFS82jiLCGwy8PQeq2IHm8lxsGbRkohAcp3hfRHZUsyiSGOVBcN3ofORLZvxSyg=="],
-
-    "@temporalio/interceptors-opentelemetry-v2/@temporalio/common/@temporalio/proto": ["@temporalio/proto@1.26.0", "", { "dependencies": { "long": "^5.3.2", "protobufjs": "^8.7.1" } }, "sha512-hrYoXs/b3W7u+PvuK6qB2Cvb/TZv1AxKJn9Rj4YCeQsemWknZ3a4+2FICRuGxwB6bR0qsoVFf5uKQOPtouyDCw=="],
 
     "@types/eslint-plugin-jsx-a11y/eslint/@eslint/config-array": ["@eslint/config-array@0.21.2", "", { "dependencies": { "@eslint/object-schema": "^2.1.7", "debug": "^4.3.1", "minimatch": "^3.1.5" } }, "sha512-nJl2KGTlrf9GjLimgIru+V/mzgSK0ABCDQRvxw5BjURL7WfH5uoWmizbH7QB6MmnMBd8cIC9uceWnezL1VZWWw=="],
 
