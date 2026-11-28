@@ -55,7 +55,7 @@ export const MaintenancePipelineSchema = z.object({
 });
 export type MaintenancePipeline = z.infer<typeof MaintenancePipelineSchema>;
 const REPO = { owner: "shepherdjerred", repo: "monorepo" };
-const required = (key: string): string => {
+export const required = (key: string): string => {
   const value = Bun.env[key];
   if (value === undefined || value === "")
     throw new Error(`${key} is required for CI maintenance`);
@@ -65,16 +65,22 @@ export async function maintenanceGithub() {
   const { token } = await createGitHubAppInstallationToken();
   return new Octokit({ auth: token, request: { timeout: 15_000 } });
 }
-export async function maintenanceApi(
+export async function maintenanceRequest(
   path: string,
   init: RequestInit = {},
   route = "pipelines",
 ) {
-  const base = new URL(
+  return await woodpeckerRequest(
     `/api/repos/${required("WOODPECKER_REPO_ID")}/${route}${path}`,
-    required("WOODPECKER_URL"),
+    init,
   );
-  const response = await fetch(base, {
+}
+export async function woodpeckerRequest(
+  apiPath: string,
+  init: RequestInit = {},
+) {
+  const base = new URL(apiPath, required("WOODPECKER_URL"));
+  return await fetch(base, {
     ...init,
     headers: {
       Authorization: `Bearer ${required("WOODPECKER_TOKEN")}`,
@@ -86,6 +92,13 @@ export async function maintenanceApi(
         ? AbortSignal.timeout(15_000)
         : AbortSignal.any([init.signal, AbortSignal.timeout(15_000)]),
   });
+}
+export async function maintenanceApi(
+  path: string,
+  init: RequestInit = {},
+  route = "pipelines",
+) {
+  const response = await maintenanceRequest(path, init, route);
   if (!response.ok)
     throw new Error(
       `Woodpecker maintenance HTTP ${response.status.toString()}`,
@@ -310,6 +323,27 @@ export async function maintenanceCandidates(
       : []),
   ];
 }
+export function assertMaintenanceReceipt(
+  receipt: MaintenancePipeline,
+  request: MaintenanceRequest,
+) {
+  if (
+    receipt.event !== "manual" ||
+    receipt.branch !== "main" ||
+    !receipt.message.includes(`ci-maintenance/${request.requestId}`)
+  )
+    throw new Error("Maintenance receipt identity mismatch");
+}
+
+/** Clone and service containers do not count; only a started command does. */
+function maintenanceStartedWork(pipeline: MaintenancePipeline) {
+  return pipeline.workflows.some((workflow) =>
+    (workflow.children ?? []).some(
+      (child) => child.type === "commands" && (child.started ?? 0) > 0,
+    ),
+  );
+}
+
 export async function findMaintenanceReceipt(
   request: MaintenanceRequest,
   recent: readonly MaintenancePipeline[],
@@ -322,12 +356,7 @@ export async function findMaintenanceReceipt(
   const number = request.pipeline ?? matches[0]?.number;
   if (number === undefined) return null;
   const receipt = await maintenancePipeline(number);
-  if (
-    receipt.event !== "manual" ||
-    receipt.branch !== "main" ||
-    !receipt.message.includes(`ci-maintenance/${request.requestId}`)
-  )
-    throw new Error("Maintenance receipt identity mismatch");
+  assertMaintenanceReceipt(receipt, request);
   // Woodpecker runs a manual pipeline at the branch tip, and the extension
   // checks out the requested verified source in its place. It supersedes the
   // request instead when that source is no longer the verified one.
@@ -336,11 +365,7 @@ export async function findMaintenanceReceipt(
   )
     ? receipt.commit
     : request.source;
-  const startedWork = receipt.workflows.some((workflow) =>
-    (workflow.children ?? []).some(
-      (child) => child.type === "commands" && (child.started ?? 0) > 0,
-    ),
-  );
+  const startedWork = maintenanceStartedWork(receipt);
   return {
     number: receipt.number,
     source,

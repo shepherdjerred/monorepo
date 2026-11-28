@@ -283,6 +283,37 @@ describe("Ops activity isolation", () => {
   });
 });
 
+function queueActivities(
+  role: Exclude<QueueWorkerRole, "workflows" | "delivery-workflows">,
+  taskQueue: string,
+): string[] {
+  const worker = getWorkerRoleContract(role).workers.find(
+    (candidate) => candidate.taskQueue === taskQueue,
+  );
+  if (worker?.kind !== "activity")
+    throw new Error(`${role} does not poll ${taskQueue} for Activities`);
+  return Object.keys(worker.activities);
+}
+
+describe("CI maintenance activity routing", () => {
+  it("registers each Activity the coordinator and its tick call on the queue they call it on", () => {
+    expect(queueActivities("repo", TASK_QUEUES.REPO_AUTOMATION)).toEqual(
+      expect.arrayContaining([
+        "wakeCiMaintenance",
+        "inspectCiMaintenance",
+        "submitCiMaintenance",
+        "cancelStuckCiMaintenance",
+      ]),
+    );
+    expect(queueActivities("infra", TASK_QUEUES.OPS)).toContain(
+      "publishCiMaintenanceHealth",
+    );
+    expect(queueActivities("infra", TASK_QUEUES.INFRA)).toContain(
+      "publishCiWorkspaceGoldenSnapshot",
+    );
+  });
+});
+
 describe("Temporal capability boundaries", () => {
   it("isolates scheduled chat waiters from repo automation", () => {
     const repoWorkers = getWorkerRoleContract("repo").workers;
