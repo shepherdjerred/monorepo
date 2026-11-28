@@ -46,7 +46,8 @@ export default defineConfig({
   testDir: "./tests",
   use: {
     baseURL,
-    trace: "retain-on-failure",
+    // CI only needs a trace for the retry of a failed test; passing runs write none.
+    trace: isCI ? "on-first-retry" : "retain-on-failure",
   },
   webServer: {
     command: previewCommand,
