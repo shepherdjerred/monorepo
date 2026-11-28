@@ -1204,7 +1204,9 @@ original `PATH`. The alias is removed with the existing per-run wrapper cleanup.
 The production dependency stage normalizes only the resolved Codex JavaScript
 entrypoint to root-owned `0755`; runtime verification rejects mutable files.
 The [helper pins](src/lib/agent-runner/codex-bubblewrap-pins.json) must be reviewed
-with Codex upgrades and the node seccomp profile. Node installation and hash
+with Codex upgrades and the node seccomp profile. After the lockfile moves Codex,
+`bun run codex:bubblewrap-pins` regenerates them from each Linux platform
+tarball, which must match its `bun.lock` integrity; `--check` verifies them. Node installation and hash
 readback precede the separate promotion chart opt-in; source and image checks do
 not replace an offline boundary probe in the deployed amd64 container.
 

@@ -12,7 +12,7 @@
   "dependencies": {
     "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/delivery": "workspace:*",
-    "@openai/codex-sdk": "0.162.1",
+    "@openai/codex-sdk": "0.172.0",
     "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/release-tools": "workspace:*",
