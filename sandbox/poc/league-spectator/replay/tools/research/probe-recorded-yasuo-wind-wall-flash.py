@@ -1,4 +1,4 @@
-"""Sample the exact-build Yasuo Wind Wall impact Flash CameraQuad.
+"""Sample exact-build recorded Yasuo or Lee Sin CameraQuad emitters.
 
 The replay handle seeds a repeatable sample of the original clock-seeded RNG.
 The fixed random controls exercise the authored probability curves.
@@ -19,13 +19,70 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from champion_replication_archive import CURRENT_BUILD, read_replication_image
 
 
+def lee_sin_authored(row):
+    event, fields = row["event"], row["emitter"]["fields"]
+    assert event["handle"] == 1073821521
+    assert event["packetDescriptorControl"]["descriptor"]["scaleRate"] == [1, 1]
+    assert fields["3d25b8ce"]["value"] == "flash"
+    assert fields["42bd7f6b"]["value"] == 1  # isSingleParticle
+    assert fields["3559e15b"]["value"] == 1  # isUniformScale
+
+    def constant(key):
+        value = fields[key]["fields"]["b4b427aa"]["value"]
+        return list(value.values()) if isinstance(value, dict) else value
+
+    return {
+        "rate": constant("ae839c67"),
+        "lifetime": fields["5212abee"]["value"]["value"],
+        "EmitterPosition": [0, 0, 0],
+        "particleLifetime": constant("2a552694"),
+        "particleLinger": fields["2431d42c"]["value"]["value"],
+        "bindWeight": constant("ca406316"),
+        "birthRotation0": constant("5932ff9c"),
+        "birthScale0": constant("f0eb7084"),
+        "blendMode": fields["fa784eab"]["value"],
+    }
+
+
+def bind_lee_sin_curves(fields, stop, definition, scale, data, vm, call, put):
+    shape, flex = stop + 0x16000, stop + 0x16100
+    call(0x17C59D0, shape)
+    call(0x17BE640, flex)
+    assert fields["3bf0b4ed"]["fields"] == {}
+    assert bytes(vm.mem_read(shape + 8, 12)) == bytes(12)
+    assert bytes(vm.mem_read(flex, 0x30)) == bytes(0x30)
+    put(definition + 0x238, "Q", shape)
+    put(definition + 0x258, "Q", flex)
+    flex_fields = fields["4ffce322"]["fields"]
+    put(flex + 4, "f", flex_fields["95111b29"]["value"])
+    put(flex + 0x10, "f", flex_fields["c0bf561e"]["value"])
+
+    def bind_curve(key, curve, times_at, values_at, dimension, vector_offset, constructor, destination):
+        native = fields[key]["fields"]["bc037de7"]["fields"]
+        times = [item["value"] for item in native["5d68eeb5"]["elements"]]
+        values = [axis for item in native["34474c3b"]["elements"] for axis in item["value"].values()]
+        call(constructor, curve)
+        put(curve + vector_offset, "QII", times_at, len(times), len(times))
+        put(curve + vector_offset + 0x10, "QII", values_at, len(times), len(times))
+        put(times_at, f"{len(times)}f", *times)
+        put(values_at, f"{len(times) * dimension}f", *values)
+        put(definition + destination, "Q", curve)
+
+    bind_curve("d4e17a53", scale, data + 0x80, data + 0xA0, 3, 0x20, 0x17AFEC0, 0x430)
+    bind_curve("3d7e6258", stop + 0xD000, data + 0x1C0, data + 0x1D0, 4, 0x28, 0x17B0430, 0x398)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("executable", type=Path)
     parser.add_argument("authored", type=Path)
     parser.add_argument("random_control", choices=("0.125", "0.875", "seeded"))
-    parser.add_argument("handle", type=int, choices=(1073820923, 1073820924, 1073820962, 1073821375))
+    parser.add_argument("handle", type=int, choices=(1073820923, 1073820924, 1073820962, 1073821375, 1073821521))
+    parser.add_argument("--lee-bound-size", type=int, choices=(0, 65, 200))
     args = parser.parse_args()
+    lee_sin = args.handle == 1073821521
+    if lee_sin != (args.lee_bound_size is not None):
+        parser.error("Supply an explicit controlled bound size only for Lee Sin handle 1073821521")
     if not __debug__:
         raise RuntimeError("Run this verification without Python optimizations")
     binary = args.executable.read_bytes()
@@ -34,30 +91,37 @@ def main():
     image = read_replication_image(binary, CURRENT_BUILD)
     source = args.authored.read_bytes()
     source_digest = hashlib.sha256(source).hexdigest()
-    assert source_digest == "ad2db3f0980ece3118bea353302bdc126caf63aa0082dfe64da53ac206557d73"
+    if lee_sin:
+        assert source_digest == "71e6f835ec86c21b65d17c2de6370a452ced7bab73ea6e9e1f7bfc7a0658d92f"
+    else:
+        assert source_digest == "ad2db3f0980ece3118bea353302bdc126caf63aa0082dfe64da53ac206557d73"
     row = json.loads(source)
-    event = next(event for event in row["events"] if event["handle"] == args.handle)
-    assert event["descriptor"]["scaleRate"] == [2, 1]
-    fields = row["emitter"]
-    assert fields["emitterName"]["value"] == "flash"
-    authored = {
-        "rate": 1,
-        "lifetime": 0.10000000149011612,
-        "EmitterPosition": [0, 0, 0],
-        "particleLifetime": struct.unpack("<f", struct.pack("<f", 0.2))[0],
-        "particleLinger": 1,
-        "bindWeight": 1,
-        "color": [1, 1, 1, 1],
-        "birthRotation0": [1, 0, 0],
-        "birthScale0": [200, 200, 200],
-        "blendMode": 4,
-    }
+    if lee_sin:
+        authored = lee_sin_authored(row)
+    else:
+        event = next(event for event in row["events"] if event["handle"] == args.handle)
+        assert event["descriptor"]["scaleRate"] == [2, 1]
+        assert row["emitter"]["emitterName"]["value"] == "flash"
+        authored = {
+            "rate": 1,
+            "lifetime": 0.10000000149011612,
+            "EmitterPosition": [0, 0, 0],
+            "particleLifetime": struct.unpack("<f", struct.pack("<f", 0.2))[0],
+            "particleLinger": 1,
+            "bindWeight": 1,
+            "color": [1, 1, 1, 1],
+            "birthRotation0": [1, 0, 0],
+            "birthScale0": [200, 200, 200],
+            "blendMode": 4,
+        }
     vm = unicorn.Uc(unicorn.UC_ARCH_X86, unicorn.UC_MODE_64)
     vm.mem_map(image.base, len(image.image))
     vm.mem_write(image.base, bytes(image.image))
 
     stop = 0x10000000
-    vm.mem_map(stop, 0x18000)
+    heap_begin = stop + (0x20000 if lee_sin else 0x8000)
+    heap_end = stop + (0x30000 if lee_sin else 0xA000)
+    vm.mem_map(stop, 0x30000 if lee_sin else 0x18000)
     stack = stop + 0xF008
     definition, primitive, actor, link, system, quality = (stop + offset for offset in range(0x1000, 0x7000, 0x1000))
 
@@ -70,19 +134,22 @@ def main():
         rsi = engine.reg_read(reg.UC_X86_REG_RSI)
         rva = address - image.base
         if rva in (0x14A0300, 0x14A2030, 0x14C5B20):
-            if not 0 < rdi <= 0x100 or heap + rdi > stop + 0xA000:
+            if not 0 < rdi <= (0x1000 if lee_sin else 0x100) or heap + rdi > heap_end:
                 raise ValueError("Original emitter allocation exceeds owned arena")
             engine.reg_write(reg.UC_X86_REG_RAX, heap)
+            allocations.add(heap)
             heap += (rdi + 15) & ~15
         elif rva == 0x14C5B80:
-            if rdi != 0:
-                raise ValueError("Unexpected release from a populated pool")
+            if rdi:
+                if not lee_sin or rdi not in allocations:
+                    raise ValueError("Unexpected release from a populated pool")
+                allocations.remove(rdi)
         elif rva == 0x2051310:
             source = bytes(engine.mem_read(rdi, 128))
             engine.reg_write(reg.UC_X86_REG_RAX, source.index(0))
         elif rva == 0x2050F6E:
             size = engine.reg_read(reg.UC_X86_REG_RDX)
-            if size > 128 or not (stop + 0x8000 <= rdi <= heap - size or stack - 0x1000 <= rdi <= stack - size):
+            if size > 128 or not (heap_begin <= rdi <= heap - size or stack - 0x1000 <= rdi <= stack - size):
                 raise ValueError("Original emitter copy outside owned memory")
             engine.mem_write(rdi, bytes(engine.mem_read(rsi, size)))
             engine.reg_write(reg.UC_X86_REG_RAX, rdi)
@@ -142,7 +209,8 @@ def main():
     # Class registrations 0x1727d37 and 0x17e5067 identify these in-place
     # constructors. The rate and single-particle bindings are in the same
     # registration at 0x1727d90 and 0x1727e22.
-    heap = stop + 0x8000
+    heap = heap_begin
+    allocations = set()
     hooks = [
         vm.hook_add(unicorn.UC_HOOK_CODE, host_boundary, begin=image.base + rva, end=image.base + rva)
         for rva in (0x14A0300, 0x14A2030, 0x2051310, 0x2050F6E)
@@ -183,13 +251,14 @@ def main():
     put(definition + 0x240, "3f", *authored["EmitterPosition"])
     put(definition + 0xF8, "f", authored["particleLifetime"])
     put(definition + 0x118, "f", authored["particleLinger"])
-    put(definition + 0x388, "4f", *authored["color"])
+    if not lee_sin:
+        put(definition + 0x388, "4f", *authored["color"])
+        put(definition + 0x150, "4f", 0.686274528503418, 1, 0.7764706015586853, 1)
     put(definition + 0x3D0, "3f", *authored["birthRotation0"])
     put(definition + 0x3E8, "3f", *authored["birthScale0"])
     put(definition + 0x14, "B", authored["blendMode"])
     put(definition + 0x2D0, "I", flags | 0x100008)
-    put(definition + 0x108, "f", 0.10000000149011612)
-    put(definition + 0x150, "4f", 0.686274528503418, 1, 0.7764706015586853, 1)
+    put(definition + 0x108, "f", authored["lifetime"])
     put(definition + 0x3A0, "f", authored["bindWeight"])
 
     # Feed the corroborated descriptor scalars through the facade's original
@@ -197,14 +266,19 @@ def main():
     facade = stop + 0x14800
     put(facade + 0x18, "I", 6)
     put(facade + 0x28, "Q", system)
-    put(facade + 0xB4, "2f", 2, 1)
+    scale_rate = (1, 1) if lee_sin else (2, 1)
+    put(facade + 0xB4, "2f", *scale_rate)
     vm.reg_write(reg.UC_X86_REG_RBX, facade)
     vm.emu_start(image.base + 0x17947D5, image.base + 0x1794804, count=32)
     assert vm.reg_read(reg.UC_X86_REG_RIP) == image.base + 0x1794804
-    assert struct.unpack("<2f", vm.mem_read(system + 0x150, 8)) == (2, 1)
+    assert struct.unpack("<2f", vm.mem_read(system + 0x150, 8)) == scale_rate
     put(system + 0x1B0, "8f", *([1] * 8))
     # The outer update copies this separate system alpha into its context.
     put(system + 0x1D0, "f", 1)
+    if lee_sin:
+        # The replay provider's value is unresolved. Control the downstream
+        # output of 0x17929C0 here, without inferring it from champion radii.
+        put(system + 0x1D4, "f", args.lee_bound_size)
     put(system + 0x1F0, "2f", 1, 1)
     rotation, scale, data = [stop + n for n in (0xC000, 0xC100, 0xC200)]
     for node in (rotation, scale):
@@ -224,42 +298,51 @@ def main():
     put(probabilities[1] + 0x20, "f", 1)
     put(probabilities[2] + 0x20, "f", 1)
     put(data + 0x40, "2f", 0, 1)
-    put(data + 0x60, "2f", 1, 90)
+    rotation_values = (1, 90)
+    if lee_sin:
+        fields = row["emitter"]["fields"]
+        rotation_curve = fields["5932ff9c"]["fields"]["bc037de7"]["fields"]
+        probabilities_source = rotation_curve["a7084719"]["elements"][0]["fields"]
+        rotation_values = [item["value"] for item in probabilities_source["e44b7382"]["elements"]]
+    put(data + 0x60, "2f", *rotation_values)
     call(0x1703BA0, rotation)
     put(definition + 0x3E0, "Q", rotation)
-    put(scale + 0x20, "QII", data + 0x80, 3, 3)
-    put(scale + 0x30, "QII", data + 0xA0, 3, 3)
-    put(data + 0x80, "3f", 0, 0.20000000298023224, 1)
-    put(data + 0xA0, "9f", 0, 0, 0, 1, 1, 1, 0, 0, 0)
+    if lee_sin:
+        bind_lee_sin_curves(fields, stop, definition, scale, data, vm, call, put)
+    else:
+        put(scale + 0x20, "QII", data + 0x80, 3, 3)
+        put(scale + 0x30, "QII", data + 0xA0, 3, 3)
+        put(data + 0x80, "3f", 0, 0.20000000298023224, 1)
+        put(data + 0xA0, "9f", 0, 0, 0, 1, 1, 1, 0, 0, 0)
 
-    call(0x1703BA0, scale)
-    put(definition + 0x430, "Q", scale)
-    birth_scale, life_curve = stop + 0xD000, stop + 0xD100
-    call(0x17AFEC0, birth_scale)
-    put(birth_scale + 0x20, "QII", data + 0x1C0, 1, 1)
-    put(birth_scale + 0x30, "QII", data + 0x1D0, 1, 1)
-    put(data + 0x1C0, "f", 0)
-    put(data + 0x1D0, "3f", 200, 200, 200)
-    for i in range(3):
-        prob = data + 0x200 + i * 0x40
-        put(birth_scale + 8 + i*8, "Q", prob)
-        vm.mem_write(prob, bytes(vm.mem_read(probabilities[i], 0x26)))
-    put(data + 0x200 + 0x10, "QII", data + 0x330, 2, 2)
-    put(data + 0x330, "2f", 0.7, 1)
-    call(0x1703BA0, birth_scale)
-    put(definition + 0x3F8, "Q", birth_scale)
-    call(0x17AFB80, life_curve)
-    life_prob = data + 0x360
-    put(life_curve + 8, "Q", life_prob)
-    vm.mem_write(life_prob, bytes(vm.mem_read(probabilities[0], 0x26)))
-    put(life_prob + 0x10, "QII", data + 0x3A0, 2, 2)
-    put(data + 0x3A0, "2f", 0.8, 1.1)
-    put(life_curve + 0x10, "QII", data + 0x3B0, 1, 1)
-    put(life_curve + 0x20, "QII", data + 0x3C0, 1, 1)
-    put(data + 0x3B0, "f", 0)
-    put(data + 0x3C0, "f", 0.2)
-    put(life_curve + 0x3C, "If", 1, 0.2)
-    put(definition + 0x100, "Q", life_curve)
+        call(0x1703BA0, scale)
+        put(definition + 0x430, "Q", scale)
+        birth_scale, life_curve = stop + 0xD000, stop + 0xD100
+        call(0x17AFEC0, birth_scale)
+        put(birth_scale + 0x20, "QII", data + 0x1C0, 1, 1)
+        put(birth_scale + 0x30, "QII", data + 0x1D0, 1, 1)
+        put(data + 0x1C0, "f", 0)
+        put(data + 0x1D0, "3f", 200, 200, 200)
+        for i in range(3):
+            prob = data + 0x200 + i * 0x40
+            put(birth_scale + 8 + i * 8, "Q", prob)
+            vm.mem_write(prob, bytes(vm.mem_read(probabilities[i], 0x26)))
+        put(data + 0x200 + 0x10, "QII", data + 0x330, 2, 2)
+        put(data + 0x330, "2f", 0.7, 1)
+        call(0x1703BA0, birth_scale)
+        put(definition + 0x3F8, "Q", birth_scale)
+        call(0x17AFB80, life_curve)
+        life_prob = data + 0x360
+        put(life_curve + 8, "Q", life_prob)
+        vm.mem_write(life_prob, bytes(vm.mem_read(probabilities[0], 0x26)))
+        put(life_prob + 0x10, "QII", data + 0x3A0, 2, 2)
+        put(data + 0x3A0, "2f", 0.8, 1.1)
+        put(life_curve + 0x10, "QII", data + 0x3B0, 1, 1)
+        put(life_curve + 0x20, "QII", data + 0x3C0, 1, 1)
+        put(data + 0x3B0, "f", 0)
+        put(data + 0x3C0, "f", 0.2)
+        put(life_curve + 0x3C, "If", 1, 0.2)
+        put(definition + 0x100, "Q", life_curve)
     writer = struct.unpack("<Q", vm.mem_read(struct.unpack("<Q", vm.mem_read(primitive, 8))[0] + 0x28, 8))[0]
     view, draw, geometry, indices, vertices = [stop + n for n in (0xA000, 0xA100, 0xA200, 0xA300, 0xA400)]
     put(image.base + 0x24DC310, "Q", view + 0x88)
@@ -284,13 +367,13 @@ def main():
         index_end, vertex_end = struct.unpack("<2Q", vm.mem_read(geometry, 16))
         if index_end == indices:
             return None
-        if index_end - indices != 12 or vertex_end - vertices != 112:
+        if index_end - indices != 12 * expected_count or vertex_end - vertices != 112 * expected_count:
             raise ValueError("Original CameraQuad writer exceeded the reviewed layout")
         return {
-            "indices": 12,
-            "indexBytes": bytes(vm.mem_read(indices, 12)).hex(),
-            "vertices": 112,
-            "vertexBytes": bytes(vm.mem_read(vertices, 112)).hex(),
+            "indices": index_end - indices,
+            "indexBytes": bytes(vm.mem_read(indices, index_end - indices)).hex(),
+            "vertices": vertex_end - vertices,
+            "vertexBytes": bytes(vm.mem_read(vertices, vertex_end - vertices)).hex(),
         }
 
     previous_clock_marker = bytes(image.image[0x2140974:0x2140978])
@@ -372,14 +455,20 @@ def main():
         vm.hook_add(unicorn.UC_HOOK_CODE, host_boundary, begin=address, end=address)
     vm.mem_write(actor + 0x24, previous_clock_marker)
     put(actor + 0x18, "B", 0)
-    for currentTime in [i / 120 for i in range(32)]:
+    expected_count = 3 if lee_sin else 1
+    for currentTime in [i / 120 for i in range(150 if lee_sin else 32)]:
         call(0x1786280, actor, time=currentTime)
         (count,) = struct.unpack("<I", vm.mem_read(pool + 0x10, 4))
         timeline.append([currentTime, count, snapshot() if count else None])
-    assert len(inserts) == 1, inserts
-    assert len(rng_samples) in (3, 4)
+    assert len(inserts) == expected_count, inserts
+    assert len(rng_samples) in ((6,) if lee_sin else (3, 4))
     assert all(
-        count == 0 or (count == 1 and geometry["vertices"] == 112 and geometry["indices"] == 12)
+        count == 0
+        or (
+            count == expected_count
+            and geometry["vertices"] == 112 * expected_count
+            and geometry["indices"] == 12 * expected_count
+        )
         for _, count, geometry in timeline
     )
 
@@ -427,6 +516,7 @@ def main():
                 "authoredSha256": source_digest,
                 "authored": authored,
                 "handle": args.handle,
+                **({"controlledSystemBoundSize": args.lee_bound_size} if lee_sin else {}),
                 "updates": updates,
                 "inserts": inserts,
                 "timeline": timeline,

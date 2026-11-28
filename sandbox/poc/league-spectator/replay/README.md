@@ -1033,6 +1033,37 @@ An attachment in the scene also needs the replay actor's world transform.
 bun sandbox/poc/league-spectator/replay/tools/verify-recorded-joint-frames.mjs $localReplayPackageDirectory $recordedAnimationBatchDirectory $threeCorePath
 ```
 
+The pose compositor check feeds the verified impact target socket and
+controlled actor transforms to the original compositor. It varies yaw,
+tilt, and scale and checks both values of the scale-write flag. The actor
+transform for the impact clock still needs replay evidence.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/verify-recorded-joint-frames.mjs $localReplayPackageDirectory $recordedAnimationBatchDirectory $threeCorePath --emit-impact-trs | uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-rift-joint-composition.py $macGameExecutable
+```
+
+The movement updater check exercises original component and fallback dispatch
+on controlled actor inputs. It also verifies that a boolean clip updates its
+desired child when its authored mid-play flag is set, and keeps its first
+choice when that flag is clear. Live actor flags and child activation clocks
+need separate replay evidence.
+
+```powershell
+uv run --offline --no-project --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-exact-movement-updater.py $macGameExecutable $newPrivateUpdaterReceipt
+```
+
+The Lee Sin R impact flash check extracts the original emitter and texture
+from the equipped skin archive. The archived emitter writes three quads in
+the controlled scene. Varying the supplied attachment size exercises its
+Flex scaling. Replay placement depends on the attached actor's transform
+and the bound size supplied by the native attachment provider.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-lee-sin-impact-flash.mjs $installation $freshFightCatalog $attachmentReceipt (Join-Path $textureExporterDirectory TerrainTextureMips.dll) $newPrivateImpactDirectory
+$impactSource = Join-Path $newPrivateImpactDirectory authored.json
+uv run --offline --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-recorded-yasuo-wind-wall-flash.py $macGameExecutable $impactSource seeded 1073821521 --lee-bound-size 65
+```
+
 The reviewed particle track derives three fixed billboard components for
 Heimerdinger W and Kai’Sa E from their authored curves. The producer compares
 the computed vertices with the retained original samples byte for byte before

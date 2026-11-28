@@ -8,10 +8,14 @@ import {
   readOrdinalChampionGlb,
 } from "./research/native-terrain-actors.mjs";
 
-const [packageRoot, batch, threeCore] = process.argv.slice(2);
+const [packageRoot, batch, threeCore, output] = process.argv.slice(2);
 assert.ok(
-  packageRoot && batch && threeCore && process.argv.length === 5,
-  "Usage: bun verify-recorded-joint-frames.mjs <.8428 private terrain package> <matching recorded animation batch> <three.core.js>",
+  packageRoot &&
+    batch &&
+    threeCore &&
+    (process.argv.length === 5 ||
+      (process.argv.length === 6 && output === "--emit-impact-trs")),
+  "Usage: bun verify-recorded-joint-frames.mjs <.8428 private terrain package> <matching recorded animation batch> <three.core.js> [--emit-impact-trs]",
 );
 const hash = (bytes) => Bun.CryptoHasher.hash("sha256", bytes, "hex");
 const file = (path) =>
@@ -54,7 +58,9 @@ const { loadRecordedChampionAnimations } = await (async () => {
     await rmdir(directory);
   }
 })();
-const { Matrix4 } = await import(pathToFileURL(resolve(threeCore)).href);
+const { Matrix4, Quaternion, Vector3 } = await import(
+  pathToFileURL(resolve(threeCore)).href
+);
 
 const { build, protocol, replaySha256, cues } = await file(
   resolve(batch, "scout-animation.json"),
@@ -268,6 +274,37 @@ for (const joint of ["C_Buffbone_Glb_Center_Loc", 60]) {
   assert.deepEqual(frame, impactFrame);
 }
 assert.ok(impactFrame.elements.every(Number.isFinite));
-console.log(
-  "Recorded joint frames verified across palette composition, rewind, cutoff, both authored missile sockets and the impact target socket.",
-);
+if (output === "--emit-impact-trs") {
+  const position = new Vector3();
+  const scale = new Vector3();
+  const orientation = new Quaternion();
+  impactFrame.decompose(position, orientation, scale);
+  const recomposed = new Matrix4().compose(position, orientation, scale);
+  assert.ok(
+    impactFrame.elements.every(
+      (value, index) => Math.abs(value - recomposed.elements[index]) < 1e-9,
+    ),
+  );
+  console.log(
+    JSON.stringify({
+      replaySha256,
+      build,
+      protocol,
+      time: impactTime,
+      modelSha256: kaisa.modelSha256,
+      clipSha256: kaisa.clip.sha256,
+      rigSha256: kaisa.rig.sha256,
+      bindingsSha256: kaisa.bindings.sha256,
+      key: 0x0ac0f283,
+      trs: [
+        ...position.toArray(),
+        ...scale.toArray(),
+        ...orientation.toArray(),
+      ],
+    }),
+  );
+} else {
+  console.log(
+    "Recorded joint frames verified across palette composition, rewind, cutoff, both authored missile sockets and the impact target socket.",
+  );
+}
