@@ -610,5 +610,11 @@
     "name": "pgdata-incidents-postgresql-0",
     "backup": "enabled",
     "reason": "Hub Incidents PostgreSQL database"
+  },
+  {
+    "namespace": "feeds",
+    "name": "pgdata-feeds-postgresql-0",
+    "backup": "enabled",
+    "reason": "Feeds PostgreSQL database (subscriptions and read/starred entry state)"
   }
 ]

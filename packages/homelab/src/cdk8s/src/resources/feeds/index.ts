@@ -10,8 +10,12 @@ import {
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FEEDS_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
-import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import {
+  FirstPartyWebService,
+  type FirstPartyInitContainer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   blackboxProbeIngressRule,
   cloudflareTunnelIngressRule,
@@ -46,7 +50,27 @@ const PUBLIC_FEED_EGRESS_BLOCK_EXCEPTIONS = [
   "169.254.0.0/16",
 ];
 
-export function createFeedsDeployment(chart: Chart) {
+/** Applies Feeds' Prisma migrations before the server starts. */
+function buildFeedsMigrateContainer(
+  dbEnv: Record<string, EnvValue>,
+): FirstPartyInitContainer {
+  return {
+    name: "prisma-migrate",
+    image: firstPartyImageRecipe("feeds"),
+    command: ["bunx", "--no-install", "prisma", "migrate", "deploy"],
+    securityContext: restrictedContainer(1000),
+    resources: {
+      cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
+      memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+    },
+    envVariables: { ...dbEnv, HOME: EnvValue.fromValue("/tmp") },
+  };
+}
+
+export function createFeedsDeployment(
+  chart: Chart,
+  database: SingleAppDatabase,
+) {
   const feedsTailnet = tailnetService("feeds");
   const webService = new FirstPartyWebService(chart, "feeds-web-service", {
     name: "feeds",
@@ -70,6 +94,7 @@ export function createFeedsDeployment(chart: Chart) {
         authItem.name,
       );
       return {
+        init: [buildFeedsMigrateContainer(database.env)],
         server: {
           image: firstPartyImageRecipe("feeds"),
           securityContext: restrictedContainer(1000),
@@ -78,6 +103,8 @@ export function createFeedsDeployment(chart: Chart) {
             memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
           },
           envVariables: {
+            // The importer (src/migration/import-sqlite.ts) reads these.
+            ...database.env,
             HOME: EnvValue.fromValue("/tmp"),
             HOST: EnvValue.fromValue("0.0.0.0"),
             PORT: EnvValue.fromValue(String(FEEDS_HTTP_PORT)),
@@ -155,6 +182,7 @@ export function createFeedsDeployment(chart: Chart) {
           dnsEgressRule(),
           kubernetesApiEgressRule(),
           flagsEgress(),
+          database.egress,
           {
             to: [
               {

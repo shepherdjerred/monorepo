@@ -3,20 +3,12 @@ import type {
   DeclaredFeed,
   ManagedCategory,
 } from "@shepherdjerred/feeds/shared/contract.ts";
+import { MANAGED_CATEGORY_ORDER } from "./store-shared.ts";
 import {
   applyRetroactiveAutoReadForFeedInDb,
   bumpSubscriptionsEtagInDb,
   ensureCategoryInDb,
 } from "./store-sql.ts";
-
-const MANAGED_CATEGORY_ORDER: readonly {
-  readonly label: ManagedCategory;
-  readonly sortOrder: number;
-}[] = [
-  { label: "Engineering & Infra", sortOrder: 10 },
-  { label: "AI", sortOrder: 20 },
-  { label: "Essays & Personal Blogs", sortOrder: 30 },
-];
 
 const UPSERT_DECLARED_FEED_SQL = `
   INSERT INTO feeds (url, title, category_id, html_url, description, source, hidden, auto_read_json) VALUES (?, ?, ?, ?, ?, 'code', ?, ?)

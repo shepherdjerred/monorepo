@@ -10,11 +10,10 @@ import {
   ensureCategoryInDb,
   getFeedByIdFromDb,
   getFeedByUrlFromDb,
-  validateHttpUrl,
-  validateOptionalAutoRead,
   type CategoryRow,
   type IdRow,
 } from "./store-sql.ts";
+import { validateHttpUrl, validateOptionalAutoRead } from "./store-shared.ts";
 import type { StoredFeed, StoreMutationFailure } from "./types.ts";
 
 export function createUserFeedInDb(

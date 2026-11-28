@@ -30,7 +30,7 @@ RUN bun install --frozen-lockfile --filter '@shepherdjerred/feeds'
 # stage's as the service gains them.
 FROM deps AS build
 COPY --parents tsconfig.base.json packages/feeds packages/feature-flags packages/eslint-config packages/console-ui packages/ops-model ./
-RUN cd packages/feeds && bun run build
+RUN cd packages/feeds && bun run generate && bun run build
 
 FROM base AS prod-deps
 COPY --parents bun.lock bunfig.toml patches/ ./
@@ -44,12 +44,18 @@ RUN bun /tools/complete-bin-links.ts node_modules/.bun
 FROM base AS runtime
 COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/feeds /app/packages/feeds
-COPY --parents packages/feature-flags ./
+COPY --parents tsconfig.base.json packages/feature-flags ./
+# Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+RUN cd packages/feeds && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
+ && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 WORKDIR /app/packages/feeds
 # The Bugsink release; declared after the build steps so it never busts caches.
 ARG VERSION=dev
 ENV VERSION=${VERSION}
 ENV NODE_ENV=production HOME=/tmp
+# The Prisma CLI runs at container start (migrations); keep its update-check
+# telemetry (checkpoint.prisma.io) off so it never attempts denied egress.
+ENV CHECKPOINT_DISABLE=1
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7430 7431
 USER 1000:1000
@@ -59,6 +65,7 @@ FROM runtime AS smoke
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 ARG SMOKE_TARGET=feeds
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
-RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
+RUN bunx --no-install prisma --version && \
+    bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

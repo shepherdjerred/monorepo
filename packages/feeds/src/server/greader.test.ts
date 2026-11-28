@@ -2,6 +2,10 @@ import { describe, expect, test } from "vitest";
 import { parseReaderItemId, toLongItemId } from "./greader-ids.ts";
 import { createGoogleReaderRoutes } from "./greader.ts";
 import {
+  asyncFeedsRepository,
+  type SyncFeedsRepository,
+} from "./sqlite-repository.ts";
+import {
   buildStubUserFeedRecord,
   createNoopConsoleQueries,
 } from "./test-repo-stub.ts";
@@ -219,7 +223,7 @@ function createFakePoller(store: FeedsRepository): FeedsPoller {
       if (input.url.includes("invalid.example")) {
         return { ok: false, kind: "invalid", message: "No feed found" };
       }
-      const created = store.createUserFeed({
+      const created = await store.createUserFeed({
         url: `${input.url.replace(/\/$/u, "")}/feed.xml`,
         title: input.titleOverride ?? "Discovered Blog",
         category: input.category ?? "Uncategorized",
@@ -236,7 +240,7 @@ function createCategoryMutators(
   categories: Map<string, StoredCategory>,
   feeds: Map<number, StoredFeed>,
   bumpEtag: () => void,
-): Pick<FeedsRepository, "renameUserCategory" | "deleteUserCategory"> {
+): Pick<SyncFeedsRepository, "renameUserCategory" | "deleteUserCategory"> {
   return {
     renameUserCategory: (oldLabel, newLabel) => {
       const cat = categories.get(oldLabel);
@@ -305,7 +309,7 @@ function createInMemoryReaderWorld(initialNow: number) {
     return id;
   };
 
-  const store: FeedsRepository = {
+  const syncStore: SyncFeedsRepository = {
     close: () => {
       /* noop */
     },
@@ -427,6 +431,7 @@ function createInMemoryReaderWorld(initialNow: number) {
     }),
   };
 
+  const store = asyncFeedsRepository(syncStore);
   const poller = createFakePoller(store);
 
   return {
@@ -843,7 +848,7 @@ describe("Google Reader subscriptions, categories, and OPML", () => {
       },
     );
     expect(importRes.status).toBe(200);
-    const importedFeed = world.store.getFeedByUrl(
+    const importedFeed = await world.store.getFeedByUrl(
       "https://krebsonsecurity.com/feed/",
     );
     expect(importedFeed?.source).toBe("user");

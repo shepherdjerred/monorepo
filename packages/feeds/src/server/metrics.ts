@@ -31,9 +31,6 @@ export type FeedsRouteLabel =
 
 export type FeedsPollOutcome = "ok" | "skipped_flag" | "failed";
 
-export type FeedsSummarySource =
-  SummaryResponse | { readonly summary: () => SummaryResponse };
-
 export type FeedsMetrics = {
   readonly recordRequest: (
     surface: FeedsSurface,
@@ -41,7 +38,7 @@ export type FeedsMetrics = {
     status: number,
   ) => void;
   readonly recordPollRun: (outcome: FeedsPollOutcome | PollRunSummary) => void;
-  readonly render: (source: FeedsSummarySource) => string;
+  readonly render: (summary: SummaryResponse) => string;
 };
 
 const POLL_OUTCOMES: readonly FeedsPollOutcome[] = [
@@ -143,8 +140,7 @@ export function createFeedsMetrics(): FeedsMetrics {
       const outcome = resolveOutcome(input);
       pollRuns.set(outcome, (pollRuns.get(outcome) ?? 0) + 1);
     },
-    render(source) {
-      const summary = "summary" in source ? source.summary() : source;
+    render(summary) {
       const lastPolledSeconds = summary.stats.lastPolledAt ?? 0;
       return [
         "# HELP feeds_subscriptions_total Configured feed subscriptions by ownership source.",

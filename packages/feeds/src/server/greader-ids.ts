@@ -125,24 +125,24 @@ export function extractLabels(rawValues: readonly string[]): readonly string[] {
   });
 }
 
-export function resolveFeedFromStream(
+export async function resolveFeedFromStream(
   store: FeedsRepository,
   streamId: string | undefined,
-): StoredFeed | undefined {
+): Promise<StoredFeed | undefined> {
   if (streamId?.startsWith("feed/") !== true) {
     return undefined;
   }
   const rest = streamId.slice("feed/".length).trim();
   if (POSITIVE_DECIMAL.test(rest)) {
-    return store.getFeedById(Number(rest));
+    return await store.getFeedById(Number(rest));
   }
-  return rest.length > 0 ? store.getFeedByUrl(rest) : undefined;
+  return rest.length > 0 ? await store.getFeedByUrl(rest) : undefined;
 }
 
-export function parseStreamTarget(
+export async function parseStreamTarget(
   rawStream: string | undefined,
   store: FeedsRepository,
-): ReaderStreamQuery["stream"] | "empty-feed" | undefined {
+): Promise<ReaderStreamQuery["stream"] | "empty-feed" | undefined> {
   if (rawStream === undefined || STATE_READING_LIST_PATTERN.test(rawStream)) {
     return { kind: "reading-list" };
   }
@@ -154,7 +154,7 @@ export function parseStreamTarget(
     return { kind: "category", label };
   }
   if (rawStream.startsWith("feed/")) {
-    const resolved = resolveFeedFromStream(store, rawStream);
+    const resolved = await resolveFeedFromStream(store, rawStream);
     return resolved === undefined
       ? "empty-feed"
       : { kind: "feed", feedId: resolved.id };
@@ -311,10 +311,10 @@ function isHttpUrl(rawUrl: string): boolean {
   }
 }
 
-export function importOpmlXml(
+export async function importOpmlXml(
   store: FeedsRepository,
   xmlText: string,
-): boolean {
+): Promise<boolean> {
   const parsedDoc = XmlRecordSchema.safeParse(OPML_PARSER.parse(xmlText));
   const opmlRec = parsedDoc.success
     ? XmlRecordSchema.safeParse(parsedDoc.data["opml"])
@@ -330,7 +330,7 @@ export function importOpmlXml(
   collectOpmlOutlines(bodyRec.data["outline"], "Uncategorized", outlines);
   for (const item of outlines) {
     if (isHttpUrl(item.xmlUrl)) {
-      store.createUserFeed({
+      await store.createUserFeed({
         url: item.xmlUrl,
         ...(item.title === undefined ? {} : { title: item.title }),
         category: item.category,

@@ -1,7 +1,9 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
+import { PostgresqlSpecUsers } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
 import { closeActivationGate } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/activation.ts";
+import { singleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import {
   FEEDS_ACTIVE,
   createFeedsDeployment,
@@ -15,6 +17,19 @@ export function createFeedsChart(app: App, active = FEEDS_ACTIVE) {
   });
   if (!active) return closeActivationGate(chart);
   new Namespace(chart, "feeds-namespace", { metadata: { name: "feeds" } });
-  createFeedsDeployment(chart);
+  // Feeds is moving from its SQLite file onto its own PostgreSQL cluster. The
+  // server still serves from SQLite; the database is migrated at every start
+  // and filled by the one-shot importer (packages/feeds/src/migration).
+  const database = singleAppDatabase(chart, {
+    app: "feeds",
+    provision: true,
+    userFlags: [PostgresqlSpecUsers.CREATEDB],
+  });
+  database.createClusterIngressPolicy(
+    "feeds-pg-netpol",
+    { app: "feeds" },
+    { name: "feeds-pg-netpol" },
+  );
+  createFeedsDeployment(chart, database);
   return chart;
 }

@@ -1,5 +1,6 @@
 import type { CreateUserFeedBody } from "@shepherdjerred/feeds/shared/contract.ts";
-import type { FeedsRepository, StoredFeed } from "./types.ts";
+import type { SyncFeedsRepository } from "./sqlite-repository.ts";
+import type { StoredFeed } from "./types.ts";
 
 export function buildStubUserFeedRecord(
   id: number,
@@ -35,7 +36,7 @@ export function createNoopConsoleQueries(
     readonly userFeeds: number;
   },
 ): Pick<
-  FeedsRepository,
+  SyncFeedsRepository,
   | "summary"
   | "listCategories"
   | "listFeedsHealth"

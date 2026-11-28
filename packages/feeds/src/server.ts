@@ -15,6 +15,7 @@ import {
   createFeedsPoller,
   type CreateFeedsPollerDeps,
 } from "./server/poller.ts";
+import { asyncFeedsRepository } from "./server/sqlite-repository.ts";
 import { FeedsStore } from "./server/store.ts";
 import type { FeedsPoller, FeedsRepository } from "./server/types.ts";
 
@@ -164,9 +165,9 @@ export async function startServer(
     await initFeatureFlags({ environment: env });
   }
   const databasePath = env["FEEDS_DATABASE_PATH"] ?? ":memory:";
-  const store = FeedsStore.open(databasePath);
+  const store = asyncFeedsRepository(FeedsStore.open(databasePath));
   try {
-    const reconciled = store.reconcileCatalog();
+    const reconciled = await store.reconcileCatalog();
     console.warn(
       JSON.stringify({
         message: "feeds catalog reconciled",
@@ -225,12 +226,12 @@ export async function startServer(
           server.stop(closeActiveConnections),
           readerServer?.stop(closeActiveConnections),
         ]);
-        store.close();
+        await store.close();
         await shutdownOptionalFlags(useFlags);
       },
     };
   } catch (error) {
-    store.close();
+    await store.close();
     await shutdownOptionalFlags(useFlags);
     throw error;
   }
