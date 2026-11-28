@@ -58,39 +58,74 @@ export async function cloneMainForGeneratedRefresh(input: {
   };
 }
 
-/** The paths git reports as changed; throws when any is outside `allowed`. */
+/**
+ * The paths git reports as changed; throws when any is outside `allowed` or
+ * below one of `allowedDirectories`. With directories git lists every untracked
+ * file (`-uall`), not a collapsed `dir/` entry, so each file is checked.
+ */
 export async function changedAllowedFiles(
   repoDir: string,
   allowed: readonly string[],
   label: string,
+  allowedDirectories: readonly string[] = [],
 ): Promise<string[]> {
-  const status = await runCommand(["git", "status", "--porcelain"], {
-    cwd: repoDir,
-    trimStdout: false,
-  });
+  const status = await runCommand(
+    [
+      "git",
+      "status",
+      "--porcelain",
+      ...(allowedDirectories.length > 0 ? ["--untracked-files=all"] : []),
+    ],
+    { cwd: repoDir, trimStdout: false },
+  );
   const changes = status
     .split("\n")
     .map((line) => parseGitStatusLine(line))
     .filter((entry) => entry !== undefined);
-  const disallowed = generatedDisallowedPaths(changes, allowed);
+  const disallowed = generatedDisallowedPaths(
+    changes,
+    allowed,
+    allowedDirectories,
+  );
   if (disallowed.length > 0) {
     throw new Error(
-      `${label} changed disallowed paths: ${disallowed.join(", ")}`,
+      `${label} changed disallowed paths: ${disallowed.slice(0, 20).join(", ")}${disallowed.length > 20 ? `, and ${(disallowed.length - 20).toString()} more` : ""}`,
     );
   }
   return changes.map((change) => change.path).toSorted();
 }
 
-/** Paths (including rename sources) in `changes` that are not in `allowed`. */
+/** Whether `path` is a file below `directory` (a path relative to the repository root). */
+export function isInGeneratedDirectory(
+  path: string,
+  directory: string,
+): boolean {
+  return path.startsWith(`${directory.replace(/\/+$/u, "")}/`);
+}
+
+/**
+ * Paths (including rename sources) in `changes` that are neither in `allowed`
+ * nor below an allowed directory. A directory allows its files and nothing
+ * beside it: `a/b` does not allow `a/bc/x`.
+ */
 export function generatedDisallowedPaths(
   changes: readonly GitStatusEntry[],
   allowed: readonly string[],
+  allowedDirectories: readonly string[] = [],
 ): string[] {
   const permitted = new Set(allowed);
   const disallowed = new Set<string>();
   for (const change of changes) {
     for (const path of [change.path, change.previousPath]) {
-      if (path !== undefined && !permitted.has(path)) disallowed.add(path);
+      if (
+        path !== undefined &&
+        !permitted.has(path) &&
+        !allowedDirectories.some((directory) =>
+          isInGeneratedDirectory(path, directory),
+        )
+      ) {
+        disallowed.add(path);
+      }
     }
   }
   return [...disallowed].toSorted();

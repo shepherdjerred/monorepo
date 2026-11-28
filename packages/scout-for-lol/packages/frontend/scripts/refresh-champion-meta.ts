@@ -7,7 +7,10 @@ import {
   assertSnapshotWithinBudget,
   serializeSnapshotV2,
 } from "#src/lib/champion-meta/snapshot-v2-files.ts";
-import { writeSnapshotDirectory } from "#src/lib/champion-meta/snapshot-v2-fs.ts";
+import {
+  changedFileCount,
+  refreshSnapshotDirectory,
+} from "#src/lib/champion-meta/snapshot-v2-fs.ts";
 
 /**
  * Regenerate the committed champion-meta snapshots from a deployed meta API.
@@ -40,6 +43,16 @@ const { single, split } =
   snapshotDir === undefined
     ? { single: await buildChampionMetaSnapshot({ origin }), split: undefined }
     : await buildChampionMetaSnapshots({ origin });
+// The v2 guards run before anything is written, so a refused refresh writes nothing.
+if (snapshotDir !== undefined && split !== undefined) {
+  const files = serializeSnapshotV2(split);
+  assertSnapshotWithinBudget(files);
+  const changes = await refreshSnapshotDirectory(snapshotDir, files);
+  console.warn(
+    `champion-meta snapshot v2: ${split.champions.size.toString()} champions, ${split.matchups.size.toString()} matchups in ${files.size.toString()} files; ${changedFileCount(changes).toString()} changed (${changes.added.length.toString()} added, ${changes.modified.length.toString()} rewritten, ${changes.removed.length.toString()} removed)`,
+  );
+}
+
 await Bun.write(output, `${JSON.stringify(single, null, 2)}\n`);
 const format = Bun.spawn(["bunx", "prettier", "--write", output], {
   stdout: "inherit",
@@ -51,12 +64,3 @@ if ((await format.exited) !== 0) {
 console.warn(
   `champion-meta snapshot: ${single.champions.length.toString()} champions from ${origin}`,
 );
-
-if (snapshotDir !== undefined && split !== undefined) {
-  const files = serializeSnapshotV2(split);
-  assertSnapshotWithinBudget(files);
-  await writeSnapshotDirectory(snapshotDir, files);
-  console.warn(
-    `champion-meta snapshot v2: ${split.champions.size.toString()} champions, ${split.matchups.size.toString()} matchups in ${files.size.toString()} files`,
-  );
-}
