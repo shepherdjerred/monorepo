@@ -54,10 +54,16 @@ function detail(
 ): WoodpeckerPipelineDetail {
   return {
     ...pipeline(),
+    id: null,
     message: SQUASH_MESSAGE,
     startedAt: "2026-11-25T17:40:05.000Z",
     event: "push",
     branch: "main",
+    ref: "refs/heads/main",
+    refspec: "",
+    attempt: 0,
+    isDraft: false,
+    eventReasons: [],
     author: "shepherdjerred",
     forgeUrl: `https://github.com/shepherdjerred/monorepo/commit/${SHA}`,
     workflows: [],

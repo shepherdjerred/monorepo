@@ -10,10 +10,9 @@ const config = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
   }),
-  // typescript-eslint 8.72.1 (#12988) builds one Program per tsconfig in
-  // single-run mode alongside the project service. For this package that
-  // needs a 4-6 GiB heap and overran Node's default 4 GiB heap in CI; without
-  // single-run inference the lint fits the default heap as it did on 8.71.
+  // typescript-eslint (#12988) builds one Program per tsconfig in single-run
+  // mode alongside the project service. Avoid retaining both programs here.
+  // The lint script caps V8 old space at 6 GiB for cold runs of the full graph.
   {
     languageOptions: {
       parserOptions: {
